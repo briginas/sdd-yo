@@ -25,12 +25,18 @@ future `spec-code` branch.
 
 ## Promotion rule
 
-When implementation starts:
+Implementation follows the
+[self-bootstrap procedure](architecture/bootstrap.md):
 
 1. review this package against the then-current repository state;
-2. generate an approved `spec-code` proposal;
-3. move the exact target product specification to `spec/` in the implementation
-   branch;
-4. implement code and tests in the same branch;
-5. merge only after the SDD Yo verification and merge gates pass.
+2. materialize contract fixtures without claiming runtime behavior;
+3. select one bounded target Requirement set;
+4. promote only that set into canonical `spec/` in its `spec-code` branch;
+5. implement code and Requirement-named tests in the same branch;
+6. use the strongest currently implemented checks without fabricating an SDD
+   gate result;
+7. transition from manual bootstrap validation to advisory self-validation and
+   finally normal SDD gates.
 
+The complete target specification is never copied into canonical `spec/`
+before its behavior exists.

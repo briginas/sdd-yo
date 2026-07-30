@@ -156,7 +156,8 @@ CLI artifact, even if its conclusion happens to be correct.
 ### Stage 0 — Contract fixtures
 
 Publish schemas, golden Markdown, adapter kit, and gate truth tables. No claim
-of production readiness.
+of production readiness. For SDD Yo itself, follow the
+[self-bootstrap procedure](bootstrap.md).
 
 Exit: all parser, graph, fingerprint, artifact, and security fixture suites pass
 on supported platforms.

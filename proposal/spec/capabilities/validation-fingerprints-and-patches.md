@@ -84,14 +84,16 @@ verification: automated
 ### Statement <!-- sdd:statement -->
 
 The CLI shall generate cryptographically random uppercase eight-hex IDs and
-shall permanently reject reuse of a full object ID found in reachable Git
-history.
+shall permanently reject reuse of an object ID previously defined in the
+reachable canonical specification history of the same SDD Project.
 
 ### Acceptance criteria <!-- sdd:acceptance -->
 
 - Supported prefixes are `CAP`, `REQ`, `CON`, and `SDD`.
 - Manual IDs pass the same validation.
 - Only newly introduced IDs require historical lookup.
+- Arbitrary prose, test fixture, or noncanonical proposal mentions do not count
+  as prior model object definitions.
 - Parallel-branch collisions are detected against the current integration ref.
 
 <a id="req-13cf54d6"></a>
@@ -297,4 +299,3 @@ verify identifier non-reuse and requested comparison refs.
 - Ordinary validation may run in a shallow clone with a warning.
 - Merge readiness is blocked when historical validation is incomplete.
 - Rewritten unreachable history is outside the guarantee.
-

@@ -181,8 +181,14 @@ Application is fail-closed:
 ## Historical ID reservation
 
 Only IDs newly introduced relative to base require a Git-history query. The
-query searches reachable history for the full exact ID. Positive and negative
-results may be cached.
+query searches reachable canonical specification history for prior typed model
+object definitions, not arbitrary prose or fixture occurrences of the same
+text. Positive and negative results may be cached.
+
+Before an SDD Project has canonical history, target-package IDs may be reserved
+and promoted according to the
+[self-bootstrap procedure](bootstrap.md). Their first appearance under the
+project's canonical `spec.root` is canonical introduction, not reuse.
 
 A shallow clone may run non-strict validation with a warning but cannot produce
 a strict merge `PASS`.

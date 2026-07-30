@@ -7,6 +7,8 @@ implementation choices into hidden product requirements.
 ## Architecture map
 
 - [System overview](overview.md)
+- [Self-bootstrap and incremental promotion](bootstrap.md)
+- [Implementation stack](implementation-stack.md)
 - [Markdown dialect](markdown-format.md)
 - [Project configuration](configuration.md)
 - [Fingerprints, Git comparison, and exact patches](fingerprints-and-git.md)
@@ -23,4 +25,3 @@ These documents are part of a pre-implementation package. They record the
 current chosen design, not implemented behavior. The product specification
 remains authoritative when an architecture detail and a product Requirement
 conflict.
-
