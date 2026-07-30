@@ -4,6 +4,7 @@
 
 - State: active
 - Current phase: Bootstrap / Stage 0 contract fixtures
+- Current leaf: 0.2 Artifact schemas
 - Last updated: 2026-07-30
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -99,24 +100,29 @@ implementation.
 
 ### 0.1 Contract inventory
 
-- [ ] Create a machine-readable inventory of every version 1 Markdown,
+- [x] Create a machine-readable inventory of every version 1 Markdown,
       artifact, JSONL, diagnostic, and gate contract.
-- [ ] Map each contract and fixture family to the target `REQ-*` identifiers it
+- [x] Map each contract and fixture family to the target `REQ-*` identifiers it
       will eventually verify.
-- [ ] Mark normative schema fields, optional provenance, ordering rules, size
+- [x] Mark normative schema fields, optional provenance, ordering rules, size
       limits, and compatibility behavior.
-- [ ] Validate that the inventory has no artifact name or schema-version
+- [x] Validate that the inventory has no artifact name or schema-version
       conflicts.
+
+Artifact:
+[`contracts/v1/inventory.json`](contracts/v1/inventory.json).
 
 Done when one reviewer can enumerate every required schema and fixture from
 the inventory without searching prose.
 
 ### 0.2 Artifact schemas
 
-- [ ] Materialize JSON Schemas for ChangeDescriptor, ProposalPackage,
-      SpecPatch, ApprovalEvidence, TestIndex, TestExecutionEvidence, QAEvidence,
-      Finding, FindingResolution, HumanSemanticReviewEvidence, ConflictReport,
-      and MergeReport.
+- [ ] Materialize JSON Schemas for ChangeDescriptor, CandidateTreeManifest,
+      ProposalPackage, SpecPatch, ApprovalEvidence, TestIndex,
+      TestExecutionEvidence, QAEvidence, GovernanceEvidence, Finding,
+      FindingResolution, HumanSemanticReviewEvidence,
+      SemanticAnalysisInputManifest, ConflictReport, VerificationReport, and
+      MergeReport.
 - [ ] Add valid, minimally valid, maximally representative, malformed, unknown
       major, unknown field, wrong project, and wrong subject fixtures.
 - [ ] Confirm generated schemas and TypeScript types will come from one source.
@@ -386,6 +392,6 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 0.1 — Contract inventory` is the only active implementation leaf.
-It adds no CLI runtime and must not begin Milestone 0.2 until its inventory is
-reviewable and internally consistent.
+`Milestone 0.2 — Artifact schemas` is the only active implementation leaf. It
+must materialize the inventory contracts without changing their wire names,
+major versions, or Requirement mappings silently.

@@ -16,6 +16,8 @@ Read these in order before planning or editing:
 2. `proposal/spec/README.md` — complete target product behavior.
 3. `proposal/architecture/README.md` — implementation contracts and boundaries.
 4. `IMPLEMENTATION_PLAN.md` — active milestone and deferred work.
+5. `contracts/v1/inventory.json` — versioned contract and fixture inventory
+   when working on Stage 0.
 
 Follow links from these maps only as needed for the current task. Do not load
 the full specification when a small Capability or Requirement set is enough.

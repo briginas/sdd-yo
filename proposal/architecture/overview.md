@@ -46,15 +46,20 @@ Git history
 Transient external state:
 
 ```text
+CandidateTreeManifest
 ProposalPackage
 SpecPatch
 ApprovalEvidence
 TestIndex
 TestExecutionEvidence
 QAEvidence
+GovernanceEvidence
 Finding
 FindingResolution
+HumanSemanticReviewEvidence
+SemanticAnalysisInputManifest
 ConflictReport
+VerificationReport
 MergeReport
 ```
 

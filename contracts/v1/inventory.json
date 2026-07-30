@@ -1,0 +1,1990 @@
+{
+  "inventory_schema_version": "1.0",
+  "product_contract_version": "1.0",
+  "status": "bootstrap-contract-inventory",
+  "scope": "Every version 1 configuration, Markdown, artifact, adapter, diagnostic, fingerprint, and gate contract required before runtime implementation.",
+  "authority_order": [
+    "proposal/spec",
+    "proposal/architecture",
+    "IMPLEMENTATION_PLAN.md",
+    "contracts/v1/inventory.json"
+  ],
+  "mapping_semantics": {
+    "contracts.requirements": "Target Requirements that normatively constrain the contract.",
+    "contracts.fixture_families": "Fixture families that exercise the contract directly or as a composed dependency.",
+    "fixture_families.contracts": "Primary wire contracts instantiated or emitted by that fixture family.",
+    "directionality": "The two fixture mappings are intentionally directional and are not required to be symmetric."
+  },
+  "metadata": {
+    "owner": "SDD Yo maintainers",
+    "last_reviewed": "2026-07-30",
+    "source_of_truth": "Inventory of planned contracts; product Requirements remain authoritative for behavior.",
+    "verification_status": "bootstrap-validated",
+    "known_staleness_risks": [
+      "A target Requirement or architecture contract changes without updating this inventory.",
+      "Stage 0.2 materializes a schema with a different wire name or major version.",
+      "A new gate or adapter record is added only to prose."
+    ]
+  },
+  "profiles": {
+    "compatibility": {
+      "config-v1-strict": {
+        "version_shape": "integer-major",
+        "unknown_newer_major": "reject",
+        "unknown_fields": "reject",
+        "implicit_migration": "forbidden"
+      },
+      "markdown-v1": {
+        "version_shape": "configured-dialect-major",
+        "unknown_document_type": "reject",
+        "unknown_normative_marker": "reject",
+        "explanatory_markdown_extensions": "ignore-semantically"
+      },
+      "json-v1-strict": {
+        "version_shape": "major.minor",
+        "unknown_newer_major": "reject",
+        "unknown_decision_fields": "reject",
+        "new_optional_nondecision_minor_fields": "allow"
+      },
+      "jsonl-v1-strict": {
+        "version_shape": "major.minor-per-record",
+        "unknown_newer_major": "reject",
+        "unknown_record_type": "reject",
+        "malformed_or_truncated_stream": "reject"
+      },
+      "adapter-command-v1": {
+        "version_shape": "major.minor",
+        "unknown_newer_major": "reject",
+        "shell_interpretation": "forbidden",
+        "unknown_protocol_environment": "reject"
+      },
+      "junit-import-v1": {
+        "version_shape": "integer-major",
+        "unknown_xml_elements": "ignore-unless-they-change-known-result-state",
+        "lost_hierarchy": "report-never-guess",
+        "dtd_and_external_entities": "reject"
+      },
+      "fingerprint-v1": {
+        "version_shape": "canonicalization-version",
+        "algorithm": "sha256",
+        "algorithm_change": "new-version-required",
+        "canonicalization_change": "new-version-required"
+      },
+      "gate-v1": {
+        "version_shape": "major.minor",
+        "unknown_newer_major": "reject",
+        "missing_required_input": "non-pass",
+        "stale_input": "non-pass"
+      }
+    },
+    "ordering": {
+      "document-order": {
+        "maps": "source-order",
+        "set_relations": "canonical-sort-by-target-id",
+        "acceptance_and_constraints": "preserve-source-order"
+      },
+      "deterministic-json": {
+        "object_keys": "canonical-schema-order",
+        "sets": "canonical-sort",
+        "sequences": "preserve-semantic-order"
+      },
+      "jsonl-normalized": {
+        "input_records": "order-independent-after-header",
+        "parent_resolution": "forward-or-backward",
+        "normalized_nodes": "adapter-id-then-local-id"
+      },
+      "diagnostic-order": {
+        "primary": "severity",
+        "secondary": "path-line-column",
+        "tertiary": "code-object-id"
+      },
+      "gate-evaluation": {
+        "conditions": "stable-condition-id",
+        "findings": "kind-severity-finding-id",
+        "artifacts": "artifact-type-issuer-subject"
+      }
+    },
+    "limits": {
+      "repository-input": {
+        "configured": [
+          "max_file_bytes",
+          "max_total_spec_bytes",
+          "max_document_count",
+          "max_object_count",
+          "max_relation_count",
+          "max_graph_depth"
+        ],
+        "failure": "technical-or-blocking-never-pass",
+        "authority": "proposal/architecture/security.md#denial-of-service"
+      },
+      "artifact-input": {
+        "configured": [
+          "max_artifact_bytes",
+          "max_array_items",
+          "max_string_bytes",
+          "max_nesting_depth"
+        ],
+        "failure": "technical-or-blocking-never-pass",
+        "authority": "proposal/architecture/security.md#denial-of-service"
+      },
+      "adapter-stream": {
+        "configured": [
+          "timeout_ms",
+          "max_output_bytes",
+          "max_stderr_bytes",
+          "max_jsonl_line_bytes",
+          "max_node_count",
+          "max_hierarchy_depth"
+        ],
+        "failure": "blocking-adapter-failure",
+        "authority": "proposal/architecture/test-adapters.md#command-adapter"
+      },
+      "xml-import": {
+        "configured": [
+          "max_report_bytes",
+          "max_xml_depth",
+          "max_suite_count",
+          "max_test_count"
+        ],
+        "dtd": "disabled",
+        "external_entities": "disabled",
+        "failure": "blocking-import-failure",
+        "authority": "proposal/architecture/security.md#malicious-adapter-output"
+      },
+      "none": {
+        "configured": [],
+        "failure": "not-applicable"
+      }
+    },
+    "provenance": {
+      "none": [],
+      "artifact-common": [
+        "created_at",
+        "producer"
+      ],
+      "human-decision": [
+        "created_at",
+        "producer",
+        "reason",
+        "notes"
+      ],
+      "test-result": [
+        "created_at",
+        "producer",
+        "duration_ms"
+      ]
+    }
+  },
+  "contracts": [
+    {
+      "contract_id": "config.project",
+      "category": "configuration",
+      "wire_name": ".sdd/config.yaml",
+      "wire_format": "yaml",
+      "version": "1",
+      "definition_status": "specified",
+      "authority": "proposal/architecture/configuration.md#initial-schema",
+      "requirements": [
+        "REQ-0361538D",
+        "REQ-FBB24D6C",
+        "REQ-F91F7D11",
+        "REQ-7FCCF943"
+      ],
+      "required_fields": [
+        "schema_version",
+        "project_id",
+        "spec.root",
+        "spec.entrypoint",
+        "adoption.mode",
+        "git.default_target_ref",
+        "ids.suffix_length",
+        "ids.alphabet",
+        "tests.adapters",
+        "evidence.allowed_issuers"
+      ],
+      "optional_provenance_profile": "none",
+      "ordering_profile": "deterministic-json",
+      "limit_profile": "repository-input",
+      "compatibility_profile": "config-v1-strict",
+      "fixture_families": [
+        "configuration"
+      ]
+    },
+    {
+      "contract_id": "markdown.index-document",
+      "category": "markdown",
+      "wire_name": "index",
+      "wire_format": "utf8-markdown",
+      "version": "1",
+      "definition_status": "specified",
+      "authority": "proposal/architecture/markdown-format.md#index-document",
+      "requirements": [
+        "REQ-DD91AD0F",
+        "REQ-8602BF02"
+      ],
+      "required_fields": [
+        "frontmatter.sdd.type=index",
+        "section.sdd:capabilities",
+        "section.sdd:concepts"
+      ],
+      "optional_provenance_profile": "none",
+      "ordering_profile": "document-order",
+      "limit_profile": "repository-input",
+      "compatibility_profile": "markdown-v1",
+      "fixture_families": [
+        "markdown-documents",
+        "markdown-graph-invalid"
+      ]
+    },
+    {
+      "contract_id": "markdown.capability-document",
+      "category": "markdown",
+      "wire_name": "capability",
+      "wire_format": "utf8-markdown",
+      "version": "1",
+      "definition_status": "specified",
+      "authority": "proposal/architecture/markdown-format.md#capability-and-fragment-documents",
+      "requirements": [
+        "REQ-8602BF02",
+        "REQ-0EF66B28"
+      ],
+      "required_fields": [
+        "frontmatter.sdd.type=capability",
+        "frontmatter.sdd.id",
+        "heading.h1",
+        "section.sdd:purpose"
+      ],
+      "optional_fields": [
+        "section.sdd:fragments",
+        "requirement_blocks"
+      ],
+      "optional_provenance_profile": "none",
+      "ordering_profile": "document-order",
+      "limit_profile": "repository-input",
+      "compatibility_profile": "markdown-v1",
+      "fixture_families": [
+        "markdown-documents",
+        "markdown-graph-invalid"
+      ]
+    },
+    {
+      "contract_id": "markdown.capability-fragment-document",
+      "category": "markdown",
+      "wire_name": "capability-fragment",
+      "wire_format": "utf8-markdown",
+      "version": "1",
+      "definition_status": "specified",
+      "authority": "proposal/architecture/markdown-format.md#capability-and-fragment-documents",
+      "requirements": [
+        "REQ-8602BF02",
+        "REQ-0EF66B28",
+        "REQ-7D93D64A"
+      ],
+      "required_fields": [
+        "frontmatter.sdd.type=capability-fragment",
+        "frontmatter.sdd.capability",
+        "heading.h1"
+      ],
+      "optional_fields": [
+        "requirement_blocks"
+      ],
+      "optional_provenance_profile": "none",
+      "ordering_profile": "document-order",
+      "limit_profile": "repository-input",
+      "compatibility_profile": "markdown-v1",
+      "fixture_families": [
+        "markdown-documents",
+        "markdown-graph-invalid"
+      ]
+    },
+    {
+      "contract_id": "markdown.requirement-block",
+      "category": "markdown",
+      "wire_name": "requirement",
+      "wire_format": "utf8-markdown-block",
+      "version": "1",
+      "definition_status": "specified",
+      "authority": "proposal/architecture/markdown-format.md#requirement-block",
+      "requirements": [
+        "REQ-EAC56CB1",
+        "REQ-8ACBC52D",
+        "REQ-065A9911",
+        "REQ-8D157EBE",
+        "REQ-99605FAB"
+      ],
+      "required_fields": [
+        "anchor.lowercase-id",
+        "heading.h2.id",
+        "metadata.kind",
+        "metadata.verification",
+        "section.sdd:statement",
+        "section.sdd:acceptance"
+      ],
+      "optional_fields": [
+        "section.sdd:relations",
+        "section.sdd:constraints",
+        "section.sdd:rationale",
+        "section.sdd:examples"
+      ],
+      "optional_provenance_profile": "none",
+      "ordering_profile": "document-order",
+      "limit_profile": "repository-input",
+      "compatibility_profile": "markdown-v1",
+      "fixture_families": [
+        "markdown-documents",
+        "markdown-graph-invalid",
+        "fingerprint-objects"
+      ]
+    },
+    {
+      "contract_id": "markdown.concept-document",
+      "category": "markdown",
+      "wire_name": "concept",
+      "wire_format": "utf8-markdown",
+      "version": "1",
+      "definition_status": "specified",
+      "authority": "proposal/architecture/markdown-format.md#concept-document",
+      "requirements": [
+        "REQ-8602BF02",
+        "REQ-40A38BA1",
+        "REQ-8D157EBE"
+      ],
+      "required_fields": [
+        "frontmatter.sdd.type=concept",
+        "frontmatter.sdd.id",
+        "heading.h1",
+        "section.sdd:definition"
+      ],
+      "optional_fields": [
+        "section.sdd:identity",
+        "section.sdd:states",
+        "section.sdd:relations",
+        "section.sdd:rationale",
+        "section.sdd:examples"
+      ],
+      "optional_provenance_profile": "none",
+      "ordering_profile": "document-order",
+      "limit_profile": "repository-input",
+      "compatibility_profile": "markdown-v1",
+      "fixture_families": [
+        "markdown-documents",
+        "markdown-graph-invalid",
+        "fingerprint-objects"
+      ]
+    },
+    {
+      "contract_id": "cli.response-envelope",
+      "category": "cli",
+      "wire_name": "cli_response",
+      "wire_format": "json",
+      "version": "1.0",
+      "definition_status": "specified",
+      "authority": "proposal/architecture/cli.md#executable-and-global-behavior",
+      "requirements": [
+        "REQ-7C848ED0",
+        "REQ-F7D39246",
+        "REQ-41EDF9A3"
+      ],
+      "required_fields": [
+        "schema_version",
+        "command",
+        "project_id",
+        "status",
+        "result",
+        "diagnostics"
+      ],
+      "optional_provenance_profile": "none",
+      "ordering_profile": "deterministic-json",
+      "limit_profile": "artifact-input",
+      "compatibility_profile": "json-v1-strict",
+      "fixture_families": [
+        "cli-and-diagnostics",
+        "compatibility"
+      ]
+    },
+    {
+      "contract_id": "artifact.change-descriptor",
+      "category": "artifact",
+      "wire_name": "change_descriptor",
+      "wire_format": "json",
+      "version": "1.0",
+      "definition_status": "specified",
+      "authority": "proposal/architecture/artifact-schemas.md#change-descriptor",
+      "requirements": [
+        "REQ-E26A859E",
+        "REQ-7341DBB7",
+        "REQ-64DB876B"
+      ],
+      "required_fields": [
+        "schema_version",
+        "artifact_type",
+        "project_id",
+        "mode",
+        "integration_ref",
+        "proposal_ref",
+        "approved_delta",
+        "code_targets"
+      ],
+      "optional_provenance_profile": "artifact-common",
+      "ordering_profile": "deterministic-json",
+      "limit_profile": "artifact-input",
+      "compatibility_profile": "json-v1-strict",
+      "fixture_families": [
+        "workflow-artifacts",
+        "mode-and-gate-truth-tables",
+        "compatibility"
+      ]
+    },
+    {
+      "contract_id": "artifact.candidate-tree-manifest",
+      "category": "artifact",
+      "wire_name": "candidate_tree_manifest",
+      "wire_format": "json",
+      "version": "1.0",
+      "definition_status": "required-detail-in-stage-0.2",
+      "authority": "proposal/architecture/artifact-schemas.md#proposalpackage",
+      "requirements": [
+        "REQ-E80F09C6",
+        "REQ-3BF12AAD"
+      ],
+      "required_fields": [
+        "schema_version",
+        "artifact_type",
+        "project_id",
+        "base_tree_fingerprint",
+        "files",
+        "files[].path",
+        "files[].sha256",
+        "files[].content_utf8"
+      ],
+      "optional_provenance_profile": "artifact-common",
+      "ordering_profile": "deterministic-json",
+      "limit_profile": "artifact-input",
+      "compatibility_profile": "json-v1-strict",
+      "fixture_families": [
+        "workflow-artifacts",
+        "security-path-process",
+        "compatibility"
+      ]
+    },
+    {
+      "contract_id": "artifact.proposal-package",
+      "category": "artifact",
+      "wire_name": "proposal_package",
+      "wire_format": "json",
+      "version": "1.0",
+      "definition_status": "specified",
+      "authority": "proposal/architecture/artifact-schemas.md#proposalpackage",
+      "requirements": [
+        "REQ-E80F09C6",
+        "REQ-A3C3B779",
+        "REQ-AFD65A03"
+      ],
+      "required_fields": [
+        "schema_version",
+        "artifact_type",
+        "project_id",
+        "mode",
+        "base",
+        "candidate",
+        "object_delta",
+        "diagnostics",
+        "semantic_candidates"
+      ],
+      "optional_provenance_profile": "artifact-common",
+      "ordering_profile": "deterministic-json",
+      "limit_profile": "artifact-input",
+      "compatibility_profile": "json-v1-strict",
+      "fixture_families": [
+        "workflow-artifacts",
+        "mode-and-gate-truth-tables",
+        "fingerprint-deltas"
+      ]
+    },
+    {
+      "contract_id": "artifact.spec-patch",
+      "category": "artifact",
+      "wire_name": "spec_patch",
+      "wire_format": "json",
+      "version": "1.0",
+      "definition_status": "specified",
+      "authority": "proposal/architecture/artifact-schemas.md#specpatch",
+      "requirements": [
+        "REQ-3BF12AAD",
+        "REQ-7AFE9904",
+        "REQ-964B9F80"
+      ],
+      "required_fields": [
+        "schema_version",
+        "artifact_type",
+        "project_id",
+        "base_tree_fingerprint",
+        "result_tree_fingerprint",
+        "operations"
+      ],
+      "optional_provenance_profile": "artifact-common",
+      "ordering_profile": "deterministic-json",
+      "limit_profile": "artifact-input",
+      "compatibility_profile": "json-v1-strict",
+      "fixture_families": [
+        "workflow-artifacts",
+        "security-path-process"
+      ]
+    },
+    {
+      "contract_id": "artifact.approval-evidence",
+      "category": "artifact",
+      "wire_name": "approval_evidence",
+      "wire_format": "json",
+      "version": "1.0",
+      "definition_status": "specified",
+      "authority": "proposal/architecture/artifact-schemas.md#approvalevidence",
+      "requirements": [
+        "REQ-7341DBB7",
+        "REQ-220945C2",
+        "REQ-E85A06C3"
+      ],
+      "required_fields": [
+        "schema_version",
+        "artifact_type",
+        "project_id",
+        "issuer",
+        "actor",
+        "decision",
+        "mode",
+        "subject"
+      ],
+      "optional_provenance_profile": "human-decision",
+      "ordering_profile": "deterministic-json",
+      "limit_profile": "artifact-input",
+      "compatibility_profile": "json-v1-strict",
+      "fixture_families": [
+        "decision-evidence",
+        "freshness-and-subjects",
+        "compatibility"
+      ]
+    },
+    {
+      "contract_id": "artifact.test-index",
+      "category": "artifact",
+      "wire_name": "test_index",
+      "wire_format": "json",
+      "version": "1.0",
+      "definition_status": "specified",
+      "authority": "proposal/architecture/artifact-schemas.md#testindex",
+      "requirements": [
+        "REQ-12E19D70",
+        "REQ-F7CEE6D0",
+        "REQ-E451458E",
+        "REQ-72BA737C"
+      ],
+      "required_fields": [
+        "schema_version",
+        "artifact_type",
+        "project_id",
+        "subject.head_ref",
+        "subject.config_fingerprint",
+        "subject.adapter_fingerprints",
+        "tests"
+      ],
+      "optional_provenance_profile": "artifact-common",
+      "ordering_profile": "deterministic-json",
+      "limit_profile": "artifact-input",
+      "compatibility_profile": "json-v1-strict",
+      "fixture_families": [
+        "test-artifacts",
+        "adapter-jsonl",
+        "freshness-and-subjects"
+      ]
+    },
+    {
+      "contract_id": "artifact.test-execution-evidence",
+      "category": "artifact",
+      "wire_name": "test_execution_evidence",
+      "wire_format": "json",
+      "version": "1.0",
+      "definition_status": "specified",
+      "authority": "proposal/architecture/artifact-schemas.md#testexecutionevidence",
+      "requirements": [
+        "REQ-5A832396",
+        "REQ-E85A06C3"
+      ],
+      "required_fields": [
+        "schema_version",
+        "artifact_type",
+        "project_id",
+        "issuer",
+        "subject.head_ref",
+        "subject.test_index_fingerprint",
+        "subject.config_fingerprint",
+        "results"
+      ],
+      "optional_provenance_profile": "test-result",
+      "ordering_profile": "deterministic-json",
+      "limit_profile": "artifact-input",
+      "compatibility_profile": "json-v1-strict",
+      "fixture_families": [
+        "test-artifacts",
+        "decision-evidence",
+        "freshness-and-subjects"
+      ]
+    },
+    {
+      "contract_id": "artifact.qa-evidence",
+      "category": "artifact",
+      "wire_name": "qa_evidence",
+      "wire_format": "json",
+      "version": "1.0",
+      "definition_status": "specified",
+      "authority": "proposal/architecture/artifact-schemas.md#qaevidence",
+      "requirements": [
+        "REQ-CDE94D0B",
+        "REQ-C11ACC55",
+        "REQ-220945C2",
+        "REQ-E85A06C3"
+      ],
+      "required_fields": [
+        "schema_version",
+        "artifact_type",
+        "project_id",
+        "issuer",
+        "actor",
+        "decision",
+        "subject",
+        "capability_ids",
+        "manual_requirements"
+      ],
+      "optional_provenance_profile": "human-decision",
+      "ordering_profile": "deterministic-json",
+      "limit_profile": "artifact-input",
+      "compatibility_profile": "json-v1-strict",
+      "fixture_families": [
+        "decision-evidence",
+        "freshness-and-subjects"
+      ]
+    },
+    {
+      "contract_id": "artifact.governance-evidence",
+      "category": "artifact",
+      "wire_name": "governance_evidence",
+      "wire_format": "json",
+      "version": "1.0",
+      "definition_status": "required-detail-in-stage-0.2",
+      "authority": "proposal/spec/capabilities/project-initialization-and-adoption.md#req-d5a7a5df",
+      "requirements": [
+        "REQ-D5A7A5DF",
+        "REQ-220945C2",
+        "REQ-E85A06C3"
+      ],
+      "required_fields": [
+        "schema_version",
+        "artifact_type",
+        "project_id",
+        "issuer",
+        "actor",
+        "decision",
+        "subject.config_fingerprint",
+        "subject.project_scope_fingerprint",
+        "subject.from_adoption_mode",
+        "subject.to_adoption_mode"
+      ],
+      "optional_provenance_profile": "human-decision",
+      "ordering_profile": "deterministic-json",
+      "limit_profile": "artifact-input",
+      "compatibility_profile": "json-v1-strict",
+      "fixture_families": [
+        "decision-evidence",
+        "freshness-and-subjects",
+        "compatibility"
+      ]
+    },
+    {
+      "contract_id": "artifact.finding",
+      "category": "artifact",
+      "wire_name": "finding",
+      "wire_format": "json",
+      "version": "1.0",
+      "definition_status": "specified",
+      "authority": "proposal/architecture/artifact-schemas.md#finding-and-findingresolution",
+      "requirements": [
+        "REQ-DFF6BFA6",
+        "REQ-A76942A0"
+      ],
+      "required_fields": [
+        "schema_version",
+        "artifact_type",
+        "project_id",
+        "finding_id",
+        "analyzer",
+        "kind",
+        "severity",
+        "input_fingerprint",
+        "objects",
+        "sections",
+        "summary",
+        "confidence",
+        "waiver_eligible"
+      ],
+      "optional_provenance_profile": "artifact-common",
+      "ordering_profile": "deterministic-json",
+      "limit_profile": "artifact-input",
+      "compatibility_profile": "json-v1-strict",
+      "fixture_families": [
+        "finding-artifacts",
+        "freshness-and-subjects"
+      ]
+    },
+    {
+      "contract_id": "artifact.finding-resolution",
+      "category": "artifact",
+      "wire_name": "finding_resolution",
+      "wire_format": "json",
+      "version": "1.0",
+      "definition_status": "specified",
+      "authority": "proposal/architecture/artifact-schemas.md#finding-and-findingresolution",
+      "requirements": [
+        "REQ-20AAA622",
+        "REQ-FB66E5D6",
+        "REQ-ADF9965A"
+      ],
+      "required_fields": [
+        "schema_version",
+        "artifact_type",
+        "project_id",
+        "issuer",
+        "actor",
+        "finding_id",
+        "input_fingerprint",
+        "decision",
+        "reason"
+      ],
+      "optional_provenance_profile": "human-decision",
+      "ordering_profile": "deterministic-json",
+      "limit_profile": "artifact-input",
+      "compatibility_profile": "json-v1-strict",
+      "fixture_families": [
+        "finding-artifacts",
+        "freshness-and-subjects"
+      ]
+    },
+    {
+      "contract_id": "artifact.human-semantic-review-evidence",
+      "category": "artifact",
+      "wire_name": "human_semantic_review_evidence",
+      "wire_format": "json",
+      "version": "1.0",
+      "definition_status": "specified",
+      "authority": "proposal/architecture/artifact-schemas.md#humansemanticreviewevidence",
+      "requirements": [
+        "REQ-2AF962EB",
+        "REQ-BDAFD401"
+      ],
+      "required_fields": [
+        "schema_version",
+        "artifact_type",
+        "project_id",
+        "issuer",
+        "actor",
+        "decision",
+        "candidate_input_fingerprint",
+        "finding_ids"
+      ],
+      "optional_provenance_profile": "human-decision",
+      "ordering_profile": "deterministic-json",
+      "limit_profile": "artifact-input",
+      "compatibility_profile": "json-v1-strict",
+      "fixture_families": [
+        "decision-evidence",
+        "finding-artifacts",
+        "freshness-and-subjects"
+      ]
+    },
+    {
+      "contract_id": "artifact.semantic-analysis-input-manifest",
+      "category": "artifact",
+      "wire_name": "semantic_analysis_input_manifest",
+      "wire_format": "json",
+      "version": "1.0",
+      "definition_status": "required-detail-in-stage-0.2",
+      "authority": "proposal/architecture/skill.md#semantic-review",
+      "requirements": [
+        "REQ-04F23007",
+        "REQ-A76942A0",
+        "REQ-ADF9965A"
+      ],
+      "required_fields": [
+        "schema_version",
+        "artifact_type",
+        "project_id",
+        "analyzer",
+        "input_fingerprint",
+        "changed_objects",
+        "related_objects",
+        "normative_sections",
+        "candidate_reasons"
+      ],
+      "optional_provenance_profile": "artifact-common",
+      "ordering_profile": "deterministic-json",
+      "limit_profile": "artifact-input",
+      "compatibility_profile": "json-v1-strict",
+      "fixture_families": [
+        "finding-artifacts",
+        "freshness-and-subjects",
+        "compatibility"
+      ]
+    },
+    {
+      "contract_id": "artifact.conflict-report",
+      "category": "artifact",
+      "wire_name": "conflict_report",
+      "wire_format": "json",
+      "version": "1.0",
+      "definition_status": "required-detail-in-stage-0.2",
+      "authority": "proposal/architecture/artifact-schemas.md#conflictreport-and-mergereport",
+      "requirements": [
+        "REQ-A8739118",
+        "REQ-964B9F80",
+        "REQ-3B9FC7FF"
+      ],
+      "required_fields": [
+        "schema_version",
+        "artifact_type",
+        "project_id",
+        "integration_ref",
+        "branch_head",
+        "merge_base",
+        "config_fingerprint",
+        "mechanical_conflicts",
+        "semantic_candidates",
+        "input_fingerprint"
+      ],
+      "optional_provenance_profile": "artifact-common",
+      "ordering_profile": "deterministic-json",
+      "limit_profile": "artifact-input",
+      "compatibility_profile": "json-v1-strict",
+      "fixture_families": [
+        "workflow-artifacts",
+        "mode-and-gate-truth-tables",
+        "freshness-and-subjects"
+      ]
+    },
+    {
+      "contract_id": "artifact.verification-report",
+      "category": "artifact",
+      "wire_name": "verification_report",
+      "wire_format": "json",
+      "version": "1.0",
+      "definition_status": "required-detail-in-stage-0.2",
+      "authority": "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-9d265509",
+      "requirements": [
+        "REQ-9D265509",
+        "REQ-E451458E",
+        "REQ-5A832396",
+        "REQ-CDE94D0B",
+        "REQ-C11ACC55",
+        "REQ-89AFB91E"
+      ],
+      "required_fields": [
+        "schema_version",
+        "artifact_type",
+        "project_id",
+        "head_ref",
+        "integration_ref",
+        "config_fingerprint",
+        "affected_scope_fingerprint",
+        "affected_requirements",
+        "affected_capabilities",
+        "test_coverage",
+        "test_execution",
+        "manual_verification",
+        "qa_coverage",
+        "findings",
+        "status",
+        "diagnostics"
+      ],
+      "optional_provenance_profile": "artifact-common",
+      "ordering_profile": "gate-evaluation",
+      "limit_profile": "artifact-input",
+      "compatibility_profile": "gate-v1",
+      "fixture_families": [
+        "workflow-artifacts",
+        "mode-and-gate-truth-tables",
+        "test-artifacts",
+        "freshness-and-subjects"
+      ]
+    },
+    {
+      "contract_id": "artifact.merge-report",
+      "category": "artifact",
+      "wire_name": "merge_report",
+      "wire_format": "json",
+      "version": "1.0",
+      "definition_status": "required-detail-in-stage-0.2",
+      "authority": "proposal/architecture/artifact-schemas.md#conflictreport-and-mergereport",
+      "requirements": [
+        "REQ-64DB876B",
+        "REQ-BCFA15D8",
+        "REQ-E85A06C3",
+        "REQ-8E2D9A5F",
+        "REQ-3B9FC7FF",
+        "REQ-82256D82"
+      ],
+      "required_fields": [
+        "schema_version",
+        "artifact_type",
+        "project_id",
+        "integration_ref",
+        "branch_head",
+        "merge_base",
+        "config_fingerprint",
+        "mode",
+        "deltas_or_code_targets",
+        "affected_scope",
+        "test_summary",
+        "qa_summary",
+        "findings_and_evidence",
+        "adoption",
+        "diagnostics",
+        "status",
+        "input_manifest"
+      ],
+      "optional_provenance_profile": "artifact-common",
+      "ordering_profile": "gate-evaluation",
+      "limit_profile": "artifact-input",
+      "compatibility_profile": "gate-v1",
+      "fixture_families": [
+        "workflow-artifacts",
+        "mode-and-gate-truth-tables",
+        "freshness-and-subjects",
+        "compatibility"
+      ]
+    },
+    {
+      "contract_id": "adapter.jsonl-test-stream-header",
+      "category": "jsonl",
+      "wire_name": "test_stream",
+      "wire_format": "jsonl-record",
+      "version": "1.0",
+      "definition_status": "specified",
+      "authority": "proposal/architecture/test-adapters.md#normalized-discovery-protocol",
+      "requirements": [
+        "REQ-12E19D70",
+        "REQ-20F8CA5C",
+        "REQ-72BA737C"
+      ],
+      "required_fields": [
+        "schema_version",
+        "record_type=test_stream",
+        "operation",
+        "adapter_id"
+      ],
+      "optional_fields": [
+        "test_index_fingerprint"
+      ],
+      "optional_provenance_profile": "none",
+      "ordering_profile": "jsonl-normalized",
+      "limit_profile": "adapter-stream",
+      "compatibility_profile": "jsonl-v1-strict",
+      "fixture_families": [
+        "adapter-jsonl",
+        "compatibility"
+      ]
+    },
+    {
+      "contract_id": "adapter.jsonl-suite-record",
+      "category": "jsonl",
+      "wire_name": "suite",
+      "wire_format": "jsonl-record",
+      "version": "1.0",
+      "definition_status": "specified",
+      "authority": "proposal/architecture/test-adapters.md#normalized-discovery-protocol",
+      "requirements": [
+        "REQ-12E19D70",
+        "REQ-F7CEE6D0"
+      ],
+      "required_fields": [
+        "schema_version",
+        "record_type=suite",
+        "local_id",
+        "parent_id",
+        "name"
+      ],
+      "optional_provenance_profile": "none",
+      "ordering_profile": "jsonl-normalized",
+      "limit_profile": "adapter-stream",
+      "compatibility_profile": "jsonl-v1-strict",
+      "fixture_families": [
+        "adapter-jsonl"
+      ]
+    },
+    {
+      "contract_id": "adapter.jsonl-test-record",
+      "category": "jsonl",
+      "wire_name": "test",
+      "wire_format": "jsonl-record",
+      "version": "1.0",
+      "definition_status": "specified",
+      "authority": "proposal/architecture/test-adapters.md#normalized-discovery-protocol",
+      "requirements": [
+        "REQ-12E19D70",
+        "REQ-F7CEE6D0",
+        "REQ-E451458E"
+      ],
+      "required_fields": [
+        "schema_version",
+        "record_type=test",
+        "local_id",
+        "parent_id",
+        "name"
+      ],
+      "optional_fields": [
+        "source.path",
+        "source.line"
+      ],
+      "optional_provenance_profile": "none",
+      "ordering_profile": "jsonl-normalized",
+      "limit_profile": "adapter-stream",
+      "compatibility_profile": "jsonl-v1-strict",
+      "fixture_families": [
+        "adapter-jsonl"
+      ]
+    },
+    {
+      "contract_id": "adapter.jsonl-result-record",
+      "category": "jsonl",
+      "wire_name": "result",
+      "wire_format": "jsonl-record",
+      "version": "1.0",
+      "definition_status": "specified",
+      "authority": "proposal/architecture/test-adapters.md#normalized-execution-protocol",
+      "requirements": [
+        "REQ-5A832396",
+        "REQ-20F8CA5C"
+      ],
+      "required_fields": [
+        "schema_version",
+        "record_type=result",
+        "local_id",
+        "status"
+      ],
+      "optional_fields": [
+        "duration_ms"
+      ],
+      "optional_provenance_profile": "test-result",
+      "ordering_profile": "jsonl-normalized",
+      "limit_profile": "adapter-stream",
+      "compatibility_profile": "jsonl-v1-strict",
+      "fixture_families": [
+        "adapter-jsonl"
+      ]
+    },
+    {
+      "contract_id": "adapter.test-selection",
+      "category": "adapter",
+      "wire_name": "test_selection",
+      "wire_format": "json",
+      "version": "1.0",
+      "definition_status": "required-detail-in-stage-0.6",
+      "authority": "proposal/architecture/test-adapters.md#command-adapter",
+      "requirements": [
+        "REQ-20F8CA5C",
+        "REQ-72BA737C"
+      ],
+      "required_fields": [
+        "schema_version",
+        "project_id",
+        "test_index_fingerprint",
+        "test_refs"
+      ],
+      "optional_provenance_profile": "none",
+      "ordering_profile": "deterministic-json",
+      "limit_profile": "adapter-stream",
+      "compatibility_profile": "json-v1-strict",
+      "fixture_families": [
+        "adapter-jsonl"
+      ]
+    },
+    {
+      "contract_id": "adapter.command-invocation",
+      "category": "adapter",
+      "wire_name": "command_adapter",
+      "wire_format": "argv-and-environment",
+      "version": "1.0",
+      "definition_status": "specified",
+      "authority": "proposal/architecture/test-adapters.md#command-adapter",
+      "requirements": [
+        "REQ-12E19D70",
+        "REQ-20F8CA5C",
+        "REQ-1DD46CA9"
+      ],
+      "required_fields": [
+        "argv",
+        "cwd",
+        "operation",
+        "project_id",
+        "project_root",
+        "timeout_ms",
+        "max_output_bytes"
+      ],
+      "optional_fields": [
+        "test_selection_file",
+        "environment_allowlist"
+      ],
+      "optional_provenance_profile": "none",
+      "ordering_profile": "deterministic-json",
+      "limit_profile": "adapter-stream",
+      "compatibility_profile": "adapter-command-v1",
+      "fixture_families": [
+        "adapter-jsonl",
+        "security-path-process"
+      ]
+    },
+    {
+      "contract_id": "adapter.junit-import",
+      "category": "adapter",
+      "wire_name": "junit_compatible_xml",
+      "wire_format": "xml",
+      "version": "1",
+      "definition_status": "specified",
+      "authority": "proposal/architecture/test-adapters.md#junit-compatible-importer",
+      "requirements": [
+        "REQ-6D8DDDF7",
+        "REQ-12E19D70"
+      ],
+      "required_fields": [
+        "testsuite-or-testsuites",
+        "testcase.name"
+      ],
+      "optional_fields": [
+        "testsuite.nesting",
+        "testcase.classname",
+        "testcase.file",
+        "testcase.line",
+        "testcase.time",
+        "failure",
+        "error",
+        "skipped"
+      ],
+      "optional_provenance_profile": "test-result",
+      "ordering_profile": "jsonl-normalized",
+      "limit_profile": "xml-import",
+      "compatibility_profile": "junit-import-v1",
+      "fixture_families": [
+        "adapter-junit",
+        "security-path-process"
+      ]
+    },
+    {
+      "contract_id": "diagnostic.record",
+      "category": "diagnostic",
+      "wire_name": "diagnostic",
+      "wire_format": "json",
+      "version": "1.0",
+      "definition_status": "specified",
+      "authority": "proposal/architecture/artifact-schemas.md#diagnostic-contract",
+      "requirements": [
+        "REQ-7D93D64A",
+        "REQ-7C848ED0",
+        "REQ-82256D82"
+      ],
+      "required_fields": [
+        "code",
+        "severity",
+        "message",
+        "details"
+      ],
+      "optional_fields": [
+        "location.path",
+        "location.line",
+        "location.column",
+        "object_id"
+      ],
+      "namespaces": [
+        "SDD_CONFIG_*",
+        "SDD_MARKDOWN_*",
+        "SDD_ID_*",
+        "SDD_GRAPH_*",
+        "SDD_GIT_*",
+        "SDD_PATCH_*",
+        "SDD_ADAPTER_*",
+        "SDD_EVIDENCE_*",
+        "SDD_FINDING_*",
+        "SDD_GATE_*"
+      ],
+      "optional_provenance_profile": "none",
+      "ordering_profile": "diagnostic-order",
+      "limit_profile": "artifact-input",
+      "compatibility_profile": "json-v1-strict",
+      "fixture_families": [
+        "cli-and-diagnostics",
+        "compatibility"
+      ]
+    },
+    {
+      "contract_id": "fingerprint.object",
+      "category": "fingerprint",
+      "wire_name": "object_fingerprint",
+      "wire_format": "canonical-json-to-sha256",
+      "version": "1",
+      "definition_status": "specified",
+      "authority": "proposal/architecture/fingerprints-and-git.md#fingerprint-classes",
+      "requirements": [
+        "REQ-1095E571",
+        "REQ-B25091A0"
+      ],
+      "required_fields": [
+        "canonicalization_version",
+        "object_type",
+        "object_id",
+        "fingerprint_class",
+        "canonical_value"
+      ],
+      "fingerprint_classes": [
+        "semantic",
+        "structural",
+        "verification"
+      ],
+      "optional_provenance_profile": "none",
+      "ordering_profile": "deterministic-json",
+      "limit_profile": "repository-input",
+      "compatibility_profile": "fingerprint-v1",
+      "fixture_families": [
+        "fingerprint-objects",
+        "compatibility"
+      ]
+    },
+    {
+      "contract_id": "fingerprint.object-delta",
+      "category": "fingerprint",
+      "wire_name": "object_delta",
+      "wire_format": "canonical-json-to-sha256",
+      "version": "1",
+      "definition_status": "specified",
+      "authority": "proposal/architecture/fingerprints-and-git.md#change-fingerprints",
+      "requirements": [
+        "REQ-AFD65A03",
+        "REQ-B25091A0",
+        "REQ-7341DBB7"
+      ],
+      "required_fields": [
+        "operation",
+        "type",
+        "id",
+        "before-or-after-fingerprints"
+      ],
+      "operations": [
+        "add",
+        "modify",
+        "delete"
+      ],
+      "optional_provenance_profile": "none",
+      "ordering_profile": "deterministic-json",
+      "limit_profile": "repository-input",
+      "compatibility_profile": "fingerprint-v1",
+      "fixture_families": [
+        "fingerprint-deltas",
+        "mode-and-gate-truth-tables"
+      ]
+    },
+    {
+      "contract_id": "gate.proposal",
+      "category": "gate",
+      "wire_name": "proposal_gate",
+      "wire_format": "typed-operation",
+      "version": "1.0",
+      "definition_status": "specified",
+      "authority": "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-e80f09c6",
+      "requirements": [
+        "REQ-E80F09C6",
+        "REQ-E26A859E",
+        "REQ-983914F3",
+        "REQ-FB76FC6F",
+        "REQ-13CE0529"
+      ],
+      "required_fields": [
+        "project",
+        "mode",
+        "base",
+        "virtual_candidate",
+        "code_targets"
+      ],
+      "outputs": [
+        "artifact.proposal-package"
+      ],
+      "optional_provenance_profile": "none",
+      "ordering_profile": "gate-evaluation",
+      "limit_profile": "repository-input",
+      "compatibility_profile": "gate-v1",
+      "fixture_families": [
+        "mode-and-gate-truth-tables",
+        "workflow-artifacts"
+      ]
+    },
+    {
+      "contract_id": "gate.branch-preparation",
+      "category": "gate",
+      "wire_name": "branch_preparation_gate",
+      "wire_format": "typed-operation",
+      "version": "1.0",
+      "definition_status": "specified",
+      "authority": "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-a8739118",
+      "requirements": [
+        "REQ-A8739118",
+        "REQ-964B9F80",
+        "REQ-FDD51416"
+      ],
+      "required_fields": [
+        "proposal_package",
+        "approval_evidence",
+        "branch_base",
+        "current_integration_ref"
+      ],
+      "outputs": [
+        "artifact.conflict-report",
+        "artifact.spec-patch"
+      ],
+      "optional_provenance_profile": "none",
+      "ordering_profile": "gate-evaluation",
+      "limit_profile": "repository-input",
+      "compatibility_profile": "gate-v1",
+      "fixture_families": [
+        "mode-and-gate-truth-tables",
+        "workflow-artifacts",
+        "freshness-and-subjects"
+      ]
+    },
+    {
+      "contract_id": "gate.verification",
+      "category": "gate",
+      "wire_name": "verification_gate",
+      "wire_format": "typed-operation",
+      "version": "1.0",
+      "definition_status": "specified-at-behavior-level",
+      "authority": "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-9d265509",
+      "requirements": [
+        "REQ-9D265509",
+        "REQ-E451458E",
+        "REQ-5A832396",
+        "REQ-CDE94D0B",
+        "REQ-C11ACC55",
+        "REQ-89AFB91E"
+      ],
+      "required_fields": [
+        "change",
+        "branch_head",
+        "current_integration_ref",
+        "test_index",
+        "test_execution_evidence",
+        "qa_evidence",
+        "findings",
+        "resolutions"
+      ],
+      "outputs": [
+        "artifact.verification-report"
+      ],
+      "optional_provenance_profile": "none",
+      "ordering_profile": "gate-evaluation",
+      "limit_profile": "artifact-input",
+      "compatibility_profile": "gate-v1",
+      "fixture_families": [
+        "mode-and-gate-truth-tables",
+        "test-artifacts",
+        "decision-evidence",
+        "freshness-and-subjects"
+      ]
+    },
+    {
+      "contract_id": "gate.merge",
+      "category": "gate",
+      "wire_name": "merge_gate",
+      "wire_format": "typed-operation",
+      "version": "1.0",
+      "definition_status": "specified",
+      "authority": "proposal/spec/capabilities/merge-readiness.md",
+      "requirements": [
+        "REQ-64DB876B",
+        "REQ-BCFA15D8",
+        "REQ-41EDF9A3",
+        "REQ-E85A06C3",
+        "REQ-8E2D9A5F",
+        "REQ-3B9FC7FF",
+        "REQ-220945C2",
+        "REQ-82256D82",
+        "REQ-44068C1A"
+      ],
+      "required_fields": [
+        "change",
+        "proposal",
+        "approval",
+        "verification_report",
+        "qa",
+        "findings",
+        "resolutions",
+        "branch_head",
+        "current_integration_ref"
+      ],
+      "outputs": [
+        "artifact.merge-report"
+      ],
+      "status_values": [
+        "PASS",
+        "REVIEW_REQUIRED",
+        "BLOCKED"
+      ],
+      "optional_provenance_profile": "none",
+      "ordering_profile": "gate-evaluation",
+      "limit_profile": "artifact-input",
+      "compatibility_profile": "gate-v1",
+      "fixture_families": [
+        "mode-and-gate-truth-tables",
+        "workflow-artifacts",
+        "freshness-and-subjects"
+      ]
+    }
+  ],
+  "fixture_families": [
+    {
+      "fixture_family_id": "configuration",
+      "category": "configuration",
+      "planned_path": "fixtures/v1/configuration",
+      "contracts": [
+        "config.project"
+      ],
+      "requirements": [
+        "REQ-0361538D",
+        "REQ-FBB24D6C",
+        "REQ-F91F7D11",
+        "REQ-7FCCF943"
+      ],
+      "required_cases": [
+        "minimal-valid",
+        "representative-valid",
+        "duplicate-key",
+        "custom-yaml-tag",
+        "unknown-field",
+        "unknown-major",
+        "duplicate-project-id",
+        "trust-sensitive-change"
+      ]
+    },
+    {
+      "fixture_family_id": "markdown-documents",
+      "category": "markdown",
+      "planned_path": "fixtures/v1/markdown/documents",
+      "contracts": [
+        "markdown.index-document",
+        "markdown.capability-document",
+        "markdown.capability-fragment-document",
+        "markdown.requirement-block",
+        "markdown.concept-document"
+      ],
+      "requirements": [
+        "REQ-DD91AD0F",
+        "REQ-8602BF02",
+        "REQ-0EF66B28",
+        "REQ-EAC56CB1",
+        "REQ-8ACBC52D",
+        "REQ-065A9911",
+        "REQ-40A38BA1"
+      ],
+      "required_cases": [
+        "minimal-valid",
+        "representative-valid",
+        "utf8",
+        "line-ending-normalization",
+        "missing-required-marker",
+        "unknown-document-type",
+        "unknown-requirement-metadata"
+      ]
+    },
+    {
+      "fixture_family_id": "markdown-graph-invalid",
+      "category": "markdown",
+      "planned_path": "fixtures/v1/markdown/graph-invalid",
+      "contracts": [
+        "markdown.index-document",
+        "markdown.capability-document",
+        "markdown.capability-fragment-document",
+        "markdown.requirement-block",
+        "markdown.concept-document"
+      ],
+      "requirements": [
+        "REQ-8D157EBE",
+        "REQ-99605FAB",
+        "REQ-7D93D64A",
+        "REQ-13CF54D6"
+      ],
+      "required_cases": [
+        "duplicate-id",
+        "broken-link",
+        "wrong-target-type",
+        "wrong-anchor",
+        "invalid-owner",
+        "unreachable-fragment",
+        "cross-project-link",
+        "dependency-cycle-policy"
+      ]
+    },
+    {
+      "fixture_family_id": "fingerprint-objects",
+      "category": "fingerprint",
+      "planned_path": "fixtures/v1/fingerprints/objects",
+      "contracts": [
+        "markdown.requirement-block",
+        "markdown.concept-document",
+        "fingerprint.object"
+      ],
+      "requirements": [
+        "REQ-8ACBC52D",
+        "REQ-1095E571",
+        "REQ-B25091A0"
+      ],
+      "required_cases": [
+        "requirement-semantic",
+        "requirement-structural",
+        "requirement-verification",
+        "concept-semantic",
+        "concept-structural",
+        "capability-structural",
+        "format-only",
+        "title-only",
+        "path-move",
+        "unicode-normalization"
+      ]
+    },
+    {
+      "fixture_family_id": "fingerprint-deltas",
+      "category": "fingerprint",
+      "planned_path": "fixtures/v1/fingerprints/deltas",
+      "contracts": [
+        "fingerprint.object-delta",
+        "artifact.proposal-package"
+      ],
+      "requirements": [
+        "REQ-AFD65A03",
+        "REQ-B25091A0",
+        "REQ-7341DBB7"
+      ],
+      "required_cases": [
+        "add",
+        "modify",
+        "delete",
+        "mixed-sorted",
+        "semantic-only",
+        "structural-only",
+        "verification-only",
+        "explanatory-only"
+      ]
+    },
+    {
+      "fixture_family_id": "workflow-artifacts",
+      "category": "artifact",
+      "planned_path": "fixtures/v1/artifacts/workflow",
+      "contracts": [
+        "artifact.change-descriptor",
+        "artifact.candidate-tree-manifest",
+        "artifact.proposal-package",
+        "artifact.spec-patch",
+        "artifact.conflict-report",
+        "artifact.verification-report",
+        "artifact.merge-report"
+      ],
+      "requirements": [
+        "REQ-64DB876B",
+        "REQ-A3C3B779",
+        "REQ-9D265509",
+        "REQ-82256D82"
+      ],
+      "required_cases": [
+        "minimal-valid",
+        "representative-valid",
+        "missing-required-field",
+        "wrong-project",
+        "wrong-artifact-type",
+        "unknown-major",
+        "unknown-decision-field"
+      ]
+    },
+    {
+      "fixture_family_id": "decision-evidence",
+      "category": "artifact",
+      "planned_path": "fixtures/v1/artifacts/evidence",
+      "contracts": [
+        "artifact.approval-evidence",
+        "artifact.qa-evidence",
+        "artifact.governance-evidence",
+        "artifact.human-semantic-review-evidence",
+        "artifact.finding-resolution",
+        "artifact.test-execution-evidence"
+      ],
+      "requirements": [
+        "REQ-7341DBB7",
+        "REQ-CDE94D0B",
+        "REQ-C11ACC55",
+        "REQ-D5A7A5DF",
+        "REQ-20AAA622",
+        "REQ-220945C2"
+      ],
+      "required_cases": [
+        "positive",
+        "negative",
+        "contradictory",
+        "unknown-issuer",
+        "wrong-actor-shape",
+        "missing-reason",
+        "wrong-mode",
+        "wrong-subject"
+      ]
+    },
+    {
+      "fixture_family_id": "finding-artifacts",
+      "category": "artifact",
+      "planned_path": "fixtures/v1/artifacts/findings",
+      "contracts": [
+        "artifact.finding",
+        "artifact.finding-resolution",
+        "artifact.human-semantic-review-evidence",
+        "artifact.semantic-analysis-input-manifest"
+      ],
+      "requirements": [
+        "REQ-A76942A0",
+        "REQ-20AAA622",
+        "REQ-FB66E5D6",
+        "REQ-ADF9965A",
+        "REQ-2AF962EB"
+      ],
+      "required_cases": [
+        "semantic-conflict",
+        "quality-waiver-eligible",
+        "missing-object-citation",
+        "missing-section-citation",
+        "invalid-finding-id",
+        "stale-resolution",
+        "semantic-waiver-rejected",
+        "human-review-empty-findings"
+      ]
+    },
+    {
+      "fixture_family_id": "test-artifacts",
+      "category": "artifact",
+      "planned_path": "fixtures/v1/artifacts/tests",
+      "contracts": [
+        "artifact.test-index",
+        "artifact.test-execution-evidence",
+        "artifact.qa-evidence",
+        "artifact.verification-report"
+      ],
+      "requirements": [
+        "REQ-E451458E",
+        "REQ-5A832396",
+        "REQ-CDE94D0B",
+        "REQ-89AFB91E",
+        "REQ-C11ACC55"
+      ],
+      "required_cases": [
+        "complete-automated",
+        "missing-coverage",
+        "failed-mapped-test",
+        "skipped-mapped-test",
+        "missing-manual-decision",
+        "affected-capability-missing-qa",
+        "transitive-dependent"
+      ]
+    },
+    {
+      "fixture_family_id": "adapter-jsonl",
+      "category": "adapter",
+      "planned_path": "fixtures/v1/adapters/jsonl",
+      "contracts": [
+        "adapter.jsonl-test-stream-header",
+        "adapter.jsonl-suite-record",
+        "adapter.jsonl-test-record",
+        "adapter.jsonl-result-record",
+        "adapter.test-selection",
+        "adapter.command-invocation"
+      ],
+      "requirements": [
+        "REQ-12E19D70",
+        "REQ-F7CEE6D0",
+        "REQ-E451458E",
+        "REQ-5A832396",
+        "REQ-20F8CA5C",
+        "REQ-72BA737C"
+      ],
+      "required_cases": [
+        "discover-valid",
+        "execute-valid",
+        "suite-inheritance",
+        "multiple-requirements",
+        "empty-suite",
+        "forward-parent",
+        "cycle",
+        "duplicate-local-id",
+        "unknown-requirement",
+        "malformed-jsonl",
+        "truncated-stream",
+        "non-utf8",
+        "timeout",
+        "output-overflow",
+        "nonzero-exit",
+        "record-order-normalization"
+      ]
+    },
+    {
+      "fixture_family_id": "adapter-junit",
+      "category": "adapter",
+      "planned_path": "fixtures/v1/adapters/junit",
+      "contracts": [
+        "adapter.junit-import",
+        "artifact.test-index",
+        "artifact.test-execution-evidence"
+      ],
+      "requirements": [
+        "REQ-6D8DDDF7",
+        "REQ-12E19D70"
+      ],
+      "required_cases": [
+        "nested-suites",
+        "flat-report",
+        "pass-fail-skip",
+        "file-and-line",
+        "lost-hierarchy",
+        "deterministic-derived-id",
+        "malformed-xml",
+        "external-entity",
+        "depth-overflow"
+      ]
+    },
+    {
+      "fixture_family_id": "cli-and-diagnostics",
+      "category": "cli",
+      "planned_path": "fixtures/v1/cli",
+      "contracts": [
+        "cli.response-envelope",
+        "diagnostic.record"
+      ],
+      "requirements": [
+        "REQ-7C848ED0",
+        "REQ-7D93D64A",
+        "REQ-41EDF9A3"
+      ],
+      "required_cases": [
+        "json-stdout-only",
+        "human-view-equivalence",
+        "deterministic-diagnostic-order",
+        "stable-code",
+        "optional-location",
+        "exit-0",
+        "exit-1",
+        "exit-2",
+        "exit-3",
+        "crash-never-pass"
+      ]
+    },
+    {
+      "fixture_family_id": "mode-and-gate-truth-tables",
+      "category": "gate",
+      "planned_path": "fixtures/v1/gates",
+      "contracts": [
+        "gate.proposal",
+        "gate.branch-preparation",
+        "gate.verification",
+        "gate.merge"
+      ],
+      "requirements": [
+        "REQ-E26A859E",
+        "REQ-983914F3",
+        "REQ-FB76FC6F",
+        "REQ-13CE0529",
+        "REQ-7341DBB7",
+        "REQ-9D265509",
+        "REQ-BCFA15D8",
+        "REQ-8E2D9A5F"
+      ],
+      "required_cases": [
+        "spec-code-valid",
+        "spec-valid",
+        "code-valid",
+        "mode-mismatch",
+        "empty-required-delta",
+        "code-spec-drift",
+        "proposal-mechanical-block",
+        "branch-text-conflict",
+        "branch-semantic-review",
+        "verification-pass",
+        "verification-review-required",
+        "verification-blocked",
+        "merge-pass",
+        "merge-review-required",
+        "merge-blocked",
+        "technical-failure"
+      ]
+    },
+    {
+      "fixture_family_id": "freshness-and-subjects",
+      "category": "evidence",
+      "planned_path": "fixtures/v1/freshness",
+      "contracts": [
+        "artifact.approval-evidence",
+        "artifact.test-index",
+        "artifact.test-execution-evidence",
+        "artifact.qa-evidence",
+        "artifact.governance-evidence",
+        "artifact.finding",
+        "artifact.finding-resolution",
+        "artifact.conflict-report",
+        "artifact.verification-report",
+        "artifact.merge-report"
+      ],
+      "requirements": [
+        "REQ-E85A06C3",
+        "REQ-ADF9965A",
+        "REQ-3B9FC7FF",
+        "REQ-220945C2"
+      ],
+      "required_cases": [
+        "current",
+        "head-moved",
+        "integration-moved",
+        "config-changed",
+        "adapter-changed",
+        "test-index-changed",
+        "delta-changed",
+        "finding-input-changed",
+        "contradictory-evidence",
+        "replay-against-new-subject"
+      ]
+    },
+    {
+      "fixture_family_id": "security-path-process",
+      "category": "security",
+      "planned_path": "fixtures/v1/security",
+      "contracts": [
+        "artifact.spec-patch",
+        "artifact.candidate-tree-manifest",
+        "adapter.command-invocation",
+        "adapter.junit-import"
+      ],
+      "requirements": [
+        "REQ-7AFE9904",
+        "REQ-20F8CA5C",
+        "REQ-1DD46CA9"
+      ],
+      "required_cases": [
+        "relative-safe-path",
+        "absolute-path",
+        "dot-dot",
+        "nul",
+        "ambiguous-separator",
+        "reserved-device-name",
+        "case-collision",
+        "symlink-escape",
+        "junction-escape",
+        "toctou-change",
+        "shell-metacharacter-argv",
+        "xml-external-entity",
+        "atomic-interruption"
+      ]
+    },
+    {
+      "fixture_family_id": "compatibility",
+      "category": "compatibility",
+      "planned_path": "fixtures/v1/compatibility",
+      "contracts": [
+        "config.project",
+        "cli.response-envelope",
+        "artifact.change-descriptor",
+        "artifact.candidate-tree-manifest",
+        "artifact.approval-evidence",
+        "artifact.governance-evidence",
+        "artifact.semantic-analysis-input-manifest",
+        "artifact.merge-report",
+        "adapter.jsonl-test-stream-header",
+        "diagnostic.record",
+        "fingerprint.object"
+      ],
+      "requirements": [
+        "REQ-7C848ED0",
+        "REQ-F91F7D11",
+        "REQ-1095E571"
+      ],
+      "required_cases": [
+        "known-major-known-minor",
+        "known-major-new-optional-nondecision-field",
+        "known-major-unknown-decision-field",
+        "unknown-newer-major",
+        "canonicalization-version-change",
+        "cache-deletion-equivalence",
+        "cross-platform-byte-equivalence"
+      ]
+    }
+  ],
+  "consistency_assertions": [
+    {
+      "assertion_id": "unique-contract-id",
+      "rule": "Every contracts[].contract_id is unique."
+    },
+    {
+      "assertion_id": "unique-wire-name-per-category-major",
+      "rule": "No two contracts in the same category and major version use the same wire_name unless they are different JSONL record types."
+    },
+    {
+      "assertion_id": "known-profile-reference",
+      "rule": "Every compatibility, ordering, limit, and provenance profile reference resolves."
+    },
+    {
+      "assertion_id": "known-contract-reference",
+      "rule": "Every fixture contract and gate output reference resolves to contracts[].contract_id."
+    },
+    {
+      "assertion_id": "known-fixture-family-reference",
+      "rule": "Every contracts[].fixture_families entry resolves to fixture_families[].fixture_family_id."
+    },
+    {
+      "assertion_id": "known-requirement-reference",
+      "rule": "Every REQ identifier exists in proposal/spec."
+    },
+    {
+      "assertion_id": "one-version-form-per-profile",
+      "rule": "Every contract version matches the shape required by its compatibility profile."
+    },
+    {
+      "assertion_id": "decision-artifacts-are-strict",
+      "rule": "Every decision-bearing artifact uses json-v1-strict or gate-v1 compatibility."
+    },
+    {
+      "assertion_id": "fixture-family-has-cases",
+      "rule": "Every fixture family has at least one contract, Requirement, and required case."
+    }
+  ],
+  "stage_0_2_detail_queue": [
+    {
+      "contract_id": "artifact.candidate-tree-manifest",
+      "reason": "Proposal input supports a virtual manifest but its complete file-entry schema is not materialized."
+    },
+    {
+      "contract_id": "artifact.governance-evidence",
+      "reason": "Product behavior requires governance evidence but the logical artifact prose has no concrete example yet."
+    },
+    {
+      "contract_id": "artifact.conflict-report",
+      "reason": "The artifact is named and semantically described but its complete field schema is not materialized."
+    },
+    {
+      "contract_id": "artifact.verification-report",
+      "reason": "Every gate requires versioned structured output; the Verification Gate result needs its own materialized schema."
+    },
+    {
+      "contract_id": "artifact.merge-report",
+      "reason": "The artifact is named and semantically described but its complete field schema is not materialized."
+    },
+    {
+      "contract_id": "artifact.semantic-analysis-input-manifest",
+      "reason": "Semantic review requires a fingerprint-bound context manifest but its complete schema is not materialized."
+    },
+    {
+      "contract_id": "adapter.test-selection",
+      "reason": "The command protocol names the selection file but does not yet publish its complete schema."
+    }
+  ]
+}
