@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Bootstrap / Stage 0 contract fixtures
-- Current leaf: 0.2b Remaining artifact schemas
+- Current leaf: 0.2c Complete artifact fixture matrix
 - Last updated: 2026-07-30
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -117,7 +117,7 @@ the inventory without searching prose.
 
 ### 0.2 Artifact schemas
 
-- [ ] Materialize JSON Schemas for ChangeDescriptor, CandidateTreeManifest,
+- [x] Materialize JSON Schemas for ChangeDescriptor, CandidateTreeManifest,
       ProposalPackage, SpecPatch, ApprovalEvidence, TestIndex,
       TestExecutionEvidence, QAEvidence, GovernanceEvidence, Finding,
       FindingResolution, HumanSemanticReviewEvidence,
@@ -125,7 +125,7 @@ the inventory without searching prose.
       MergeReport.
 - [ ] Add valid, minimally valid, maximally representative, malformed, unknown
       major, unknown field, wrong project, and wrong subject fixtures.
-- [ ] Confirm generated schemas and TypeScript types will come from one source.
+- [x] Confirm generated schemas and TypeScript types will come from one source.
 
 Primary target Requirements:
 `REQ-64DB876B`, `REQ-7C848ED0`, `REQ-A76942A0`, `REQ-82256D82`.
@@ -137,7 +137,7 @@ Bounded leaves:
       definitions, materialize ChangeDescriptor, and add its schema and
       contextual fixture matrix. Target Requirements: `REQ-E26A859E`,
       `REQ-7341DBB7`, `REQ-64DB876B`.
-- [ ] **0.2b — Remaining artifact schemas.** Materialize the other fifteen
+- [x] **0.2b — Remaining artifact schemas.** Materialize the other fifteen
       inventory artifact schemas without adding runtime dependencies.
 - [ ] **0.2c — Complete artifact fixture matrix.** Add the required valid,
       boundary, malformed, compatibility, project, and subject cases for the
@@ -405,8 +405,8 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 0.2b — Remaining artifact schemas` is the only active implementation
-leaf. It must materialize the other fifteen inventory artifact contracts
-without changing their wire names, major versions, or Requirement mappings
-silently. Runtime schema libraries, generated TypeScript types, and CLI
-behavior remain deferred to Milestone 1.
+`Milestone 0.2c — Complete artifact fixture matrix` is the only active
+implementation leaf. It must add the required valid, boundary, malformed,
+compatibility, project, and subject cases for the fifteen newly materialized
+artifact contracts. Runtime schema libraries, generated TypeScript types, and
+CLI behavior remain deferred to Milestone 1.

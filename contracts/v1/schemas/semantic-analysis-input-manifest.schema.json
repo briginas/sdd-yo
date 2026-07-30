@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semantic-analysis-input-manifest.schema.json",
+  "title": "SDD Yo SemanticAnalysisInputManifest",
+  "description": "Version 1 fingerprint-bound semantic analysis context manifest.",
+  "type": "object",
+  "unevaluatedProperties": false,
+  "required": [
+    "analyzer",
+    "input_fingerprint",
+    "changed_objects",
+    "related_objects",
+    "normative_sections",
+    "candidate_reasons"
+  ],
+  "properties": {
+    "artifact_type": {
+      "const": "semantic_analysis_input_manifest"
+    },
+    "analyzer": {
+      "$ref": "common.schema.json#/$defs/analyzer"
+    },
+    "input_fingerprint": {
+      "$ref": "common.schema.json#/$defs/fingerprint"
+    },
+    "changed_objects": {
+      "$ref": "#/$defs/objectIds"
+    },
+    "related_objects": {
+      "$ref": "#/$defs/objectIds"
+    },
+    "normative_sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "object_id",
+          "section",
+          "content"
+        ],
+        "properties": {
+          "object_id": {
+            "$ref": "common.schema.json#/$defs/objectId"
+          },
+          "section": {
+            "enum": [
+              "statement",
+              "acceptance",
+              "constraints",
+              "definition",
+              "identity",
+              "states",
+              "relations"
+            ]
+          },
+          "content": {
+            "type": "string"
+          }
+        }
+      },
+      "x-sdd-ordering": "object_id,section"
+    },
+    "candidate_reasons": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/semanticCandidate"
+      },
+      "x-sdd-ordering": "candidate"
+    }
+  },
+  "$defs": {
+    "objectIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "common.schema.json#/$defs/objectId"
+      },
+      "x-sdd-ordering": "object_id"
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "common.schema.json#/$defs/artifactEnvelope"
+    }
+  ]
+}

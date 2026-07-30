@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "test-execution-evidence.schema.json",
+  "title": "SDD Yo TestExecutionEvidence",
+  "description": "Version 1 external executable test result evidence.",
+  "type": "object",
+  "unevaluatedProperties": false,
+  "required": [
+    "issuer",
+    "subject",
+    "results"
+  ],
+  "properties": {
+    "artifact_type": {
+      "const": "test_execution_evidence"
+    },
+    "issuer": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "head_ref",
+        "test_index_fingerprint",
+        "config_fingerprint"
+      ],
+      "properties": {
+        "head_ref": {
+          "$ref": "common.schema.json#/$defs/gitObjectId"
+        },
+        "test_index_fingerprint": {
+          "$ref": "common.schema.json#/$defs/fingerprint"
+        },
+        "config_fingerprint": {
+          "$ref": "common.schema.json#/$defs/fingerprint"
+        }
+      }
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "test_ref",
+          "status"
+        ],
+        "properties": {
+          "test_ref": {
+            "$ref": "common.schema.json#/$defs/testRef"
+          },
+          "status": {
+            "enum": [
+              "passed",
+              "failed",
+              "skipped",
+              "todo",
+              "disabled",
+              "xfailed",
+              "error"
+            ]
+          },
+          "duration_ms": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "x-sdd-ordering": "test_ref"
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "common.schema.json#/$defs/artifactEnvelope"
+    }
+  ]
+}

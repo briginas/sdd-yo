@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "proposal-package.schema.json",
+  "title": "SDD Yo ProposalPackage",
+  "description": "Version 1 deterministic Proposal Gate output.",
+  "type": "object",
+  "unevaluatedProperties": false,
+  "required": [
+    "mode",
+    "base",
+    "candidate",
+    "object_delta",
+    "diagnostics",
+    "semantic_candidates"
+  ],
+  "properties": {
+    "artifact_type": {
+      "const": "proposal_package"
+    },
+    "mode": {
+      "$ref": "common.schema.json#/$defs/mode"
+    },
+    "base": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "git_ref",
+        "tree_fingerprint"
+      ],
+      "properties": {
+        "git_ref": {
+          "$ref": "common.schema.json#/$defs/gitObjectId"
+        },
+        "tree_fingerprint": {
+          "$ref": "common.schema.json#/$defs/fingerprint"
+        }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "tree_fingerprint"
+      ],
+      "properties": {
+        "source": {
+          "enum": [
+            "directory",
+            "archive",
+            "manifest"
+          ]
+        },
+        "tree_fingerprint": {
+          "$ref": "common.schema.json#/$defs/fingerprint"
+        }
+      }
+    },
+    "object_delta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "semantic_fingerprint",
+        "structural_fingerprint",
+        "added",
+        "modified",
+        "deleted"
+      ],
+      "properties": {
+        "semantic_fingerprint": {
+          "$ref": "common.schema.json#/$defs/fingerprint"
+        },
+        "structural_fingerprint": {
+          "$ref": "common.schema.json#/$defs/fingerprint"
+        },
+        "added": {
+          "$ref": "#/$defs/objectIds"
+        },
+        "modified": {
+          "$ref": "#/$defs/objectIds"
+        },
+        "deleted": {
+          "$ref": "#/$defs/objectIds"
+        }
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/diagnostic"
+      },
+      "x-sdd-ordering": "diagnostic"
+    },
+    "semantic_candidates": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/semanticCandidate"
+      },
+      "x-sdd-ordering": "candidate"
+    }
+  },
+  "$defs": {
+    "objectIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "common.schema.json#/$defs/objectId"
+      },
+      "x-sdd-ordering": "object_id"
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "common.schema.json#/$defs/artifactEnvelope"
+    }
+  ]
+}

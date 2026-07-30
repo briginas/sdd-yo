@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "spec-patch.schema.json",
+  "title": "SDD Yo SpecPatch",
+  "description": "Version 1 exact specification file operations.",
+  "type": "object",
+  "unevaluatedProperties": false,
+  "required": [
+    "base_tree_fingerprint",
+    "result_tree_fingerprint",
+    "operations"
+  ],
+  "properties": {
+    "artifact_type": {
+      "const": "spec_patch"
+    },
+    "base_tree_fingerprint": {
+      "$ref": "common.schema.json#/$defs/fingerprint"
+    },
+    "result_tree_fingerprint": {
+      "$ref": "common.schema.json#/$defs/fingerprint"
+    },
+    "operations": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/create"
+          },
+          {
+            "$ref": "#/$defs/replace"
+          },
+          {
+            "$ref": "#/$defs/delete"
+          }
+        ]
+      },
+      "x-sdd-ordering": "path"
+    }
+  },
+  "$defs": {
+    "operationBase": {
+      "type": "object",
+      "required": [
+        "operation",
+        "path"
+      ],
+      "properties": {
+        "operation": {
+          "enum": [
+            "create",
+            "replace",
+            "delete"
+          ]
+        },
+        "path": {
+          "$ref": "common.schema.json#/$defs/projectPath"
+        }
+      }
+    },
+    "create": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/operationBase"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "operation",
+            "path",
+            "after_sha256",
+            "content_utf8"
+          ],
+          "properties": {
+            "operation": {
+              "const": "create"
+            },
+            "path": true,
+            "after_sha256": {
+              "$ref": "common.schema.json#/$defs/fingerprint"
+            },
+            "content_utf8": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "replace": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/operationBase"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "operation",
+            "path",
+            "before_sha256",
+            "after_sha256",
+            "content_utf8"
+          ],
+          "properties": {
+            "operation": {
+              "const": "replace"
+            },
+            "path": true,
+            "before_sha256": {
+              "$ref": "common.schema.json#/$defs/fingerprint"
+            },
+            "after_sha256": {
+              "$ref": "common.schema.json#/$defs/fingerprint"
+            },
+            "content_utf8": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "delete": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/operationBase"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "operation",
+            "path",
+            "before_sha256"
+          ],
+          "properties": {
+            "operation": {
+              "const": "delete"
+            },
+            "path": true,
+            "before_sha256": {
+              "$ref": "common.schema.json#/$defs/fingerprint"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "common.schema.json#/$defs/artifactEnvelope"
+    }
+  ]
+}

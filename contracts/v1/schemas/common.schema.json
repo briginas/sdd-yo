@@ -15,9 +15,45 @@
       "type": "string",
       "pattern": "^SDD-[0-9A-F]{8}$"
     },
+    "capabilityId": {
+      "type": "string",
+      "pattern": "^CAP-[0-9A-F]{8}$"
+    },
     "requirementId": {
       "type": "string",
       "pattern": "^REQ-[0-9A-F]{8}$"
+    },
+    "conceptId": {
+      "type": "string",
+      "pattern": "^CON-[0-9A-F]{8}$"
+    },
+    "objectId": {
+      "type": "string",
+      "pattern": "^(CAP|REQ|CON)-[0-9A-F]{8}$"
+    },
+    "findingId": {
+      "type": "string",
+      "pattern": "^FND-[0-9A-F]{12}$"
+    },
+    "mode": {
+      "enum": [
+        "spec-code",
+        "spec",
+        "code"
+      ]
+    },
+    "adoptionMode": {
+      "enum": [
+        "incremental",
+        "complete"
+      ]
+    },
+    "readinessStatus": {
+      "enum": [
+        "PASS",
+        "REVIEW_REQUIRED",
+        "BLOCKED"
+      ]
     },
     "fingerprint": {
       "type": "string",
@@ -31,6 +67,23 @@
       "type": "string",
       "format": "date-time",
       "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\\.[0-9]+)?Z$"
+    },
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "projectPath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(^|/)\\.\\.?(/|$))(?!.*(^|/)\\.git(/|$))[^\\\\\\u0000]+$"
+    },
+    "adapterId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{0,31}$"
+    },
+    "testRef": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{0,31}:.+$"
     },
     "producer": {
       "type": "object",
@@ -88,6 +141,119 @@
         },
         "structural": {
           "$ref": "#/$defs/fingerprint"
+        }
+      }
+    },
+    "analyzer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "version": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "sourceLocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/projectPath"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "column": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "severity",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^SDD_[A-Z0-9_]+$"
+        },
+        "severity": {
+          "enum": [
+            "info",
+            "warning",
+            "error"
+          ]
+        },
+        "message": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "location": {
+          "$ref": "#/$defs/sourceLocation"
+        },
+        "object_id": {
+          "$ref": "#/$defs/objectId"
+        },
+        "details": {
+          "type": "object"
+        }
+      }
+    },
+    "semanticCandidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "objects",
+        "reason"
+      ],
+      "properties": {
+        "objects": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/objectId"
+          },
+          "x-sdd-ordering": "object_id"
+        },
+        "reason": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "findingSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "finding_id",
+        "state"
+      ],
+      "properties": {
+        "finding_id": {
+          "$ref": "#/$defs/findingId"
+        },
+        "state": {
+          "enum": [
+            "open",
+            "resolved",
+            "stale",
+            "contradictory"
+          ]
         }
       }
     },

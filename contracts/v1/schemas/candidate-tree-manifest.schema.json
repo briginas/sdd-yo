@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "candidate-tree-manifest.schema.json",
+  "title": "SDD Yo CandidateTreeManifest",
+  "description": "Version 1 virtual candidate specification tree input.",
+  "type": "object",
+  "unevaluatedProperties": false,
+  "required": [
+    "base_tree_fingerprint",
+    "files"
+  ],
+  "properties": {
+    "artifact_type": {
+      "const": "candidate_tree_manifest"
+    },
+    "base_tree_fingerprint": {
+      "$ref": "common.schema.json#/$defs/fingerprint"
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256",
+          "content_utf8"
+        ],
+        "properties": {
+          "path": {
+            "$ref": "common.schema.json#/$defs/projectPath"
+          },
+          "sha256": {
+            "$ref": "common.schema.json#/$defs/fingerprint"
+          },
+          "content_utf8": {
+            "type": "string"
+          }
+        }
+      },
+      "uniqueItems": true,
+      "x-sdd-ordering": "path"
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "common.schema.json#/$defs/artifactEnvelope"
+    }
+  ]
+}

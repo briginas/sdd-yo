@@ -15,6 +15,27 @@ live in `common.schema.json`; artifact schemas reference them rather than
 copying their definitions. Examples omit optional fields but are otherwise
 representative.
 
+The complete version 1 artifact schema set is:
+
+| Artifact | Materialized schema |
+| --- | --- |
+| ChangeDescriptor | [`change-descriptor.schema.json`](../../contracts/v1/schemas/change-descriptor.schema.json) |
+| CandidateTreeManifest | [`candidate-tree-manifest.schema.json`](../../contracts/v1/schemas/candidate-tree-manifest.schema.json) |
+| ProposalPackage | [`proposal-package.schema.json`](../../contracts/v1/schemas/proposal-package.schema.json) |
+| SpecPatch | [`spec-patch.schema.json`](../../contracts/v1/schemas/spec-patch.schema.json) |
+| ApprovalEvidence | [`approval-evidence.schema.json`](../../contracts/v1/schemas/approval-evidence.schema.json) |
+| TestIndex | [`test-index.schema.json`](../../contracts/v1/schemas/test-index.schema.json) |
+| TestExecutionEvidence | [`test-execution-evidence.schema.json`](../../contracts/v1/schemas/test-execution-evidence.schema.json) |
+| QAEvidence | [`qa-evidence.schema.json`](../../contracts/v1/schemas/qa-evidence.schema.json) |
+| GovernanceEvidence | [`governance-evidence.schema.json`](../../contracts/v1/schemas/governance-evidence.schema.json) |
+| Finding | [`finding.schema.json`](../../contracts/v1/schemas/finding.schema.json) |
+| FindingResolution | [`finding-resolution.schema.json`](../../contracts/v1/schemas/finding-resolution.schema.json) |
+| HumanSemanticReviewEvidence | [`human-semantic-review-evidence.schema.json`](../../contracts/v1/schemas/human-semantic-review-evidence.schema.json) |
+| SemanticAnalysisInputManifest | [`semantic-analysis-input-manifest.schema.json`](../../contracts/v1/schemas/semantic-analysis-input-manifest.schema.json) |
+| ConflictReport | [`conflict-report.schema.json`](../../contracts/v1/schemas/conflict-report.schema.json) |
+| VerificationReport | [`verification-report.schema.json`](../../contracts/v1/schemas/verification-report.schema.json) |
+| MergeReport | [`merge-report.schema.json`](../../contracts/v1/schemas/merge-report.schema.json) |
+
 ## Common envelope
 
 Every external artifact uses this envelope:
@@ -75,6 +96,14 @@ A Change is transient input, not a canonical specification object:
 an active Requirement and its approved semantic and structural fingerprints.
 The descriptor does not grant approval; it only states what other evidence is
 expected to approve.
+
+## CandidateTreeManifest
+
+A virtual candidate tree contains its base tree fingerprint and a
+deterministically path-sorted set of UTF-8 files. Every file entry binds a
+project-relative path, its exact SHA-256 content hash, and its UTF-8 content.
+Duplicate paths, unsafe paths, unknown fields, and a content/hash mismatch are
+invalid; hash revalidation is a runtime check over schema-valid input.
 
 ## ProposalPackage
 
@@ -245,6 +274,21 @@ Capability coverage and manual Requirement decisions are evaluated
 independently. A general `passed` value cannot imply an omitted manual
 Requirement.
 
+## GovernanceEvidence
+
+Governance evidence records an authorized human decision to move a project
+between `incremental` and `complete` adoption. Its subject binds the
+configuration fingerprint, declared project-scope fingerprint, and exact
+before and after adoption modes. A no-op transition is invalid.
+
+## SemanticAnalysisInputManifest
+
+The semantic analysis manifest names the analyzer and binds the complete
+selected input by fingerprint. It separately lists changed objects, related
+objects, included normative section content, and the deterministic candidate
+reasons that caused each object set to be selected. The manifest is the only
+context contract for model-assisted or equivalent human semantic review.
+
 ## Finding and FindingResolution
 
 ```json
@@ -311,6 +355,11 @@ semantic problem exists.
 A ConflictReport binds integration ref, branch head, merge base, configuration,
 mechanical conflicts, deterministic semantic candidates, and their combined
 fingerprint.
+
+A VerificationReport binds the same selected project to exact head,
+integration, configuration, and affected-scope fingerprints. It reports
+affected Requirement and Capability IDs, satisfied and unsatisfied test,
+manual, and QA checks, Finding states, diagnostics, and one gate status.
 
 A MergeReport contains:
 

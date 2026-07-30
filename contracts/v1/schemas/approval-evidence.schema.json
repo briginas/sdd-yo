@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "approval-evidence.schema.json",
+  "title": "SDD Yo ApprovalEvidence",
+  "description": "Version 1 external product approval decision.",
+  "type": "object",
+  "unevaluatedProperties": false,
+  "required": [
+    "issuer",
+    "actor",
+    "decision",
+    "mode",
+    "subject"
+  ],
+  "properties": {
+    "artifact_type": {
+      "const": "approval_evidence"
+    },
+    "issuer": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "actor": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "decision": {
+      "enum": [
+        "approved",
+        "rejected"
+      ]
+    },
+    "mode": {
+      "$ref": "common.schema.json#/$defs/mode"
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "base_ref",
+        "semantic_delta_fingerprint",
+        "structural_delta_fingerprint"
+      ],
+      "properties": {
+        "base_ref": {
+          "$ref": "common.schema.json#/$defs/gitObjectId"
+        },
+        "semantic_delta_fingerprint": {
+          "$ref": "common.schema.json#/$defs/fingerprint"
+        },
+        "structural_delta_fingerprint": {
+          "$ref": "common.schema.json#/$defs/fingerprint"
+        }
+      }
+    },
+    "reason": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "common.schema.json#/$defs/artifactEnvelope"
+    }
+  ]
+}

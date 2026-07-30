@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "test-index.schema.json",
+  "title": "SDD Yo TestIndex",
+  "description": "Version 1 normalized executable test discovery snapshot.",
+  "type": "object",
+  "unevaluatedProperties": false,
+  "required": [
+    "subject",
+    "tests"
+  ],
+  "properties": {
+    "artifact_type": {
+      "const": "test_index"
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "head_ref",
+        "config_fingerprint",
+        "adapter_fingerprints"
+      ],
+      "properties": {
+        "head_ref": {
+          "$ref": "common.schema.json#/$defs/gitObjectId"
+        },
+        "config_fingerprint": {
+          "$ref": "common.schema.json#/$defs/fingerprint"
+        },
+        "adapter_fingerprints": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "$ref": "common.schema.json#/$defs/adapterId"
+          },
+          "additionalProperties": {
+            "$ref": "common.schema.json#/$defs/fingerprint"
+          },
+          "x-sdd-ordering": "adapter_id"
+        }
+      }
+    },
+    "tests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "test_ref",
+          "adapter_id",
+          "local_id",
+          "full_name",
+          "requirement_ids"
+        ],
+        "properties": {
+          "test_ref": {
+            "$ref": "common.schema.json#/$defs/testRef"
+          },
+          "adapter_id": {
+            "$ref": "common.schema.json#/$defs/adapterId"
+          },
+          "local_id": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          },
+          "full_name": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          },
+          "requirement_ids": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "$ref": "common.schema.json#/$defs/requirementId"
+            },
+            "x-sdd-ordering": "requirement_id"
+          },
+          "source": {
+            "$ref": "common.schema.json#/$defs/sourceLocation"
+          }
+        }
+      },
+      "x-sdd-ordering": "test_ref"
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "common.schema.json#/$defs/artifactEnvelope"
+    }
+  ]
+}

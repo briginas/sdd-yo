@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "finding.schema.json",
+  "title": "SDD Yo Finding",
+  "description": "Version 1 evidence-backed semantic or quality finding.",
+  "type": "object",
+  "unevaluatedProperties": false,
+  "required": [
+    "finding_id",
+    "analyzer",
+    "kind",
+    "severity",
+    "input_fingerprint",
+    "objects",
+    "sections",
+    "summary",
+    "confidence",
+    "waiver_eligible"
+  ],
+  "properties": {
+    "artifact_type": {
+      "const": "finding"
+    },
+    "finding_id": {
+      "$ref": "common.schema.json#/$defs/findingId"
+    },
+    "analyzer": {
+      "$ref": "common.schema.json#/$defs/analyzer"
+    },
+    "kind": {
+      "enum": [
+        "semantic_conflict",
+        "quality"
+      ]
+    },
+    "severity": {
+      "enum": [
+        "blocking",
+        "review"
+      ]
+    },
+    "input_fingerprint": {
+      "$ref": "common.schema.json#/$defs/fingerprint"
+    },
+    "objects": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "common.schema.json#/$defs/objectId"
+      },
+      "x-sdd-ordering": "object_id"
+    },
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "object_id",
+          "section"
+        ],
+        "properties": {
+          "object_id": {
+            "$ref": "common.schema.json#/$defs/objectId"
+          },
+          "section": {
+            "enum": [
+              "statement",
+              "acceptance",
+              "constraints",
+              "definition",
+              "identity",
+              "states",
+              "relations"
+            ]
+          }
+        }
+      },
+      "x-sdd-ordering": "object_id,section"
+    },
+    "summary": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "waiver_eligible": {
+      "type": "boolean"
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "common.schema.json#/$defs/artifactEnvelope"
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "semantic_conflict"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "waiver_eligible": {
+            "const": false
+          }
+        }
+      }
+    }
+  ]
+}

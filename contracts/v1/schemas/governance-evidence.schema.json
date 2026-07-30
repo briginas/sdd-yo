@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "governance-evidence.schema.json",
+  "title": "SDD Yo GovernanceEvidence",
+  "description": "Version 1 external project adoption transition decision.",
+  "type": "object",
+  "unevaluatedProperties": false,
+  "required": [
+    "issuer",
+    "actor",
+    "decision",
+    "subject"
+  ],
+  "properties": {
+    "artifact_type": {
+      "const": "governance_evidence"
+    },
+    "issuer": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "actor": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "decision": {
+      "enum": [
+        "approved",
+        "rejected"
+      ]
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "config_fingerprint",
+        "project_scope_fingerprint",
+        "from_adoption_mode",
+        "to_adoption_mode"
+      ],
+      "properties": {
+        "config_fingerprint": {
+          "$ref": "common.schema.json#/$defs/fingerprint"
+        },
+        "project_scope_fingerprint": {
+          "$ref": "common.schema.json#/$defs/fingerprint"
+        },
+        "from_adoption_mode": {
+          "$ref": "common.schema.json#/$defs/adoptionMode"
+        },
+        "to_adoption_mode": {
+          "$ref": "common.schema.json#/$defs/adoptionMode"
+        }
+      }
+    },
+    "reason": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "common.schema.json#/$defs/artifactEnvelope"
+    },
+    {
+      "not": {
+        "properties": {
+          "subject": {
+            "properties": {
+              "from_adoption_mode": {
+                "const": "incremental"
+              },
+              "to_adoption_mode": {
+                "const": "incremental"
+              }
+            },
+            "required": [
+              "from_adoption_mode",
+              "to_adoption_mode"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "not": {
+        "properties": {
+          "subject": {
+            "properties": {
+              "from_adoption_mode": {
+                "const": "complete"
+              },
+              "to_adoption_mode": {
+                "const": "complete"
+              }
+            },
+            "required": [
+              "from_adoption_mode",
+              "to_adoption_mode"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

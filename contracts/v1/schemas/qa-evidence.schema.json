@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "qa-evidence.schema.json",
+  "title": "SDD Yo QAEvidence",
+  "description": "Version 1 external QA and manual Requirement decision evidence.",
+  "type": "object",
+  "unevaluatedProperties": false,
+  "required": [
+    "issuer",
+    "actor",
+    "decision",
+    "subject",
+    "capability_ids",
+    "manual_requirements"
+  ],
+  "properties": {
+    "artifact_type": {
+      "const": "qa_evidence"
+    },
+    "issuer": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "actor": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "decision": {
+      "enum": [
+        "passed",
+        "failed"
+      ]
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "head_ref",
+        "integration_ref",
+        "affected_scope_fingerprint"
+      ],
+      "properties": {
+        "head_ref": {
+          "$ref": "common.schema.json#/$defs/gitObjectId"
+        },
+        "integration_ref": {
+          "$ref": "common.schema.json#/$defs/gitObjectId"
+        },
+        "affected_scope_fingerprint": {
+          "$ref": "common.schema.json#/$defs/fingerprint"
+        }
+      }
+    },
+    "capability_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "common.schema.json#/$defs/capabilityId"
+      },
+      "x-sdd-ordering": "capability_id"
+    },
+    "manual_requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "requirement_id",
+          "decision"
+        ],
+        "properties": {
+          "requirement_id": {
+            "$ref": "common.schema.json#/$defs/requirementId"
+          },
+          "decision": {
+            "enum": [
+              "passed",
+              "failed"
+            ]
+          }
+        }
+      },
+      "x-sdd-ordering": "requirement_id"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "common.schema.json#/$defs/artifactEnvelope"
+    }
+  ]
+}

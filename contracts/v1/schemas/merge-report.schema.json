@@ -1,0 +1,256 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "merge-report.schema.json",
+  "title": "SDD Yo MergeReport",
+  "description": "Version 1 deterministic Merge Gate readiness report.",
+  "type": "object",
+  "unevaluatedProperties": false,
+  "required": [
+    "integration_ref",
+    "branch_head",
+    "merge_base",
+    "config_fingerprint",
+    "mode",
+    "deltas_or_code_targets",
+    "affected_scope",
+    "test_summary",
+    "qa_summary",
+    "findings_and_evidence",
+    "adoption",
+    "diagnostics",
+    "status",
+    "input_manifest"
+  ],
+  "properties": {
+    "artifact_type": {
+      "const": "merge_report"
+    },
+    "integration_ref": {
+      "$ref": "common.schema.json#/$defs/gitObjectId"
+    },
+    "branch_head": {
+      "$ref": "common.schema.json#/$defs/gitObjectId"
+    },
+    "merge_base": {
+      "$ref": "common.schema.json#/$defs/gitObjectId"
+    },
+    "config_fingerprint": {
+      "$ref": "common.schema.json#/$defs/fingerprint"
+    },
+    "mode": {
+      "$ref": "common.schema.json#/$defs/mode"
+    },
+    "deltas_or_code_targets": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "approved_delta": {
+          "$ref": "common.schema.json#/$defs/approvedDelta"
+        },
+        "code_targets": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "common.schema.json#/$defs/codeTarget"
+          },
+          "x-sdd-ordering": "requirement_id"
+        }
+      }
+    },
+    "affected_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fingerprint",
+        "requirements",
+        "capabilities"
+      ],
+      "properties": {
+        "fingerprint": {
+          "$ref": "common.schema.json#/$defs/fingerprint"
+        },
+        "requirements": {
+          "$ref": "#/$defs/requirementIds"
+        },
+        "capabilities": {
+          "$ref": "#/$defs/capabilityIds"
+        }
+      }
+    },
+    "test_summary": {
+      "$ref": "#/$defs/checkSummary"
+    },
+    "qa_summary": {
+      "$ref": "#/$defs/checkSummary"
+    },
+    "findings_and_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "findings",
+        "evidence_status"
+      ],
+      "properties": {
+        "findings": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/findingSummary"
+          },
+          "x-sdd-ordering": "finding_id"
+        },
+        "evidence_status": {
+          "enum": [
+            "current",
+            "missing",
+            "stale",
+            "negative",
+            "contradictory"
+          ]
+        }
+      }
+    },
+    "adoption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "project_scope_fingerprint"
+      ],
+      "properties": {
+        "mode": {
+          "$ref": "common.schema.json#/$defs/adoptionMode"
+        },
+        "project_scope_fingerprint": {
+          "$ref": "common.schema.json#/$defs/fingerprint"
+        }
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/diagnostic"
+      },
+      "x-sdd-ordering": "diagnostic"
+    },
+    "status": {
+      "$ref": "common.schema.json#/$defs/readinessStatus"
+    },
+    "input_manifest": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "artifact_type",
+          "fingerprint",
+          "source"
+        ],
+        "properties": {
+          "artifact_type": {
+            "$ref": "common.schema.json#/$defs/artifactType"
+          },
+          "fingerprint": {
+            "$ref": "common.schema.json#/$defs/fingerprint"
+          },
+          "source": {
+            "oneOf": [
+              {
+                "const": "stdin"
+              },
+              {
+                "$ref": "common.schema.json#/$defs/projectPath"
+              }
+            ]
+          }
+        }
+      },
+      "x-sdd-ordering": "artifact_type,fingerprint,source"
+    }
+  },
+  "$defs": {
+    "requirementIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "common.schema.json#/$defs/requirementId"
+      },
+      "x-sdd-ordering": "requirement_id"
+    },
+    "capabilityIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "common.schema.json#/$defs/capabilityId"
+      },
+      "x-sdd-ordering": "capability_id"
+    },
+    "checkSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "satisfied",
+        "unsatisfied"
+      ],
+      "properties": {
+        "status": {
+          "$ref": "common.schema.json#/$defs/readinessStatus"
+        },
+        "satisfied": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unsatisfied": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "common.schema.json#/$defs/artifactEnvelope"
+    },
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "code"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "then": {
+        "properties": {
+          "deltas_or_code_targets": {
+            "required": [
+              "code_targets"
+            ],
+            "not": {
+              "required": [
+                "approved_delta"
+              ]
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "deltas_or_code_targets": {
+            "required": [
+              "approved_delta"
+            ],
+            "not": {
+              "required": [
+                "code_targets"
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

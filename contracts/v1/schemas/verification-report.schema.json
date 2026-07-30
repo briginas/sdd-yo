@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "verification-report.schema.json",
+  "title": "SDD Yo VerificationReport",
+  "description": "Version 1 deterministic Verification Gate output.",
+  "type": "object",
+  "unevaluatedProperties": false,
+  "required": [
+    "head_ref",
+    "integration_ref",
+    "config_fingerprint",
+    "affected_scope_fingerprint",
+    "affected_requirements",
+    "affected_capabilities",
+    "test_coverage",
+    "test_execution",
+    "manual_verification",
+    "qa_coverage",
+    "findings",
+    "status",
+    "diagnostics"
+  ],
+  "properties": {
+    "artifact_type": {
+      "const": "verification_report"
+    },
+    "head_ref": {
+      "$ref": "common.schema.json#/$defs/gitObjectId"
+    },
+    "integration_ref": {
+      "$ref": "common.schema.json#/$defs/gitObjectId"
+    },
+    "config_fingerprint": {
+      "$ref": "common.schema.json#/$defs/fingerprint"
+    },
+    "affected_scope_fingerprint": {
+      "$ref": "common.schema.json#/$defs/fingerprint"
+    },
+    "affected_requirements": {
+      "$ref": "#/$defs/requirementIds"
+    },
+    "affected_capabilities": {
+      "$ref": "#/$defs/capabilityIds"
+    },
+    "test_coverage": {
+      "$ref": "#/$defs/requirementCheck"
+    },
+    "test_execution": {
+      "$ref": "#/$defs/requirementCheck"
+    },
+    "manual_verification": {
+      "$ref": "#/$defs/requirementCheck"
+    },
+    "qa_coverage": {
+      "$ref": "#/$defs/capabilityCheck"
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/findingSummary"
+      },
+      "x-sdd-ordering": "finding_id"
+    },
+    "status": {
+      "$ref": "common.schema.json#/$defs/readinessStatus"
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/diagnostic"
+      },
+      "x-sdd-ordering": "diagnostic"
+    }
+  },
+  "$defs": {
+    "requirementIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "common.schema.json#/$defs/requirementId"
+      },
+      "x-sdd-ordering": "requirement_id"
+    },
+    "capabilityIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "common.schema.json#/$defs/capabilityId"
+      },
+      "x-sdd-ordering": "capability_id"
+    },
+    "requirementCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "satisfied",
+        "unsatisfied"
+      ],
+      "properties": {
+        "satisfied": {
+          "$ref": "#/$defs/requirementIds"
+        },
+        "unsatisfied": {
+          "$ref": "#/$defs/requirementIds"
+        }
+      }
+    },
+    "capabilityCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "satisfied",
+        "unsatisfied"
+      ],
+      "properties": {
+        "satisfied": {
+          "$ref": "#/$defs/capabilityIds"
+        },
+        "unsatisfied": {
+          "$ref": "#/$defs/capabilityIds"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "common.schema.json#/$defs/artifactEnvelope"
+    }
+  ]
+}

@@ -442,8 +442,9 @@
       "wire_name": "candidate_tree_manifest",
       "wire_format": "json",
       "version": "1.0",
-      "definition_status": "required-detail-in-stage-0.2",
-      "authority": "proposal/architecture/artifact-schemas.md#proposalpackage",
+      "definition_status": "specified",
+      "materialized_schema": "contracts/v1/schemas/candidate-tree-manifest.schema.json",
+      "authority": "proposal/architecture/artifact-schemas.md#candidatetreemanifest",
       "requirements": [
         "REQ-E80F09C6",
         "REQ-3BF12AAD"
@@ -475,6 +476,7 @@
       "wire_format": "json",
       "version": "1.0",
       "definition_status": "specified",
+      "materialized_schema": "contracts/v1/schemas/proposal-package.schema.json",
       "authority": "proposal/architecture/artifact-schemas.md#proposalpackage",
       "requirements": [
         "REQ-E80F09C6",
@@ -509,6 +511,7 @@
       "wire_format": "json",
       "version": "1.0",
       "definition_status": "specified",
+      "materialized_schema": "contracts/v1/schemas/spec-patch.schema.json",
       "authority": "proposal/architecture/artifact-schemas.md#specpatch",
       "requirements": [
         "REQ-3BF12AAD",
@@ -539,6 +542,7 @@
       "wire_format": "json",
       "version": "1.0",
       "definition_status": "specified",
+      "materialized_schema": "contracts/v1/schemas/approval-evidence.schema.json",
       "authority": "proposal/architecture/artifact-schemas.md#approvalevidence",
       "requirements": [
         "REQ-7341DBB7",
@@ -572,6 +576,7 @@
       "wire_format": "json",
       "version": "1.0",
       "definition_status": "specified",
+      "materialized_schema": "contracts/v1/schemas/test-index.schema.json",
       "authority": "proposal/architecture/artifact-schemas.md#testindex",
       "requirements": [
         "REQ-12E19D70",
@@ -605,6 +610,7 @@
       "wire_format": "json",
       "version": "1.0",
       "definition_status": "specified",
+      "materialized_schema": "contracts/v1/schemas/test-execution-evidence.schema.json",
       "authority": "proposal/architecture/artifact-schemas.md#testexecutionevidence",
       "requirements": [
         "REQ-5A832396",
@@ -637,6 +643,7 @@
       "wire_format": "json",
       "version": "1.0",
       "definition_status": "specified",
+      "materialized_schema": "contracts/v1/schemas/qa-evidence.schema.json",
       "authority": "proposal/architecture/artifact-schemas.md#qaevidence",
       "requirements": [
         "REQ-CDE94D0B",
@@ -670,8 +677,9 @@
       "wire_name": "governance_evidence",
       "wire_format": "json",
       "version": "1.0",
-      "definition_status": "required-detail-in-stage-0.2",
-      "authority": "proposal/spec/capabilities/project-initialization-and-adoption.md#req-d5a7a5df",
+      "definition_status": "specified",
+      "materialized_schema": "contracts/v1/schemas/governance-evidence.schema.json",
+      "authority": "proposal/architecture/artifact-schemas.md#governanceevidence",
       "requirements": [
         "REQ-D5A7A5DF",
         "REQ-220945C2",
@@ -706,6 +714,7 @@
       "wire_format": "json",
       "version": "1.0",
       "definition_status": "specified",
+      "materialized_schema": "contracts/v1/schemas/finding.schema.json",
       "authority": "proposal/architecture/artifact-schemas.md#finding-and-findingresolution",
       "requirements": [
         "REQ-DFF6BFA6",
@@ -742,6 +751,7 @@
       "wire_format": "json",
       "version": "1.0",
       "definition_status": "specified",
+      "materialized_schema": "contracts/v1/schemas/finding-resolution.schema.json",
       "authority": "proposal/architecture/artifact-schemas.md#finding-and-findingresolution",
       "requirements": [
         "REQ-20AAA622",
@@ -775,6 +785,7 @@
       "wire_format": "json",
       "version": "1.0",
       "definition_status": "specified",
+      "materialized_schema": "contracts/v1/schemas/human-semantic-review-evidence.schema.json",
       "authority": "proposal/architecture/artifact-schemas.md#humansemanticreviewevidence",
       "requirements": [
         "REQ-2AF962EB",
@@ -806,8 +817,9 @@
       "wire_name": "semantic_analysis_input_manifest",
       "wire_format": "json",
       "version": "1.0",
-      "definition_status": "required-detail-in-stage-0.2",
-      "authority": "proposal/architecture/skill.md#semantic-review",
+      "definition_status": "specified",
+      "materialized_schema": "contracts/v1/schemas/semantic-analysis-input-manifest.schema.json",
+      "authority": "proposal/architecture/artifact-schemas.md#semanticanalysisinputmanifest",
       "requirements": [
         "REQ-04F23007",
         "REQ-A76942A0",
@@ -840,7 +852,8 @@
       "wire_name": "conflict_report",
       "wire_format": "json",
       "version": "1.0",
-      "definition_status": "required-detail-in-stage-0.2",
+      "definition_status": "specified",
+      "materialized_schema": "contracts/v1/schemas/conflict-report.schema.json",
       "authority": "proposal/architecture/artifact-schemas.md#conflictreport-and-mergereport",
       "requirements": [
         "REQ-A8739118",
@@ -875,7 +888,8 @@
       "wire_name": "verification_report",
       "wire_format": "json",
       "version": "1.0",
-      "definition_status": "required-detail-in-stage-0.2",
+      "definition_status": "specified",
+      "materialized_schema": "contracts/v1/schemas/verification-report.schema.json",
       "authority": "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-9d265509",
       "requirements": [
         "REQ-9D265509",
@@ -920,7 +934,8 @@
       "wire_name": "merge_report",
       "wire_format": "json",
       "version": "1.0",
-      "definition_status": "required-detail-in-stage-0.2",
+      "definition_status": "specified",
+      "materialized_schema": "contracts/v1/schemas/merge-report.schema.json",
       "authority": "proposal/architecture/artifact-schemas.md#conflictreport-and-mergereport",
       "requirements": [
         "REQ-64DB876B",
@@ -1959,30 +1974,6 @@
     }
   ],
   "stage_0_2_detail_queue": [
-    {
-      "contract_id": "artifact.candidate-tree-manifest",
-      "reason": "Proposal input supports a virtual manifest but its complete file-entry schema is not materialized."
-    },
-    {
-      "contract_id": "artifact.governance-evidence",
-      "reason": "Product behavior requires governance evidence but the logical artifact prose has no concrete example yet."
-    },
-    {
-      "contract_id": "artifact.conflict-report",
-      "reason": "The artifact is named and semantically described but its complete field schema is not materialized."
-    },
-    {
-      "contract_id": "artifact.verification-report",
-      "reason": "Every gate requires versioned structured output; the Verification Gate result needs its own materialized schema."
-    },
-    {
-      "contract_id": "artifact.merge-report",
-      "reason": "The artifact is named and semantically described but its complete field schema is not materialized."
-    },
-    {
-      "contract_id": "artifact.semantic-analysis-input-manifest",
-      "reason": "Semantic review requires a fingerprint-bound context manifest but its complete schema is not materialized."
-    },
     {
       "contract_id": "adapter.test-selection",
       "reason": "The command protocol names the selection file but does not yet publish its complete schema."

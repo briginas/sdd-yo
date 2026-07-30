@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "human-semantic-review-evidence.schema.json",
+  "title": "SDD Yo HumanSemanticReviewEvidence",
+  "description": "Version 1 human review evidence for a deterministic candidate set.",
+  "type": "object",
+  "unevaluatedProperties": false,
+  "required": [
+    "issuer",
+    "actor",
+    "decision",
+    "candidate_input_fingerprint",
+    "finding_ids"
+  ],
+  "properties": {
+    "artifact_type": {
+      "const": "human_semantic_review_evidence"
+    },
+    "issuer": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "actor": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "decision": {
+      "const": "reviewed"
+    },
+    "candidate_input_fingerprint": {
+      "$ref": "common.schema.json#/$defs/fingerprint"
+    },
+    "finding_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "common.schema.json#/$defs/findingId"
+      },
+      "x-sdd-ordering": "finding_id"
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "common.schema.json#/$defs/artifactEnvelope"
+    }
+  ]
+}

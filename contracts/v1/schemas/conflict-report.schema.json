@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "conflict-report.schema.json",
+  "title": "SDD Yo ConflictReport",
+  "description": "Version 1 three-way mechanical and semantic conflict analysis.",
+  "type": "object",
+  "unevaluatedProperties": false,
+  "required": [
+    "integration_ref",
+    "branch_head",
+    "merge_base",
+    "config_fingerprint",
+    "mechanical_conflicts",
+    "semantic_candidates",
+    "input_fingerprint"
+  ],
+  "properties": {
+    "artifact_type": {
+      "const": "conflict_report"
+    },
+    "integration_ref": {
+      "$ref": "common.schema.json#/$defs/gitObjectId"
+    },
+    "branch_head": {
+      "$ref": "common.schema.json#/$defs/gitObjectId"
+    },
+    "merge_base": {
+      "$ref": "common.schema.json#/$defs/gitObjectId"
+    },
+    "config_fingerprint": {
+      "$ref": "common.schema.json#/$defs/fingerprint"
+    },
+    "mechanical_conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "kind"
+        ],
+        "properties": {
+          "path": {
+            "$ref": "common.schema.json#/$defs/projectPath"
+          },
+          "kind": {
+            "enum": [
+              "add_add",
+              "modify_modify",
+              "modify_delete",
+              "delete_modify",
+              "id_reuse"
+            ]
+          },
+          "object_id": {
+            "$ref": "common.schema.json#/$defs/objectId"
+          }
+        }
+      },
+      "x-sdd-ordering": "path,kind,object_id"
+    },
+    "semantic_candidates": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/semanticCandidate"
+      },
+      "x-sdd-ordering": "candidate"
+    },
+    "input_fingerprint": {
+      "$ref": "common.schema.json#/$defs/fingerprint"
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "common.schema.json#/$defs/artifactEnvelope"
+    }
+  ]
+}
