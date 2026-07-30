@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "change-descriptor.schema.json",
+  "title": "SDD Yo ChangeDescriptor",
+  "description": "Version 1 transient input describing an approved synchronization change.",
+  "type": "object",
+  "unevaluatedProperties": false,
+  "required": [
+    "mode",
+    "integration_ref",
+    "proposal_ref",
+    "approved_delta",
+    "code_targets"
+  ],
+  "properties": {
+    "artifact_type": {
+      "const": "change_descriptor"
+    },
+    "mode": {
+      "enum": [
+        "spec-code",
+        "spec",
+        "code"
+      ]
+    },
+    "integration_ref": {
+      "$ref": "common.schema.json#/$defs/gitObjectId"
+    },
+    "proposal_ref": {
+      "$ref": "common.schema.json#/$defs/gitObjectId"
+    },
+    "approved_delta": {
+      "$ref": "common.schema.json#/$defs/approvedDelta"
+    },
+    "code_targets": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/codeTarget"
+      },
+      "uniqueItems": true,
+      "x-sdd-ordering": "requirement_id"
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "common.schema.json#/$defs/artifactEnvelope"
+    },
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "code"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "then": {
+        "properties": {
+          "code_targets": {
+            "minItems": 1
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "code_targets": {
+            "maxItems": 0
+          }
+        }
+      }
+    }
+  ]
+}

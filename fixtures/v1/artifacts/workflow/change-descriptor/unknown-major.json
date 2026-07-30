@@ -1,0 +1,13 @@
+{
+  "schema_version": "2.0",
+  "artifact_type": "change_descriptor",
+  "project_id": "SDD-17EF8B29",
+  "mode": "spec-code",
+  "integration_ref": "refs/remotes/origin/main",
+  "proposal_ref": "refs/heads/add-export",
+  "approved_delta": {
+    "semantic": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "structural": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "code_targets": []
+}

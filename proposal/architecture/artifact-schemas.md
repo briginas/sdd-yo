@@ -2,9 +2,18 @@
 
 ## Status
 
-This document defines the version 1 logical contracts. Concrete JSON Schema
-files shall be generated from one typed source and published with the CLI.
-Examples omit optional fields but are otherwise representative.
+This document defines the version 1 logical contracts. During Stage 0,
+versioned JSON Schema files under `contracts/v1/schemas/` are the single typed
+source for external JSON artifacts. Milestone 1 shall generate TypeScript
+types from those schemas and shall verify that published schemas are
+byte-for-byte identical to the checked-in source. A later change may replace
+the authoring representation only if the generated schemas remain compatible
+and this source-of-truth rule is updated in the same change.
+
+The schemas use JSON Schema Draft 2020-12. Shared lexical and envelope values
+live in `common.schema.json`; artifact schemas reference them rather than
+copying their definitions. Examples omit optional fields but are otherwise
+representative.
 
 ## Common envelope
 

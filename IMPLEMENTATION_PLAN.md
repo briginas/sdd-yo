@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Bootstrap / Stage 0 contract fixtures
-- Current leaf: 0.2 Artifact schemas
+- Current leaf: 0.2b Remaining artifact schemas
 - Last updated: 2026-07-30
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -129,6 +129,19 @@ the inventory without searching prose.
 
 Primary target Requirements:
 `REQ-64DB876B`, `REQ-7C848ED0`, `REQ-A76942A0`, `REQ-82256D82`.
+
+Bounded leaves:
+
+- [x] **0.2a — Schema foundation and ChangeDescriptor.** Select checked-in
+      Draft 2020-12 JSON Schemas as the Stage 0 typed source, add shared
+      definitions, materialize ChangeDescriptor, and add its schema and
+      contextual fixture matrix. Target Requirements: `REQ-E26A859E`,
+      `REQ-7341DBB7`, `REQ-64DB876B`.
+- [ ] **0.2b — Remaining artifact schemas.** Materialize the other fifteen
+      inventory artifact schemas without adding runtime dependencies.
+- [ ] **0.2c — Complete artifact fixture matrix.** Add the required valid,
+      boundary, malformed, compatibility, project, and subject cases for the
+      remaining artifacts.
 
 ### 0.3 Markdown grammar fixtures
 
@@ -392,6 +405,8 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 0.2 — Artifact schemas` is the only active implementation leaf. It
-must materialize the inventory contracts without changing their wire names,
-major versions, or Requirement mappings silently.
+`Milestone 0.2b — Remaining artifact schemas` is the only active implementation
+leaf. It must materialize the other fifteen inventory artifact contracts
+without changing their wire names, major versions, or Requirement mappings
+silently. Runtime schema libraries, generated TypeScript types, and CLI
+behavior remain deferred to Milestone 1.

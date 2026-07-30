@@ -409,6 +409,7 @@
       "wire_format": "json",
       "version": "1.0",
       "definition_status": "specified",
+      "materialized_schema": "contracts/v1/schemas/change-descriptor.schema.json",
       "authority": "proposal/architecture/artifact-schemas.md#change-descriptor",
       "requirements": [
         "REQ-E26A859E",
