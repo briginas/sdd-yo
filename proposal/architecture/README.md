@@ -1,0 +1,26 @@
+# SDD Yo Architecture
+
+This set explains how the target behavior in the
+[product specification](../spec/README.md) can be implemented without turning
+implementation choices into hidden product requirements.
+
+## Architecture map
+
+- [System overview](overview.md)
+- [Markdown dialect](markdown-format.md)
+- [Project configuration](configuration.md)
+- [Fingerprints, Git comparison, and exact patches](fingerprints-and-git.md)
+- [Workflow artifacts and schemas](artifact-schemas.md)
+- [Test adapters](test-adapters.md)
+- [CLI](cli.md)
+- [Agent Skill](skill.md)
+- [Security and trust](security.md)
+- [Evals and rollout](evals-and-rollout.md)
+
+## Architectural status
+
+These documents are part of a pre-implementation package. They record the
+current chosen design, not implemented behavior. The product specification
+remains authoritative when an architecture detail and a product Requirement
+conflict.
+

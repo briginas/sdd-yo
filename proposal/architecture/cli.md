@@ -1,0 +1,220 @@
+# Command-line interface
+
+## Executable and global behavior
+
+The provisional executable is `sdd`. All commands accept:
+
+```text
+--config <path>       Select an exact .sdd/config.yaml.
+--cwd <path>          Resolve the nearest project from this directory.
+--format human|json   Select output; human is the interactive default.
+--output <path>       Write the primary artifact to a new or replaced file.
+--quiet               Suppress non-primary human diagnostics.
+```
+
+`--config` and `--cwd` are mutually exclusive. Without either, resolution
+starts at the process working directory. JSON goes to stdout unless `--output`
+is given; logs and progress go to stderr. Colors are disabled for JSON and
+when stdout is not a terminal.
+
+Every JSON response has:
+
+```json
+{
+  "schema_version": "1.0",
+  "command": "validate",
+  "project_id": "SDD-17EF8B29",
+  "status": "ok",
+  "result": {},
+  "diagnostics": []
+}
+```
+
+Arrays representing sets are deterministically sorted. Human output is a view
+over this object and is not parsed by automation.
+
+## Exit codes
+
+General commands use:
+
+- `0`: operation completed and no blocking validation diagnostic exists;
+- `1`: the requested validation or gate result is blocked;
+- `2`: a gate result requires human review;
+- `3`: invocation, configuration, I/O, protocol, or internal technical failure.
+
+`merge check` maps `PASS`, `BLOCKED`, and `REVIEW_REQUIRED` to `0`, `1`, and
+`2`. A crash, panic, uncaught exception, or incomplete result must never exit
+`0`.
+
+## Commands
+
+### `sdd init`
+
+```text
+sdd init [--root <path>] [--spec-path <path>] [--adoption incremental|complete]
+```
+
+Creates `.sdd/config.yaml` plus the minimal `spec/README.md`,
+`spec/capabilities/`, and `spec/concepts/` structure. It refuses to overwrite
+existing files unless a future explicit migration command owns that behavior.
+The generated project and initial object IDs are cryptographically random.
+
+### `sdd id`
+
+```text
+sdd id project|capability|requirement|concept [--count <n>]
+```
+
+Generates uppercase random IDs and checks the selected repository's complete
+Git history when a project resolves. Without a project it can generate
+candidates but marks historical uniqueness as unchecked.
+
+### `sdd validate`
+
+```text
+sdd validate [--ref <git-ref>] [--history-ref <git-ref>] [--changed-from <git-ref>]
+```
+
+Parses configuration and specification, resolves the graph, validates
+identities and links, checks historical reuse, and computes fingerprints.
+`--changed-from` additionally reports an object delta.
+
+### `sdd inspect`
+
+```text
+sdd inspect <CAP-ID|REQ-ID|CON-ID> [--ref <git-ref>] [--include explanatory]
+```
+
+Returns the typed object, owning document, normative sections, relations,
+reverse relations, and fingerprints.
+
+### `sdd trace`
+
+```text
+sdd trace <CAP-ID|REQ-ID|CON-ID> [--ref <git-ref>] [--test-index <path>]
+```
+
+Returns graph ancestry, dependencies, dependents, referring objects, and
+mapped tests when an index is supplied. It does not run tests.
+
+### `sdd diff`
+
+```text
+sdd diff --base <git-ref-or-tree> --target <git-ref-or-tree>
+```
+
+Produces semantic, structural, and verification object deltas plus
+deterministic semantic-review candidates. A tree may be a Git ref or an
+explicit candidate directory/manifest.
+
+### `sdd proposal validate`
+
+```text
+sdd proposal validate --mode spec-code|spec|code --base <git-ref> \
+  --candidate <path> [--code-target <REQ-ID> ...]
+```
+
+Evaluates Proposal Gate and emits a `ProposalPackage`. `code` mode requires
+targets and unchanged candidate specification. Other modes require the
+appropriate non-empty object delta.
+
+### `sdd proposal prepare`
+
+```text
+sdd proposal prepare --package <path> --branch-base <git-ref> \
+  [--integration-ref <git-ref>]
+```
+
+Performs three-way analysis and emits a ConflictReport plus an exact
+`SpecPatch`. It reads refs and worktree state but does not write them.
+
+### `sdd proposal apply`
+
+```text
+sdd proposal apply --patch <path> [--worktree <path>]
+```
+
+This is the only specification write operation after initialization. It
+verifies config scope, path and symlink safety, all before-hashes, target
+uniqueness, the whole candidate result, and then applies atomically. It
+creates no commit and has no fuzzy, force, or partial mode.
+
+### `sdd tests discover`
+
+```text
+sdd tests discover --head <git-ref> [--adapter <id> ...] \
+  [--import-junit <path> ...] [--import-jsonl <path> ...]
+```
+
+Runs or imports configured discovery protocols and emits a normalized
+`TestIndex`. Command execution remains subject to host permission policy.
+
+### `sdd findings validate`
+
+```text
+sdd findings validate --input-manifest <path> --findings <path> \
+  [--resolutions <path> ...]
+```
+
+Validates finding schemas, deterministic IDs, cited objects/sections, input
+fingerprints, decision eligibility, and resolution freshness. It does not call
+a model or make a human decision.
+
+### `sdd merge check`
+
+```text
+sdd merge check --change <path> --approval <path> \
+  --test-index <path> --test-evidence <path> ... --qa <path> ... \
+  [--findings <path>] [--resolutions <path> ...] \
+  [--human-semantic-review <path>]
+```
+
+Resolves the current configured integration ref and declared branch head,
+recomputes conflict and affected scope, validates all evidence, and returns a
+`MergeReport`. It never modifies Git or hosting state.
+
+## Input rules
+
+- `-` means standard input only where the command has one unambiguous artifact
+  input.
+- Relative paths resolve from project root after config discovery.
+- Refs are resolved once at command start and reported as object IDs.
+- Candidate directories are read as immutable snapshots; a change during the
+  command causes a technical failure.
+- Size, count, depth, and command time limits come from configuration.
+- Secrets and unrestricted environment dumps are never emitted.
+
+## Diagnostic stability
+
+Diagnostics use namespaces such as:
+
+```text
+SDD_CONFIG_*
+SDD_MARKDOWN_*
+SDD_ID_*
+SDD_GRAPH_*
+SDD_GIT_*
+SDD_PATCH_*
+SDD_ADAPTER_*
+SDD_EVIDENCE_*
+SDD_FINDING_*
+SDD_GATE_*
+```
+
+Automation branches on code, location, object ID, and structured details, not
+English message text.
+
+## Library boundary
+
+The executable is a thin adapter over a provider-neutral library. Core modules
+accept explicit bytes, typed configuration, object graphs, Git reader
+interfaces, clocks, and process runner interfaces. They do not read global
+state implicitly. This enables the CLI, CI integrations, and Agent Skill to
+share exact behavior.
+
+## Deferred commands
+
+Version 1 deliberately has no `branch`, `commit`, `push`, `merge`, `approve`,
+`qa approve`, hosted-service, daemon, or issue-tracker command. Migration,
+formatting, and repository-wide orchestration commands require separate
+requirements before addition.
