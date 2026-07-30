@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "semantic_analysis_input_manifest",
+  "project_id": "SDD-17EF8B29",
+  "created_at": "2026-07-30T16:00:00Z",
+  "producer": {
+    "name": "sdd-yo-bootstrap-fixtures",
+    "version": "0.2c"
+  },
+  "analyzer": {
+    "name": "semantic-review",
+    "version": "2.3.0"
+  },
+  "input_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "changed_objects": [
+    "REQ-1234ABCD"
+  ],
+  "related_objects": [
+    "CON-89ABCDEF",
+    "REQ-5678EFAB"
+  ],
+  "normative_sections": [
+    {
+      "object_id": "REQ-1234ABCD",
+      "section": "statement",
+      "content": "The system shall preserve exact subject identity."
+    },
+    {
+      "object_id": "REQ-5678EFAB",
+      "section": "constraints",
+      "content": "A stale subject shall not pass."
+    }
+  ],
+  "candidate_reasons": [
+    {
+      "objects": [
+        "REQ-1234ABCD",
+        "REQ-5678EFAB"
+      ],
+      "reason": "Shared state transition may prescribe incompatible outcomes."
+    }
+  ]
+}

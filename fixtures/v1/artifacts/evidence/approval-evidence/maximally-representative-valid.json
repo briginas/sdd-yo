@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "approval_evidence",
+  "project_id": "SDD-17EF8B29",
+  "created_at": "2026-07-30T16:00:00Z",
+  "producer": {
+    "name": "sdd-yo-bootstrap-fixtures",
+    "version": "0.2c"
+  },
+  "issuer": "product-review",
+  "actor": "user:42",
+  "decision": "approved",
+  "mode": "spec-code",
+  "subject": {
+    "base_ref": "4f88abc",
+    "semantic_delta_fingerprint": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "structural_delta_fingerprint": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+  },
+  "reason": "The proposed product behavior is approved."
+}

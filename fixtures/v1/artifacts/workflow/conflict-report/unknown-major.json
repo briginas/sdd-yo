@@ -1,0 +1,12 @@
+{
+  "schema_version": "2.0",
+  "artifact_type": "conflict_report",
+  "project_id": "SDD-17EF8B29",
+  "integration_ref": "base-commit",
+  "branch_head": "head-commit",
+  "merge_base": "merge-base",
+  "config_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "mechanical_conflicts": [],
+  "semantic_candidates": [],
+  "input_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+}

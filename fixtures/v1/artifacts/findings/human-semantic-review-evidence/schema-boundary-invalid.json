@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "human_semantic_review_evidence",
+  "project_id": "SDD-17EF8B29",
+  "issuer": "semantic-review",
+  "actor": "user:23",
+  "decision": "reviewed",
+  "candidate_input_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "finding_ids": [
+    "FND-1234ABCDEF12",
+    "FND-1234ABCDEF12"
+  ]
+}

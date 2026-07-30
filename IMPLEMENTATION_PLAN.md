@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Bootstrap / Stage 0 contract fixtures
-- Current leaf: 0.2c Complete artifact fixture matrix
+- Current leaf: 0.3 Markdown grammar fixtures
 - Last updated: 2026-07-30
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -123,7 +123,7 @@ the inventory without searching prose.
       FindingResolution, HumanSemanticReviewEvidence,
       SemanticAnalysisInputManifest, ConflictReport, VerificationReport, and
       MergeReport.
-- [ ] Add valid, minimally valid, maximally representative, malformed, unknown
+- [x] Add valid, minimally valid, maximally representative, malformed, unknown
       major, unknown field, wrong project, and wrong subject fixtures.
 - [x] Confirm generated schemas and TypeScript types will come from one source.
 
@@ -139,9 +139,12 @@ Bounded leaves:
       `REQ-7341DBB7`, `REQ-64DB876B`.
 - [x] **0.2b — Remaining artifact schemas.** Materialize the other fifteen
       inventory artifact schemas without adding runtime dependencies.
-- [ ] **0.2c — Complete artifact fixture matrix.** Add the required valid,
+- [x] **0.2c — Complete artifact fixture matrix.** Add the required valid,
       boundary, malformed, compatibility, project, and subject cases for the
       remaining artifacts.
+
+Artifact:
+[`fixtures/v1/artifacts/cases.json`](fixtures/v1/artifacts/cases.json).
 
 ### 0.3 Markdown grammar fixtures
 
@@ -405,8 +408,8 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 0.2c — Complete artifact fixture matrix` is the only active
-implementation leaf. It must add the required valid, boundary, malformed,
-compatibility, project, and subject cases for the fifteen newly materialized
-artifact contracts. Runtime schema libraries, generated TypeScript types, and
-CLI behavior remain deferred to Milestone 1.
+`Milestone 0.3 — Markdown grammar fixtures` is the only active implementation
+leaf. It must add golden version 1 Markdown documents and invalid grammar,
+graph, change-classification, UTF-8, and line-ending cases without adding a
+runtime parser. Runtime schema libraries, generated TypeScript types, and CLI
+behavior remain deferred to Milestone 1.

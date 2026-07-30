@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "qa_evidence",
+  "project_id": "SDD-17EF8B29",
+  "created_at": "2026-07-30T16:00:00Z",
+  "producer": {
+    "name": "sdd-yo-bootstrap-fixtures",
+    "version": "0.2c"
+  },
+  "issuer": "qa",
+  "actor": "user:84",
+  "decision": "passed",
+  "subject": {
+    "head_ref": "9aa1abc",
+    "integration_ref": "4f88abc",
+    "affected_scope_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "capability_ids": [
+    "CAP-1234ABCD",
+    "CAP-5678EFAB"
+  ],
+  "manual_requirements": [
+    {
+      "requirement_id": "REQ-1234ABCD",
+      "decision": "passed"
+    },
+    {
+      "requirement_id": "REQ-5678EFAB",
+      "decision": "failed"
+    }
+  ],
+  "notes": "One manual Requirement remains unsatisfied."
+}

@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "finding_resolution",
+  "project_id": "SDD-17EF8B29",
+  "issuer": "architecture-review",
+  "actor": "user:23",
+  "finding_id": "FND-1234ABCDEF12",
+  "input_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "decision": "dismissed",
+  "reason": ""
+}

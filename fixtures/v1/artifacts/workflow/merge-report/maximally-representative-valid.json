@@ -1,0 +1,87 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "merge_report",
+  "project_id": "SDD-17EF8B29",
+  "created_at": "2026-07-30T16:00:00Z",
+  "producer": {
+    "name": "sdd-yo-bootstrap-fixtures",
+    "version": "0.2c"
+  },
+  "integration_ref": "4f88abc",
+  "branch_head": "9aa1abc",
+  "merge_base": "31bcabc",
+  "config_fingerprint": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+  "mode": "spec-code",
+  "deltas_or_code_targets": {
+    "approved_delta": {
+      "semantic": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+      "structural": "sha256:8888888888888888888888888888888888888888888888888888888888888888"
+    }
+  },
+  "affected_scope": {
+    "fingerprint": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+    "requirements": [
+      "REQ-1234ABCD",
+      "REQ-5678EFAB"
+    ],
+    "capabilities": [
+      "CAP-1234ABCD"
+    ]
+  },
+  "test_summary": {
+    "status": "BLOCKED",
+    "satisfied": 1,
+    "unsatisfied": 1
+  },
+  "qa_summary": {
+    "status": "REVIEW_REQUIRED",
+    "satisfied": 0,
+    "unsatisfied": 1
+  },
+  "findings_and_evidence": {
+    "findings": [
+      {
+        "finding_id": "FND-1234ABCDEF12",
+        "state": "open"
+      },
+      {
+        "finding_id": "FND-ABCDEF123456",
+        "state": "contradictory"
+      }
+    ],
+    "evidence_status": "contradictory"
+  },
+  "adoption": {
+    "mode": "complete",
+    "project_scope_fingerprint": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "diagnostics": [
+    {
+      "code": "SDD_EXAMPLE_WARNING",
+      "severity": "warning",
+      "message": "Representative diagnostic.",
+      "location": {
+        "path": "spec/capabilities/example.md",
+        "line": 12,
+        "column": 3
+      },
+      "object_id": "REQ-1234ABCD",
+      "details": {
+        "source": "fixture"
+      }
+    }
+  ],
+  "status": "BLOCKED",
+  "input_manifest": [
+    {
+      "artifact_type": "approval_evidence",
+      "fingerprint": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "source": "evidence/approval.json"
+    },
+    {
+      "artifact_type": "verification_report",
+      "fingerprint": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "source": "stdin"
+    }
+  ]
+}

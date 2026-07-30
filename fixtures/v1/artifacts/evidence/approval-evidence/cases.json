@@ -1,0 +1,128 @@
+{
+  "fixture_manifest_version": "1.0",
+  "status": "bootstrap-fixture-manifest",
+  "contract_id": "artifact.approval-evidence",
+  "schema": "../../../../../contracts/v1/schemas/approval-evidence.schema.json",
+  "requirements": [
+    "REQ-7341DBB7",
+    "REQ-220945C2",
+    "REQ-E85A06C3"
+  ],
+  "context": {
+    "project_id": "SDD-17EF8B29",
+    "valid_subjects": [
+      {
+        "case": "minimal-valid.json",
+        "subject": {
+          "mode": "spec",
+          "base_ref": "base-commit",
+          "semantic_delta_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "structural_delta_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+        }
+      },
+      {
+        "case": "maximally-representative-valid.json",
+        "subject": {
+          "mode": "spec-code",
+          "base_ref": "4f88abc",
+          "semantic_delta_fingerprint": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+          "structural_delta_fingerprint": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+        }
+      },
+      {
+        "case": "schema-boundary-valid.json",
+        "subject": {
+          "mode": "spec",
+          "base_ref": "base-commit",
+          "semantic_delta_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "structural_delta_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+        }
+      }
+    ],
+    "allowed_issuers": [
+      "product-review"
+    ]
+  },
+  "cases": [
+    {
+      "path": "minimal-valid.json",
+      "parse_valid": true,
+      "schema_valid": true,
+      "context_valid": true
+    },
+    {
+      "path": "maximally-representative-valid.json",
+      "parse_valid": true,
+      "schema_valid": true,
+      "context_valid": true
+    },
+    {
+      "path": "malformed.json",
+      "parse_valid": false,
+      "schema_valid": false,
+      "context_valid": false
+    },
+    {
+      "path": "missing-required-field.json",
+      "parse_valid": true,
+      "schema_valid": false,
+      "context_valid": false
+    },
+    {
+      "path": "unknown-major.json",
+      "parse_valid": true,
+      "schema_valid": false,
+      "context_valid": false
+    },
+    {
+      "path": "unknown-field.json",
+      "parse_valid": true,
+      "schema_valid": false,
+      "context_valid": false
+    },
+    {
+      "path": "wrong-artifact-type.json",
+      "parse_valid": true,
+      "schema_valid": false,
+      "context_valid": false
+    },
+    {
+      "path": "wrong-project.json",
+      "parse_valid": true,
+      "schema_valid": true,
+      "context_valid": false,
+      "expectation": "Reject when the selected SDD Project is SDD-17EF8B29."
+    },
+    {
+      "path": "wrong-subject.json",
+      "parse_valid": true,
+      "schema_valid": true,
+      "context_valid": false,
+      "expectation": "Reject when evaluated against the manifest context."
+    },
+    {
+      "path": "schema-boundary-valid.json",
+      "parse_valid": true,
+      "schema_valid": true,
+      "context_valid": true
+    },
+    {
+      "path": "schema-boundary-invalid.json",
+      "parse_valid": true,
+      "schema_valid": false,
+      "context_valid": false
+    },
+    {
+      "path": "unknown-issuer.json",
+      "parse_valid": true,
+      "schema_valid": true,
+      "context_valid": false
+    },
+    {
+      "path": "wrong-mode-subject.json",
+      "parse_valid": true,
+      "schema_valid": true,
+      "context_valid": false
+    }
+  ]
+}

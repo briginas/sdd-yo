@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "approval_evidence",
+  "project_id": "SDD-17EF8B29",
+  "issuer": "product-review",
+  "actor": "user:42",
+  "decision": "approved",
+  "mode": "spec",
+  "subject": {
+    "base_ref": "base-commit",
+    "semantic_delta_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "structural_delta_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  }
+}

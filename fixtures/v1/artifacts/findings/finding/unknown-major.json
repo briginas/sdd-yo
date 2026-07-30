@@ -1,0 +1,25 @@
+{
+  "schema_version": "2.0",
+  "artifact_type": "finding",
+  "project_id": "SDD-17EF8B29",
+  "finding_id": "FND-1234ABCDEF12",
+  "analyzer": {
+    "name": "semantic-review",
+    "version": "1.0"
+  },
+  "kind": "semantic_conflict",
+  "severity": "blocking",
+  "input_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "objects": [
+    "REQ-1234ABCD"
+  ],
+  "sections": [
+    {
+      "object_id": "REQ-1234ABCD",
+      "section": "statement"
+    }
+  ],
+  "summary": "The Requirement conflicts with another declared outcome.",
+  "confidence": 0,
+  "waiver_eligible": false
+}

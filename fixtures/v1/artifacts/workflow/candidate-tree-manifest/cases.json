@@ -1,0 +1,103 @@
+{
+  "fixture_manifest_version": "1.0",
+  "status": "bootstrap-fixture-manifest",
+  "contract_id": "artifact.candidate-tree-manifest",
+  "schema": "../../../../../contracts/v1/schemas/candidate-tree-manifest.schema.json",
+  "requirements": [
+    "REQ-E80F09C6",
+    "REQ-3BF12AAD"
+  ],
+  "context": {
+    "project_id": "SDD-17EF8B29",
+    "valid_subjects": [
+      {
+        "case": "minimal-valid.json",
+        "subject": {
+          "base_tree_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      },
+      {
+        "case": "maximally-representative-valid.json",
+        "subject": {
+          "base_tree_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+        }
+      },
+      {
+        "case": "schema-boundary-valid.json",
+        "subject": {
+          "base_tree_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "path": "minimal-valid.json",
+      "parse_valid": true,
+      "schema_valid": true,
+      "context_valid": true
+    },
+    {
+      "path": "maximally-representative-valid.json",
+      "parse_valid": true,
+      "schema_valid": true,
+      "context_valid": true
+    },
+    {
+      "path": "malformed.json",
+      "parse_valid": false,
+      "schema_valid": false,
+      "context_valid": false
+    },
+    {
+      "path": "missing-required-field.json",
+      "parse_valid": true,
+      "schema_valid": false,
+      "context_valid": false
+    },
+    {
+      "path": "unknown-major.json",
+      "parse_valid": true,
+      "schema_valid": false,
+      "context_valid": false
+    },
+    {
+      "path": "unknown-field.json",
+      "parse_valid": true,
+      "schema_valid": false,
+      "context_valid": false
+    },
+    {
+      "path": "wrong-artifact-type.json",
+      "parse_valid": true,
+      "schema_valid": false,
+      "context_valid": false
+    },
+    {
+      "path": "wrong-project.json",
+      "parse_valid": true,
+      "schema_valid": true,
+      "context_valid": false,
+      "expectation": "Reject when the selected SDD Project is SDD-17EF8B29."
+    },
+    {
+      "path": "wrong-subject.json",
+      "parse_valid": true,
+      "schema_valid": true,
+      "context_valid": false,
+      "expectation": "Reject when evaluated against the manifest context."
+    },
+    {
+      "path": "schema-boundary-valid.json",
+      "parse_valid": true,
+      "schema_valid": true,
+      "context_valid": true
+    },
+    {
+      "path": "schema-boundary-invalid.json",
+      "parse_valid": true,
+      "schema_valid": false,
+      "context_valid": false
+    }
+  ]
+}

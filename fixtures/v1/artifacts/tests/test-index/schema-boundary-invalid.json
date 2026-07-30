@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "test_index",
+  "project_id": "SDD-17EF8B29",
+  "subject": {
+    "head_ref": "head-commit",
+    "config_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "adapter_fingerprints": {}
+  },
+  "tests": []
+}

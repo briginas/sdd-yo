@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "wrong_artifact_type",
+  "project_id": "SDD-17EF8B29",
+  "issuer": "ci",
+  "subject": {
+    "head_ref": "head-commit",
+    "test_index_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "config_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "results": []
+}

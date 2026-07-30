@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "governance_evidence",
+  "project_id": "SDD-17EF8B29",
+  "issuer": "governance",
+  "actor": "user:12",
+  "decision": "approved",
+  "subject": {
+    "config_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "project_scope_fingerprint": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "from_adoption_mode": "incremental",
+    "to_adoption_mode": "complete"
+  }
+}

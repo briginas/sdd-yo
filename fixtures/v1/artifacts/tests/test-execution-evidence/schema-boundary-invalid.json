@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "test_execution_evidence",
+  "project_id": "SDD-17EF8B29",
+  "issuer": "ci",
+  "subject": {
+    "head_ref": "head-commit",
+    "test_index_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "config_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "results": [
+    {
+      "test_ref": "unit:test-000",
+      "status": "passed",
+      "duration_ms": -1
+    }
+  ]
+}

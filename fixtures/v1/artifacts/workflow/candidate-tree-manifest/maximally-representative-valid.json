@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "candidate_tree_manifest",
+  "project_id": "SDD-17EF8B29",
+  "created_at": "2026-07-30T16:00:00Z",
+  "producer": {
+    "name": "sdd-yo-bootstrap-fixtures",
+    "version": "0.2c"
+  },
+  "base_tree_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "files": [
+    {
+      "path": "spec/capabilities/example.md",
+      "sha256": "sha256:acb8fd1be7b9375b6b0a8ae97fac484171b96ef2994ce9f580a644f711b3c177",
+      "content_utf8": "# Capability\n"
+    },
+    {
+      "path": "spec/requirements/example.md",
+      "sha256": "sha256:e7ca694007cd5c4e911ede20dd1aae435b8074a287a25d8e9586e341bbf239d4",
+      "content_utf8": "# Requirement\n"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "verification_report",
+  "project_id": "SDD-17EF8B29",
+  "head_ref": "head-commit",
+  "integration_ref": "base-commit",
+  "config_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "affected_scope_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "affected_requirements": [],
+  "affected_capabilities": [],
+  "test_coverage": {
+    "satisfied": [],
+    "unsatisfied": []
+  },
+  "test_execution": {
+    "satisfied": [],
+    "unsatisfied": []
+  },
+  "manual_verification": {
+    "satisfied": [],
+    "unsatisfied": []
+  },
+  "qa_coverage": {
+    "satisfied": [],
+    "unsatisfied": []
+  },
+  "findings": [],
+  "status": "PASS",
+  "diagnostics": [],
+  "unexpected_decision_field": true
+}

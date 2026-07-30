@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "test_execution_evidence",
+  "project_id": "SDD-17EF8B29",
+  "created_at": "2026-07-30T16:00:00Z",
+  "producer": {
+    "name": "sdd-yo-bootstrap-fixtures",
+    "version": "0.2c"
+  },
+  "issuer": "ci",
+  "subject": {
+    "head_ref": "9aa1abc",
+    "test_index_fingerprint": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "config_fingerprint": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+  },
+  "results": [
+    {
+      "test_ref": "integration:test-004",
+      "status": "failed",
+      "duration_ms": 44
+    },
+    {
+      "test_ref": "unit:test-818",
+      "status": "passed",
+      "duration_ms": 31
+    }
+  ]
+}

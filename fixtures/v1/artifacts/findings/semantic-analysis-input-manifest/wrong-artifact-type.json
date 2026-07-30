@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "wrong_artifact_type",
+  "project_id": "SDD-17EF8B29",
+  "analyzer": {
+    "name": "semantic-review",
+    "version": "1.0"
+  },
+  "input_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "changed_objects": [],
+  "related_objects": [],
+  "normative_sections": [],
+  "candidate_reasons": []
+}

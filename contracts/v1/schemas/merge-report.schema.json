@@ -154,7 +154,7 @@
             "$ref": "common.schema.json#/$defs/fingerprint"
           },
           "source": {
-            "oneOf": [
+            "anyOf": [
               {
                 "const": "stdin"
               },

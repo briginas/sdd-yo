@@ -1,0 +1,76 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "verification_report",
+  "project_id": "SDD-17EF8B29",
+  "created_at": "2026-07-30T16:00:00Z",
+  "producer": {
+    "name": "sdd-yo-bootstrap-fixtures",
+    "version": "0.2c"
+  },
+  "head_ref": "9aa1abc",
+  "integration_ref": "4f88abc",
+  "config_fingerprint": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+  "affected_scope_fingerprint": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+  "affected_requirements": [
+    "REQ-1234ABCD",
+    "REQ-5678EFAB"
+  ],
+  "affected_capabilities": [
+    "CAP-1234ABCD"
+  ],
+  "test_coverage": {
+    "satisfied": [
+      "REQ-1234ABCD"
+    ],
+    "unsatisfied": [
+      "REQ-5678EFAB"
+    ]
+  },
+  "test_execution": {
+    "satisfied": [
+      "REQ-1234ABCD"
+    ],
+    "unsatisfied": [
+      "REQ-5678EFAB"
+    ]
+  },
+  "manual_verification": {
+    "satisfied": [],
+    "unsatisfied": [
+      "REQ-5678EFAB"
+    ]
+  },
+  "qa_coverage": {
+    "satisfied": [],
+    "unsatisfied": [
+      "CAP-1234ABCD"
+    ]
+  },
+  "findings": [
+    {
+      "finding_id": "FND-1234ABCDEF12",
+      "state": "open"
+    },
+    {
+      "finding_id": "FND-ABCDEF123456",
+      "state": "resolved"
+    }
+  ],
+  "status": "BLOCKED",
+  "diagnostics": [
+    {
+      "code": "SDD_EXAMPLE_WARNING",
+      "severity": "warning",
+      "message": "Representative diagnostic.",
+      "location": {
+        "path": "spec/capabilities/example.md",
+        "line": 12,
+        "column": 3
+      },
+      "object_id": "REQ-1234ABCD",
+      "details": {
+        "source": "fixture"
+      }
+    }
+  ]
+}

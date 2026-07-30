@@ -1,0 +1,110 @@
+{
+  "fixture_manifest_version": "1.0",
+  "status": "bootstrap-fixture-manifest",
+  "contract_id": "artifact.proposal-package",
+  "schema": "../../../../../contracts/v1/schemas/proposal-package.schema.json",
+  "requirements": [
+    "REQ-E80F09C6",
+    "REQ-A3C3B779",
+    "REQ-AFD65A03"
+  ],
+  "context": {
+    "project_id": "SDD-17EF8B29",
+    "valid_subjects": [
+      {
+        "case": "minimal-valid.json",
+        "subject": {
+          "base_git_ref": "base-commit",
+          "base_tree_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "candidate_tree_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+        }
+      },
+      {
+        "case": "maximally-representative-valid.json",
+        "subject": {
+          "base_git_ref": "4f88abc",
+          "base_tree_fingerprint": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+          "candidate_tree_fingerprint": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+        }
+      },
+      {
+        "case": "schema-boundary-valid.json",
+        "subject": {
+          "base_git_ref": "base-commit",
+          "base_tree_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "candidate_tree_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "path": "minimal-valid.json",
+      "parse_valid": true,
+      "schema_valid": true,
+      "context_valid": true
+    },
+    {
+      "path": "maximally-representative-valid.json",
+      "parse_valid": true,
+      "schema_valid": true,
+      "context_valid": true
+    },
+    {
+      "path": "malformed.json",
+      "parse_valid": false,
+      "schema_valid": false,
+      "context_valid": false
+    },
+    {
+      "path": "missing-required-field.json",
+      "parse_valid": true,
+      "schema_valid": false,
+      "context_valid": false
+    },
+    {
+      "path": "unknown-major.json",
+      "parse_valid": true,
+      "schema_valid": false,
+      "context_valid": false
+    },
+    {
+      "path": "unknown-field.json",
+      "parse_valid": true,
+      "schema_valid": false,
+      "context_valid": false
+    },
+    {
+      "path": "wrong-artifact-type.json",
+      "parse_valid": true,
+      "schema_valid": false,
+      "context_valid": false
+    },
+    {
+      "path": "wrong-project.json",
+      "parse_valid": true,
+      "schema_valid": true,
+      "context_valid": false,
+      "expectation": "Reject when the selected SDD Project is SDD-17EF8B29."
+    },
+    {
+      "path": "wrong-subject.json",
+      "parse_valid": true,
+      "schema_valid": true,
+      "context_valid": false,
+      "expectation": "Reject when evaluated against the manifest context."
+    },
+    {
+      "path": "schema-boundary-valid.json",
+      "parse_valid": true,
+      "schema_valid": true,
+      "context_valid": true
+    },
+    {
+      "path": "schema-boundary-invalid.json",
+      "parse_valid": true,
+      "schema_valid": false,
+      "context_valid": false
+    }
+  ]
+}

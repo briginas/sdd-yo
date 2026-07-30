@@ -1,0 +1,8 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "spec_patch",
+  "project_id": "SDD-FFFFFFFF",
+  "base_tree_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "result_tree_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "operations": []
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "wrong_artifact_type",
+  "project_id": "SDD-17EF8B29",
+  "issuer": "qa",
+  "actor": "user:84",
+  "decision": "passed",
+  "subject": {
+    "head_ref": "head-commit",
+    "integration_ref": "base-commit",
+    "affected_scope_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "capability_ids": [],
+  "manual_requirements": []
+}

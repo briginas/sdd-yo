@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "finding",
+  "project_id": "SDD-17EF8B29",
+  "created_at": "2026-07-30T16:00:00Z",
+  "producer": {
+    "name": "sdd-yo-bootstrap-fixtures",
+    "version": "0.2c"
+  },
+  "finding_id": "FND-ABCDEF123456",
+  "analyzer": {
+    "name": "semantic-review",
+    "version": "2.3.0"
+  },
+  "kind": "quality",
+  "severity": "review",
+  "input_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "objects": [
+    "REQ-1234ABCD",
+    "REQ-5678EFAB"
+  ],
+  "sections": [
+    {
+      "object_id": "REQ-1234ABCD",
+      "section": "acceptance"
+    },
+    {
+      "object_id": "REQ-5678EFAB",
+      "section": "constraints"
+    }
+  ],
+  "summary": "Acceptance criteria leave an important boundary ambiguous.",
+  "confidence": 1,
+  "waiver_eligible": true
+}

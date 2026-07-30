@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "governance_evidence",
+  "project_id": "SDD-17EF8B29",
+  "created_at": "2026-07-30T16:00:00Z",
+  "producer": {
+    "name": "sdd-yo-bootstrap-fixtures",
+    "version": "0.2c"
+  },
+  "issuer": "governance",
+  "actor": "user:12",
+  "decision": "approved",
+  "subject": {
+    "config_fingerprint": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "project_scope_fingerprint": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+    "from_adoption_mode": "complete",
+    "to_adoption_mode": "incremental"
+  },
+  "reason": "The governed project scope changed."
+}

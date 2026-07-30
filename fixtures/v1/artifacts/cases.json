@@ -1,0 +1,162 @@
+{
+  "fixture_matrix_version": "1.0",
+  "status": "bootstrap-artifact-fixture-matrix",
+  "scope": "The fifteen artifact contracts materialized by Milestone 0.2b; ChangeDescriptor remains covered by Milestone 0.2a.",
+  "project_id": "SDD-17EF8B29",
+  "manifests": [
+    {
+      "contract_id": "artifact.candidate-tree-manifest",
+      "schema": "../../../contracts/v1/schemas/candidate-tree-manifest.schema.json",
+      "manifest": "workflow/candidate-tree-manifest/cases.json",
+      "requirements": [
+        "REQ-E80F09C6",
+        "REQ-3BF12AAD"
+      ]
+    },
+    {
+      "contract_id": "artifact.proposal-package",
+      "schema": "../../../contracts/v1/schemas/proposal-package.schema.json",
+      "manifest": "workflow/proposal-package/cases.json",
+      "requirements": [
+        "REQ-E80F09C6",
+        "REQ-A3C3B779",
+        "REQ-AFD65A03"
+      ]
+    },
+    {
+      "contract_id": "artifact.spec-patch",
+      "schema": "../../../contracts/v1/schemas/spec-patch.schema.json",
+      "manifest": "workflow/spec-patch/cases.json",
+      "requirements": [
+        "REQ-3BF12AAD",
+        "REQ-7AFE9904",
+        "REQ-964B9F80"
+      ]
+    },
+    {
+      "contract_id": "artifact.approval-evidence",
+      "schema": "../../../contracts/v1/schemas/approval-evidence.schema.json",
+      "manifest": "evidence/approval-evidence/cases.json",
+      "requirements": [
+        "REQ-7341DBB7",
+        "REQ-220945C2",
+        "REQ-E85A06C3"
+      ]
+    },
+    {
+      "contract_id": "artifact.test-index",
+      "schema": "../../../contracts/v1/schemas/test-index.schema.json",
+      "manifest": "tests/test-index/cases.json",
+      "requirements": [
+        "REQ-12E19D70",
+        "REQ-F7CEE6D0",
+        "REQ-E451458E",
+        "REQ-72BA737C"
+      ]
+    },
+    {
+      "contract_id": "artifact.test-execution-evidence",
+      "schema": "../../../contracts/v1/schemas/test-execution-evidence.schema.json",
+      "manifest": "tests/test-execution-evidence/cases.json",
+      "requirements": [
+        "REQ-5A832396",
+        "REQ-E85A06C3"
+      ]
+    },
+    {
+      "contract_id": "artifact.qa-evidence",
+      "schema": "../../../contracts/v1/schemas/qa-evidence.schema.json",
+      "manifest": "evidence/qa-evidence/cases.json",
+      "requirements": [
+        "REQ-CDE94D0B",
+        "REQ-C11ACC55",
+        "REQ-220945C2",
+        "REQ-E85A06C3"
+      ]
+    },
+    {
+      "contract_id": "artifact.governance-evidence",
+      "schema": "../../../contracts/v1/schemas/governance-evidence.schema.json",
+      "manifest": "evidence/governance-evidence/cases.json",
+      "requirements": [
+        "REQ-D5A7A5DF",
+        "REQ-220945C2",
+        "REQ-E85A06C3"
+      ]
+    },
+    {
+      "contract_id": "artifact.finding",
+      "schema": "../../../contracts/v1/schemas/finding.schema.json",
+      "manifest": "findings/finding/cases.json",
+      "requirements": [
+        "REQ-DFF6BFA6",
+        "REQ-A76942A0"
+      ]
+    },
+    {
+      "contract_id": "artifact.finding-resolution",
+      "schema": "../../../contracts/v1/schemas/finding-resolution.schema.json",
+      "manifest": "findings/finding-resolution/cases.json",
+      "requirements": [
+        "REQ-20AAA622",
+        "REQ-FB66E5D6",
+        "REQ-ADF9965A"
+      ]
+    },
+    {
+      "contract_id": "artifact.human-semantic-review-evidence",
+      "schema": "../../../contracts/v1/schemas/human-semantic-review-evidence.schema.json",
+      "manifest": "findings/human-semantic-review-evidence/cases.json",
+      "requirements": [
+        "REQ-2AF962EB",
+        "REQ-BDAFD401"
+      ]
+    },
+    {
+      "contract_id": "artifact.semantic-analysis-input-manifest",
+      "schema": "../../../contracts/v1/schemas/semantic-analysis-input-manifest.schema.json",
+      "manifest": "findings/semantic-analysis-input-manifest/cases.json",
+      "requirements": [
+        "REQ-04F23007",
+        "REQ-A76942A0",
+        "REQ-ADF9965A"
+      ]
+    },
+    {
+      "contract_id": "artifact.conflict-report",
+      "schema": "../../../contracts/v1/schemas/conflict-report.schema.json",
+      "manifest": "workflow/conflict-report/cases.json",
+      "requirements": [
+        "REQ-A8739118",
+        "REQ-964B9F80",
+        "REQ-3B9FC7FF"
+      ]
+    },
+    {
+      "contract_id": "artifact.verification-report",
+      "schema": "../../../contracts/v1/schemas/verification-report.schema.json",
+      "manifest": "workflow/verification-report/cases.json",
+      "requirements": [
+        "REQ-9D265509",
+        "REQ-E451458E",
+        "REQ-5A832396",
+        "REQ-CDE94D0B",
+        "REQ-C11ACC55",
+        "REQ-89AFB91E"
+      ]
+    },
+    {
+      "contract_id": "artifact.merge-report",
+      "schema": "../../../contracts/v1/schemas/merge-report.schema.json",
+      "manifest": "workflow/merge-report/cases.json",
+      "requirements": [
+        "REQ-64DB876B",
+        "REQ-BCFA15D8",
+        "REQ-E85A06C3",
+        "REQ-8E2D9A5F",
+        "REQ-3B9FC7FF",
+        "REQ-82256D82"
+      ]
+    }
+  ]
+}

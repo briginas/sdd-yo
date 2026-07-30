@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "merge_report",
+  "project_id": "SDD-17EF8B29",
+  "integration_ref": "base-commit",
+  "branch_head": "head-commit",
+  "merge_base": "merge-base",
+  "config_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "mode": "code",
+  "deltas_or_code_targets": {
+    "code_targets": [
+      {
+        "requirement_id": "REQ-1234ABCD",
+        "semantic_fingerprint": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "structural_fingerprint": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+      }
+    ]
+  },
+  "affected_scope": {
+    "fingerprint": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+    "requirements": [],
+    "capabilities": []
+  },
+  "test_summary": {
+    "status": "PASS",
+    "satisfied": 0,
+    "unsatisfied": 0
+  },
+  "qa_summary": {
+    "status": "PASS",
+    "satisfied": 0,
+    "unsatisfied": 0
+  },
+  "findings_and_evidence": {
+    "findings": [],
+    "evidence_status": "current"
+  },
+  "adoption": {
+    "mode": "incremental",
+    "project_scope_fingerprint": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+  },
+  "diagnostics": [],
+  "status": "PASS",
+  "input_manifest": [
+    {
+      "artifact_type": "verification_report",
+      "fingerprint": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+      "source": "stdin"
+    }
+  ]
+}

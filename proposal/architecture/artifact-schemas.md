@@ -36,6 +36,9 @@ The complete version 1 artifact schema set is:
 | VerificationReport | [`verification-report.schema.json`](../../contracts/v1/schemas/verification-report.schema.json) |
 | MergeReport | [`merge-report.schema.json`](../../contracts/v1/schemas/merge-report.schema.json) |
 
+The Stage 0 parse, schema, project, and subject cases are enumerated by the
+[`artifact fixture matrix`](../../fixtures/v1/artifacts/cases.json).
+
 ## Common envelope
 
 Every external artifact uses this envelope:
