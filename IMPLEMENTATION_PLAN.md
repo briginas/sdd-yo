@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 1 / Project scaffold and contract types
-- Current leaf: Milestone 1 project scaffold and contract types
+- Current leaf: 1.1 Direct TypeScript bootstrap verifier
 - Last updated: 2026-07-31
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -40,7 +40,7 @@ The root commit is:
 ## Fixed decisions
 
 - Implementation language: TypeScript.
-- Runtime baseline: Node.js 22+.
+- Runtime baseline: Node.js 22.18+.
 - Module system: ESM.
 - Package manager: npm.
 - CLI binary: `sdd`.
@@ -291,9 +291,21 @@ definitions.
 
 Mode: repository maintenance until a public command produces defined behavior.
 
-- [ ] Create `package.json`, lockfile, strict `tsconfig.json`, source/test
-      directories, build, typecheck, test, format-check, and fixture-check
-      scripts.
+Bounded leaves:
+
+- [ ] **1.1 — Direct TypeScript bootstrap verifier.** Add the minimum
+      `package.json`, lockfile, and strict `tsconfig.json`; pin TypeScript and
+      Node.js type definitions as development dependencies; rename
+      `scripts/verify-stage-0.mjs` to `scripts/verify-stage-0.ts`; execute it
+      directly with Node.js 22.18+ type stripping; and add exact `typecheck`
+      and Stage 0 fixture-check scripts. `tsc --noEmit`, not Node.js type
+      stripping, is authoritative for static type safety. Use ESM,
+      `erasableSyntaxOnly`, `verbatimModuleSyntax`, explicit file extensions,
+      and type-only imports. This leaf does not add product runtime code,
+      source/test directories, a test runner, formatter, build output, schema
+      validation dependencies, or public `sdd` behavior.
+- [ ] Complete the remaining scaffold: source/test directories, build, test,
+      format-check, and their exact repository scripts.
 - [ ] Select and pin the smallest dependency set after focused spikes.
 - [ ] Define branded IDs, schema versions, diagnostics, result envelopes, and
       injected platform interfaces.
@@ -475,6 +487,7 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 1 — Project scaffold and contract types` is next. Milestone 0.8 did
-not add a package manifest, TypeScript runtime, public `sdd` behavior, or
-dependency-backed Draft 2020-12 instance validation.
+`Milestone 1.1 — Direct TypeScript bootstrap verifier` is the only active
+implementation leaf. It establishes strict static checking for the existing
+bootstrap command without adding product runtime behavior or absorbing the
+remaining project scaffold.
