@@ -3,7 +3,7 @@
   "status": "bootstrap-fixture-manifest",
   "fixture_family_id": "mode-and-gate-truth-tables",
   "leaf": "0.5b",
-  "scope": "Outcome composition for Proposal, Branch Preparation, Verification, and Merge gates; evidence freshness and concrete missing, negative, or contradictory evidence combinations are deferred to Milestone 0.5c.",
+  "scope": "Outcome composition for Proposal, Branch Preparation, Verification, and Merge gates. Concrete current, stale, missing, negative, contradictory, and mode-specific evidence combinations are defined by the Milestone 0.5c freshness-and-subjects oracle.",
   "contracts": [
     "gate.proposal",
     "gate.branch-preparation",
@@ -66,12 +66,7 @@
     "review_required": "REVIEW_REQUIRED applies only when no definite violation is established and a human decision remains necessary.",
     "proposal_result": "A mechanically valid proposal emits a ProposalPackage. Semantic or quality concerns remain reviewable findings and do not turn the package into human approval.",
     "branch_result": "A clean preparation emits ConflictReport and SpecPatch. Textual conflict or a changed affected object returns REVIEW_REQUIRED without a SpecPatch.",
-    "deferred_inputs": [
-      "stale_evidence",
-      "missing_evidence",
-      "negative_evidence",
-      "contradictory_evidence"
-    ]
+    "composed_evidence_state_oracle": "fixtures/v1/freshness/cases.json"
   },
   "cases": [
     {

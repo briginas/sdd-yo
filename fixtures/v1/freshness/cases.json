@@ -1,0 +1,584 @@
+{
+  "fixture_manifest_version": "1.0",
+  "status": "bootstrap-fixture-manifest",
+  "fixture_family_id": "freshness-and-subjects",
+  "leaf": "0.5c",
+  "scope": "Decision truth tables for current, stale, missing, negative, contradictory, and mode-inapplicable evidence at Merge Gate. Inputs are abstract validated artifact states; malformed artifact shape remains covered by the Stage 0.2 artifact fixture matrix.",
+  "contracts": [
+    "artifact.approval-evidence",
+    "artifact.test-index",
+    "artifact.test-execution-evidence",
+    "artifact.qa-evidence",
+    "artifact.governance-evidence",
+    "artifact.finding",
+    "artifact.finding-resolution",
+    "artifact.conflict-report",
+    "artifact.verification-report",
+    "artifact.merge-report",
+    "gate.merge"
+  ],
+  "requirements": [
+    "REQ-E85A06C3",
+    "REQ-220945C2",
+    "REQ-8E2D9A5F",
+    "REQ-ADF9965A",
+    "REQ-3B9FC7FF"
+  ],
+  "authorities": [
+    "proposal/spec/capabilities/merge-readiness.md#req-e85a06c3",
+    "proposal/spec/capabilities/merge-readiness.md#req-8e2d9a5f",
+    "proposal/spec/capabilities/merge-readiness.md#req-3b9fc7ff",
+    "proposal/spec/capabilities/merge-readiness.md#req-220945c2",
+    "proposal/spec/capabilities/semantic-review-and-conflicts.md#req-adf9965a",
+    "proposal/architecture/artifact-schemas.md#approvalevidence",
+    "proposal/architecture/artifact-schemas.md#conflictreport-and-mergereport",
+    "proposal/architecture/security.md#git-ref-movement",
+    "proposal/architecture/cli.md#exit-codes"
+  ],
+  "oracle_semantics": {
+    "evaluation_gate": "merge",
+    "outcome_values": [
+      "PASS",
+      "REVIEW_REQUIRED",
+      "BLOCKED"
+    ],
+    "current": "A required artifact is schema-valid, has an allowed issuer where applicable, and is bound to the exact current project, refs, configuration, indexes, object inputs, mode, and affected subject.",
+    "stale": "A schema-valid artifact whose bound subject differs from the current subject is rejected and yields BLOCKED; it is never silently reused.",
+    "missing": "Missing applicable human-decision evidence yields REVIEW_REQUIRED when no definite violation exists. Missing deterministic or execution evidence is outside this leaf's human-decision matrix and remains a failed required check in the gate outcome oracle.",
+    "negative": "An applicable rejected, failed, or confirmed human decision is a definite violation and yields BLOCKED.",
+    "contradictory": "Conflicting applicable decisions for the same current subject yield BLOCKED.",
+    "not_applicable": "Evidence not required by the selected mode, affected scope, adoption transition, or open Finding set does not affect the outcome.",
+    "mode_conditions": {
+      "spec-code": "Requires current approval for an approved non-empty semantic delta.",
+      "spec": "Requires current approval for an approved non-empty semantic delta and current baseline QA.",
+      "code": "Requires empty semantic and structural specification deltas and current target Requirement fingerprints."
+    },
+    "authentication_boundary": "The CLI validates configured issuer names and subject fingerprints. Actor authentication and organizational authorization remain external and are not inferred by this oracle.",
+    "schema_fixture_boundary": "Cases assume artifacts already passed their JSON Schema. Unknown fields, malformed values, wrong projects, wrong artifact types, and missing schema fields remain in fixtures/v1/artifacts/cases.json."
+  },
+  "cases": [
+    {
+      "case_id": "current-spec-code",
+      "input": {
+        "approved_mode": "spec-code",
+        "semantic_delta": "non-empty-approved",
+        "structural_delta": "any-approved",
+        "approval": "current-approved",
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "outcome": "PASS",
+        "product_status": "PASS",
+        "cli_exit_code": 0,
+        "basis_requirements": ["REQ-E85A06C3", "REQ-8E2D9A5F"]
+      }
+    },
+    {
+      "case_id": "current-spec",
+      "input": {
+        "approved_mode": "spec",
+        "semantic_delta": "non-empty-approved",
+        "structural_delta": "any-approved",
+        "approval": "current-approved",
+        "baseline_qa": "current-passed",
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "outcome": "PASS",
+        "product_status": "PASS",
+        "cli_exit_code": 0,
+        "basis_requirements": ["REQ-E85A06C3", "REQ-220945C2", "REQ-8E2D9A5F"]
+      }
+    },
+    {
+      "case_id": "current-code",
+      "input": {
+        "approved_mode": "code",
+        "semantic_delta": "empty",
+        "structural_delta": "empty",
+        "target_requirement_fingerprints": "current",
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "outcome": "PASS",
+        "product_status": "PASS",
+        "cli_exit_code": 0,
+        "basis_requirements": ["REQ-E85A06C3", "REQ-8E2D9A5F"]
+      }
+    },
+    {
+      "case_id": "head-moved-test-index",
+      "input": {
+        "artifact": "artifact.test-index",
+        "bound_head": "previous",
+        "current_head": "moved",
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "artifact_state": "stale",
+        "accepted_for_current_subject": false,
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "cli_exit_code": 1,
+        "basis_requirements": ["REQ-E85A06C3"]
+      }
+    },
+    {
+      "case_id": "head-moved-test-execution",
+      "input": {
+        "artifact": "artifact.test-execution-evidence",
+        "bound_head": "previous",
+        "current_head": "moved",
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "artifact_state": "stale",
+        "accepted_for_current_subject": false,
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "cli_exit_code": 1,
+        "basis_requirements": ["REQ-E85A06C3"]
+      }
+    },
+    {
+      "case_id": "head-moved-qa",
+      "input": {
+        "artifact": "artifact.qa-evidence",
+        "bound_head": "previous",
+        "current_head": "moved",
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "artifact_state": "stale",
+        "accepted_for_current_subject": false,
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "cli_exit_code": 1,
+        "basis_requirements": ["REQ-E85A06C3", "REQ-220945C2"]
+      }
+    },
+    {
+      "case_id": "integration-moved-conflict-report",
+      "input": {
+        "artifact": "artifact.conflict-report",
+        "bound_integration_ref": "previous",
+        "current_integration_ref": "moved",
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "artifact_state": "stale",
+        "accepted_for_current_subject": false,
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "cli_exit_code": 1,
+        "basis_requirements": ["REQ-E85A06C3", "REQ-3B9FC7FF"]
+      }
+    },
+    {
+      "case_id": "integration-moved-qa",
+      "input": {
+        "artifact": "artifact.qa-evidence",
+        "bound_integration_ref": "previous",
+        "current_integration_ref": "moved",
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "artifact_state": "stale",
+        "accepted_for_current_subject": false,
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "cli_exit_code": 1,
+        "basis_requirements": ["REQ-E85A06C3", "REQ-220945C2"]
+      }
+    },
+    {
+      "case_id": "integration-moved-merge-report",
+      "input": {
+        "artifact": "artifact.merge-report",
+        "bound_integration_ref": "previous",
+        "current_integration_ref": "moved",
+        "reuse_attempted": true
+      },
+      "expected": {
+        "artifact_state": "stale",
+        "accepted_for_current_subject": false,
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "cli_exit_code": 1,
+        "basis_requirements": ["REQ-E85A06C3", "REQ-3B9FC7FF"]
+      }
+    },
+    {
+      "case_id": "config-changed-test-index",
+      "input": {
+        "artifact": "artifact.test-index",
+        "bound_config_fingerprint": "previous",
+        "current_config_fingerprint": "changed",
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "artifact_state": "stale",
+        "accepted_for_current_subject": false,
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "cli_exit_code": 1,
+        "basis_requirements": ["REQ-E85A06C3"]
+      }
+    },
+    {
+      "case_id": "config-changed-test-execution",
+      "input": {
+        "artifact": "artifact.test-execution-evidence",
+        "bound_config_fingerprint": "previous",
+        "current_config_fingerprint": "changed",
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "artifact_state": "stale",
+        "accepted_for_current_subject": false,
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "cli_exit_code": 1,
+        "basis_requirements": ["REQ-E85A06C3"]
+      }
+    },
+    {
+      "case_id": "config-changed-governance",
+      "input": {
+        "artifact": "artifact.governance-evidence",
+        "applicable": true,
+        "bound_config_fingerprint": "previous",
+        "current_config_fingerprint": "changed",
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "artifact_state": "stale",
+        "accepted_for_current_subject": false,
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "cli_exit_code": 1,
+        "basis_requirements": ["REQ-E85A06C3", "REQ-220945C2"]
+      }
+    },
+    {
+      "case_id": "adapter-changed-test-index",
+      "input": {
+        "artifact": "artifact.test-index",
+        "bound_adapter_fingerprint": "previous",
+        "current_adapter_fingerprint": "changed",
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "artifact_state": "stale",
+        "accepted_for_current_subject": false,
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "cli_exit_code": 1,
+        "basis_requirements": ["REQ-E85A06C3"]
+      }
+    },
+    {
+      "case_id": "adapter-changed-dependent-test-execution",
+      "input": {
+        "artifact": "artifact.test-execution-evidence",
+        "bound_test_index": "uses-previous-adapter",
+        "current_test_index": "uses-changed-adapter",
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "artifact_state": "stale",
+        "accepted_for_current_subject": false,
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "cli_exit_code": 1,
+        "basis_requirements": ["REQ-E85A06C3"]
+      }
+    },
+    {
+      "case_id": "test-index-changed-test-execution",
+      "input": {
+        "artifact": "artifact.test-execution-evidence",
+        "bound_test_index_fingerprint": "previous",
+        "current_test_index_fingerprint": "changed",
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "artifact_state": "stale",
+        "accepted_for_current_subject": false,
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "cli_exit_code": 1,
+        "basis_requirements": ["REQ-E85A06C3"]
+      }
+    },
+    {
+      "case_id": "delta-changed-approval",
+      "input": {
+        "artifact": "artifact.approval-evidence",
+        "bound_delta_fingerprints": "previous",
+        "current_delta_fingerprints": "changed",
+        "decision": "approved",
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "artifact_state": "stale",
+        "accepted_for_current_subject": false,
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "cli_exit_code": 1,
+        "basis_requirements": ["REQ-E85A06C3", "REQ-220945C2"]
+      }
+    },
+    {
+      "case_id": "finding-input-changed-resolution",
+      "input": {
+        "artifact": "artifact.finding-resolution",
+        "bound_finding_input_fingerprint": "previous",
+        "current_finding_input_fingerprint": "changed",
+        "decision": "dismissed",
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "artifact_state": "stale",
+        "accepted_for_current_subject": false,
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "cli_exit_code": 1,
+        "basis_requirements": ["REQ-E85A06C3", "REQ-ADF9965A", "REQ-220945C2"]
+      }
+    },
+    {
+      "case_id": "replay-against-new-subject",
+      "input": {
+        "artifact": "artifact.approval-evidence",
+        "bound_project_and_subject": "previous-change",
+        "current_project_and_subject": "new-change",
+        "decision": "approved",
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "artifact_state": "stale",
+        "accepted_for_current_subject": false,
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "cli_exit_code": 1,
+        "basis_requirements": ["REQ-E85A06C3", "REQ-220945C2"]
+      }
+    },
+    {
+      "case_id": "spec-code-missing-approval",
+      "input": {
+        "approved_mode": "spec-code",
+        "semantic_delta": "non-empty",
+        "approval": "missing",
+        "definite_violation": false,
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "outcome": "REVIEW_REQUIRED",
+        "product_status": "REVIEW_REQUIRED",
+        "cli_exit_code": 2,
+        "basis_requirements": ["REQ-220945C2", "REQ-8E2D9A5F"]
+      }
+    },
+    {
+      "case_id": "spec-code-rejected-approval",
+      "input": {
+        "approved_mode": "spec-code",
+        "semantic_delta": "non-empty",
+        "approval": "current-rejected",
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "cli_exit_code": 1,
+        "basis_requirements": ["REQ-220945C2", "REQ-8E2D9A5F"]
+      }
+    },
+    {
+      "case_id": "spec-missing-baseline-qa",
+      "input": {
+        "approved_mode": "spec",
+        "semantic_delta": "non-empty-approved",
+        "approval": "current-approved",
+        "baseline_qa": "missing",
+        "definite_violation": false,
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "outcome": "REVIEW_REQUIRED",
+        "product_status": "REVIEW_REQUIRED",
+        "cli_exit_code": 2,
+        "basis_requirements": ["REQ-220945C2", "REQ-8E2D9A5F"]
+      }
+    },
+    {
+      "case_id": "spec-failed-baseline-qa",
+      "input": {
+        "approved_mode": "spec",
+        "semantic_delta": "non-empty-approved",
+        "approval": "current-approved",
+        "baseline_qa": "current-failed",
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "cli_exit_code": 1,
+        "basis_requirements": ["REQ-220945C2", "REQ-8E2D9A5F"]
+      }
+    },
+    {
+      "case_id": "code-stale-target-requirement-fingerprints",
+      "input": {
+        "approved_mode": "code",
+        "semantic_delta": "empty",
+        "structural_delta": "empty",
+        "target_requirement_fingerprints": "stale",
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "cli_exit_code": 1,
+        "basis_requirements": ["REQ-E85A06C3", "REQ-8E2D9A5F"]
+      }
+    },
+    {
+      "case_id": "approval-mode-mismatch",
+      "input": {
+        "approved_mode": "spec-code",
+        "evaluated_mode": "spec",
+        "approval": "current-approved-for-approved-mode",
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "cli_exit_code": 1,
+        "basis_requirements": ["REQ-E85A06C3", "REQ-8E2D9A5F"]
+      }
+    },
+    {
+      "case_id": "applicable-governance-missing",
+      "input": {
+        "adoption_transition": "applicable",
+        "governance_evidence": "missing",
+        "definite_violation": false,
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "outcome": "REVIEW_REQUIRED",
+        "product_status": "REVIEW_REQUIRED",
+        "cli_exit_code": 2,
+        "basis_requirements": ["REQ-220945C2"]
+      }
+    },
+    {
+      "case_id": "applicable-governance-rejected",
+      "input": {
+        "adoption_transition": "applicable",
+        "governance_evidence": "current-rejected",
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "cli_exit_code": 1,
+        "basis_requirements": ["REQ-220945C2"]
+      }
+    },
+    {
+      "case_id": "applicable-finding-resolution-missing",
+      "input": {
+        "open_finding": "requires-human-decision",
+        "finding_resolution": "missing",
+        "definite_violation": false,
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "outcome": "REVIEW_REQUIRED",
+        "product_status": "REVIEW_REQUIRED",
+        "cli_exit_code": 2,
+        "basis_requirements": ["REQ-220945C2"]
+      }
+    },
+    {
+      "case_id": "applicable-finding-confirmed",
+      "input": {
+        "open_finding": "requires-human-decision",
+        "finding_resolution": "current-confirmed",
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "cli_exit_code": 1,
+        "basis_requirements": ["REQ-220945C2"]
+      }
+    },
+    {
+      "case_id": "contradictory-approval-evidence",
+      "input": {
+        "artifact": "artifact.approval-evidence",
+        "subject_relationship": "same-current-subject",
+        "decisions": ["approved", "rejected"],
+        "issuers": "configured-and-applicable",
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "artifact_state": "contradictory",
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "cli_exit_code": 1,
+        "basis_requirements": ["REQ-220945C2"]
+      }
+    },
+    {
+      "case_id": "non-applicable-evidence-absent",
+      "input": {
+        "adoption_transition": "not-applicable",
+        "open_findings_requiring_decision": "none",
+        "governance_evidence": "missing",
+        "finding_resolution": "missing",
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "outcome": "PASS",
+        "product_status": "PASS",
+        "cli_exit_code": 0,
+        "basis_requirements": ["REQ-220945C2"]
+      }
+    },
+    {
+      "case_id": "stale-blocks-with-other-human-decision-missing",
+      "input": {
+        "stale_applicable_evidence": true,
+        "other_human_decision": "missing",
+        "other_applicable_evidence": "current-positive"
+      },
+      "expected": {
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "cli_exit_code": 1,
+        "basis_requirements": ["REQ-E85A06C3", "REQ-220945C2"]
+      }
+    }
+  ],
+  "inventory_required_case_coverage": {
+    "current": ["current-spec-code", "current-spec", "current-code"],
+    "head-moved": ["head-moved-test-index", "head-moved-test-execution", "head-moved-qa"],
+    "integration-moved": ["integration-moved-conflict-report", "integration-moved-qa", "integration-moved-merge-report"],
+    "config-changed": ["config-changed-test-index", "config-changed-test-execution", "config-changed-governance"],
+    "adapter-changed": ["adapter-changed-test-index", "adapter-changed-dependent-test-execution"],
+    "test-index-changed": ["test-index-changed-test-execution"],
+    "delta-changed": ["delta-changed-approval"],
+    "finding-input-changed": ["finding-input-changed-resolution"],
+    "contradictory-evidence": ["contradictory-approval-evidence"],
+    "replay-against-new-subject": ["replay-against-new-subject"],
+    "missing-required-evidence": ["spec-code-missing-approval", "spec-missing-baseline-qa", "applicable-governance-missing", "applicable-finding-resolution-missing"],
+    "negative-evidence": ["spec-code-rejected-approval", "spec-failed-baseline-qa", "applicable-governance-rejected", "applicable-finding-confirmed"],
+    "mode-specific-conditions": ["current-spec-code", "current-spec", "current-code", "spec-code-missing-approval", "spec-missing-baseline-qa", "code-stale-target-requirement-fingerprints", "approval-mode-mismatch"]
+  }
+}

@@ -1881,6 +1881,7 @@
       ],
       "requirements": [
         "REQ-E85A06C3",
+        "REQ-8E2D9A5F",
         "REQ-ADF9965A",
         "REQ-3B9FC7FF",
         "REQ-220945C2"
@@ -1895,7 +1896,10 @@
         "delta-changed",
         "finding-input-changed",
         "contradictory-evidence",
-        "replay-against-new-subject"
+        "replay-against-new-subject",
+        "missing-required-evidence",
+        "negative-evidence",
+        "mode-specific-conditions"
       ]
     },
     {
