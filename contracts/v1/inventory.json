@@ -1954,6 +1954,11 @@
         "evidence-unconfigured-issuer",
         "evidence-artifact-role-confusion",
         "contradictory-cross-issuer-evidence",
+        "prompt-injection-spec-requirement",
+        "prompt-injection-code-comment",
+        "prompt-injection-test-name",
+        "prompt-injection-adapter-stderr",
+        "prompt-injection-linked-document",
         "atomic-interruption"
       ]
     },

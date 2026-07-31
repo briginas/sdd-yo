@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Bootstrap / Stage 0 contract fixtures
-- Current leaf: 0.7 Security fixture corpus
+- Current leaf: 0.8 Stage 0 verifier
 - Last updated: 2026-07-31
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -264,7 +264,7 @@ Primary target Requirements:
 - [x] Add malicious JSONL and XML fixtures with external entities disabled.
 - [x] Add argv versus shell-metacharacter cases.
 - [x] Add evidence replay and subject-confusion cases.
-- [ ] Add repository prompt-injection cases for the future Agent Skill.
+- [x] Add repository prompt-injection cases for the future Agent Skill.
 
 Primary target Requirements:
 `REQ-7AFE9904`, `REQ-1DD46CA9`, `REQ-F91F7D11`, `REQ-E85A06C3`.
@@ -467,7 +467,6 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 0.7 — Security fixture corpus` is the only active implementation
-leaf. It must add path, process, malicious-input, evidence-confusion, and
-future Agent Skill prompt-injection fixtures without adding runtime security
-implementations, generated TypeScript types, or CLI behavior.
+`Milestone 0.8 — Stage 0 verifier` is the only active implementation leaf. It
+must add one repository command that validates the completed Stage 0 fixture
+surface without adding public CLI behavior or claiming production readiness.
