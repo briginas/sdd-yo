@@ -36,12 +36,13 @@ function isRecord(value: unknown): value is UnknownRecord {
 
 function exactKeys(
   value: UnknownRecord,
-  allowed: readonly string[],
+  required: readonly string[],
   field: string,
   location: ProjectPath | undefined,
+  optional: readonly string[] = [],
 ): Diagnostic | undefined {
   const unknown = Object.keys(value)
-    .filter((key) => !allowed.includes(key))
+    .filter((key) => !required.includes(key) && !optional.includes(key))
     .sort()[0];
   if (unknown !== undefined) {
     return diagnostic(
@@ -51,7 +52,7 @@ function exactKeys(
       location,
     );
   }
-  const missing = allowed.find((key) => !Object.hasOwn(value, key));
+  const missing = required.find((key) => !Object.hasOwn(value, key));
   if (missing !== undefined) {
     return diagnostic(
       "SDD_CONFIG_MISSING_FIELD",
@@ -112,23 +113,31 @@ function parseAdapter(
   }
 
   if (value.type === "command") {
-    const keyError = exactKeys(
-      value,
-      ["id", "type", "protocol", "discover", "execute", "timeout_ms", "max_output_bytes"],
-      field,
-      location,
-    );
+    const keyError = exactKeys(value, ["id", "type", "protocol", "timeout_ms", "max_output_bytes"], field, location, [
+      "discover",
+      "execute",
+    ]);
     if (keyError !== undefined) return failure(keyError);
     if (value.protocol !== "jsonl-v1") return failure(invalidField(`${field}.protocol`, location));
-    if (!isRecord(value.discover) || !isRecord(value.execute)) return failure(invalidField(field, location));
-    const discoverKeyError = exactKeys(value.discover, ["argv"], `${field}.discover`, location);
-    if (discoverKeyError !== undefined) return failure(discoverKeyError);
-    const executeKeyError = exactKeys(value.execute, ["argv"], `${field}.execute`, location);
-    if (executeKeyError !== undefined) return failure(executeKeyError);
-    const discoverArgv = parseArgv(value.discover.argv);
-    const executeArgv = parseArgv(value.execute.argv);
-    if (discoverArgv === undefined) return failure(invalidField(`${field}.discover.argv`, location));
-    if (executeArgv === undefined) return failure(invalidField(`${field}.execute.argv`, location));
+    if (value.discover === undefined && value.execute === undefined) return failure(invalidField(field, location));
+
+    let discoverArgv: readonly string[] | undefined;
+    if (value.discover !== undefined) {
+      if (!isRecord(value.discover)) return failure(invalidField(`${field}.discover`, location));
+      const discoverKeyError = exactKeys(value.discover, ["argv"], `${field}.discover`, location);
+      if (discoverKeyError !== undefined) return failure(discoverKeyError);
+      discoverArgv = parseArgv(value.discover.argv);
+      if (discoverArgv === undefined) return failure(invalidField(`${field}.discover.argv`, location));
+    }
+
+    let executeArgv: readonly string[] | undefined;
+    if (value.execute !== undefined) {
+      if (!isRecord(value.execute)) return failure(invalidField(`${field}.execute`, location));
+      const executeKeyError = exactKeys(value.execute, ["argv"], `${field}.execute`, location);
+      if (executeKeyError !== undefined) return failure(executeKeyError);
+      executeArgv = parseArgv(value.execute.argv);
+      if (executeArgv === undefined) return failure(invalidField(`${field}.execute.argv`, location));
+    }
     if (!Number.isSafeInteger(value.timeout_ms) || (value.timeout_ms as number) <= 0) {
       return failure(invalidField(`${field}.timeout_ms`, location));
     }
@@ -139,8 +148,8 @@ function parseAdapter(
       id: value.id,
       type: "command",
       protocol: "jsonl-v1",
-      discover: { argv: discoverArgv },
-      execute: { argv: executeArgv },
+      ...(discoverArgv === undefined ? {} : { discover: { argv: discoverArgv } }),
+      ...(executeArgv === undefined ? {} : { execute: { argv: executeArgv } }),
       timeout_ms: value.timeout_ms as number,
       max_output_bytes: value.max_output_bytes as number,
     };

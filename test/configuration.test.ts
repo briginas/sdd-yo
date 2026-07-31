@@ -49,6 +49,17 @@ describe("REQ-0361538D project configuration", () => {
     );
   });
 
+  test("accepts command adapters that implement discovery, execution, or both", () => {
+    for (const phases of ["discover", "execute", "both"] as const) {
+      const result = parseProjectConfiguration(encoder.encode(commandAdapterSource(phases)));
+      assert.equal(result.ok, true, phases);
+    }
+
+    const missingPhases = parseProjectConfiguration(encoder.encode(commandAdapterSource("neither")));
+    assert.equal(missingPhases.ok, false);
+    if (!missingPhases.ok) assert.equal(missingPhases.diagnostics[0]?.code, "SDD_CONFIG_INVALID_FIELD");
+  });
+
   test("rejects duplicate keys, custom tags, aliases, unknown fields, and newer schemas", () => {
     const cases = [
       ["project_id: SDD-17EF8B29\nproject_id: SDD-AAAAAAAA\n", "SDD_CONFIG_DUPLICATE_KEY"],
@@ -151,4 +162,15 @@ tests:
 evidence:
   allowed_issuers: []
 `;
+}
+
+function commandAdapterSource(phases: "discover" | "execute" | "both" | "neither"): string {
+  const discover =
+    phases === "discover" || phases === "both" ? '      discover:\n        argv: ["node", "discover.mjs"]\n' : "";
+  const execute =
+    phases === "execute" || phases === "both" ? '      execute:\n        argv: ["node", "execute.mjs"]\n' : "";
+  return validSource().replace(
+    "  adapters: []\n",
+    `  adapters:\n    - id: custom\n      type: command\n      protocol: jsonl-v1\n${discover}${execute}      timeout_ms: 1000\n      max_output_bytes: 1024\n`,
+  );
 }

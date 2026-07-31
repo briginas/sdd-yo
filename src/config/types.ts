@@ -13,10 +13,10 @@ export type CommandTestAdapter = {
   readonly id: string;
   readonly type: "command";
   readonly protocol: "jsonl-v1";
-  readonly discover: {
+  readonly discover?: {
     readonly argv: readonly string[];
   };
-  readonly execute: {
+  readonly execute?: {
     readonly argv: readonly string[];
   };
   readonly timeout_ms: number;
