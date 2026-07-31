@@ -129,8 +129,30 @@ A change delta is a canonical sorted sequence:
 ]
 ```
 
-Semantic, structural, and verification deltas are fingerprinted independently.
-Approval binds semantic and structural deltas.
+### Object delta version 1 byte contract
+
+Semantic, structural, and verification deltas are canonicalized and
+fingerprinted independently. Each delta is one compact JSON array encoded
+with the canonical JSON version 1 byte rules. An entry uses key order
+`operation`, `type`, `id`, then `before` and/or `after`. `add` includes only
+`after`, `modify` includes `before` then `after`, and `delete` includes only
+`before`.
+
+Entries are sorted by the NFC-normalized tuple `type`, `id`, `operation`, with
+each component compared by Unicode code point. One fingerprint class cannot
+contain more than one operation for the same `type` and `id`. An unchanged
+class emits no entry, and an empty class is the exact two bytes `[]` before
+hashing. A change confined to explanatory content therefore produces empty
+semantic, structural, and verification deltas; there is no explanatory
+fingerprint class.
+
+Approval binds the explicit Change `mode` together with the semantic and
+structural delta fingerprints. Verification deltas remain independently
+reportable but are not approval-bound. Reusing the same delta fingerprints
+under another mode does not match the approval subject.
+
+The Stage 0 byte and truth-table oracle is the
+[`fingerprint-deltas` fixture manifest](../../fixtures/v1/fingerprints/deltas/cases.json).
 
 ## Git model
 

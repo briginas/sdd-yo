@@ -1,0 +1,339 @@
+{
+  "fixture_manifest_version": "1.0",
+  "status": "bootstrap-fixture-manifest",
+  "fixture_family_id": "fingerprint-deltas",
+  "contracts": [
+    "fingerprint.object-delta",
+    "artifact.proposal-package"
+  ],
+  "requirements": [
+    "REQ-AFD65A03",
+    "REQ-B25091A0",
+    "REQ-7341DBB7"
+  ],
+  "canonicalization": {
+    "version": "1",
+    "encoding": "utf-8",
+    "byte_order_mark": false,
+    "unicode_normalization": "NFC",
+    "json_layout": "compact",
+    "trailing_newline": false,
+    "entry_key_order": [
+      "operation",
+      "type",
+      "id",
+      "before",
+      "after"
+    ],
+    "entry_sort_order": [
+      "type",
+      "id",
+      "operation"
+    ],
+    "duplicate_type_and_id": "reject"
+  },
+  "approval_binding": {
+    "bound_fields": [
+      "mode",
+      "object_delta.semantic_fingerprint",
+      "object_delta.structural_fingerprint"
+    ],
+    "not_approval_bound_classes": [
+      "verification"
+    ],
+    "same_delta_with_different_mode_matches": false,
+    "mode_gate_validity": "deferred-to-milestone-0.5"
+  },
+  "delta_goldens": [
+    {
+      "golden_id": "empty",
+      "canonical_json_utf8": "[]",
+      "expected_fingerprint": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "golden_id": "add-requirement-semantic",
+      "canonical_json_utf8": "[{\"operation\":\"add\",\"type\":\"requirement\",\"id\":\"REQ-D4000001\",\"after\":\"sha256:1111111111111111111111111111111111111111111111111111111111111111\"}]",
+      "expected_fingerprint": "sha256:98694a36a6845d1e5a02b98e03de2dce4287c757ba89992b490b3044347cb074"
+    },
+    {
+      "golden_id": "add-requirement-structural",
+      "canonical_json_utf8": "[{\"operation\":\"add\",\"type\":\"requirement\",\"id\":\"REQ-D4000001\",\"after\":\"sha256:2222222222222222222222222222222222222222222222222222222222222222\"}]",
+      "expected_fingerprint": "sha256:0fa1e462276c9082f7836c6590e020a51d689c030e7ee168509199322e879612"
+    },
+    {
+      "golden_id": "add-requirement-verification",
+      "canonical_json_utf8": "[{\"operation\":\"add\",\"type\":\"requirement\",\"id\":\"REQ-D4000001\",\"after\":\"sha256:3333333333333333333333333333333333333333333333333333333333333333\"}]",
+      "expected_fingerprint": "sha256:680d674a8ad822e9eab3be97a3915ec7e15cf8cb4cc6ca7028a1ded6aa7f25e5"
+    },
+    {
+      "golden_id": "modify-concept-semantic",
+      "canonical_json_utf8": "[{\"operation\":\"modify\",\"type\":\"concept\",\"id\":\"CON-D4000001\",\"before\":\"sha256:4444444444444444444444444444444444444444444444444444444444444444\",\"after\":\"sha256:5555555555555555555555555555555555555555555555555555555555555555\"}]",
+      "expected_fingerprint": "sha256:a87596330ea705430adbb28af92105c84abe6b23aee291712d4f1fc14df1ec1e"
+    },
+    {
+      "golden_id": "modify-concept-structural",
+      "canonical_json_utf8": "[{\"operation\":\"modify\",\"type\":\"concept\",\"id\":\"CON-D4000001\",\"before\":\"sha256:6666666666666666666666666666666666666666666666666666666666666666\",\"after\":\"sha256:7777777777777777777777777777777777777777777777777777777777777777\"}]",
+      "expected_fingerprint": "sha256:84099030f1c556dbbf54cfd62ab9e5100f1f8a0df1e16cadc44ecee3cbf9a7ef"
+    },
+    {
+      "golden_id": "delete-requirement-semantic",
+      "canonical_json_utf8": "[{\"operation\":\"delete\",\"type\":\"requirement\",\"id\":\"REQ-D4000002\",\"before\":\"sha256:8888888888888888888888888888888888888888888888888888888888888888\"}]",
+      "expected_fingerprint": "sha256:e874b401d97562b7c9ecc56d3a63ce58458c863160a80c35433d52ffb4111809"
+    },
+    {
+      "golden_id": "delete-requirement-structural",
+      "canonical_json_utf8": "[{\"operation\":\"delete\",\"type\":\"requirement\",\"id\":\"REQ-D4000002\",\"before\":\"sha256:9999999999999999999999999999999999999999999999999999999999999999\"}]",
+      "expected_fingerprint": "sha256:a331ea2dcfe3448014b52fbeb83c2ae697df21524b8b73a590b0b28b267fb683"
+    },
+    {
+      "golden_id": "delete-requirement-verification",
+      "canonical_json_utf8": "[{\"operation\":\"delete\",\"type\":\"requirement\",\"id\":\"REQ-D4000002\",\"before\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}]",
+      "expected_fingerprint": "sha256:97ce61ad028412a04aa6cc37d885ab82b3eeb7509eda46b0f11a8f1f29d79373"
+    },
+    {
+      "golden_id": "mixed-semantic",
+      "canonical_json_utf8": "[{\"operation\":\"add\",\"type\":\"concept\",\"id\":\"CON-D4000010\",\"after\":\"sha256:1111111111111111111111111111111111111111111111111111111111111111\"},{\"operation\":\"delete\",\"type\":\"requirement\",\"id\":\"REQ-D4000012\",\"before\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}]",
+      "expected_fingerprint": "sha256:8522260e3fa433aed696856726c71354293f4e560a47935d8667355a1fd9ff1e"
+    },
+    {
+      "golden_id": "mixed-structural",
+      "canonical_json_utf8": "[{\"operation\":\"modify\",\"type\":\"capability\",\"id\":\"CAP-D4000011\",\"before\":\"sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"after\":\"sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\"},{\"operation\":\"add\",\"type\":\"concept\",\"id\":\"CON-D4000010\",\"after\":\"sha256:2222222222222222222222222222222222222222222222222222222222222222\"},{\"operation\":\"delete\",\"type\":\"requirement\",\"id\":\"REQ-D4000012\",\"before\":\"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}]",
+      "expected_fingerprint": "sha256:5b1139f4319fad4ae31524bc4207c8eec5f236f943e2281688da2a2ec7dcfda4"
+    },
+    {
+      "golden_id": "mixed-verification",
+      "canonical_json_utf8": "[{\"operation\":\"delete\",\"type\":\"requirement\",\"id\":\"REQ-D4000012\",\"before\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}]",
+      "expected_fingerprint": "sha256:ce9eb54035bb28f45b403bd094b84147205df17ef96735e06393503198257094"
+    },
+    {
+      "golden_id": "modify-requirement-semantic-only",
+      "canonical_json_utf8": "[{\"operation\":\"modify\",\"type\":\"requirement\",\"id\":\"REQ-D4000020\",\"before\":\"sha256:1111111111111111111111111111111111111111111111111111111111111111\",\"after\":\"sha256:2222222222222222222222222222222222222222222222222222222222222222\"}]",
+      "expected_fingerprint": "sha256:edc355514c587a54d476700a9253ee89b4c13f535a981666bfd5271ebcdc8482"
+    },
+    {
+      "golden_id": "modify-requirement-structural-only",
+      "canonical_json_utf8": "[{\"operation\":\"modify\",\"type\":\"requirement\",\"id\":\"REQ-D4000021\",\"before\":\"sha256:3333333333333333333333333333333333333333333333333333333333333333\",\"after\":\"sha256:4444444444444444444444444444444444444444444444444444444444444444\"}]",
+      "expected_fingerprint": "sha256:2e87a697a299233c94b33724fafe4a9093e99aae1d7c78df930720f0879fb79e"
+    },
+    {
+      "golden_id": "modify-requirement-verification-only",
+      "canonical_json_utf8": "[{\"operation\":\"modify\",\"type\":\"requirement\",\"id\":\"REQ-D4000022\",\"before\":\"sha256:5555555555555555555555555555555555555555555555555555555555555555\",\"after\":\"sha256:6666666666666666666666666666666666666666666666666666666666666666\"}]",
+      "expected_fingerprint": "sha256:32660cfc0c35f7aaee08c9e31c8bbb2b668f95d0159503d13346433abdef34f8"
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "add",
+      "mode": "spec-code",
+      "input_changes": [
+        {
+          "operation": "add",
+          "type": "requirement",
+          "id": "REQ-D4000001",
+          "after_fingerprints": {
+            "semantic": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "structural": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "verification": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+          }
+        }
+      ],
+      "expected_delta_golden_ids": {
+        "semantic": "add-requirement-semantic",
+        "structural": "add-requirement-structural",
+        "verification": "add-requirement-verification"
+      }
+    },
+    {
+      "case_id": "modify",
+      "mode": "spec-code",
+      "input_changes": [
+        {
+          "operation": "modify",
+          "type": "concept",
+          "id": "CON-D4000001",
+          "before_fingerprints": {
+            "semantic": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "structural": "sha256:6666666666666666666666666666666666666666666666666666666666666666"
+          },
+          "after_fingerprints": {
+            "semantic": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "structural": "sha256:7777777777777777777777777777777777777777777777777777777777777777"
+          }
+        }
+      ],
+      "expected_delta_golden_ids": {
+        "semantic": "modify-concept-semantic",
+        "structural": "modify-concept-structural",
+        "verification": "empty"
+      }
+    },
+    {
+      "case_id": "delete",
+      "mode": "spec-code",
+      "input_changes": [
+        {
+          "operation": "delete",
+          "type": "requirement",
+          "id": "REQ-D4000002",
+          "before_fingerprints": {
+            "semantic": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "structural": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+            "verification": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        }
+      ],
+      "expected_delta_golden_ids": {
+        "semantic": "delete-requirement-semantic",
+        "structural": "delete-requirement-structural",
+        "verification": "delete-requirement-verification"
+      }
+    },
+    {
+      "case_id": "mixed-sorted",
+      "mode": "spec-code",
+      "input_order": "intentionally-unsorted",
+      "input_changes": [
+        {
+          "operation": "delete",
+          "type": "requirement",
+          "id": "REQ-D4000012",
+          "before_fingerprints": {
+            "semantic": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "structural": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "verification": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          }
+        },
+        {
+          "operation": "modify",
+          "type": "capability",
+          "id": "CAP-D4000011",
+          "before_fingerprints": {
+            "structural": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          "after_fingerprints": {
+            "structural": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+          }
+        },
+        {
+          "operation": "add",
+          "type": "concept",
+          "id": "CON-D4000010",
+          "after_fingerprints": {
+            "semantic": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "structural": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+          }
+        }
+      ],
+      "expected_delta_golden_ids": {
+        "semantic": "mixed-semantic",
+        "structural": "mixed-structural",
+        "verification": "mixed-verification"
+      }
+    },
+    {
+      "case_id": "semantic-only",
+      "mode": "spec-code",
+      "input_changes": [
+        {
+          "operation": "modify",
+          "type": "requirement",
+          "id": "REQ-D4000020",
+          "before_fingerprints": {
+            "semantic": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "structural": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "verification": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+          },
+          "after_fingerprints": {
+            "semantic": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "structural": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "verification": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+          }
+        }
+      ],
+      "expected_delta_golden_ids": {
+        "semantic": "modify-requirement-semantic-only",
+        "structural": "empty",
+        "verification": "empty"
+      }
+    },
+    {
+      "case_id": "structural-only",
+      "mode": "spec-code",
+      "input_changes": [
+        {
+          "operation": "modify",
+          "type": "requirement",
+          "id": "REQ-D4000021",
+          "before_fingerprints": {
+            "semantic": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "structural": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "verification": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+          },
+          "after_fingerprints": {
+            "semantic": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "structural": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "verification": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+          }
+        }
+      ],
+      "expected_delta_golden_ids": {
+        "semantic": "empty",
+        "structural": "modify-requirement-structural-only",
+        "verification": "empty"
+      }
+    },
+    {
+      "case_id": "verification-only",
+      "mode": "code",
+      "input_changes": [
+        {
+          "operation": "modify",
+          "type": "requirement",
+          "id": "REQ-D4000022",
+          "before_fingerprints": {
+            "semantic": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "structural": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "verification": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+          },
+          "after_fingerprints": {
+            "semantic": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "structural": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "verification": "sha256:6666666666666666666666666666666666666666666666666666666666666666"
+          }
+        }
+      ],
+      "expected_delta_golden_ids": {
+        "semantic": "empty",
+        "structural": "empty",
+        "verification": "modify-requirement-verification-only"
+      }
+    },
+    {
+      "case_id": "explanatory-only",
+      "mode": "code",
+      "input_changes": [
+        {
+          "operation": "modify",
+          "type": "requirement",
+          "id": "REQ-D4000023",
+          "explanatory_content_changed": true,
+          "before_fingerprints": {
+            "semantic": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "structural": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "verification": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+          },
+          "after_fingerprints": {
+            "semantic": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "structural": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "verification": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+          }
+        }
+      ],
+      "expected_delta_golden_ids": {
+        "semantic": "empty",
+        "structural": "empty",
+        "verification": "empty"
+      }
+    }
+  ]
+}

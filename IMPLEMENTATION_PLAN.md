@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Bootstrap / Stage 0 contract fixtures
-- Current leaf: 0.4b Object delta truth tables
+- Current leaf: 0.5 Gate truth tables
 - Last updated: 2026-07-31
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -185,16 +185,19 @@ and
       acceptance ordering, and Unicode normalization invariants. Target
       Requirements: `REQ-13CF54D6`, `REQ-8ACBC52D`, `REQ-1095E571`,
       `REQ-B25091A0`.
-- [ ] **0.4b — Object delta truth tables.** Define add, modify, delete, mixed
+- [x] **0.4b — Object delta truth tables.** Define add, modify, delete, mixed
       ordering, and semantic, structural, verification, and explanatory delta
       truth tables. Target Requirements: `REQ-AFD65A03`, `REQ-B25091A0`,
       `REQ-7341DBB7`.
 
 Artifact:
-[`fixtures/v1/fingerprints/objects/cases.json`](fixtures/v1/fingerprints/objects/cases.json).
+[`fixtures/v1/fingerprints/objects/cases.json`](fixtures/v1/fingerprints/objects/cases.json)
+and
+[`fixtures/v1/fingerprints/deltas/cases.json`](fixtures/v1/fingerprints/deltas/cases.json).
 
 Primary target Requirements:
-`REQ-13CF54D6`, `REQ-1095E571`, `REQ-B25091A0`, `REQ-AFD65A03`.
+`REQ-13CF54D6`, `REQ-1095E571`, `REQ-B25091A0`, `REQ-AFD65A03`,
+`REQ-7341DBB7`.
 
 ### 0.5 Gate truth tables
 
@@ -432,8 +435,8 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 0.4 — Fingerprint and delta goldens` is the only active
-implementation leaf. It must define versioned canonical JSON byte fixtures and
-semantic, structural, verification, and explanatory delta truth tables without
-adding a runtime canonicalizer. Runtime schema libraries, generated TypeScript
-types, and CLI behavior remain deferred.
+`Milestone 0.5 — Gate truth tables` is the only active implementation leaf. It
+must encode deterministic Proposal, Branch Preparation, Verification, and
+Merge outcomes for all three modes without adding runtime gate evaluators.
+Runtime schema libraries, generated TypeScript types, and CLI behavior remain
+deferred.
