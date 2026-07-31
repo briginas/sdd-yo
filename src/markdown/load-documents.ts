@@ -1,4 +1,4 @@
-import { join } from "node:path";
+import { join, relative, sep } from "node:path";
 
 import { isDiagnosticCode } from "../contracts/diagnostics.ts";
 import type { Diagnostic } from "../contracts/diagnostics.ts";
@@ -12,7 +12,13 @@ import type { SpecificationDocument } from "./types.ts";
 
 function technicalDiagnostic(codeValue: string, message: string, path: ProjectPath): Diagnostic {
   if (!isDiagnosticCode(codeValue)) throw new Error(`Invalid internal diagnostic code ${codeValue}`);
-  return { code: codeValue, severity: "error", message, details: {}, location: { path } };
+  return {
+    code: codeValue,
+    severity: "error",
+    message,
+    details: { remediation: "Correct the specification path or file and run the command again." },
+    location: { path },
+  };
 }
 
 export async function loadSpecificationDocuments(
@@ -21,6 +27,33 @@ export async function loadSpecificationDocuments(
   specRoot: ProjectPath,
 ): Promise<MarkdownResult<readonly SpecificationDocument[]>> {
   const documents: SpecificationDocument[] = [];
+  try {
+    const realProjectRoot = await fileSystem.realPath(projectRoot);
+    const realSpecRoot = await fileSystem.realPath(resolveConfiguredPath(projectRoot, specRoot));
+    const containment = relative(realProjectRoot, realSpecRoot);
+    if (containment === ".." || containment.startsWith(`..${sep}`))
+      return {
+        ok: false,
+        diagnostics: [
+          technicalDiagnostic(
+            "SDD_MARKDOWN_PATH_OUTSIDE_SCOPE",
+            "The specification root resolves outside the selected project.",
+            specRoot,
+          ),
+        ],
+      };
+  } catch {
+    return {
+      ok: false,
+      diagnostics: [
+        technicalDiagnostic(
+          "SDD_MARKDOWN_DIRECTORY_READ_FAILED",
+          "Specification directory could not be read.",
+          specRoot,
+        ),
+      ],
+    };
+  }
 
   const visit = async (directory: ProjectPath): Promise<readonly Diagnostic[]> => {
     let entries;

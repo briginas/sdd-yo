@@ -102,6 +102,8 @@ describe("REQ-EAC56CB1 addressable Requirement blocks and REQ-065A9911 kinds", (
       assert.equal(invalid.diagnostics[0]?.code, "SDD_MARKDOWN_REQUIREMENT_KIND_UNKNOWN");
       assert.equal(invalid.diagnostics[0]?.location?.path, "capability.md");
       assert.ok((invalid.diagnostics[0]?.location?.line ?? 0) > 0);
+      assert.match(invalid.diagnostics[0]?.object_id ?? "", /^REQ-/u);
+      assert.equal(typeof invalid.diagnostics[0]?.details.remediation, "string");
     }
   });
 

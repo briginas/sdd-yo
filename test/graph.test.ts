@@ -86,7 +86,14 @@ describe("REQ-DD91AD0F REQ-0EF66B28 REQ-8D157EBE REQ-99605FAB REQ-F3A241BE REQ-7
     for (const [name, code] of Object.entries(expectations)) {
       const result = validateSpecificationGraph(await documents(join(invalidRoot, name)), "README.md" as ProjectPath);
       assert.equal(result.ok, false, name);
-      if (!result.ok) assert.equal(result.diagnostics[0]?.code, code, name);
+      if (!result.ok) {
+        assert.equal(result.diagnostics[0]?.code, code, name);
+        assert.equal(typeof result.diagnostics[0]?.details.remediation, "string", name);
+        if (name === "dependency-cycle-policy") {
+          assert.match(result.diagnostics[0]?.object_id ?? "", /^REQ-/u);
+          assert.ok((result.diagnostics[0]?.location?.line ?? 0) > 0);
+        }
+      }
     }
     const crossRoot = join(invalidRoot, "cross-project-link", "project-a");
     const cross = validateSpecificationGraph(await documents(crossRoot), "README.md" as ProjectPath);

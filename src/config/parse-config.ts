@@ -21,7 +21,7 @@ function diagnostic(
     code: codeValue,
     severity: "error",
     message,
-    details,
+    details: { ...details, remediation: "Correct the reported configuration field and run the command again." },
     ...(location === undefined ? {} : { location: { path: location } }),
   };
 }

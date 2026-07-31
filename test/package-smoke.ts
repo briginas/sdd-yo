@@ -104,7 +104,7 @@ function parsePackResult(standardOutput: string): PackResult {
   return result as PackResult;
 }
 
-test("bootstrap package builds, packs, stages, imports, and wires sdd offline", async () => {
+test("package builds, packs, stages, imports, and runs sdd offline", async () => {
   const temporaryRoot = await mkdtemp(join(tmpdir(), "sdd-yo-package-smoke-"));
   const npmCache = join(temporaryRoot, "npm-cache");
 
@@ -169,8 +169,28 @@ test("bootstrap package builds, packs, stages, imports, and wires sdd offline", 
     const cli = await runCommand(process.execPath, [binTarget, "validate"], consumerRoot);
     assert.equal(cli.exitCode, 3);
     assert.equal(cli.signal, null);
-    assert.equal(cli.standardOutput, "");
-    assert.equal(cli.standardError, "sdd: no product commands are implemented in this bootstrap package.\n");
+    assert.equal(
+      cli.standardOutput,
+      "validate: error\nERROR SDD_CONFIG_NOT_FOUND: No .sdd/config.yaml was found for the requested project.\n",
+    );
+    assert.equal(cli.standardError, "");
+
+    const validCli = await runCommand(
+      process.execPath,
+      [binTarget, "validate", "--cwd", repositoryRoot, "--format", "json"],
+      consumerRoot,
+    );
+    assert.equal(validCli.exitCode, 0, validCli.standardError || validCli.standardOutput);
+    const validResponse = JSON.parse(validCli.standardOutput) as {
+      schema_version: string;
+      status: string;
+      project_id: string;
+      result: { fingerprints: readonly unknown[] };
+    };
+    assert.equal(validResponse.schema_version, "1.0");
+    assert.equal(validResponse.status, "ok");
+    assert.equal(validResponse.project_id, "SDD-17EF8B29");
+    assert.ok(validResponse.result.fingerprints.length > 0);
   } finally {
     await rm(temporaryRoot, { recursive: true, force: true });
   }

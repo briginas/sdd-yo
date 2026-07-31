@@ -2,6 +2,7 @@ import { dirname, join, normalize } from "node:path/posix";
 import { isDiagnosticCode } from "../contracts/diagnostics.ts";
 import type { Diagnostic } from "../contracts/diagnostics.ts";
 import type { ObjectId, ProjectPath } from "../contracts/identifiers.ts";
+import { isObjectId } from "../contracts/identifiers.ts";
 import type { MarkdownResult } from "../markdown/result.ts";
 import type {
   CapabilityDocument,
@@ -10,6 +11,7 @@ import type {
   IndexDocument,
   MarkdownLink,
   Requirement,
+  SourcePosition,
   SpecificationDocument,
 } from "../markdown/types.ts";
 
@@ -19,20 +21,28 @@ export type ValidatedSpecificationGraph = {
   readonly objects: ReadonlyMap<ObjectId, CapabilityDocument | ConceptDocument | Requirement>;
 };
 
-function problem(codeValue: string, message: string, path: ProjectPath, link?: MarkdownLink): Diagnostic {
+function problem(
+  codeValue: string,
+  message: string,
+  path: ProjectPath,
+  link?: MarkdownLink,
+  objectId?: ObjectId,
+  position?: SourcePosition,
+): Diagnostic {
   if (!isDiagnosticCode(codeValue)) throw new Error(`Invalid graph diagnostic ${codeValue}`);
   return {
     code: codeValue,
     severity: "error",
     message,
     details: { remediation: "Correct the reported graph structure and validate again." },
-    location: { path, ...(link === undefined ? {} : link.position) },
+    location: { path, ...(link === undefined ? (position ?? {}) : link.position) },
+    ...(objectId === undefined ? {} : { object_id: objectId }),
   };
 }
 function titleWarning(
   path: ProjectPath,
   link: MarkdownLink,
-  expectedId: string,
+  expectedId: ObjectId,
   expectedTitle: string,
 ): Diagnostic | undefined {
   if (link.label === `${expectedId} — ${expectedTitle}`) return undefined;
@@ -44,6 +54,7 @@ function titleWarning(
     message: "Graph link display title does not match the target title.",
     details: { remediation: `Change the link label to ${expectedId} — ${expectedTitle}.` },
     location: { path, ...link.position },
+    object_id: expectedId,
   };
 }
 function fail<Value>(item: Diagnostic): MarkdownResult<Value> {
@@ -87,14 +98,30 @@ export function validateSpecificationGraph(
   for (const document of orderedDocuments) {
     if (document.type === "capability" || document.type === "concept") {
       if (objects.has(document.id))
-        return fail(problem("SDD_GRAPH_DUPLICATE_ID", `Object ID ${document.id} is duplicated.`, document.path));
+        return fail(
+          problem(
+            "SDD_GRAPH_DUPLICATE_ID",
+            `Object ID ${document.id} is duplicated.`,
+            document.path,
+            undefined,
+            document.id,
+          ),
+        );
       objects.set(document.id, document);
       objectPaths.set(document.id, document.path);
     } else if (document.type === "capability-fragment") fragments.push(document);
     if (document.type === "capability" || document.type === "capability-fragment")
       for (const requirement of document.requirements) {
         if (objects.has(requirement.id))
-          return fail(problem("SDD_GRAPH_DUPLICATE_ID", `Object ID ${requirement.id} is duplicated.`, document.path));
+          return fail(
+            problem(
+              "SDD_GRAPH_DUPLICATE_ID",
+              `Object ID ${requirement.id} is duplicated.`,
+              document.path,
+              undefined,
+              requirement.id,
+            ),
+          );
         objects.set(requirement.id, requirement);
         objectPaths.set(requirement.id, document.path);
       }
@@ -106,23 +133,45 @@ export function validateSpecificationGraph(
     expected: "capability" | "concept" | "fragment",
     idPrefix?: "CAP" | "CON",
   ): MarkdownResult<SpecificationDocument> => {
+    const labeledObjectId = idPrefix === undefined ? undefined : labeledId(link, idPrefix);
+    const targetObjectId = isObjectId(labeledObjectId) ? labeledObjectId : undefined;
     const target = targetPath(source, link);
     if (target === undefined)
       return fail(
-        problem("SDD_GRAPH_PATH_OUTSIDE_SCOPE", "Graph link escapes project scope or is not portable.", source, link),
+        problem(
+          "SDD_GRAPH_PATH_OUTSIDE_SCOPE",
+          "Graph link escapes project scope or is not portable.",
+          source,
+          link,
+          targetObjectId,
+        ),
       );
     if (scopeRoot !== "." && target.path !== scopeRoot && !target.path.startsWith(`${scopeRoot}/`))
       return fail(
-        problem("SDD_GRAPH_PATH_OUTSIDE_SCOPE", "Graph link escapes project scope or is not portable.", source, link),
+        problem(
+          "SDD_GRAPH_PATH_OUTSIDE_SCOPE",
+          "Graph link escapes project scope or is not portable.",
+          source,
+          link,
+          targetObjectId,
+        ),
       );
     const document = documents.get(target.path as ProjectPath);
     if (document === undefined)
-      return fail(problem("SDD_GRAPH_LINK_BROKEN", "Graph link target does not exist.", source, link));
+      return fail(problem("SDD_GRAPH_LINK_BROKEN", "Graph link target does not exist.", source, link, targetObjectId));
     if (
       (expected === "fragment" && document.type !== "capability-fragment") ||
       (expected !== "fragment" && document.type !== expected)
     )
-      return fail(problem("SDD_GRAPH_TARGET_TYPE", "Graph link target has the wrong document type.", source, link));
+      return fail(
+        problem(
+          "SDD_GRAPH_TARGET_TYPE",
+          "Graph link target has the wrong document type.",
+          source,
+          link,
+          targetObjectId,
+        ),
+      );
     if (target.anchor !== undefined)
       return fail(
         problem(
@@ -130,13 +179,22 @@ export function validateSpecificationGraph(
           "Capability and Concept links must target documents without anchors.",
           source,
           link,
+          targetObjectId,
         ),
       );
     if (idPrefix !== undefined) {
       const id = labeledId(link, idPrefix);
       if (id === undefined || !("id" in document) || document.id !== id)
-        return fail(problem("SDD_GRAPH_TARGET_ID", "Graph link label and target identity do not match.", source, link));
-      const warning = titleWarning(source, link, id, document.title);
+        return fail(
+          problem(
+            "SDD_GRAPH_TARGET_ID",
+            "Graph link label and target identity do not match.",
+            source,
+            link,
+            targetObjectId ?? ("id" in document ? document.id : undefined),
+          ),
+        );
+      const warning = titleWarning(source, link, document.id, document.title);
       if (warning !== undefined) warnings.push(warning);
     }
     reachable.add(document.path);
@@ -147,7 +205,13 @@ export function validateSpecificationGraph(
     const id = labeledId(link, "CAP");
     if (id === undefined || indexedIds.has(id))
       return fail(
-        problem("SDD_GRAPH_INDEX_DUPLICATE", "Index object identity is missing or duplicated.", index.path, link),
+        problem(
+          "SDD_GRAPH_INDEX_DUPLICATE",
+          "Index object identity is missing or duplicated.",
+          index.path,
+          link,
+          isObjectId(id) ? id : undefined,
+        ),
       );
     indexedIds.add(id);
     const target = resolveTyped(index.path, link, "capability", "CAP");
@@ -157,7 +221,13 @@ export function validateSpecificationGraph(
     const id = labeledId(link, "CON");
     if (id === undefined || indexedIds.has(id))
       return fail(
-        problem("SDD_GRAPH_INDEX_DUPLICATE", "Index object identity is missing or duplicated.", index.path, link),
+        problem(
+          "SDD_GRAPH_INDEX_DUPLICATE",
+          "Index object identity is missing or duplicated.",
+          index.path,
+          link,
+          isObjectId(id) ? id : undefined,
+        ),
       );
     indexedIds.add(id);
     const target = resolveTyped(index.path, link, "concept", "CON");
@@ -203,6 +273,7 @@ export function validateSpecificationGraph(
             "Relation escapes project scope or is not portable.",
             ownerDocument.path,
             relation.link,
+            requirement.id,
           ),
         );
       if (scopeRoot !== "." && target.path !== scopeRoot && !target.path.startsWith(`${scopeRoot}/`))
@@ -212,6 +283,7 @@ export function validateSpecificationGraph(
             "Relation escapes project scope or is not portable.",
             ownerDocument.path,
             relation.link,
+            requirement.id,
           ),
         );
       const object = objects.get(relation.target_id);
@@ -222,6 +294,7 @@ export function validateSpecificationGraph(
             "Relation target identity is unknown.",
             ownerDocument.path,
             relation.link,
+            requirement.id,
           ),
         );
       if (objectPaths.get(relation.target_id) !== target.path)
@@ -231,6 +304,7 @@ export function validateSpecificationGraph(
             "Relation path and target identity do not match.",
             ownerDocument.path,
             relation.link,
+            requirement.id,
           ),
         );
       if (relation.type === "depends-on") {
@@ -241,6 +315,7 @@ export function validateSpecificationGraph(
               "Requirement relation anchor is invalid.",
               ownerDocument.path,
               relation.link,
+              requirement.id,
             ),
           );
         const warning = titleWarning(ownerDocument.path, relation.link, object.id, object.title);
@@ -254,6 +329,7 @@ export function validateSpecificationGraph(
               "refers-to must target a Concept document without an anchor.",
               ownerDocument.path,
               relation.link,
+              requirement.id,
             ),
           );
         const warning = titleWarning(ownerDocument.path, relation.link, object.id, object.title);
@@ -276,6 +352,7 @@ export function validateSpecificationGraph(
             "Concept relation escapes project scope or is not portable.",
             concept.path,
             relation.link,
+            concept.id,
           ),
         );
       const object = objects.get(relation.target_id);
@@ -286,6 +363,7 @@ export function validateSpecificationGraph(
             "Concept relation target identity is unknown.",
             concept.path,
             relation.link,
+            concept.id,
           ),
         );
       if (
@@ -299,6 +377,7 @@ export function validateSpecificationGraph(
             "relates-to must resolve to the labeled Concept document.",
             concept.path,
             relation.link,
+            concept.id,
           ),
         );
       const warning = titleWarning(concept.path, relation.link, object.id, object.title);
@@ -318,6 +397,15 @@ export function validateSpecificationGraph(
   };
   for (const requirement of requirements)
     if (cyclic(requirement.id))
-      return fail(problem("SDD_GRAPH_DEPENDENCY_CYCLE", "Requirement dependency graph contains a cycle.", entrypoint));
+      return fail(
+        problem(
+          "SDD_GRAPH_DEPENDENCY_CYCLE",
+          "Requirement dependency graph contains a cycle.",
+          objectPaths.get(requirement.id) ?? entrypoint,
+          undefined,
+          requirement.id,
+          requirement.position,
+        ),
+      );
   return { ok: true, value: { index, documents, objects }, diagnostics: warnings };
 }

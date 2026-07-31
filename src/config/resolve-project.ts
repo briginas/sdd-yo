@@ -24,7 +24,15 @@ export type ProjectResolutionRequest =
 
 function resolutionDiagnostic(codeValue: string, message: string, details: Record<string, string>): Diagnostic {
   if (!isDiagnosticCode(codeValue)) throw new Error(`Invalid internal diagnostic code: ${codeValue}`);
-  return { code: codeValue, severity: "error", message, details };
+  return {
+    code: codeValue,
+    severity: "error",
+    message,
+    details: {
+      ...details,
+      remediation: "Correct the project selection or configuration path and run the command again.",
+    },
+  };
 }
 
 function failure<Value>(item: Diagnostic): ConfigurationResult<Value> {
@@ -73,7 +81,7 @@ export async function resolveProject(
           resolutionDiagnostic(
             "SDD_CONFIG_PATH_INVALID",
             "The explicit configuration path must name .sdd/config.yaml.",
-            { config_path: request.config_path },
+            { selection: "explicit" },
           ),
         );
       }
@@ -83,7 +91,7 @@ export async function resolveProject(
   } catch {
     return failure(
       resolutionDiagnostic("SDD_CONFIG_RESOLUTION_FAILED", "The configuration search path could not be resolved.", {
-        start_path: request.kind === "explicit" ? request.working_directory : request.start_directory,
+        selection: request.kind,
       }),
     );
   }
@@ -91,7 +99,7 @@ export async function resolveProject(
   if (selectedPath === undefined) {
     return failure(
       resolutionDiagnostic("SDD_CONFIG_NOT_FOUND", "No .sdd/config.yaml was found for the requested project.", {
-        start_path: request.kind === "nearest" ? request.start_directory : request.config_path,
+        selection: request.kind,
       }),
     );
   }
@@ -102,21 +110,21 @@ export async function resolveProject(
   } catch {
     return failure(
       resolutionDiagnostic("SDD_CONFIG_READ_FAILED", "The selected configuration could not be inspected.", {
-        config_path: selectedPath,
+        selection: request.kind,
       }),
     );
   }
   if (metadata === undefined) {
     return failure(
       resolutionDiagnostic("SDD_CONFIG_NOT_FOUND", "The selected configuration does not exist.", {
-        config_path: selectedPath,
+        selection: request.kind,
       }),
     );
   }
   if (metadata.kind !== "file") {
     return failure(
       resolutionDiagnostic("SDD_CONFIG_NOT_FILE", "The selected configuration is not a regular file.", {
-        config_path: selectedPath,
+        selection: request.kind,
       }),
     );
   }
@@ -129,7 +137,7 @@ export async function resolveProject(
   } catch {
     return failure(
       resolutionDiagnostic("SDD_CONFIG_READ_FAILED", "The selected configuration could not be read.", {
-        config_path: selectedPath,
+        selection: request.kind,
       }),
     );
   }

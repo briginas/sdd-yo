@@ -7,7 +7,7 @@ import { parseDocument } from "yaml";
 import { isDiagnosticCode } from "../contracts/diagnostics.ts";
 import type { Diagnostic } from "../contracts/diagnostics.ts";
 import { isCapabilityId, isConceptId, isProjectPath, isRequirementId } from "../contracts/identifiers.ts";
-import type { CapabilityId, ProjectPath } from "../contracts/identifiers.ts";
+import type { CapabilityId, ObjectId, ProjectPath } from "../contracts/identifiers.ts";
 import type { MarkdownResult } from "./result.ts";
 import {
   DOCUMENT_TYPES,
@@ -57,17 +57,24 @@ const allowedMarkers = new Set([
   "states",
 ]);
 
-function diagnostic(codeValue: string, message: string, path: ProjectPath, node?: Node): Diagnostic {
+function diagnostic(
+  codeValue: string,
+  message: string,
+  path: ProjectPath,
+  node?: Node,
+  objectId?: ObjectId,
+): Diagnostic {
   if (!isDiagnosticCode(codeValue)) throw new Error(`Invalid internal diagnostic code ${codeValue}`);
   return {
     code: codeValue,
     severity: "error",
     message,
-    details: {},
+    details: { remediation: "Correct the reported Markdown structure and validate again." },
     location: {
       path,
       ...(node?.position === undefined ? {} : { line: node.position.start.line, column: node.position.start.column }),
     },
+    ...(objectId === undefined ? {} : { object_id: objectId }),
   };
 }
 function failure<Value>(item: Diagnostic): MarkdownResult<Value> {
@@ -140,15 +147,30 @@ function markedSection(
   name: string,
   path: ProjectPath,
   required: boolean,
+  objectId?: ObjectId,
 ): MarkdownResult<readonly Node[]> {
   const headings = nodes.filter((node) => marker(node) === name);
   if (headings.length === 0)
     return required
-      ? failure(diagnostic("SDD_MARKDOWN_MARKER_REQUIRED", `Required sdd:${name} marker is missing.`, path))
+      ? failure(
+          diagnostic(
+            "SDD_MARKDOWN_MARKER_REQUIRED",
+            `Required sdd:${name} marker is missing.`,
+            path,
+            undefined,
+            objectId,
+          ),
+        )
       : { ok: true, value: [], diagnostics: [] };
   if (headings.length > 1)
     return failure(
-      diagnostic("SDD_MARKDOWN_MARKER_DUPLICATE", `Machine marker sdd:${name} is duplicated.`, path, headings[1]),
+      diagnostic(
+        "SDD_MARKDOWN_MARKER_DUPLICATE",
+        `Machine marker sdd:${name} is duplicated.`,
+        path,
+        headings[1],
+        objectId,
+      ),
     );
   const heading = headings[0];
   if (heading === undefined) throw new Error("Expected one marked heading.");
@@ -157,7 +179,11 @@ function markedSection(
   while (end < nodes.length && !(nodes[end]?.type === "heading" && nodes[end]?.depth === heading?.depth)) end += 1;
   return { ok: true, value: nodes.slice(start, end), diagnostics: [] };
 }
-function blockSections(nodes: readonly Node[], path: ProjectPath): MarkdownResult<Map<string, readonly Node[]>> {
+function blockSections(
+  nodes: readonly Node[],
+  path: ProjectPath,
+  objectId?: ObjectId,
+): MarkdownResult<Map<string, readonly Node[]>> {
   const result = new Map<string, readonly Node[]>();
   for (let index = 0; index < nodes.length; index += 1) {
     const heading = nodes[index];
@@ -166,7 +192,13 @@ function blockSections(nodes: readonly Node[], path: ProjectPath): MarkdownResul
     if (name === undefined) continue;
     if (result.has(name))
       return failure(
-        diagnostic("SDD_MARKDOWN_MARKER_DUPLICATE", `Requirement marker sdd:${name} is duplicated.`, path, heading),
+        diagnostic(
+          "SDD_MARKDOWN_MARKER_DUPLICATE",
+          `Requirement marker sdd:${name} is duplicated.`,
+          path,
+          heading,
+          objectId,
+        ),
       );
     let end = index + 1;
     while (end < nodes.length && !(nodes[end]?.type === "heading" && nodes[end]?.depth === 3)) end += 1;
@@ -177,6 +209,7 @@ function blockSections(nodes: readonly Node[], path: ProjectPath): MarkdownResul
 function parseRequirementRelations(
   nodes: readonly Node[],
   path: ProjectPath,
+  objectId: ObjectId,
 ): MarkdownResult<readonly RequirementRelation[]> {
   const result: RequirementRelation[] = [];
   for (const item of nodes.flatMap((node) => (node.type === "list" ? [...(node.children ?? [])] : []))) {
@@ -194,7 +227,9 @@ function parseRequirementRelations(
       (!isRequirementId(id) && !isConceptId(id)) ||
       (type === "depends-on" && !isRequirementId(id))
     ) {
-      return failure(diagnostic("SDD_MARKDOWN_RELATION_INVALID", "Requirement relation is invalid.", path, item));
+      return failure(
+        diagnostic("SDD_MARKDOWN_RELATION_INVALID", "Requirement relation is invalid.", path, item, objectId),
+      );
     }
     result.push({ type, target_id: id, link });
   }
@@ -236,7 +271,13 @@ function parseRequirements(
     const expectedAnchor = id.toLowerCase();
     if (standaloneHtml(nodes[index - 1]) !== `<a id="${expectedAnchor}"></a>`)
       return failure(
-        diagnostic("SDD_MARKDOWN_REQUIREMENT_ANCHOR_INVALID", `Expected anchor ${expectedAnchor}.`, path, headingNode),
+        diagnostic(
+          "SDD_MARKDOWN_REQUIREMENT_ANCHOR_INVALID",
+          `Expected anchor ${expectedAnchor}.`,
+          path,
+          headingNode,
+          id,
+        ),
       );
     const metadataNode = nodes[index + 1];
     if (metadataNode?.type !== "code" || metadataNode.lang !== "sdd" || metadataNode.value === undefined)
@@ -246,6 +287,7 @@ function parseRequirements(
           "Requirement metadata must immediately follow its heading.",
           path,
           headingNode,
+          id,
         ),
       );
     let metadata: unknown;
@@ -253,7 +295,13 @@ function parseRequirements(
       metadata = yamlValue(metadataNode.value);
     } catch {
       return failure(
-        diagnostic("SDD_MARKDOWN_REQUIREMENT_METADATA_INVALID", "Requirement metadata is invalid.", path, metadataNode),
+        diagnostic(
+          "SDD_MARKDOWN_REQUIREMENT_METADATA_INVALID",
+          "Requirement metadata is invalid.",
+          path,
+          metadataNode,
+          id,
+        ),
       );
     }
     if (!isRecord(metadata) || !exactKeys(metadata, ["kind", "verification"]))
@@ -263,11 +311,12 @@ function parseRequirements(
           "Requirement metadata fields are invalid.",
           path,
           metadataNode,
+          id,
         ),
       );
     if (!REQUIREMENT_KINDS.some((kind) => kind === metadata.kind))
       return failure(
-        diagnostic("SDD_MARKDOWN_REQUIREMENT_KIND_UNKNOWN", "Requirement kind is unsupported.", path, metadataNode),
+        diagnostic("SDD_MARKDOWN_REQUIREMENT_KIND_UNKNOWN", "Requirement kind is unsupported.", path, metadataNode, id),
       );
     if (!VERIFICATION_MODES.some((mode) => mode === metadata.verification))
       return failure(
@@ -276,11 +325,12 @@ function parseRequirements(
           "Verification mode is unsupported.",
           path,
           metadataNode,
+          id,
         ),
       );
     let end = index + 2;
     while (end < nodes.length && !(nodes[end]?.type === "heading" && nodes[end]?.depth === 2)) end += 1;
-    const sectionsResult = blockSections(nodes.slice(index + 2, end), path);
+    const sectionsResult = blockSections(nodes.slice(index + 2, end), path, id);
     if (!sectionsResult.ok) return sectionsResult;
     const sections = sectionsResult.value;
     const unknown = [...sections.keys()].find(
@@ -293,6 +343,7 @@ function parseRequirements(
           `Requirement marker sdd:${unknown} is unsupported.`,
           path,
           headingNode,
+          id,
         ),
       );
     const statement = content(sections.get("statement") ?? []);
@@ -305,6 +356,7 @@ function parseRequirements(
           "Requirement statement is required.",
           path,
           headingNode,
+          id,
         ),
       );
     if (acceptance.length === 0)
@@ -314,9 +366,10 @@ function parseRequirements(
           "Acceptance criteria are required.",
           path,
           headingNode,
+          id,
         ),
       );
-    const relations = parseRequirementRelations(sections.get("relations") ?? [], path);
+    const relations = parseRequirementRelations(sections.get("relations") ?? [], path, id);
     if (!relations.ok) return relations;
     const rationale = content(sections.get("rationale") ?? []);
     const examples = content(sections.get("examples") ?? []);
@@ -342,13 +395,17 @@ function parseRequirements(
   }
   return { ok: true, value: requirements, diagnostics: [] };
 }
-function conceptRelations(nodes: readonly Node[], path: ProjectPath): MarkdownResult<readonly ConceptRelation[]> {
+function conceptRelations(
+  nodes: readonly Node[],
+  path: ProjectPath,
+  objectId: ObjectId,
+): MarkdownResult<readonly ConceptRelation[]> {
   const result: ConceptRelation[] = [];
   for (const item of nodes.flatMap((node) => (node.type === "list" ? [...(node.children ?? [])] : []))) {
     const link = links([item])[0];
     const id = link === undefined ? undefined : /\bCON-[0-9A-F]{8}\b/u.exec(link.label)?.[0];
     if (!text(item).startsWith("relates-to:") || link === undefined || !isConceptId(id))
-      return failure(diagnostic("SDD_MARKDOWN_RELATION_INVALID", "Concept relation is invalid.", path, item));
+      return failure(diagnostic("SDD_MARKDOWN_RELATION_INVALID", "Concept relation is invalid.", path, item, objectId));
     result.push({ type: "relates-to", target_id: id, link });
   }
   return { ok: true, value: result, diagnostics: [] };
@@ -399,7 +456,8 @@ export function parseSpecificationDocument(
     return failure(diagnostic("SDD_MARKDOWN_DOCUMENT_TYPE_UNKNOWN", "Document type is unsupported.", path, yamlNode));
   const titleNode = nodes.find((node) => node.type === "heading" && node.depth === 1);
   const title = titleNode === undefined ? "" : text(titleNode).trim();
-  if (!title) return failure(diagnostic("SDD_MARKDOWN_TITLE_REQUIRED", "Document H1 title is required.", path));
+  if (!title)
+    return failure(diagnostic("SDD_MARKDOWN_TITLE_REQUIRED", "Document H1 title is required.", path, titleNode));
   const unexpectedRequirement = nodes.find(
     (node) => node.type === "heading" && /^REQ-[0-9A-F]{8}\b/u.test(text(node).trim()),
   );
@@ -440,9 +498,9 @@ export function parseSpecificationDocument(
     const requirements = parseRequirements(nodes, owner, path);
     if (!requirements.ok) return requirements;
     if (type === "capability") {
-      const purpose = markedSection(nodes, "purpose", path, false);
+      const purpose = markedSection(nodes, "purpose", path, false, owner);
       if (!purpose.ok) return purpose;
-      const fragments = markedSection(nodes, "fragments", path, false);
+      const fragments = markedSection(nodes, "fragments", path, false, owner);
       if (!fragments.ok) return fragments;
       const purposeText = content(purpose.value);
       const value: CapabilityDocument = {
@@ -474,24 +532,33 @@ export function parseSpecificationDocument(
         "Requirements may appear only in Capability documents.",
         path,
         unexpectedRequirement,
+        sdd.id,
       ),
     );
-  const definition = markedSection(nodes, "definition", path, true);
+  const definition = markedSection(nodes, "definition", path, true, sdd.id);
   if (!definition.ok) return definition;
   const definitionText = content(definition.value);
   if (!definitionText)
-    return failure(diagnostic("SDD_MARKDOWN_CONCEPT_DEFINITION_REQUIRED", "Concept definition is required.", path));
-  const identity = markedSection(nodes, "identity", path, false);
+    return failure(
+      diagnostic(
+        "SDD_MARKDOWN_CONCEPT_DEFINITION_REQUIRED",
+        "Concept definition is required.",
+        path,
+        undefined,
+        sdd.id,
+      ),
+    );
+  const identity = markedSection(nodes, "identity", path, false, sdd.id);
   if (!identity.ok) return identity;
-  const states = markedSection(nodes, "states", path, false);
+  const states = markedSection(nodes, "states", path, false, sdd.id);
   if (!states.ok) return states;
-  const relationSection = markedSection(nodes, "relations", path, false);
+  const relationSection = markedSection(nodes, "relations", path, false, sdd.id);
   if (!relationSection.ok) return relationSection;
-  const relations = conceptRelations(relationSection.value, path);
+  const relations = conceptRelations(relationSection.value, path, sdd.id);
   if (!relations.ok) return relations;
-  const rationale = markedSection(nodes, "rationale", path, false);
+  const rationale = markedSection(nodes, "rationale", path, false, sdd.id);
   if (!rationale.ok) return rationale;
-  const examples = markedSection(nodes, "examples", path, false);
+  const examples = markedSection(nodes, "examples", path, false, sdd.id);
   if (!examples.ok) return examples;
   const identityText = content(identity.value);
   const rationaleText = content(rationale.value);

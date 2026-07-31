@@ -11,35 +11,6 @@ sdd:
 Provide deterministic structural validation, stable meaning-aware
 fingerprints, safe exact patch preparation, and reproducible Git comparison.
 
-<a id="req-7d93d64a"></a>
-
-## REQ-7D93D64A — Enforce mechanical graph invariants
-
-```sdd
-kind: invariant
-verification: automated
-```
-
-### Relations <!-- sdd:relations -->
-
-- refers-to: [CON-EA57C937 — SDD Project](../../../spec/concepts/sdd-project.md)
-- refers-to: [CON-77D857DB — Document](../../../spec/concepts/document.md)
-
-### Statement <!-- sdd:statement -->
-
-Validation shall reject malformed schemas, duplicate IDs, broken typed links,
-invalid ownership, unreachable objects, invalid anchors, and unsupported
-document or Requirement metadata.
-
-### Acceptance criteria <!-- sdd:acceptance -->
-
-- Diagnostics include stable code, severity, path, line, object ID when
-  available, message, and remediation.
-- The directed Requirement `depends-on` graph is acyclic.
-- Mechanical validation does not claim to prove semantic atomicity or
-  completeness.
-- A CLI crash never produces a passing result.
-
 <a id="req-2c8e8085"></a>
 
 ## REQ-2C8E8085 — Generate and reserve random object IDs
@@ -69,32 +40,6 @@ reachable canonical specification history of the same SDD Project.
 - Arbitrary prose, test fixture, or noncanonical proposal mentions do not count
   as prior model object definitions.
 - Parallel-branch collisions are detected against the current integration ref.
-
-<a id="req-1095e571"></a>
-
-## REQ-1095E571 — Canonicalize objects before hashing
-
-```sdd
-kind: invariant
-verification: automated
-```
-
-### Relations <!-- sdd:relations -->
-
-- refers-to: [CON-FC16381E — Fingerprint](../../../spec/concepts/fingerprint.md)
-
-### Statement <!-- sdd:statement -->
-
-The CLI shall compute SHA-256 fingerprints from schema-versioned canonical JSON
-derived from parsed Markdown AST content.
-
-### Acceptance criteria <!-- sdd:acceptance -->
-
-- Formatting, line endings, title, rationale, examples, and file movement do
-  not change semantic fingerprints.
-- Statement, acceptance, constraints, and semantic Concept definition changes
-  do change semantic fingerprints.
-- Unordered relation sets are sorted; ordered normative lists preserve order.
 
 <a id="req-b25091a0"></a>
 

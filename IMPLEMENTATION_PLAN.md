@@ -3,8 +3,8 @@
 ## Status
 
 - State: active
-- Current phase: Milestone 2 / Read-only specification vertical slice
-- Current leaf: 2.5 First CLI surface
+- Current phase: Milestone 3 / Initialization, IDs, trace, and diff
+- Current leaf: 3.1 Non-overwriting project initialization
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -477,6 +477,15 @@ This leaf contributes to the full CLI surface in `REQ-F7D39246`; that
 Requirement is promoted only after every named version 1 operation exists.
 Merge-specific exit mapping in `REQ-41EDF9A3` remains deferred.
 
+This leaf connects the production Node filesystem adapter and shared
+configuration, parser, graph, and fingerprint pipeline to `sdd validate` and
+`sdd inspect`. Both commands emit deterministic versioned JSON or a human view
+of the same response, and map valid, blocked, and technical outcomes to exits
+`0`, `1`, and `3`. It completes and promotes `REQ-0361538D`, `REQ-7C848ED0`,
+`REQ-1095E571`, and `REQ-7D93D64A`. `REQ-F7D39246` remains proposed until all
+named version 1 commands exist; `REQ-B25091A0` remains proposed until TestIndex
+enables verification fingerprints.
+
 Done when SDD Yo validates its first canonical Requirement subset and produces
 byte-identical JSON/fingerprints across repeated runs.
 
@@ -591,9 +600,7 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 2.5 — First CLI surface` is the only active implementation leaf. It
-must connect project resolution, parsing, graph validation, and fingerprints
-to deterministic `validate` and `inspect` JSON and human views with exit codes
-`0`, `1`, and `3`. `REQ-0361538D`, `REQ-1095E571`, and the CLI-dependent parts
-of `REQ-7D93D64A` remain proposed until this integration makes their Statements
-observable.
+`Milestone 3.1 — Non-overwriting project initialization` is the only active
+implementation leaf. It must implement the bounded `sdd init` operation without
+overwriting existing project files; random ID generation, history checks,
+trace, and diff remain later leaves within Milestone 3.

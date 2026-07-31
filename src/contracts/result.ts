@@ -14,5 +14,5 @@ export type CliResponseEnvelope<Command extends string, Status extends string, R
 > & {
   readonly schema_version: JsonSchemaVersion;
   readonly command: Command;
-  readonly project_id: ProjectId;
+  readonly project_id: ProjectId | null;
 };
