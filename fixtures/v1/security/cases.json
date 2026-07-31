@@ -1,0 +1,364 @@
+{
+  "fixture_manifest_version": "1.0",
+  "status": "bootstrap-fixture-manifest",
+  "fixture_family_id": "security-path-process",
+  "leaf": "0.7-path-safety-scenarios",
+  "scope": "Declarative project-path and filesystem-race scenarios for SpecPatch and CandidateTreeManifest inputs. The manifest defines portable setup and expected fail-closed decisions without creating host-specific symlinks or junctions. Malicious JSONL and XML, command argv, evidence confusion, prompt injection, atomic interruption, runtime code, and verifier behavior are deferred.",
+  "contracts": [
+    "artifact.spec-patch",
+    "artifact.candidate-tree-manifest"
+  ],
+  "requirements": [
+    "REQ-7AFE9904"
+  ],
+  "authorities": [
+    "proposal/spec/capabilities/validation-fingerprints-and-patches.md#req-7afe9904",
+    "proposal/architecture/security.md#path-traversal-and-symlink-escape",
+    "proposal/architecture/security.md#security-validation",
+    "proposal/architecture/fingerprints-and-git.md#specpatch"
+  ],
+  "oracle_semantics": {
+    "fixture_form": "Scenario definitions describe path-bearing artifact input, filesystem topology, and deterministic mutation hooks. A future platform test materializes the topology inside an isolated temporary project root.",
+    "path_domain": "Paths are non-empty normalized project-relative UTF-8 paths using slash separators and must remain beneath the configured specification root.",
+    "lexical_rejection": "Reject absolute, drive-relative, dot-segment, NUL-bearing, ambiguous-separator, and platform-reserved paths before filesystem mutation.",
+    "component_topology_rejection": "Inspect every existing component from the project root to the target without following a symlink or junction outside project scope.",
+    "case_collision_rejection": "On a case-insensitive filesystem, reject a target whose normalized spelling aliases a differently cased existing path.",
+    "toctou_revalidation": "Revalidate path identity and patch preconditions after validation and before mutation; any change aborts the complete patch.",
+    "rejection_result": {
+      "accepted": false,
+      "patch_operations_applied": 0,
+      "pass_allowed": false
+    },
+    "positive_result": {
+      "accepted": true,
+      "path": "spec/capabilities/example.md"
+    },
+    "platform_values": [
+      "all",
+      "posix",
+      "windows",
+      "case-insensitive-filesystem"
+    ],
+    "deferred_inventory_cases": [
+      "shell-metacharacter-argv",
+      "xml-external-entity",
+      "atomic-interruption"
+    ]
+  },
+  "cases": [
+    {
+      "case_id": "relative-safe-path",
+      "category": "positive-control",
+      "platforms": [
+        "all"
+      ],
+      "input": {
+        "artifact_surfaces": [
+          "artifact.spec-patch",
+          "artifact.candidate-tree-manifest"
+        ],
+        "path": "spec/capabilities/example.md"
+      },
+      "topology": {
+        "project_root": "<project-root>",
+        "spec_root": "<project-root>/spec",
+        "components": "ordinary-directories-within-project"
+      },
+      "expected": {
+        "validation_stage": "path-and-component-validation",
+        "accepted": true,
+        "normalized_path": "spec/capabilities/example.md",
+        "basis_requirements": [
+          "REQ-7AFE9904"
+        ]
+      }
+    },
+    {
+      "case_id": "absolute-path",
+      "category": "lexical-containment",
+      "platforms": [
+        "all"
+      ],
+      "input": {
+        "artifact_surfaces": [
+          "artifact.spec-patch",
+          "artifact.candidate-tree-manifest"
+        ],
+        "path_variants": [
+          {
+            "kind": "posix-absolute",
+            "path": "/outside/example.md"
+          },
+          {
+            "kind": "windows-drive-absolute",
+            "path": "C:/outside/example.md"
+          },
+          {
+            "kind": "windows-drive-relative",
+            "path": "C:outside/example.md"
+          },
+          {
+            "kind": "windows-unc",
+            "path": "//server/share/example.md"
+          }
+        ]
+      },
+      "expected": {
+        "validation_stage": "lexical-path-validation",
+        "accepted": false,
+        "patch_operations_applied": 0,
+        "pass_allowed": false,
+        "basis_requirements": [
+          "REQ-7AFE9904"
+        ]
+      }
+    },
+    {
+      "case_id": "dot-dot",
+      "category": "path-traversal",
+      "platforms": [
+        "all"
+      ],
+      "input": {
+        "artifact_surfaces": [
+          "artifact.spec-patch",
+          "artifact.candidate-tree-manifest"
+        ],
+        "path_variants": [
+          {
+            "kind": "parent-from-spec-root",
+            "path": "spec/../outside.md"
+          },
+          {
+            "kind": "nested-parent",
+            "path": "spec/capabilities/../../outside.md"
+          },
+          {
+            "kind": "current-directory-segment",
+            "path": "spec/./capabilities/example.md"
+          }
+        ]
+      },
+      "expected": {
+        "validation_stage": "lexical-path-validation",
+        "accepted": false,
+        "patch_operations_applied": 0,
+        "pass_allowed": false,
+        "basis_requirements": [
+          "REQ-7AFE9904"
+        ]
+      }
+    },
+    {
+      "case_id": "nul",
+      "category": "invalid-path-code-point",
+      "platforms": [
+        "all"
+      ],
+      "input": {
+        "artifact_surfaces": [
+          "artifact.spec-patch",
+          "artifact.candidate-tree-manifest"
+        ],
+        "path": "spec/capabilities/example\u0000.md"
+      },
+      "expected": {
+        "validation_stage": "lexical-path-validation",
+        "accepted": false,
+        "patch_operations_applied": 0,
+        "pass_allowed": false,
+        "basis_requirements": [
+          "REQ-7AFE9904"
+        ]
+      }
+    },
+    {
+      "case_id": "ambiguous-separator",
+      "category": "path-separator",
+      "platforms": [
+        "all"
+      ],
+      "input": {
+        "artifact_surfaces": [
+          "artifact.spec-patch",
+          "artifact.candidate-tree-manifest"
+        ],
+        "path_variants": [
+          {
+            "kind": "backslash",
+            "path": "spec\\capabilities\\example.md"
+          },
+          {
+            "kind": "mixed-slash-and-backslash",
+            "path": "spec/capabilities\\example.md"
+          }
+        ]
+      },
+      "expected": {
+        "validation_stage": "lexical-path-validation",
+        "accepted": false,
+        "patch_operations_applied": 0,
+        "pass_allowed": false,
+        "basis_requirements": [
+          "REQ-7AFE9904"
+        ]
+      }
+    },
+    {
+      "case_id": "reserved-device-name",
+      "category": "platform-reserved-name",
+      "platforms": [
+        "windows"
+      ],
+      "input": {
+        "artifact_surfaces": [
+          "artifact.spec-patch",
+          "artifact.candidate-tree-manifest"
+        ],
+        "path_variants": [
+          {
+            "kind": "reserved-device-basename",
+            "path": "spec/CON.md"
+          },
+          {
+            "kind": "reserved-device-basename-case-folded",
+            "path": "spec/capabilities/nul.txt"
+          }
+        ]
+      },
+      "expected": {
+        "validation_stage": "platform-path-validation",
+        "accepted": false,
+        "patch_operations_applied": 0,
+        "pass_allowed": false,
+        "basis_requirements": [
+          "REQ-7AFE9904"
+        ]
+      }
+    },
+    {
+      "case_id": "case-collision",
+      "category": "filesystem-alias",
+      "platforms": [
+        "case-insensitive-filesystem"
+      ],
+      "input": {
+        "artifact_surfaces": [
+          "artifact.spec-patch",
+          "artifact.candidate-tree-manifest"
+        ],
+        "path": "spec/capabilities/example.md"
+      },
+      "topology": {
+        "existing_path": "spec/Capabilities/Example.md",
+        "filesystem_case_sensitive": false
+      },
+      "expected": {
+        "validation_stage": "component-topology-validation",
+        "accepted": false,
+        "patch_operations_applied": 0,
+        "pass_allowed": false,
+        "reason": "The requested spelling aliases a differently cased existing target.",
+        "basis_requirements": [
+          "REQ-7AFE9904"
+        ]
+      }
+    },
+    {
+      "case_id": "symlink-escape",
+      "category": "filesystem-indirection",
+      "platforms": [
+        "posix"
+      ],
+      "input": {
+        "artifact_surfaces": [
+          "artifact.spec-patch",
+          "artifact.candidate-tree-manifest"
+        ],
+        "path": "spec/linked/example.md"
+      },
+      "topology": {
+        "project_root": "<project-root>",
+        "link_path": "<project-root>/spec/linked",
+        "link_type": "symbolic-link",
+        "link_target": "<outside-root>"
+      },
+      "expected": {
+        "validation_stage": "component-topology-validation",
+        "accepted": false,
+        "patch_operations_applied": 0,
+        "pass_allowed": false,
+        "checked_component": "spec/linked",
+        "basis_requirements": [
+          "REQ-7AFE9904"
+        ]
+      }
+    },
+    {
+      "case_id": "junction-escape",
+      "category": "filesystem-indirection",
+      "platforms": [
+        "windows"
+      ],
+      "input": {
+        "artifact_surfaces": [
+          "artifact.spec-patch",
+          "artifact.candidate-tree-manifest"
+        ],
+        "path": "spec/linked/example.md"
+      },
+      "topology": {
+        "project_root": "<project-root>",
+        "link_path": "<project-root>/spec/linked",
+        "link_type": "directory-junction",
+        "link_target": "<outside-root>"
+      },
+      "expected": {
+        "validation_stage": "component-topology-validation",
+        "accepted": false,
+        "patch_operations_applied": 0,
+        "pass_allowed": false,
+        "checked_component": "spec/linked",
+        "basis_requirements": [
+          "REQ-7AFE9904"
+        ]
+      }
+    },
+    {
+      "case_id": "toctou-change",
+      "category": "filesystem-race",
+      "platforms": [
+        "all"
+      ],
+      "input": {
+        "artifact_surfaces": [
+          "artifact.spec-patch"
+        ],
+        "operation_paths": [
+          "spec/capabilities/first.md",
+          "spec/capabilities/second.md"
+        ]
+      },
+      "topology": {
+        "initial_component": "<project-root>/spec/capabilities",
+        "initial_component_type": "ordinary-directory-within-project"
+      },
+      "mutation": {
+        "hook": "after-all-preconditions-before-first-write",
+        "action": "replace-validated-component-with-filesystem-indirection",
+        "path": "<project-root>/spec/capabilities",
+        "new_target": "<outside-root>"
+      },
+      "expected": {
+        "validation_stage": "pre-write-revalidation",
+        "accepted": false,
+        "patch_operations_applied": 0,
+        "pass_allowed": false,
+        "reason": "A component identity change after validation aborts the complete patch before any patch operation is applied.",
+        "basis_requirements": [
+          "REQ-7AFE9904"
+        ]
+      }
+    }
+  ]
+}

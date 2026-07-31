@@ -259,7 +259,7 @@ Primary target Requirements:
 
 ### 0.7 Security fixture corpus
 
-- [ ] Add traversal, absolute path, separator, reserved-name, symlink, junction,
+- [x] Add traversal, absolute path, separator, reserved-name, symlink, junction,
       case-fold collision, and TOCTOU scenario definitions.
 - [ ] Add malicious JSONL and XML fixtures with external entities disabled.
 - [ ] Add argv versus shell-metacharacter cases.
