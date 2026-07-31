@@ -38,6 +38,35 @@
       "expectation": "Accept optional semantic, structural, and explanatory sections with typed relative graph links."
     },
     {
+      "case_id": "utf8",
+      "root": "utf8",
+      "entrypoint": "README.md",
+      "parse_valid": true,
+      "graph_valid": true,
+      "expectation": "Accept UTF-8 multibyte text in human-visible headings, prose, and graph-link labels while machine tokens remain stable ASCII."
+    },
+    {
+      "case_id": "line-ending-normalization",
+      "variants": [
+        {
+          "variant_id": "lf",
+          "root": "line-ending-normalization/lf",
+          "entrypoint": "README.md",
+          "line_endings": "lf"
+        },
+        {
+          "variant_id": "crlf",
+          "root": "line-ending-normalization/crlf",
+          "entrypoint": "README.md",
+          "line_endings": "crlf"
+        }
+      ],
+      "parse_valid": true,
+      "graph_valid": true,
+      "expected_normalized_equivalent": true,
+      "expectation": "Treat byte-distinct LF and CRLF trees as the same Markdown content after line-ending normalization."
+    },
+    {
       "case_id": "unknown-document-type",
       "root": "unknown-document-type",
       "entrypoint": "README.md",

@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Bootstrap / Stage 0 contract fixtures
-- Current leaf: 0.3d Markdown encoding and normalization fixtures
+- Current leaf: 0.4 Fingerprint and delta goldens
 - Last updated: 2026-07-31
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -161,7 +161,7 @@ Artifact:
 - [x] **0.3c — Markdown change-classification pairs.** Add
       semantic/structural/explanatory change pairs. Target Requirements:
       `REQ-8ACBC52D`, `REQ-065A9911`, `REQ-1095E571`.
-- [ ] **0.3d — Markdown encoding and normalization fixtures.** Add UTF-8 and
+- [x] **0.3d — Markdown encoding and normalization fixtures.** Add UTF-8 and
       normalized line-ending cases.
 
 Primary target Requirements:
@@ -424,7 +424,8 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 0.3d — Markdown encoding and normalization fixtures` is the only
-active implementation leaf. It must add UTF-8 and normalized line-ending cases
-without adding a runtime parser. Fingerprint and delta truth tables, runtime
-schema libraries, generated TypeScript types, and CLI behavior remain deferred.
+`Milestone 0.4 — Fingerprint and delta goldens` is the only active
+implementation leaf. It must define versioned canonical JSON byte fixtures and
+semantic, structural, verification, and explanatory delta truth tables without
+adding a runtime canonicalizer. Runtime schema libraries, generated TypeScript
+types, and CLI behavior remain deferred.
