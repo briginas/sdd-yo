@@ -22,59 +22,81 @@ includes an algorithm prefix:
 sha256:<lowercase-hex-digest>
 ```
 
+### Canonical JSON version 1 byte contract
+
+Canonicalization version `1` emits one compact JSON value encoded as UTF-8
+without a byte-order mark or trailing newline. Input text is normalized to
+Unicode NFC before JSON escaping. JSON strings use the escapes required by
+JSON and otherwise retain UTF-8 characters; insignificant whitespace is not
+emitted.
+
+Object keys use contract-defined order rather than input insertion order. The
+fingerprint envelope order is:
+
+```text
+canonicalization_version, object_type, object_id, fingerprint_class,
+canonical_value
+```
+
+Within `canonical_value`, keys follow the fingerprint-class field order listed
+below. Set-like ID and test-reference arrays are sorted by Unicode code point
+after normalization. Normative sequences, including acceptance criteria,
+constraints, and Concept states, retain source order. Empty applicable fields
+are emitted; absent inapplicable fields are not. Paths, display titles,
+explanatory sections, source formatting, and input object-key order are not
+copied into canonical values.
+
+Stage 0 object fixtures use a language-independent parsed-model projection as
+their input boundary. That projection is a bootstrap oracle, not a public CLI
+wire format. Later parser tests must demonstrate that Markdown produces the
+same projection before the fingerprint implementation consumes it.
+
 ## Fingerprint classes
 
 Requirement semantic:
 
 ```text
-object type and ID
-statement AST
-acceptance criteria AST
-constraints AST
+statement, acceptance, constraints
 ```
 
 Requirement structural:
 
 ```text
-object type and ID
-kind
-owner Capability ID
-refers-to IDs
-depends-on IDs
+kind, owner_capability_id, refers_to_ids, depends_on_ids
 ```
 
 Requirement verification:
 
 ```text
-object type and ID
-verification mode
-normalized discovered test references
+verification, test_refs
 ```
 
 Concept semantic:
 
 ```text
-object type and ID
-definition
-identity
-states
-semantic relation content
+definition, identity, states
 ```
 
 Concept structural:
 
 ```text
-object type and ID
-relates-to IDs
+relates_to_ids
 ```
 
 Capability structural:
 
 ```text
-object type and ID
-owned Requirement IDs
-reachable fragment set
+requirement_ids, reachable_fragments
 ```
+
+The envelope supplies object type and ID for every class. Prose fields in the
+Stage 0 projection are normalized block-AST arrays. Version 1 fixtures cover
+paragraph and text nodes; node keys are ordered `type`, then `children` or
+`value`. Acceptance criteria, constraints, and states are arrays of block-AST
+arrays so their outer source order remains observable. `reachable_fragments`
+contains sorted arrays of the Requirement IDs contributed by each reachable
+fragment, ordered lexicographically by their canonical JSON bytes; it does not
+contain document paths.
 
 Titles, rationale, examples, purpose, formatting, and document paths are
 excluded from semantic fingerprints.

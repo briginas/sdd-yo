@@ -1,0 +1,93 @@
+{
+  "source": {
+    "line_endings": "crlf",
+    "link_labels": [
+      "CON-C4000002 — Operator",
+      "CON-C4000001 — Project",
+      "REQ-C4000003 — Retain the record",
+      "REQ-C4000002 — Authorize the operator"
+    ],
+    "display_title": "Archive an inactive project",
+    "path": "spec/capabilities/archiving.md"
+  },
+  "object": {
+    "examples": [],
+    "rationale": [
+      {
+        "children": [
+          {
+            "value": "Archiving keeps active views focused.",
+            "type": "text"
+          }
+        ],
+        "type": "paragraph"
+      }
+    ],
+    "test_refs": [
+      "unit:archive-active",
+      "integration:archive"
+    ],
+    "depends_on_ids": [
+      "REQ-C4000003",
+      "REQ-C4000002"
+    ],
+    "refers_to_ids": [
+      "CON-C4000002",
+      "CON-C4000001"
+    ],
+    "constraints": [
+      [
+        {
+          "children": [
+            {
+              "value": "An active project cannot be archived.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        }
+      ]
+    ],
+    "acceptance": [
+      [
+        {
+          "children": [
+            {
+              "value": "The project leaves the active list.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        }
+      ],
+      [
+        {
+          "children": [
+            {
+              "value": "The project record remains available.",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        }
+      ]
+    ],
+    "statement": [
+      {
+        "children": [
+          {
+            "value": "An operator shall archive an inactive project.",
+            "type": "text"
+          }
+        ],
+        "type": "paragraph"
+      }
+    ],
+    "verification": "automated",
+    "owner_capability_id": "CAP-C4000001",
+    "kind": "behavior",
+    "object_id": "REQ-C4000001",
+    "object_type": "requirement"
+  },
+  "projection_version": "1"
+}

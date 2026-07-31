@@ -1,0 +1,32 @@
+{
+  "projection_version": "1",
+  "source": {
+    "path": "spec/workflows/archive/project.md",
+    "display_title": "Archive an inactive project",
+    "line_endings": "lf",
+    "resolved_link_paths": [
+      "../../../concepts/people/operator.md",
+      "../../../concepts/work/project.md",
+      "retention.md#req-c4000003",
+      "authorization.md#req-c4000002"
+    ]
+  },
+  "object": {
+    "object_type": "requirement",
+    "object_id": "REQ-C4000001",
+    "kind": "behavior",
+    "owner_capability_id": "CAP-C4000001",
+    "verification": "automated",
+    "statement": [{"type": "paragraph", "children": [{"type": "text", "value": "An operator shall archive an inactive project."}]}],
+    "acceptance": [
+      [{"type": "paragraph", "children": [{"type": "text", "value": "The project leaves the active list."}]}],
+      [{"type": "paragraph", "children": [{"type": "text", "value": "The project record remains available."}]}]
+    ],
+    "constraints": [[{"type": "paragraph", "children": [{"type": "text", "value": "An active project cannot be archived."}]}]],
+    "refers_to_ids": ["CON-C4000002", "CON-C4000001"],
+    "depends_on_ids": ["REQ-C4000003", "REQ-C4000002"],
+    "test_refs": ["unit:archive-active", "integration:archive"],
+    "rationale": [{"type": "paragraph", "children": [{"type": "text", "value": "Archiving keeps active views focused."}]}],
+    "examples": []
+  }
+}

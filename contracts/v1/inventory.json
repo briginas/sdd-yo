@@ -1245,6 +1245,7 @@
       "definition_status": "specified",
       "authority": "proposal/architecture/fingerprints-and-git.md#fingerprint-classes",
       "requirements": [
+        "REQ-13CF54D6",
         "REQ-1095E571",
         "REQ-B25091A0"
       ],
@@ -1576,6 +1577,7 @@
         "fingerprint.object"
       ],
       "requirements": [
+        "REQ-13CF54D6",
         "REQ-8ACBC52D",
         "REQ-1095E571",
         "REQ-B25091A0"

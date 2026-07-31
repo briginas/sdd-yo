@@ -1,0 +1,149 @@
+{
+  "fixture_manifest_version": "1.0",
+  "status": "bootstrap-fixture-manifest",
+  "fixture_family_id": "fingerprint-objects",
+  "contracts": [
+    "markdown.requirement-block",
+    "markdown.concept-document",
+    "fingerprint.object"
+  ],
+  "requirements": [
+    "REQ-13CF54D6",
+    "REQ-8ACBC52D",
+    "REQ-1095E571",
+    "REQ-B25091A0"
+  ],
+  "canonicalization": {
+    "version": "1",
+    "encoding": "utf-8",
+    "byte_order_mark": false,
+    "unicode_normalization": "NFC",
+    "json_layout": "compact",
+    "trailing_newline": false,
+    "object_key_order": "contract-defined"
+  },
+  "cases": [
+    {
+      "case_id": "requirement-semantic",
+      "canonicalization_version": "1",
+      "model_path": "models/baseline/requirement.json",
+      "object_type": "requirement",
+      "object_id": "REQ-C4000001",
+      "fingerprint_class": "semantic",
+      "canonical_json_utf8": "{\"canonicalization_version\":\"1\",\"object_type\":\"requirement\",\"object_id\":\"REQ-C4000001\",\"fingerprint_class\":\"semantic\",\"canonical_value\":{\"statement\":[{\"type\":\"paragraph\",\"children\":[{\"type\":\"text\",\"value\":\"An operator shall archive an inactive project.\"}]}],\"acceptance\":[[{\"type\":\"paragraph\",\"children\":[{\"type\":\"text\",\"value\":\"The project leaves the active list.\"}]}],[{\"type\":\"paragraph\",\"children\":[{\"type\":\"text\",\"value\":\"The project record remains available.\"}]}]],\"constraints\":[[{\"type\":\"paragraph\",\"children\":[{\"type\":\"text\",\"value\":\"An active project cannot be archived.\"}]}]]}}",
+      "expected_fingerprint": "sha256:6c216021443d3a6ecc367c731c51a76322e640e0663f8b15b208175750770511",
+      "expectation": "Preserve normative statement, acceptance, and constraint order while excluding explanatory and source fields."
+    },
+    {
+      "case_id": "requirement-structural",
+      "canonicalization_version": "1",
+      "model_path": "models/baseline/requirement.json",
+      "object_type": "requirement",
+      "object_id": "REQ-C4000001",
+      "fingerprint_class": "structural",
+      "canonical_json_utf8": "{\"canonicalization_version\":\"1\",\"object_type\":\"requirement\",\"object_id\":\"REQ-C4000001\",\"fingerprint_class\":\"structural\",\"canonical_value\":{\"kind\":\"behavior\",\"owner_capability_id\":\"CAP-C4000001\",\"refers_to_ids\":[\"CON-C4000001\",\"CON-C4000002\"],\"depends_on_ids\":[\"REQ-C4000002\",\"REQ-C4000003\"]}}",
+      "expected_fingerprint": "sha256:9628209ddac26812e6cac9404fbdbd142eba0a4ca6c1430cbf33367a943e828c",
+      "expectation": "Sort set-like relations by stable target ID rather than source path, label, or input order."
+    },
+    {
+      "case_id": "requirement-verification",
+      "canonicalization_version": "1",
+      "model_path": "models/baseline/requirement.json",
+      "object_type": "requirement",
+      "object_id": "REQ-C4000001",
+      "fingerprint_class": "verification",
+      "canonical_json_utf8": "{\"canonicalization_version\":\"1\",\"object_type\":\"requirement\",\"object_id\":\"REQ-C4000001\",\"fingerprint_class\":\"verification\",\"canonical_value\":{\"verification\":\"automated\",\"test_refs\":[\"integration:archive\",\"unit:archive-active\"]}}",
+      "expected_fingerprint": "sha256:6e00c81946acedddd85131f4ba4fcbe526590b174c5e6a3713a5ed1299c7b562",
+      "expectation": "Sort normalized discovered test references independently of adapter enumeration order."
+    },
+    {
+      "case_id": "concept-semantic",
+      "canonicalization_version": "1",
+      "model_path": "models/baseline/concept.json",
+      "object_type": "concept",
+      "object_id": "CON-C4000001",
+      "fingerprint_class": "semantic",
+      "canonical_json_utf8": "{\"canonicalization_version\":\"1\",\"object_type\":\"concept\",\"object_id\":\"CON-C4000001\",\"fingerprint_class\":\"semantic\",\"canonical_value\":{\"definition\":[{\"type\":\"paragraph\",\"children\":[{\"type\":\"text\",\"value\":\"A project is a governed collection of work.\"}]}],\"identity\":[{\"type\":\"paragraph\",\"children\":[{\"type\":\"text\",\"value\":\"A project keeps its identity across lifecycle states.\"}]}],\"states\":[[{\"type\":\"paragraph\",\"children\":[{\"type\":\"text\",\"value\":\"active\"}]}],[{\"type\":\"paragraph\",\"children\":[{\"type\":\"text\",\"value\":\"archived\"}]}]]}}",
+      "expected_fingerprint": "sha256:bd12a4fa022ca88091201714d448d5e2df9eca8067665e08f28b415bfac3aa6f",
+      "expectation": "Preserve semantic definition, identity, and state order while excluding title, rationale, examples, and path."
+    },
+    {
+      "case_id": "concept-structural",
+      "canonicalization_version": "1",
+      "model_path": "models/baseline/concept.json",
+      "object_type": "concept",
+      "object_id": "CON-C4000001",
+      "fingerprint_class": "structural",
+      "canonical_json_utf8": "{\"canonicalization_version\":\"1\",\"object_type\":\"concept\",\"object_id\":\"CON-C4000001\",\"fingerprint_class\":\"structural\",\"canonical_value\":{\"relates_to_ids\":[\"CON-C4000002\",\"CON-C4000003\"]}}",
+      "expected_fingerprint": "sha256:179b470ee86f615d999ed1bd75405d18d7c88423d0abf74ead06a0fd2efe5f3b",
+      "expectation": "Sort Concept relation targets by stable ID."
+    },
+    {
+      "case_id": "capability-structural",
+      "canonicalization_version": "1",
+      "model_path": "models/baseline/capability.json",
+      "object_type": "capability",
+      "object_id": "CAP-C4000001",
+      "fingerprint_class": "structural",
+      "canonical_json_utf8": "{\"canonicalization_version\":\"1\",\"object_type\":\"capability\",\"object_id\":\"CAP-C4000001\",\"fingerprint_class\":\"structural\",\"canonical_value\":{\"requirement_ids\":[\"REQ-C4000001\",\"REQ-C4000002\",\"REQ-C4000003\"],\"reachable_fragments\":[[\"REQ-C4000002\"],[\"REQ-C4000003\"]]}}",
+      "expected_fingerprint": "sha256:561cb450189a6659cbe7cf5f4219a5a884d073aa61b9a648f98e048894801bc6",
+      "expectation": "Sort owned Requirement IDs and represent reachable fragments without document paths."
+    },
+    {
+      "case_id": "format-only",
+      "canonicalization_version": "1",
+      "variant_model_paths": [
+        "models/baseline/requirement.json",
+        "models/format-only/requirement.json"
+      ],
+      "expected_equal_to_case_ids": [
+        "requirement-semantic",
+        "requirement-structural",
+        "requirement-verification"
+      ],
+      "expectation": "Source layout, line endings, and parsed-model input key order do not change any Requirement fingerprint."
+    },
+    {
+      "case_id": "title-only",
+      "canonicalization_version": "1",
+      "variant_model_paths": [
+        "models/baseline/requirement.json",
+        "models/title-only/requirement.json"
+      ],
+      "expected_equal_to_case_ids": [
+        "requirement-semantic",
+        "requirement-structural",
+        "requirement-verification"
+      ],
+      "expectation": "Changing only display titles and graph-link labels does not change Requirement fingerprints."
+    },
+    {
+      "case_id": "path-move",
+      "canonicalization_version": "1",
+      "variant_model_paths": [
+        "models/baseline/requirement.json",
+        "models/path-move/requirement.json"
+      ],
+      "expected_equal_to_case_ids": [
+        "requirement-semantic",
+        "requirement-structural",
+        "requirement-verification"
+      ],
+      "expectation": "Moving source and target documents while retaining stable IDs does not change Requirement fingerprints."
+    },
+    {
+      "case_id": "unicode-normalization",
+      "canonicalization_version": "1",
+      "variant_model_paths": [
+        "models/unicode-nfc/concept.json",
+        "models/unicode-nfd/concept.json"
+      ],
+      "object_type": "concept",
+      "object_id": "CON-C4000010",
+      "fingerprint_class": "semantic",
+      "canonical_json_utf8": "{\"canonicalization_version\":\"1\",\"object_type\":\"concept\",\"object_id\":\"CON-C4000010\",\"fingerprint_class\":\"semantic\",\"canonical_value\":{\"definition\":[{\"type\":\"paragraph\",\"children\":[{\"type\":\"text\",\"value\":\"Café is a shared workspace.\"}]}],\"identity\":[],\"states\":[]}}",
+      "expected_fingerprint": "sha256:be160aeceb6aa7c9a4b17e34b050d593cab00b6fb4c79919ecb7a5f7883be292",
+      "expectation": "NFC and canonically equivalent NFD input produce the same NFC canonical bytes and fingerprint."
+    }
+  ]
+}

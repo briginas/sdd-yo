@@ -1,0 +1,63 @@
+{
+  "projection_version": "1",
+  "source": {
+    "path": "spec/concepts/project.md",
+    "display_title": "Project"
+  },
+  "object": {
+    "object_type": "concept",
+    "object_id": "CON-C4000001",
+    "definition": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "value": "A project is a governed collection of work."
+          }
+        ]
+      }
+    ],
+    "identity": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "value": "A project keeps its identity across lifecycle states."
+          }
+        ]
+      }
+    ],
+    "states": [
+      [
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "value": "active"
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "value": "archived"
+            }
+          ]
+        }
+      ]
+    ],
+    "relates_to_ids": [
+      "CON-C4000003",
+      "CON-C4000002"
+    ],
+    "rationale": [],
+    "examples": []
+  }
+}

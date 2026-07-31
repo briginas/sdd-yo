@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Bootstrap / Stage 0 contract fixtures
-- Current leaf: 0.4 Fingerprint and delta goldens
+- Current leaf: 0.4b Object delta truth tables
 - Last updated: 2026-07-31
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -178,12 +178,20 @@ and
 
 ### 0.4 Fingerprint and delta goldens
 
-- [ ] Define canonical JSON byte fixtures for every model object.
-- [ ] Define semantic, structural, verification, and explanatory delta truth
-      tables.
-- [ ] Include ordering, path move, title, rationale, relation set, acceptance
-      order, and Unicode cases.
-- [ ] Version every canonicalization fixture explicitly.
+- [x] **0.4a — Canonical object fingerprint goldens.** Define the version 1
+      canonical JSON byte contract and add exact canonical bytes and SHA-256
+      goldens for every applicable Capability, Requirement, and Concept
+      fingerprint class. Cover format, title, path, relation ordering,
+      acceptance ordering, and Unicode normalization invariants. Target
+      Requirements: `REQ-13CF54D6`, `REQ-8ACBC52D`, `REQ-1095E571`,
+      `REQ-B25091A0`.
+- [ ] **0.4b — Object delta truth tables.** Define add, modify, delete, mixed
+      ordering, and semantic, structural, verification, and explanatory delta
+      truth tables. Target Requirements: `REQ-AFD65A03`, `REQ-B25091A0`,
+      `REQ-7341DBB7`.
+
+Artifact:
+[`fixtures/v1/fingerprints/objects/cases.json`](fixtures/v1/fingerprints/objects/cases.json).
 
 Primary target Requirements:
 `REQ-13CF54D6`, `REQ-1095E571`, `REQ-B25091A0`, `REQ-AFD65A03`.

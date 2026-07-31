@@ -1,0 +1,17 @@
+{
+  "projection_version": "1",
+  "source": {
+    "path": "spec/concepts/cafe.md",
+    "display_title": "Café"
+  },
+  "object": {
+    "object_type": "concept",
+    "object_id": "CON-C4000010",
+    "definition": [{"type": "paragraph", "children": [{"type": "text", "value": "Café is a shared workspace."}]}],
+    "identity": [],
+    "states": [],
+    "relates_to_ids": [],
+    "rationale": [],
+    "examples": []
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "projection_version": "1",
+  "source": {
+    "path": "spec/capabilities/archiving.md",
+    "display_title": "Project archiving",
+    "fragment_paths": [
+      "spec/capabilities/archive-retention.md",
+      "spec/capabilities/archive-authorization.md"
+    ]
+  },
+  "object": {
+    "object_type": "capability",
+    "object_id": "CAP-C4000001",
+    "requirement_ids": [
+      "REQ-C4000003",
+      "REQ-C4000001",
+      "REQ-C4000002"
+    ],
+    "reachable_fragments": [
+      [
+        "REQ-C4000003"
+      ],
+      [
+        "REQ-C4000002"
+      ]
+    ],
+    "purpose": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "value": "Allow authorized project archiving."
+          }
+        ]
+      }
+    ]
+  }
+}
