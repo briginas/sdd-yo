@@ -1,7 +1,23 @@
 {
   "name": "sdd-yo",
+  "version": "0.0.0",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./schemas/v1/*.schema.json": "./contracts/v1/schemas/*.schema.json"
+  },
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "sdd": "./dist/bin/sdd.js"
+  },
+  "files": [
+    "dist",
+    "contracts/v1/schemas"
+  ],
   "engines": {
     "node": ">=22.18.0"
   },
@@ -12,6 +28,7 @@
     "format:check": "prettier --check \"scripts/generate-schema-types.ts\" \"src/**/*.ts\" \"test/**/*.ts\" \"*.md\" \"*.json\"",
     "generate:schemas": "node scripts/generate-schema-types.ts --write",
     "test": "node --test test/*.test.ts",
+    "test:package": "node --test test/package-smoke.ts",
     "typecheck": "tsc --noEmit",
     "verify:stage-0": "node scripts/verify-stage-0.ts"
   },

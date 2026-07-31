@@ -6,8 +6,9 @@ This repository develops SDD Yo: a repository-native specification governance
 system with a deterministic CLI and an optional Agent Skill.
 
 The repository is currently in pre-implementation bootstrap. A testable
-TypeScript scaffold exists, but there is no product runtime, canonical `spec/`,
-or working `sdd` executable yet.
+TypeScript scaffold and package/executable wiring exist, but there is no
+implemented product command, canonical `spec/`, or gate-producing `sdd`
+runtime yet.
 
 ## Source-of-truth map
 
@@ -99,6 +100,7 @@ surface and the following full validation commands:
 
 ```text
 npm test
+npm run test:package
 npm run check:schemas
 npm run build
 npm run typecheck
@@ -108,7 +110,11 @@ git diff --check
 ```
 
 `npm test` uses the Node.js test runner directly; it does not require a test
-framework dependency. `npm run check:schemas` regenerates version 1 artifact
+framework dependency. `npm run test:package` builds and packs the local private
+bootstrap package, stages the exact tarball in a temporary consumer layout,
+and verifies the ESM exports, declarations, versioned schemas, and `sdd`
+executable wiring without dependency resolution or network access.
+`npm run check:schemas` regenerates version 1 artifact
 types in memory from the checked-in JSON Schema source and fails on stale or
 unexpected generated output. `npm run build` runs that check before removing
 and recreating ignored `dist/` output from `src/`. Prettier is a

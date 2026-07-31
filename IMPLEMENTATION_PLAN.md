@@ -3,8 +3,8 @@
 ## Status
 
 - State: active
-- Current phase: Milestone 1 / Project scaffold and contract types
-- Current leaf: 1.5 Schema and type single-source generation
+- Current phase: Milestone 2 / Read-only specification vertical slice
+- Current leaf: 2.1 Project resolution and configuration
 - Last updated: 2026-07-31
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -27,9 +27,11 @@ of:
 ## Current state
 
 The repository contains an approved target specification and architecture, a
-Stage 0 bootstrap verifier, and no product runtime or public CLI
-implementation. The target package is intentionally outside canonical `spec/`;
-the first implemented slices will promote only the Requirements they satisfy.
+Stage 0 bootstrap verifier, a testable TypeScript library package, generated
+contract types, and safe `sdd` executable wiring. The executable reports a
+technical-unavailable failure because no product command is implemented. The
+target package is intentionally outside canonical `spec/`; the first product
+slices will promote only the Requirements they satisfy.
 
 The root commit is:
 
@@ -287,7 +289,7 @@ macOS bootstrap host and no CLI behavior is claimed. Cross-platform execution
 evidence remains deferred without removing Windows- or POSIX-specific fixture
 definitions.
 
-## Milestone 1 — Project scaffold and contract types
+## Milestone 1 — Project scaffold and contract types (complete)
 
 Mode: repository maintenance until a public command produces defined behavior.
 
@@ -342,10 +344,18 @@ Bounded leaves:
       `REQ-DFF6BFA6`, `REQ-E26A859E`, `REQ-E451458E`, `REQ-E80F09C6`,
       `REQ-E85A06C3`, `REQ-F7CEE6D0`, and `REQ-FB66E5D6`. Bootstrap
       generation tests do not claim executable Requirement coverage.
-- [ ] **1.6 — Package and executable smoke tests.** Add only package/export
-      integrity and executable wiring smoke coverage without claiming full
-      command behavior. Config, Markdown, XML, runtime schema validation,
-      canonical Requirement promotion, and Milestone 2 remain deferred.
+- [x] **1.6 — Package and executable smoke tests.** Configure the local private
+      bootstrap artifact with ESM library exports and declarations, exact
+      generated output plus checked-in version 1 schemas, and `sdd` bin wiring.
+      Build, pack, inspect, stage, import, and execute that actual artifact in
+      temporary directories without network access. Until a product command exists, the
+      thin process adapter writes only a technical-unavailable diagnostic to
+      stderr, leaves stdout empty, and exits `3`; it cannot emit a product or
+      gate result. This leaf is constrained by target Requirements
+      `REQ-F7D39246`, `REQ-7C848ED0`, `REQ-41EDF9A3`, and `REQ-F91F7D11`, but
+      bootstrap package tests claim no executable Requirement coverage.
+      Config, Markdown, XML, runtime schema validation, canonical Requirement
+      promotion, and Milestone 2 implementation remain deferred.
 
 Done when a clean clone can install, build, typecheck, test, and validate all
 Stage 0 fixtures deterministically.
@@ -522,7 +532,7 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 1.6 — Package and executable smoke tests` is the only active
-implementation leaf. It verifies package/export integrity and executable
-wiring without adding full command behavior, config/Markdown/XML parsing,
-runtime schema validation, canonical Requirement promotion, or Milestone 2.
+`Milestone 2.1 — Project resolution and configuration` is the only active
+implementation leaf. It will promote and implement `REQ-0361538D` without
+claiming the broader graph-isolation behavior of `REQ-FBB24D6C`. No Milestone
+2 product behavior is implemented yet.
