@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Bootstrap / Stage 0 contract fixtures
-- Current leaf: 0.5 Gate truth tables
+- Current leaf: 0.5c Gate evidence-state truth tables
 - Last updated: 2026-07-31
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -206,12 +206,22 @@ Primary target Requirements:
       input partitions, including approval-mode binding and target Requirement
       drift. Target Requirements: `REQ-E26A859E`, `REQ-983914F3`,
       `REQ-FB76FC6F`, `REQ-13CE0529`, `REQ-7341DBB7`.
-- [ ] Encode Proposal, Branch Preparation, Verification, and Merge outcomes.
-- [ ] Cover `PASS`, `REVIEW_REQUIRED`, `BLOCKED`, and technical failure.
-- [ ] Cover stale, missing, negative, and contradictory evidence.
+- [x] **0.5b — Four-gate outcome truth tables.** Encode Proposal, Branch
+      Preparation, Verification, and Merge outcome composition, including
+      `PASS`, `REVIEW_REQUIRED`, `BLOCKED`, blocker precedence, and technical
+      failure outside product status. Target Requirements: `REQ-E80F09C6`,
+      `REQ-A8739118`, `REQ-964B9F80`, `REQ-9D265509`, `REQ-E451458E`,
+      `REQ-5A832396`, `REQ-CDE94D0B`, `REQ-C11ACC55`, `REQ-20AAA622`,
+      `REQ-2AF962EB`, `REQ-BCFA15D8`, `REQ-41EDF9A3`.
+- [ ] **0.5c — Gate evidence-state truth tables.** Cover stale, missing,
+      negative, and contradictory evidence without duplicating artifact-schema
+      fixtures. Target Requirements: `REQ-E85A06C3`, `REQ-220945C2`,
+      `REQ-8E2D9A5F`.
 
 Artifact:
-[`fixtures/v1/gates/modes/cases.json`](fixtures/v1/gates/modes/cases.json).
+[`fixtures/v1/gates/modes/cases.json`](fixtures/v1/gates/modes/cases.json)
+and
+[`fixtures/v1/gates/outcomes/cases.json`](fixtures/v1/gates/outcomes/cases.json).
 
 Primary target Requirements:
 `REQ-E26A859E`, `REQ-983914F3`, `REQ-FB76FC6F`, `REQ-13CE0529`,

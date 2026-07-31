@@ -1,0 +1,511 @@
+{
+  "fixture_manifest_version": "1.0",
+  "status": "bootstrap-fixture-manifest",
+  "fixture_family_id": "mode-and-gate-truth-tables",
+  "leaf": "0.5b",
+  "scope": "Outcome composition for Proposal, Branch Preparation, Verification, and Merge gates; evidence freshness and concrete missing, negative, or contradictory evidence combinations are deferred to Milestone 0.5c.",
+  "contracts": [
+    "gate.proposal",
+    "gate.branch-preparation",
+    "gate.verification",
+    "gate.merge"
+  ],
+  "requirements": [
+    "REQ-E80F09C6",
+    "REQ-A8739118",
+    "REQ-964B9F80",
+    "REQ-9D265509",
+    "REQ-E451458E",
+    "REQ-5A832396",
+    "REQ-CDE94D0B",
+    "REQ-C11ACC55",
+    "REQ-20AAA622",
+    "REQ-2AF962EB",
+    "REQ-BCFA15D8",
+    "REQ-41EDF9A3"
+  ],
+  "authorities": [
+    "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-e80f09c6",
+    "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-a8739118",
+    "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-9d265509",
+    "proposal/spec/capabilities/validation-fingerprints-and-patches.md#req-964b9f80",
+    "proposal/spec/capabilities/test-traceability-and-qa.md#req-e451458e",
+    "proposal/spec/capabilities/test-traceability-and-qa.md#req-5a832396",
+    "proposal/spec/capabilities/test-traceability-and-qa.md#req-cde94d0b",
+    "proposal/spec/capabilities/test-traceability-and-qa.md#req-c11acc55",
+    "proposal/spec/capabilities/semantic-review-and-conflicts.md#req-20aaa622",
+    "proposal/spec/capabilities/semantic-review-and-conflicts.md#req-2af962eb",
+    "proposal/spec/capabilities/merge-readiness.md#req-bcfa15d8",
+    "proposal/spec/capabilities/merge-readiness.md#req-41edf9a3",
+    "proposal/architecture/artifact-schemas.md#conflictreport-and-mergereport",
+    "proposal/architecture/cli.md#exit-codes"
+  ],
+  "oracle_semantics": {
+    "gate_values": [
+      "proposal",
+      "branch_preparation",
+      "verification",
+      "merge"
+    ],
+    "outcome_values": [
+      "PROPOSAL_PACKAGE",
+      "SPEC_PATCH",
+      "PASS",
+      "REVIEW_REQUIRED",
+      "BLOCKED",
+      "TECHNICAL_FAILURE"
+    ],
+    "product_status_values": [
+      "PASS",
+      "REVIEW_REQUIRED",
+      "BLOCKED"
+    ],
+    "product_status_scope": "Only VerificationReport and MergeReport carry a product status. Proposal and Branch Preparation outcomes are operation classifications and emitted-artifact sets, not invented wire status fields.",
+    "technical_failure": "Invocation, configuration, I/O, protocol, resource-limit, or internal failure produces no completed gate artifact, has no product status, and maps to CLI exit code 3.",
+    "blocked_precedence": "For status-bearing gates, any definite invariant failure, negative decision, or failed required check yields BLOCKED even when a human decision is also pending.",
+    "review_required": "REVIEW_REQUIRED applies only when no definite violation is established and a human decision remains necessary.",
+    "proposal_result": "A mechanically valid proposal emits a ProposalPackage. Semantic or quality concerns remain reviewable findings and do not turn the package into human approval.",
+    "branch_result": "A clean preparation emits ConflictReport and SpecPatch. Textual conflict or a changed affected object returns REVIEW_REQUIRED without a SpecPatch.",
+    "deferred_inputs": [
+      "stale_evidence",
+      "missing_evidence",
+      "negative_evidence",
+      "contradictory_evidence"
+    ]
+  },
+  "cases": [
+    {
+      "case_id": "proposal-package-clean",
+      "gate": "proposal",
+      "input": {
+        "execution_completed": true,
+        "mechanical_violation": false,
+        "semantic_or_quality_findings": false
+      },
+      "expected": {
+        "outcome": "PROPOSAL_PACKAGE",
+        "product_status": null,
+        "artifacts_emitted": [
+          "artifact.proposal-package"
+        ],
+        "cli_exit_code": 0,
+        "basis_requirements": [
+          "REQ-E80F09C6"
+        ]
+      }
+    },
+    {
+      "case_id": "proposal-package-with-reviewable-findings",
+      "gate": "proposal",
+      "input": {
+        "execution_completed": true,
+        "mechanical_violation": false,
+        "semantic_or_quality_findings": true
+      },
+      "expected": {
+        "outcome": "PROPOSAL_PACKAGE",
+        "product_status": null,
+        "artifacts_emitted": [
+          "artifact.proposal-package"
+        ],
+        "cli_exit_code": 0,
+        "basis_requirements": [
+          "REQ-E80F09C6"
+        ]
+      }
+    },
+    {
+      "case_id": "proposal-mechanical-block",
+      "gate": "proposal",
+      "input": {
+        "execution_completed": true,
+        "mechanical_violation": true,
+        "semantic_or_quality_findings": false
+      },
+      "expected": {
+        "outcome": "BLOCKED",
+        "product_status": null,
+        "artifacts_emitted": [
+          "artifact.proposal-package"
+        ],
+        "cli_exit_code": 1,
+        "basis_requirements": [
+          "REQ-E80F09C6"
+        ]
+      }
+    },
+    {
+      "case_id": "proposal-technical-failure",
+      "gate": "proposal",
+      "input": {
+        "execution_completed": false,
+        "technical_failure": true
+      },
+      "expected": {
+        "outcome": "TECHNICAL_FAILURE",
+        "product_status": null,
+        "artifacts_emitted": [],
+        "cli_exit_code": 3,
+        "basis_requirements": [
+          "REQ-41EDF9A3"
+        ]
+      }
+    },
+    {
+      "case_id": "branch-preparation-clean",
+      "gate": "branch_preparation",
+      "input": {
+        "execution_completed": true,
+        "text_conflict": false,
+        "changed_affected_object": false,
+        "definite_violation": false
+      },
+      "expected": {
+        "outcome": "SPEC_PATCH",
+        "product_status": null,
+        "artifacts_emitted": [
+          "artifact.conflict-report",
+          "artifact.spec-patch"
+        ],
+        "cli_exit_code": 0,
+        "basis_requirements": [
+          "REQ-A8739118",
+          "REQ-964B9F80"
+        ]
+      }
+    },
+    {
+      "case_id": "branch-text-conflict",
+      "gate": "branch_preparation",
+      "input": {
+        "execution_completed": true,
+        "text_conflict": true,
+        "changed_affected_object": false,
+        "definite_violation": false
+      },
+      "expected": {
+        "outcome": "REVIEW_REQUIRED",
+        "product_status": null,
+        "artifacts_emitted": [
+          "artifact.conflict-report"
+        ],
+        "cli_exit_code": 2,
+        "basis_requirements": [
+          "REQ-964B9F80"
+        ]
+      }
+    },
+    {
+      "case_id": "branch-semantic-review",
+      "gate": "branch_preparation",
+      "input": {
+        "execution_completed": true,
+        "text_conflict": false,
+        "changed_affected_object": true,
+        "definite_violation": false
+      },
+      "expected": {
+        "outcome": "REVIEW_REQUIRED",
+        "product_status": null,
+        "artifacts_emitted": [
+          "artifact.conflict-report"
+        ],
+        "cli_exit_code": 2,
+        "basis_requirements": [
+          "REQ-A8739118"
+        ]
+      }
+    },
+    {
+      "case_id": "branch-newly-occupied-id-blocked",
+      "gate": "branch_preparation",
+      "input": {
+        "execution_completed": true,
+        "text_conflict": false,
+        "changed_affected_object": false,
+        "definite_violation": true
+      },
+      "expected": {
+        "outcome": "BLOCKED",
+        "product_status": null,
+        "artifacts_emitted": [
+          "artifact.conflict-report"
+        ],
+        "cli_exit_code": 1,
+        "basis_requirements": [
+          "REQ-A8739118"
+        ]
+      }
+    },
+    {
+      "case_id": "branch-preparation-technical-failure",
+      "gate": "branch_preparation",
+      "input": {
+        "execution_completed": false,
+        "technical_failure": true
+      },
+      "expected": {
+        "outcome": "TECHNICAL_FAILURE",
+        "product_status": null,
+        "artifacts_emitted": [],
+        "cli_exit_code": 3,
+        "basis_requirements": [
+          "REQ-41EDF9A3"
+        ]
+      }
+    },
+    {
+      "case_id": "verification-pass",
+      "gate": "verification",
+      "input": {
+        "execution_completed": true,
+        "required_checks_satisfied": true,
+        "human_decision_pending": false,
+        "definite_violation": false
+      },
+      "expected": {
+        "outcome": "PASS",
+        "product_status": "PASS",
+        "artifacts_emitted": [
+          "artifact.verification-report"
+        ],
+        "cli_exit_code": 0,
+        "basis_requirements": [
+          "REQ-9D265509",
+          "REQ-E451458E",
+          "REQ-5A832396",
+          "REQ-CDE94D0B",
+          "REQ-C11ACC55"
+        ]
+      }
+    },
+    {
+      "case_id": "verification-review-required",
+      "gate": "verification",
+      "input": {
+        "execution_completed": true,
+        "required_checks_satisfied": false,
+        "human_decision_pending": true,
+        "definite_violation": false
+      },
+      "expected": {
+        "outcome": "REVIEW_REQUIRED",
+        "product_status": "REVIEW_REQUIRED",
+        "artifacts_emitted": [
+          "artifact.verification-report"
+        ],
+        "cli_exit_code": 2,
+        "basis_requirements": [
+          "REQ-CDE94D0B",
+          "REQ-20AAA622",
+          "REQ-2AF962EB"
+        ]
+      }
+    },
+    {
+      "case_id": "verification-blocked",
+      "gate": "verification",
+      "input": {
+        "execution_completed": true,
+        "required_checks_satisfied": false,
+        "human_decision_pending": false,
+        "definite_violation": true
+      },
+      "expected": {
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "artifacts_emitted": [
+          "artifact.verification-report"
+        ],
+        "cli_exit_code": 1,
+        "basis_requirements": [
+          "REQ-E451458E",
+          "REQ-5A832396",
+          "REQ-CDE94D0B",
+          "REQ-C11ACC55"
+        ]
+      }
+    },
+    {
+      "case_id": "verification-blocked-dominates-review",
+      "gate": "verification",
+      "input": {
+        "execution_completed": true,
+        "required_checks_satisfied": false,
+        "human_decision_pending": true,
+        "definite_violation": true
+      },
+      "expected": {
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "artifacts_emitted": [
+          "artifact.verification-report"
+        ],
+        "cli_exit_code": 1,
+        "basis_requirements": [
+          "REQ-5A832396",
+          "REQ-CDE94D0B"
+        ]
+      }
+    },
+    {
+      "case_id": "verification-technical-failure",
+      "gate": "verification",
+      "input": {
+        "execution_completed": false,
+        "technical_failure": true
+      },
+      "expected": {
+        "outcome": "TECHNICAL_FAILURE",
+        "product_status": null,
+        "artifacts_emitted": [],
+        "cli_exit_code": 3,
+        "basis_requirements": [
+          "REQ-41EDF9A3"
+        ]
+      }
+    },
+    {
+      "case_id": "merge-pass",
+      "gate": "merge",
+      "input": {
+        "execution_completed": true,
+        "all_required_current_conditions_satisfied": true,
+        "human_decision_pending": false,
+        "definite_violation": false
+      },
+      "expected": {
+        "outcome": "PASS",
+        "product_status": "PASS",
+        "artifacts_emitted": [
+          "artifact.merge-report"
+        ],
+        "cli_exit_code": 0,
+        "basis_requirements": [
+          "REQ-BCFA15D8",
+          "REQ-41EDF9A3"
+        ]
+      }
+    },
+    {
+      "case_id": "merge-review-required",
+      "gate": "merge",
+      "input": {
+        "execution_completed": true,
+        "all_required_current_conditions_satisfied": false,
+        "human_decision_pending": true,
+        "definite_violation": false
+      },
+      "expected": {
+        "outcome": "REVIEW_REQUIRED",
+        "product_status": "REVIEW_REQUIRED",
+        "artifacts_emitted": [
+          "artifact.merge-report"
+        ],
+        "cli_exit_code": 2,
+        "basis_requirements": [
+          "REQ-BCFA15D8",
+          "REQ-41EDF9A3"
+        ]
+      }
+    },
+    {
+      "case_id": "merge-blocked",
+      "gate": "merge",
+      "input": {
+        "execution_completed": true,
+        "all_required_current_conditions_satisfied": false,
+        "human_decision_pending": false,
+        "definite_violation": true
+      },
+      "expected": {
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "artifacts_emitted": [
+          "artifact.merge-report"
+        ],
+        "cli_exit_code": 1,
+        "basis_requirements": [
+          "REQ-BCFA15D8",
+          "REQ-41EDF9A3"
+        ]
+      }
+    },
+    {
+      "case_id": "merge-blocked-dominates-review",
+      "gate": "merge",
+      "input": {
+        "execution_completed": true,
+        "all_required_current_conditions_satisfied": false,
+        "human_decision_pending": true,
+        "definite_violation": true
+      },
+      "expected": {
+        "outcome": "BLOCKED",
+        "product_status": "BLOCKED",
+        "artifacts_emitted": [
+          "artifact.merge-report"
+        ],
+        "cli_exit_code": 1,
+        "basis_requirements": [
+          "REQ-BCFA15D8",
+          "REQ-41EDF9A3"
+        ]
+      }
+    },
+    {
+      "case_id": "merge-technical-failure",
+      "gate": "merge",
+      "input": {
+        "execution_completed": false,
+        "technical_failure": true
+      },
+      "expected": {
+        "outcome": "TECHNICAL_FAILURE",
+        "product_status": null,
+        "artifacts_emitted": [],
+        "cli_exit_code": 3,
+        "basis_requirements": [
+          "REQ-41EDF9A3"
+        ]
+      }
+    }
+  ],
+  "inventory_required_case_coverage": {
+    "proposal-mechanical-block": [
+      "proposal-mechanical-block"
+    ],
+    "branch-text-conflict": [
+      "branch-text-conflict"
+    ],
+    "branch-semantic-review": [
+      "branch-semantic-review"
+    ],
+    "verification-pass": [
+      "verification-pass"
+    ],
+    "verification-review-required": [
+      "verification-review-required"
+    ],
+    "verification-blocked": [
+      "verification-blocked",
+      "verification-blocked-dominates-review"
+    ],
+    "merge-pass": [
+      "merge-pass"
+    ],
+    "merge-review-required": [
+      "merge-review-required"
+    ],
+    "merge-blocked": [
+      "merge-blocked",
+      "merge-blocked-dominates-review"
+    ],
+    "technical-failure": [
+      "proposal-technical-failure",
+      "branch-preparation-technical-failure",
+      "verification-technical-failure",
+      "merge-technical-failure"
+    ]
+  }
+}
