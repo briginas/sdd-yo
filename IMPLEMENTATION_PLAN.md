@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 1 / Project scaffold and contract types
-- Current leaf: 1.2 Remaining testable scaffold
+- Current leaf: 1.3 Product dependency spikes
 - Last updated: 2026-07-31
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -304,11 +304,15 @@ Bounded leaves:
       and type-only imports. This leaf does not add product runtime code,
       source/test directories, a test runner, formatter, build output, schema
       validation dependencies, or public `sdd` behavior.
-- [ ] **1.2 — Remaining testable scaffold.** Add source/test directories,
+- [x] **1.2 — Remaining testable scaffold.** Add source/test directories,
       build, test, format-check, and their exact repository scripts. Keep
       dependency selection and product contract types in their later bounded
       leaves.
-- [ ] Select and pin the smallest dependency set after focused spikes.
+- [ ] **1.3 — Product dependency spikes.** Select and pin the smallest
+      standards-focused dependency set needed by the first production uses.
+      Record why Node.js or an existing dependency is insufficient, verify ESM
+      and Node.js 22.18+ compatibility, and defer contract/domain types, schema
+      generation, package smoke tests, and public `sdd` behavior.
 - [ ] Define branded IDs, schema versions, diagnostics, result envelopes, and
       injected platform interfaces.
 - [ ] Generate JSON Schemas and TypeScript types from one source.
@@ -489,7 +493,8 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 1.2 — Remaining testable scaffold` is the only active
-implementation leaf. It adds the source/test directory skeleton and exact
-build, test, and format-check commands without selecting product dependencies,
-defining contract types, generating schemas, or adding public `sdd` behavior.
+`Milestone 1.3 — Product dependency spikes` is the only active implementation
+leaf. It selects only the standards-focused libraries required by the first
+production uses and records their compatibility and necessity without defining
+contract types, generating schemas, adding package smoke tests, or introducing
+public `sdd` behavior.

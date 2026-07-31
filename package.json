@@ -6,11 +6,16 @@
     "node": ">=22.18.0"
   },
   "scripts": {
+    "build": "npm run clean:build && tsc -p tsconfig.build.json",
+    "clean:build": "node -e \"import('node:fs/promises').then(({ rm }) => rm('dist', { recursive: true, force: true }))\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\" \"*.md\" \"*.json\"",
+    "test": "node --test test/*.test.ts",
     "typecheck": "tsc --noEmit",
     "verify:stage-0": "node scripts/verify-stage-0.ts"
   },
   "devDependencies": {
     "@types/node": "22.20.1",
+    "prettier": "3.6.2",
     "typescript": "7.0.2"
   }
 }

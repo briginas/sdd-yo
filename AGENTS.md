@@ -5,8 +5,9 @@
 This repository develops SDD Yo: a repository-native specification governance
 system with a deterministic CLI and an optional Agent Skill.
 
-The repository is currently in pre-implementation bootstrap. There is no
-runtime, package manifest, canonical `spec/`, or working `sdd` executable yet.
+The repository is currently in pre-implementation bootstrap. A testable
+TypeScript scaffold exists, but there is no product runtime, canonical `spec/`,
+or working `sdd` executable yet.
 
 ## Source-of-truth map
 
@@ -93,17 +94,26 @@ For documentation-only changes before the runtime exists:
 - check trailing whitespace and unresolved TODO markers;
 - inspect the final Git diff.
 
-Once the TypeScript scaffold exists, this section must be updated with the
-exact focused and full commands. The expected full validation surface will
-include:
+For scaffold or implementation changes, run the focused check for the changed
+surface and the following full validation commands:
 
 ```text
 npm test
 npm run build
 npm run typecheck
 npm run format:check
+npm run verify:stage-0
 git diff --check
 ```
+
+`npm test` uses the Node.js test runner directly; it does not require a test
+framework dependency. `npm run build` removes and recreates ignored `dist/`
+output from `src/`. Prettier is a development-only dependency because Node.js
+and TypeScript do not provide a repository formatter. Product dependencies
+remain subject to focused selection in their implementation leaves. The
+format check covers product source, tests, and root Markdown and JSON control
+files; Stage 0 fixture bytes and the existing bootstrap verifier surface remain
+outside this leaf's formatting baseline.
 
 Never claim a validation command ran when it did not. A failure, crash,
 timeout, unavailable dependency, or incomplete result cannot be reported as a
