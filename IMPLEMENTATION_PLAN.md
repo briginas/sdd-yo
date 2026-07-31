@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 2 / Read-only specification vertical slice
-- Current leaf: 2.2 Markdown parsing and object identity
+- Current leaf: 2.3 Graph validation
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -390,12 +390,34 @@ satisfied.
 
 ### 2.2 Markdown parsing and object identity
 
-Implement typed documents, Requirement blocks, stable anchors, and model
-objects without graph traversal.
+Status: parser and local model implementation complete.
+
+Implemented deterministic UTF-8 CommonMark/GFM parsing for every Markdown
+file below the configured specification root, strict typed frontmatter and
+machine markers, stable Requirement anchors and metadata, normative and
+explanatory sections, Capability-local Requirement ownership, Domain Concept
+objects, relative graph-link records, and stable source diagnostics. This leaf
+does not resolve links or validate graph-wide reachability, uniqueness, or
+ownership.
 
 Primary target Requirements:
 `REQ-DD91AD0F`, `REQ-8602BF02`, `REQ-0EF66B28`, `REQ-EAC56CB1`,
 `REQ-065A9911`, `REQ-40A38BA1`.
+
+Core parsing and model behavior fully covers `REQ-8602BF02`,
+`REQ-EAC56CB1`, `REQ-065A9911`, and `REQ-40A38BA1`.
+`REQ-DD91AD0F` remains incomplete until graph validation proves that the index
+lists every active Capability and Concept exactly once. `REQ-0EF66B28` remains
+incomplete until graph validation proves fragment reachability and unique
+Capability ownership. Requirement-named tests for those two Requirements
+cover only their parser-local portions and do not claim full satisfaction.
+
+Canonical promotion is deferred as one coherent subset to 2.3. Promoting only
+the four parser-complete Requirements would require moving shared Concept
+context out of `proposal/spec/` and retargeting the remaining proposal graph;
+doing that before link resolution would either duplicate normative Concept
+copies or create an unverified canonical graph. No Requirement has two
+normative copies in this interim state.
 
 ### 2.3 Graph validation
 
@@ -543,8 +565,9 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 2.2 — Markdown parsing and object identity` is the only active
-implementation leaf. Milestone 2.1 core behavior is implemented and tested,
-but `REQ-0361538D` remains proposed until the CLI integration in 2.5 makes its
-observable Statement true. The broader graph-isolation behavior of
-`REQ-FBB24D6C` remains deferred.
+`Milestone 2.3 — Graph validation` is the only active implementation leaf. It
+must complete the graph-wide acceptance criteria in `REQ-DD91AD0F` and
+`REQ-0EF66B28`, validate the parser-produced link and ownership records, and
+create the first coherent canonical specification subset. `REQ-0361538D`
+remains proposed until CLI integration in 2.5 makes its observable Statement
+true.
