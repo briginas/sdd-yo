@@ -1,2 +1,2 @@
-// Product exports are added only with their bounded implementation leaves.
-export {};
+export * from "./contracts/index.ts";
+export * from "./platform/index.ts";

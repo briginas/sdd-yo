@@ -31,7 +31,8 @@ test("scaffold runs on the declared Node.js baseline", () => {
   );
 });
 
-test("scaffold source entry point loads as ESM without a public runtime surface", async () => {
+test("scaffold source entry point loads its foundational library surface as ESM", async () => {
   const entryPoint = await import("../src/index.ts");
-  assert.deepEqual(Object.keys(entryPoint), []);
+  assert.equal(entryPoint.JSON_SCHEMA_VERSION_V1, "1.0");
+  assert.equal(typeof entryPoint.isProjectId, "function");
 });

@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 1 / Project scaffold and contract types
-- Current leaf: 1.4 Foundational contract types and platform interfaces
+- Current leaf: 1.5 Schema and type single-source generation
 - Last updated: 2026-07-31
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -313,13 +313,21 @@ Bounded leaves:
       Record why Node.js or an existing dependency is insufficient, verify ESM
       and Node.js 22.18+ compatibility, and defer contract/domain types, schema
       generation, package smoke tests, and public `sdd` behavior.
-- [ ] **1.4 — Foundational contract types and platform interfaces.** Define
+- [x] **1.4 — Foundational contract types and platform interfaces.** Define
       branded IDs, schema versions, diagnostics, result envelopes, and narrow
       injected filesystem, Git, process, clock, and randomness interfaces.
       Name the target `REQ-*` identifiers in the implementation handoff, but
       keep schema generation, config/Markdown/XML parsing, package smoke tests,
       executable behavior, and Requirement promotion in their later leaves.
-- [ ] Generate JSON Schemas and TypeScript types from one source.
+      Foundational shapes are constrained by target Requirements
+      `REQ-2C8E8085`, `REQ-13CF54D6`, `REQ-1095E571`, `REQ-B25091A0`,
+      `REQ-7D93D64A`, `REQ-7C848ED0`, `REQ-F7D39246`, `REQ-41EDF9A3`, and
+      `REQ-82256D82`; bootstrap tests do not claim executable Requirement
+      coverage.
+- [ ] **1.5 — Schema and type single-source generation.** Generate version 1
+      JSON Schemas and TypeScript types from the checked-in schema source,
+      verify published schemas byte-for-byte, and keep parsing, executable
+      behavior, package smoke tests, and Requirement promotion deferred.
 - [ ] Add package and executable smoke tests without claiming full commands.
 
 Done when a clean clone can install, build, typecheck, test, and validate all
@@ -497,8 +505,8 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 1.3 — Product dependency spikes` is the only active implementation
-leaf. It selects only the standards-focused libraries required by the first
-production uses and records their compatibility and necessity without defining
-contract types, generating schemas, adding package smoke tests, or introducing
-public `sdd` behavior.
+`Milestone 1.5 — Schema and type single-source generation` is the only active
+implementation leaf. It generates version 1 TypeScript artifact types from the
+checked-in JSON Schema source and verifies the published schema surface without
+adding parsing, package smoke tests, public `sdd` behavior, or Requirement
+promotion.
