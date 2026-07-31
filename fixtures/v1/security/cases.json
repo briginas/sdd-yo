@@ -5,16 +5,22 @@
   "completed_leaves": [
     "0.7-path-safety-scenarios",
     "0.7-malicious-adapter-output",
-    "0.7-argv-shell-metacharacters"
+    "0.7-argv-shell-metacharacters",
+    "0.7-evidence-replay-subject-confusion"
   ],
-  "scope": "Declarative project-path, filesystem-race, malicious adapter-output, and command argv scenarios. The manifest defines portable setup and fail-closed decisions without creating host-specific links, allowing XML DTD or external-entity processing, or evaluating shell syntax. Evidence confusion, prompt injection, atomic interruption, runtime code, and verifier behavior are deferred.",
+  "scope": "Declarative project-path, filesystem-race, malicious adapter-output, command argv, and evidence-confusion scenarios. The manifest defines portable setup and fail-closed decisions without creating host-specific links, allowing XML DTD or external-entity processing, evaluating shell syntax, or treating repository evidence claims as authority. Prompt injection, atomic interruption, runtime code, and verifier behavior are deferred.",
   "contracts": [
     "artifact.spec-patch",
     "artifact.candidate-tree-manifest",
     "adapter.jsonl-test-stream-header",
     "adapter.jsonl-test-record",
     "adapter.command-invocation",
-    "adapter.junit-import"
+    "adapter.junit-import",
+    "artifact.approval-evidence",
+    "artifact.test-execution-evidence",
+    "artifact.qa-evidence",
+    "artifact.governance-evidence",
+    "artifact.finding-resolution"
   ],
   "requirements": [
     "REQ-7AFE9904",
@@ -22,7 +28,9 @@
     "REQ-6D8DDDF7",
     "REQ-20F8CA5C",
     "REQ-1DD46CA9",
-    "REQ-F91F7D11"
+    "REQ-F91F7D11",
+    "REQ-E85A06C3",
+    "REQ-220945C2"
   ],
   "authorities": [
     "proposal/spec/capabilities/validation-fingerprints-and-patches.md#req-7afe9904",
@@ -31,15 +39,20 @@
     "proposal/spec/capabilities/test-traceability-and-qa.md#req-20f8ca5c",
     "proposal/spec/capabilities/multi-project-cli-and-skill.md#req-1dd46ca9",
     "proposal/spec/capabilities/multi-project-cli-and-skill.md#req-f91f7d11",
+    "proposal/spec/capabilities/merge-readiness.md#req-e85a06c3",
+    "proposal/spec/capabilities/merge-readiness.md#req-220945c2",
+    "proposal/spec/concepts/evidence.md#identity",
     "proposal/architecture/security.md#path-traversal-and-symlink-escape",
     "proposal/architecture/security.md#command-injection",
     "proposal/architecture/security.md#malicious-adapter-output",
+    "proposal/architecture/security.md#evidence-forgery-or-privilege-confusion",
     "proposal/architecture/security.md#security-validation",
     "proposal/architecture/configuration.md#initial-schema",
     "proposal/architecture/fingerprints-and-git.md#specpatch",
     "proposal/architecture/test-adapters.md#normalized-discovery-protocol",
     "proposal/architecture/test-adapters.md#command-adapter",
-    "proposal/architecture/test-adapters.md#junit-compatible-importer"
+    "proposal/architecture/test-adapters.md#junit-compatible-importer",
+    "proposal/architecture/artifact-schemas.md#approvalevidence"
   ],
   "oracle_semantics": {
     "fixture_form": "Scenario definitions describe path-bearing artifact input, filesystem topology, and deterministic mutation hooks. A future platform test materializes the topology inside an isolated temporary project root.",
@@ -64,6 +77,15 @@
       "marker_files_created": 0,
       "unexpected_processes_started": 0,
       "network_requests": 0
+    },
+    "evidence_precondition": "Evidence-confusion scenarios use individually schema-valid artifacts. Malformed shape, unknown fields, and primitive schema boundaries remain in fixtures/v1/artifacts/cases.json.",
+    "evidence_identity": "Acceptance requires the exact artifact kind, selected SDD Project, configured issuer, and complete current subject. Matching only a subset of subject fields does not make evidence current.",
+    "evidence_authority": "An artifact issuer claim and repository content cannot extend the configured issuer allowlist or authenticate an actor. Authentication and organizational authorization remain external.",
+    "evidence_confusion_result": {
+      "accepted_for_current_subject": false,
+      "outcome": "BLOCKED",
+      "cli_exit_code": 1,
+      "pass_allowed": false
     },
     "rejection_result": {
       "accepted": false,
@@ -480,6 +502,212 @@
           "REQ-20F8CA5C",
           "REQ-1DD46CA9",
           "REQ-F91F7D11"
+        ]
+      }
+    },
+    {
+      "case_id": "current-evidence-control",
+      "category": "evidence-positive-control",
+      "input": {
+        "required_evidence_role": "approval",
+        "artifact": "artifact.approval-evidence",
+        "schema_valid": true,
+        "project_relationship": "exact-selected-project",
+        "issuer_relationship": "configured",
+        "subject_relationship": "exact-current-subject",
+        "decision": "approved"
+      },
+      "expected": {
+        "validation_stage": "evidence-context-validation",
+        "artifact_state": "current",
+        "accepted_for_current_subject": true,
+        "pass_allowed_by_this_artifact": true,
+        "basis_requirements": [
+          "REQ-E85A06C3",
+          "REQ-220945C2"
+        ]
+      }
+    },
+    {
+      "case_id": "replayed-evidence-new-subject",
+      "category": "evidence-replay",
+      "input": {
+        "schema_valid": true,
+        "project_relationship": "exact-selected-project",
+        "issuer_relationship": "configured",
+        "variants": [
+          {
+            "artifact": "artifact.approval-evidence",
+            "bound_subject": "previous-base-and-delta-fingerprints",
+            "current_subject": "new-base-or-delta-fingerprints"
+          },
+          {
+            "artifact": "artifact.test-execution-evidence",
+            "bound_subject": "previous-head-index-or-config-fingerprint",
+            "current_subject": "new-head-index-or-config-fingerprint"
+          },
+          {
+            "artifact": "artifact.qa-evidence",
+            "bound_subject": "previous-head-integration-or-scope-fingerprint",
+            "current_subject": "new-head-integration-or-scope-fingerprint"
+          },
+          {
+            "artifact": "artifact.governance-evidence",
+            "bound_subject": "previous-config-scope-or-adoption-transition",
+            "current_subject": "new-config-scope-or-adoption-transition"
+          },
+          {
+            "artifact": "artifact.finding-resolution",
+            "bound_subject": "previous-finding-and-input-fingerprint",
+            "current_subject": "new-finding-or-input-fingerprint"
+          }
+        ]
+      },
+      "expected": {
+        "validation_stage": "evidence-subject-validation",
+        "artifact_state": "stale",
+        "accepted_for_current_subject": false,
+        "outcome": "BLOCKED",
+        "cli_exit_code": 1,
+        "pass_allowed": false,
+        "basis_requirements": [
+          "REQ-E85A06C3",
+          "REQ-220945C2"
+        ]
+      }
+    },
+    {
+      "case_id": "evidence-wrong-project-context",
+      "category": "evidence-project-confusion",
+      "input": {
+        "artifact": "artifact.approval-evidence",
+        "schema_valid": true,
+        "artifact_project_id": "SDD-AAAAAAAA",
+        "selected_project_id": "SDD-BBBBBBBB",
+        "issuer_relationship": "configured-in-selected-project",
+        "subject_relationship": "otherwise-matches-current-subject",
+        "decision": "approved"
+      },
+      "expected": {
+        "validation_stage": "evidence-project-validation",
+        "artifact_state": "stale",
+        "accepted_for_current_subject": false,
+        "outcome": "BLOCKED",
+        "cli_exit_code": 1,
+        "pass_allowed": false,
+        "basis_requirements": [
+          "REQ-E85A06C3",
+          "REQ-220945C2"
+        ]
+      }
+    },
+    {
+      "case_id": "evidence-unconfigured-issuer",
+      "category": "evidence-issuer-confusion",
+      "input": {
+        "artifact": "artifact.approval-evidence",
+        "schema_valid": true,
+        "project_relationship": "exact-selected-project",
+        "subject_relationship": "exact-current-subject",
+        "artifact_issuer": "repository-self-declared-reviewer",
+        "configured_allowed_issuers": [
+          "product-review"
+        ],
+        "repository_claims_artifact_issuer_is_authorized": true,
+        "decision": "approved"
+      },
+      "expected": {
+        "validation_stage": "configured-issuer-validation",
+        "artifact_state": "failed",
+        "configured_allowed_issuers_changed": false,
+        "actor_authenticated_by_cli": false,
+        "accepted_for_current_subject": false,
+        "outcome": "BLOCKED",
+        "cli_exit_code": 1,
+        "pass_allowed": false,
+        "basis_requirements": [
+          "REQ-220945C2"
+        ]
+      }
+    },
+    {
+      "case_id": "evidence-artifact-role-confusion",
+      "category": "evidence-artifact-confusion",
+      "input": {
+        "schema_valid": true,
+        "project_relationship": "exact-selected-project",
+        "issuer_relationship": "configured-for-presented-artifact",
+        "subject_relationship": "exact-current-subject-for-presented-artifact",
+        "variants": [
+          {
+            "required_evidence_role": "approval",
+            "presented_artifact": "artifact.qa-evidence",
+            "decision": "passed"
+          },
+          {
+            "required_evidence_role": "qa",
+            "presented_artifact": "artifact.approval-evidence",
+            "decision": "approved"
+          },
+          {
+            "required_evidence_role": "governance",
+            "presented_artifact": "artifact.finding-resolution",
+            "decision": "dismissed"
+          },
+          {
+            "required_evidence_role": "test-execution",
+            "presented_artifact": "artifact.qa-evidence",
+            "decision": "passed"
+          }
+        ]
+      },
+      "expected": {
+        "validation_stage": "artifact-role-validation",
+        "artifact_state": "failed",
+        "accepted_for_required_role": false,
+        "required_evidence_satisfied": false,
+        "outcome": "BLOCKED",
+        "cli_exit_code": 1,
+        "pass_allowed": false,
+        "basis_requirements": [
+          "REQ-220945C2"
+        ]
+      }
+    },
+    {
+      "case_id": "contradictory-cross-issuer-evidence",
+      "category": "evidence-issuer-confusion",
+      "input": {
+        "required_evidence_role": "approval",
+        "artifacts": [
+          {
+            "artifact": "artifact.approval-evidence",
+            "schema_valid": true,
+            "issuer": "product-review-primary",
+            "issuer_relationship": "configured",
+            "subject_relationship": "exact-same-current-subject",
+            "decision": "approved"
+          },
+          {
+            "artifact": "artifact.approval-evidence",
+            "schema_valid": true,
+            "issuer": "product-review-secondary",
+            "issuer_relationship": "configured",
+            "subject_relationship": "exact-same-current-subject",
+            "decision": "rejected"
+          }
+        ]
+      },
+      "expected": {
+        "validation_stage": "evidence-contradiction-validation",
+        "artifact_state": "contradictory",
+        "issuer_precedence_inferred": false,
+        "accepted_for_current_subject": false,
+        "outcome": "BLOCKED",
+        "cli_exit_code": 1,
+        "pass_allowed": false,
+        "basis_requirements": [
+          "REQ-220945C2"
         ]
       }
     },

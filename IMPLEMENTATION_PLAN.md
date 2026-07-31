@@ -263,7 +263,7 @@ Primary target Requirements:
       case-fold collision, and TOCTOU scenario definitions.
 - [x] Add malicious JSONL and XML fixtures with external entities disabled.
 - [x] Add argv versus shell-metacharacter cases.
-- [ ] Add evidence replay and subject-confusion cases.
+- [x] Add evidence replay and subject-confusion cases.
 - [ ] Add repository prompt-injection cases for the future Agent Skill.
 
 Primary target Requirements:
