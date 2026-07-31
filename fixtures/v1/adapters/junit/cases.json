@@ -1,0 +1,288 @@
+{
+  "fixture_manifest_version": "1.0",
+  "status": "bootstrap-fixture-manifest",
+  "fixture_family_id": "adapter-junit",
+  "completed_leaves": [
+    "0.6c"
+  ],
+  "scope": "Language- and framework-neutral JUnit-compatible XML import fixtures for hierarchy, deterministic derived identity, result and source mapping, malformed input, and bounded parser failures; importer implementation, CLI behavior, and the broader security corpus are deferred.",
+  "contracts": [
+    "adapter.junit-import",
+    "artifact.test-index",
+    "artifact.test-execution-evidence"
+  ],
+  "requirements": [
+    "REQ-6D8DDDF7",
+    "REQ-12E19D70"
+  ],
+  "authorities": [
+    "proposal/spec/capabilities/test-traceability-and-qa.md#req-6d8dddf7",
+    "proposal/spec/capabilities/test-traceability-and-qa.md#req-12e19d70",
+    "proposal/architecture/test-adapters.md#junit-compatible-importer",
+    "proposal/architecture/security.md#malicious-adapter-output",
+    "proposal/architecture/security.md#denial-of-service"
+  ],
+  "oracle_semantics": {
+    "input_encoding": "utf8-xml",
+    "hierarchy": "preserve testsuite nesting and names exactly when present; report lost or ambiguous hierarchy and never reconstruct it from testcase.classname or another framework-specific guess",
+    "executable_nodes": "each testcase maps to one executable normalized test",
+    "result_mapping": {
+      "failure": "failed",
+      "error": "failed",
+      "skipped": "skipped",
+      "otherwise_completed": "passed"
+    },
+    "source_mapping": "retain project-relative testcase.file and positive integer testcase.line when present",
+    "time_mapping": "retain testcase.time in seconds when present without assigning a Stage 0 runtime representation",
+    "derived_id_components": [
+      "report_path",
+      "suite_path",
+      "testcase_classname",
+      "testcase_name",
+      "occurrence_index"
+    ],
+    "derived_id_contract": "equal component tuples produce the same opaque local ID; a changed component tuple produces a distinct opaque local ID; the concrete encoding and hash algorithm remain deferred to runtime design",
+    "xml_limits": [
+      "max_report_bytes",
+      "max_xml_depth",
+      "max_suite_count",
+      "max_test_count"
+    ],
+    "blocking_failures": [
+      "malformed-xml",
+      "dtd-or-external-entity",
+      "report-bytes-overflow",
+      "xml-depth-overflow",
+      "suite-count-overflow",
+      "test-count-overflow"
+    ]
+  },
+  "cases": [
+    {
+      "case_id": "nested-suites",
+      "path": "nested-suites.xml",
+      "report_path": "reports/nested.xml",
+      "xml_valid": true,
+      "import_valid": true,
+      "expected_suite_paths": [
+        [
+          "Root adapter suite REQ-6D8DDDF7"
+        ],
+        [
+          "Root adapter suite REQ-6D8DDDF7",
+          "Nested behavior REQ-12E19D70"
+        ]
+      ],
+      "expected_test_names": [
+        "imports a passing case",
+        "imports a failure",
+        "imports an error",
+        "imports a skipped case"
+      ],
+      "hierarchy_retained": true,
+      "lost_hierarchy_reported": false,
+      "expectation": "Retain the two-level testsuite hierarchy and preserve every suite and testcase name without framework-specific interpretation."
+    },
+    {
+      "case_id": "pass-fail-skip",
+      "path": "nested-suites.xml",
+      "report_path": "reports/nested.xml",
+      "xml_valid": true,
+      "import_valid": true,
+      "expected_status_by_test_name": {
+        "imports a passing case": "passed",
+        "imports a failure": "failed",
+        "imports an error": "failed",
+        "imports a skipped case": "skipped"
+      },
+      "expectation": "Map failure and error elements to failed, skipped to skipped, and a completed testcase without a result child to passed."
+    },
+    {
+      "case_id": "file-and-line",
+      "path": "nested-suites.xml",
+      "report_path": "reports/nested.xml",
+      "xml_valid": true,
+      "import_valid": true,
+      "testcase_name": "imports a passing case",
+      "expected_source": {
+        "path": "tests/adapter-contract.case",
+        "line": 17
+      },
+      "expected_time_seconds": "0.125",
+      "expectation": "Retain file, line, and time from a testcase when the producer supplies them."
+    },
+    {
+      "case_id": "flat-report",
+      "path": "flat-report.xml",
+      "report_path": "reports/flat.xml",
+      "xml_valid": true,
+      "import_valid": true,
+      "expected_suite_paths": [
+        [
+          "Flat producer report"
+        ]
+      ],
+      "expected_test_names": [
+        "duplicate example",
+        "duplicate example",
+        "different case"
+      ],
+      "expectation": "Import a producer report that supplies one flat suite without inventing additional nested suites from classname values."
+    },
+    {
+      "case_id": "lost-hierarchy",
+      "path": "flat-report.xml",
+      "report_path": "reports/flat.xml",
+      "xml_valid": true,
+      "import_valid": true,
+      "hierarchy_retained": false,
+      "lost_hierarchy_reported": true,
+      "forbidden_inferred_suite_names": [
+        "framework.module.ContextA",
+        "framework.module.ContextB"
+      ],
+      "expectation": "Report that producer hierarchy is unavailable and do not guess suite nesting from framework-specific classname strings."
+    },
+    {
+      "case_id": "deterministic-derived-id",
+      "path": "flat-report.xml",
+      "report_path": "reports/flat.xml",
+      "xml_valid": true,
+      "import_valid": true,
+      "derived_id_observations": [
+        {
+          "observation_id": "first-import-first-occurrence",
+          "components": [
+            "reports/flat.xml",
+            "Flat producer report",
+            "framework.module.ContextA",
+            "duplicate example",
+            0
+          ]
+        },
+        {
+          "observation_id": "repeated-import-first-occurrence",
+          "components": [
+            "reports/flat.xml",
+            "Flat producer report",
+            "framework.module.ContextA",
+            "duplicate example",
+            0
+          ]
+        },
+        {
+          "observation_id": "same-name-second-occurrence",
+          "components": [
+            "reports/flat.xml",
+            "Flat producer report",
+            "framework.module.ContextA",
+            "duplicate example",
+            1
+          ]
+        },
+        {
+          "observation_id": "different-classname",
+          "components": [
+            "reports/flat.xml",
+            "Flat producer report",
+            "framework.module.ContextB",
+            "different case",
+            0
+          ]
+        }
+      ],
+      "expected_equal_id_groups": [
+        [
+          "first-import-first-occurrence",
+          "repeated-import-first-occurrence"
+        ]
+      ],
+      "expected_distinct_id_groups": [
+        [
+          "first-import-first-occurrence",
+          "same-name-second-occurrence",
+          "different-classname"
+        ]
+      ],
+      "expectation": "Derive the same opaque ID for repeated import of the same component tuple while occurrence index and other changed components keep otherwise identical cases distinct."
+    },
+    {
+      "case_id": "malformed-xml",
+      "path": "malformed.xml",
+      "report_path": "reports/malformed.xml",
+      "xml_valid": false,
+      "import_valid": false,
+      "failure": "malformed-xml",
+      "expectation": "Reject mismatched XML elements without producing a partial TestIndex or execution evidence."
+    },
+    {
+      "case_id": "external-entity",
+      "path": "external-entity.xml",
+      "report_path": "reports/external-entity.xml",
+      "xml_valid": true,
+      "import_valid": false,
+      "failure": "dtd-or-external-entity",
+      "expectation": "Reject a report containing a DTD and external entity declaration before entity resolution or network or filesystem access."
+    },
+    {
+      "case_id": "depth-overflow",
+      "path": "depth-overflow.xml",
+      "report_path": "reports/depth-overflow.xml",
+      "limits": {
+        "max_report_bytes": 4096,
+        "max_xml_depth": 3,
+        "max_suite_count": 8,
+        "max_test_count": 8
+      },
+      "xml_valid": true,
+      "import_valid": false,
+      "failure": "xml-depth-overflow",
+      "expectation": "Reject valid XML whose element depth exceeds the configured XML depth bound."
+    },
+    {
+      "case_id": "report-bytes-overflow",
+      "path": "nested-suites.xml",
+      "report_path": "reports/nested.xml",
+      "limits": {
+        "max_report_bytes": 128,
+        "max_xml_depth": 16,
+        "max_suite_count": 8,
+        "max_test_count": 8
+      },
+      "xml_valid": true,
+      "import_valid": false,
+      "failure": "report-bytes-overflow",
+      "expectation": "Reject a report larger than the configured byte bound."
+    },
+    {
+      "case_id": "suite-count-overflow",
+      "path": "suite-count-overflow.xml",
+      "report_path": "reports/suite-count-overflow.xml",
+      "limits": {
+        "max_report_bytes": 4096,
+        "max_xml_depth": 8,
+        "max_suite_count": 2,
+        "max_test_count": 8
+      },
+      "xml_valid": true,
+      "import_valid": false,
+      "failure": "suite-count-overflow",
+      "expectation": "Reject a report containing more testsuite elements than the configured suite-count bound."
+    },
+    {
+      "case_id": "test-count-overflow",
+      "path": "test-count-overflow.xml",
+      "report_path": "reports/test-count-overflow.xml",
+      "limits": {
+        "max_report_bytes": 4096,
+        "max_xml_depth": 8,
+        "max_suite_count": 2,
+        "max_test_count": 2
+      },
+      "xml_valid": true,
+      "import_valid": false,
+      "failure": "test-count-overflow",
+      "expectation": "Reject a report containing more testcase elements than the configured test-count bound."
+    }
+  ]
+}

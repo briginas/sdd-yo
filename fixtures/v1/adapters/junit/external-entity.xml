@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE testsuite [
+  <!ENTITY external SYSTEM "file:///fixture-must-not-be-read">
+]>
+<testsuite name="External entity report" tests="1">
+  <testcase classname="adapter.contract" name="external entity must be rejected">
+    <system-out>&external;</system-out>
+  </testcase>
+</testsuite>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Adapter reports">
+  <testsuite name="Root adapter suite REQ-6D8DDDF7" tests="4" failures="2" skipped="1" time="0.500">
+    <testsuite name="Nested behavior REQ-12E19D70" tests="4" failures="2" skipped="1" time="0.500">
+      <testcase classname="adapter.contract" name="imports a passing case" file="tests/adapter-contract.case" line="17" time="0.125" />
+      <testcase classname="adapter.contract" name="imports a failure" file="tests/adapter-contract.case" line="23" time="0.125">
+        <failure message="expected contract mismatch" type="ContractFailure">bounded fixture failure</failure>
+      </testcase>
+      <testcase classname="adapter.contract" name="imports an error" time="0.125">
+        <error message="adapter raised" type="AdapterError">bounded fixture error</error>
+      </testcase>
+      <testcase classname="adapter.contract" name="imports a skipped case" time="0.125">
+        <skipped message="not selected" />
+      </testcase>
+    </testsuite>
+  </testsuite>
+</testsuites>

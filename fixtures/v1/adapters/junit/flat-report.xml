@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Flat producer report" tests="3" failures="0" skipped="0">
+  <testcase classname="framework.module.ContextA" name="duplicate example" />
+  <testcase classname="framework.module.ContextA" name="duplicate example" />
+  <testcase classname="framework.module.ContextB" name="different case" />
+</testsuite>

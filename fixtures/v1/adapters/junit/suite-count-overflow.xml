@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Suite count fixture">
+  <testsuite name="Suite one" />
+  <testsuite name="Suite two" />
+  <testsuite name="Suite three" />
+</testsuites>

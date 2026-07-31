@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Test count fixture" tests="3">
+  <testcase classname="adapter.contract" name="test one" />
+  <testcase classname="adapter.contract" name="test two" />
+  <testcase classname="adapter.contract" name="test three" />
+</testsuite>

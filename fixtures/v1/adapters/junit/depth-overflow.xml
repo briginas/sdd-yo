@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Depth fixture">
+  <testsuite name="Level one">
+    <testsuite name="Level two">
+      <testsuite name="Level three">
+        <testcase classname="adapter.contract" name="beyond configured depth" />
+      </testsuite>
+    </testsuite>
+  </testsuite>
+</testsuites>

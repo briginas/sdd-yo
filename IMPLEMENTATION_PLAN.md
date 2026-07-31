@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Bootstrap / Stage 0 contract fixtures
-- Current leaf: 0.6c JUnit contract fixtures
+- Current leaf: 0.7 Security fixture corpus
 - Last updated: 2026-07-31
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -243,9 +243,10 @@ Bounded leaves:
       local IDs, cycles, malformed UTF-8, truncation, timeout, overflow,
       non-zero exit, forward parents, and record-order normalization. Target
       Requirements: `REQ-F7CEE6D0`, `REQ-E451458E`.
-- [ ] **0.6c — JUnit contract fixtures.** Add representative JUnit fixtures
+- [x] **0.6c — JUnit contract fixtures.** Add representative JUnit fixtures
       with retained and lost hierarchy, deterministic derived IDs, status and
-      source mapping, malformed XML, and bounded XML failures.
+      source mapping, malformed XML, and bounded XML failures. Target
+      Requirements: `REQ-6D8DDDF7`, `REQ-12E19D70`.
 
 All adapter fixtures remain language- and framework-neutral.
 
@@ -466,8 +467,7 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 0.5 — Gate truth tables` is the only active implementation leaf. It
-must encode deterministic Proposal, Branch Preparation, Verification, and
-Merge outcomes for all three modes without adding runtime gate evaluators.
-Runtime schema libraries, generated TypeScript types, and CLI behavior remain
-deferred.
+`Milestone 0.7 — Security fixture corpus` is the only active implementation
+leaf. It must add path, process, malicious-input, evidence-confusion, and
+future Agent Skill prompt-injection fixtures without adding runtime security
+implementations, generated TypeScript types, or CLI behavior.

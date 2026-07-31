@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Malformed report">
+  <testcase classname="adapter.contract" name="must not be imported">
+</testsuite>
