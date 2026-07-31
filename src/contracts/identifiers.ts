@@ -56,14 +56,3 @@ export function isFingerprint(value: unknown): value is Fingerprint {
 export function isGitObjectId(value: unknown): value is GitObjectId {
   return typeof value === "string" && value.length > 0;
 }
-
-export function isProjectPath(value: unknown): value is ProjectPath {
-  if (typeof value !== "string" || value.length === 0 || value.startsWith("/") || value.includes("\\")) {
-    return false;
-  }
-
-  const segments = value.split("/");
-  return (
-    !segments.some((segment) => segment === "." || segment === ".." || segment === ".git") && !value.includes("\0")
-  );
-}

@@ -14,7 +14,6 @@ import {
   isGitObjectId,
   isObjectId,
   isProjectId,
-  isProjectPath,
   isRequirementId,
 } from "../src/index.ts";
 import type {
@@ -42,9 +41,6 @@ test("bootstrap foundational contract guards accept only version 1 lexical value
   assert.equal(isFingerprint(`SHA256:${"a".repeat(64)}`), false);
   assert.equal(isGitObjectId("opaque-object-id"), true);
   assert.equal(isGitObjectId(""), false);
-  assert.equal(isProjectPath("spec/capabilities/example.md"), true);
-  assert.equal(isProjectPath("spec/../secret"), false);
-  assert.equal(isProjectPath("spec\\example.md"), false);
 });
 
 test("bootstrap foundational contract exposes fixed version 1 values", () => {
