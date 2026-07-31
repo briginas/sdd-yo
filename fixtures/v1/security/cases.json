@@ -4,20 +4,23 @@
   "fixture_family_id": "security-path-process",
   "completed_leaves": [
     "0.7-path-safety-scenarios",
-    "0.7-malicious-adapter-output"
+    "0.7-malicious-adapter-output",
+    "0.7-argv-shell-metacharacters"
   ],
-  "scope": "Declarative project-path, filesystem-race, and malicious adapter-output scenarios. The manifest defines portable setup and fail-closed decisions without creating host-specific links or allowing XML DTD or external-entity processing. Command argv, evidence confusion, prompt injection, atomic interruption, runtime code, and verifier behavior are deferred.",
+  "scope": "Declarative project-path, filesystem-race, malicious adapter-output, and command argv scenarios. The manifest defines portable setup and fail-closed decisions without creating host-specific links, allowing XML DTD or external-entity processing, or evaluating shell syntax. Evidence confusion, prompt injection, atomic interruption, runtime code, and verifier behavior are deferred.",
   "contracts": [
     "artifact.spec-patch",
     "artifact.candidate-tree-manifest",
     "adapter.jsonl-test-stream-header",
     "adapter.jsonl-test-record",
+    "adapter.command-invocation",
     "adapter.junit-import"
   ],
   "requirements": [
     "REQ-7AFE9904",
     "REQ-12E19D70",
     "REQ-6D8DDDF7",
+    "REQ-20F8CA5C",
     "REQ-1DD46CA9",
     "REQ-F91F7D11"
   ],
@@ -25,13 +28,17 @@
     "proposal/spec/capabilities/validation-fingerprints-and-patches.md#req-7afe9904",
     "proposal/spec/capabilities/test-traceability-and-qa.md#req-12e19d70",
     "proposal/spec/capabilities/test-traceability-and-qa.md#req-6d8dddf7",
+    "proposal/spec/capabilities/test-traceability-and-qa.md#req-20f8ca5c",
     "proposal/spec/capabilities/multi-project-cli-and-skill.md#req-1dd46ca9",
     "proposal/spec/capabilities/multi-project-cli-and-skill.md#req-f91f7d11",
     "proposal/architecture/security.md#path-traversal-and-symlink-escape",
+    "proposal/architecture/security.md#command-injection",
     "proposal/architecture/security.md#malicious-adapter-output",
     "proposal/architecture/security.md#security-validation",
+    "proposal/architecture/configuration.md#initial-schema",
     "proposal/architecture/fingerprints-and-git.md#specpatch",
     "proposal/architecture/test-adapters.md#normalized-discovery-protocol",
+    "proposal/architecture/test-adapters.md#command-adapter",
     "proposal/architecture/test-adapters.md#junit-compatible-importer"
   ],
   "oracle_semantics": {
@@ -49,6 +56,15 @@
       "network_requests": 0,
       "imported_tests": 0
     },
+    "command_invocation": "Preserve configured argv element boundaries, order, and literal UTF-8 text, then pass the executable and argument array to direct process spawning with shell evaluation disabled.",
+    "shell_syntax_handling": "Shell metacharacters, substitutions, environment references, globs, redirections, separators, and whitespace inside an argv element remain literal adapter data. Configuration performs no interpolation and the CLI starts no shell.",
+    "command_side_effects": {
+      "shell_processes_started": 0,
+      "shell_commands_evaluated": 0,
+      "marker_files_created": 0,
+      "unexpected_processes_started": 0,
+      "network_requests": 0
+    },
     "rejection_result": {
       "accepted": false,
       "patch_operations_applied": 0,
@@ -65,7 +81,6 @@
       "case-insensitive-filesystem"
     ],
     "deferred_inventory_cases": [
-      "shell-metacharacter-argv",
       "atomic-interruption"
     ]
   },
@@ -381,6 +396,90 @@
         "reason": "A component identity change after validation aborts the complete patch before any patch operation is applied.",
         "basis_requirements": [
           "REQ-7AFE9904"
+        ]
+      }
+    },
+    {
+      "case_id": "shell-metacharacter-argv",
+      "category": "command-injection",
+      "platforms": [
+        "all"
+      ],
+      "input": {
+        "contract_surface": "adapter.command-invocation",
+        "configuration_surface": "tests.adapters[].discover.argv and tests.adapters[].execute.argv",
+        "working_directory": "<project-root>",
+        "environment_allowlist": [],
+        "variants": [
+          {
+            "variant_id": "discover-posix-metacharacters",
+            "operation": "discover",
+            "platforms": [
+              "posix"
+            ],
+            "configured_argv": [
+              "<argv-recorder-executable>",
+              "discover",
+              "; touch <outside-root>/semicolon-created",
+              "&& touch <outside-root>/and-created",
+              "| touch <outside-root>/pipe-created",
+              "$(touch <outside-root>/substitution-created)",
+              "`touch <outside-root>/backtick-created`",
+              "> <outside-root>/redirect-created",
+              "*.jsonl",
+              "$SDD_PROJECT_ROOT",
+              "two words"
+            ]
+          },
+          {
+            "variant_id": "execute-windows-metacharacters",
+            "operation": "execute",
+            "platforms": [
+              "windows"
+            ],
+            "configured_argv": [
+              "<argv-recorder-executable>",
+              "execute",
+              "& type nul > <outside-root>/ampersand-created",
+              "&& type nul > <outside-root>/and-created",
+              "| type nul > <outside-root>/pipe-created",
+              "%SDD_PROJECT_ROOT%",
+              "^&",
+              "*.jsonl",
+              "two words"
+            ]
+          },
+          {
+            "variant_id": "metacharacters-in-executable-token",
+            "operation": "discover",
+            "platforms": [
+              "all"
+            ],
+            "configured_argv": [
+              "<missing-executable>; touch <outside-root>/executable-created",
+              "discover"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "configuration_accepted": true,
+        "argv_normalization": "preserve-elements-verbatim",
+        "spawn_mode": "direct",
+        "shell": false,
+        "discover_and_execute_argument_observation": "Every argument after argv[0] is observed by the adapter as the same single literal element at the same index.",
+        "executable_token_observation": "The complete argv[0] value is attempted as one executable name; failure to resolve it is a blocking adapter failure without shell fallback.",
+        "shell_processes_started": 0,
+        "shell_commands_evaluated": 0,
+        "marker_files_created": 0,
+        "unexpected_processes_started": 0,
+        "network_requests": 0,
+        "pass_allowed_after_spawn_failure": false,
+        "basis_requirements": [
+          "REQ-12E19D70",
+          "REQ-20F8CA5C",
+          "REQ-1DD46CA9",
+          "REQ-F91F7D11"
         ]
       }
     },
