@@ -196,6 +196,8 @@ refers-to
 depends-on
 ```
 
+The directed Requirement `depends-on` graph must be acyclic.
+
 Permanent Concept relation:
 
 ```text
@@ -204,4 +206,3 @@ relates-to
 
 Transient relations such as conflicts, replacement, implementation, test
 coverage, and workflow state are not serialized into canonical Markdown.
-

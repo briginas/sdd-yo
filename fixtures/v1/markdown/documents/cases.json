@@ -16,7 +16,9 @@
     "REQ-EAC56CB1",
     "REQ-8ACBC52D",
     "REQ-065A9911",
-    "REQ-40A38BA1"
+    "REQ-40A38BA1",
+    "REQ-F3A241BE",
+    "REQ-7D93D64A"
   ],
   "cases": [
     {
@@ -34,6 +36,46 @@
       "parse_valid": true,
       "graph_valid": true,
       "expectation": "Accept optional semantic, structural, and explanatory sections with typed relative graph links."
+    },
+    {
+      "case_id": "unknown-document-type",
+      "root": "unknown-document-type",
+      "entrypoint": "README.md",
+      "parse_valid": false,
+      "graph_valid": false,
+      "expectation": "Reject an unsupported document type in YAML frontmatter."
+    },
+    {
+      "case_id": "missing-required-marker",
+      "root": "missing-required-marker",
+      "entrypoint": "README.md",
+      "parse_valid": false,
+      "graph_valid": false,
+      "expectation": "Reject an index whose required Concepts section omits the sdd:concepts marker."
+    },
+    {
+      "case_id": "duplicate-machine-marker",
+      "root": "duplicate-machine-marker",
+      "entrypoint": "README.md",
+      "parse_valid": false,
+      "graph_valid": false,
+      "expectation": "Reject an index containing the sdd:capabilities marker more than once."
+    },
+    {
+      "case_id": "unknown-machine-marker",
+      "root": "unknown-machine-marker",
+      "entrypoint": "README.md",
+      "parse_valid": false,
+      "graph_valid": false,
+      "expectation": "Reject an unknown normative sdd:notes machine marker."
+    },
+    {
+      "case_id": "unknown-requirement-metadata",
+      "root": "unknown-requirement-metadata",
+      "entrypoint": "README.md",
+      "parse_valid": false,
+      "graph_valid": false,
+      "expectation": "Reject a Requirement whose kind metadata uses an unsupported value."
     }
   ]
 }

@@ -1,0 +1,85 @@
+{
+  "fixture_manifest_version": "1.0",
+  "status": "bootstrap-fixture-manifest",
+  "fixture_family_id": "markdown-graph-invalid",
+  "contracts": [
+    "markdown.index-document",
+    "markdown.capability-document",
+    "markdown.capability-fragment-document",
+    "markdown.requirement-block",
+    "markdown.concept-document"
+  ],
+  "requirements": [
+    "REQ-8D157EBE",
+    "REQ-99605FAB",
+    "REQ-7D93D64A",
+    "REQ-13CF54D6",
+    "REQ-FBB24D6C"
+  ],
+  "cases": [
+    {
+      "case_id": "duplicate-id",
+      "root": "duplicate-id",
+      "entrypoint": "README.md",
+      "parse_valid": true,
+      "graph_valid": false,
+      "expectation": "Reject two Concept documents that declare the same stable ID."
+    },
+    {
+      "case_id": "broken-link",
+      "root": "broken-link",
+      "entrypoint": "README.md",
+      "parse_valid": true,
+      "graph_valid": false,
+      "expectation": "Reject an index graph link whose relative target does not exist."
+    },
+    {
+      "case_id": "wrong-target-type",
+      "root": "wrong-target-type",
+      "entrypoint": "README.md",
+      "parse_valid": true,
+      "graph_valid": false,
+      "expectation": "Reject a Concept graph link that resolves to a Capability document."
+    },
+    {
+      "case_id": "wrong-anchor",
+      "root": "wrong-anchor",
+      "entrypoint": "README.md",
+      "parse_valid": true,
+      "graph_valid": false,
+      "expectation": "Reject a Requirement link whose fragment is not the lowercase anchor derived from its labeled ID."
+    },
+    {
+      "case_id": "invalid-owner",
+      "root": "invalid-owner",
+      "entrypoint": "README.md",
+      "parse_valid": true,
+      "graph_valid": false,
+      "expectation": "Reject a fragment reached from one Capability when its frontmatter declares another owner."
+    },
+    {
+      "case_id": "unreachable-fragment",
+      "root": "unreachable-fragment",
+      "entrypoint": "README.md",
+      "parse_valid": true,
+      "graph_valid": false,
+      "expectation": "Reject a fragment that is not reachable from its declared Capability root."
+    },
+    {
+      "case_id": "cross-project-link",
+      "root": "cross-project-link/project-a",
+      "entrypoint": "README.md",
+      "parse_valid": true,
+      "graph_valid": false,
+      "expectation": "Reject a relative graph link that resolves into a neighboring SDD Project scope."
+    },
+    {
+      "case_id": "dependency-cycle-policy",
+      "root": "dependency-cycle-policy",
+      "entrypoint": "README.md",
+      "parse_valid": true,
+      "graph_valid": false,
+      "expectation": "Reject a cycle in the Requirement depends-on graph."
+    }
+  ]
+}

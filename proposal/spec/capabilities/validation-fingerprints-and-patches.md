@@ -62,6 +62,7 @@ document or Requirement metadata.
 
 - Diagnostics include stable code, severity, path, line, object ID when
   available, message, and remediation.
+- The directed Requirement `depends-on` graph is acyclic.
 - Mechanical validation does not claim to prove semantic atomicity or
   completeness.
 - A CLI crash never produces a passing result.

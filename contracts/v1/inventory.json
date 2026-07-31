@@ -1501,7 +1501,9 @@
         "REQ-EAC56CB1",
         "REQ-8ACBC52D",
         "REQ-065A9911",
-        "REQ-40A38BA1"
+        "REQ-40A38BA1",
+        "REQ-F3A241BE",
+        "REQ-7D93D64A"
       ],
       "required_cases": [
         "minimal-valid",
@@ -1509,6 +1511,8 @@
         "utf8",
         "line-ending-normalization",
         "missing-required-marker",
+        "duplicate-machine-marker",
+        "unknown-machine-marker",
         "unknown-document-type",
         "unknown-requirement-metadata"
       ]
@@ -1528,7 +1532,8 @@
         "REQ-8D157EBE",
         "REQ-99605FAB",
         "REQ-7D93D64A",
-        "REQ-13CF54D6"
+        "REQ-13CF54D6",
+        "REQ-FBB24D6C"
       ],
       "required_cases": [
         "duplicate-id",
