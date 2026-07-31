@@ -9,7 +9,7 @@
     "0.7-evidence-replay-subject-confusion",
     "0.7-repository-prompt-injection"
   ],
-  "scope": "Declarative project-path, filesystem-race, malicious adapter-output, command argv, evidence-confusion, and future Agent Skill repository prompt-injection scenarios. The manifest defines portable setup and fail-closed decisions without creating host-specific links, allowing XML DTD or external-entity processing, evaluating shell syntax, treating repository claims as authority, exposing secrets, or performing requested side effects. Atomic interruption, runtime code, the Agent Skill, eval harness, and verifier behavior are deferred.",
+  "scope": "Declarative project-path, filesystem-race, exact-patch interruption, malicious adapter-output, command argv, evidence-confusion, and future Agent Skill repository prompt-injection scenarios. The manifest defines portable setup and fail-closed decisions without creating host-specific links, allowing XML DTD or external-entity processing, evaluating shell syntax, treating repository claims as authority, exposing secrets, or performing requested side effects. Runtime code, the Agent Skill, eval harness, and verifier behavior are deferred.",
   "contracts": [
     "artifact.spec-patch",
     "artifact.candidate-tree-manifest",
@@ -62,6 +62,17 @@
     "component_topology_rejection": "Inspect every existing component from the project root to the target without following a symlink or junction outside project scope.",
     "case_collision_rejection": "On a case-insensitive filesystem, reject a target whose normalized spelling aliases a differently cased existing path.",
     "toctou_revalidation": "Revalidate path identity and patch preconditions after validation and before mutation; any change aborts the complete patch.",
+    "atomic_interruption": "A future platform test injects a controlled interruption at each declared patch-application boundary. The visible specification tree must remain exactly the original tree; no create, replace, or delete operation may remain partially applied.",
+    "atomic_interruption_result": {
+      "accepted": false,
+      "failure": "injected-interruption",
+      "final_visible_tree": "exact-original-tree",
+      "partial_final_state": false,
+      "patch_operations_committed": 0,
+      "unrelated_working_tree_changes_preserved": true,
+      "git_mutations": 0,
+      "pass_allowed": false
+    },
     "jsonl_untrusted_data": "Parse each bounded UTF-8 line as data, reject invalid source paths and adapter-supplied Requirement mappings, and produce no partial TestIndex after rejection.",
     "xml_parser_mode": "Use a bounded non-networked XML parser with DTD processing and external entities disabled.",
     "xml_doctype_rejection": "Reject every XML document containing a DOCTYPE before processing internal declarations, resolving an entity, or importing any testcase.",
@@ -118,9 +129,6 @@
       "posix",
       "windows",
       "case-insensitive-filesystem"
-    ],
-    "deferred_inventory_cases": [
-      "atomic-interruption"
     ]
   },
   "cases": [
@@ -433,6 +441,60 @@
         "patch_operations_applied": 0,
         "pass_allowed": false,
         "reason": "A component identity change after validation aborts the complete patch before any patch operation is applied.",
+        "basis_requirements": [
+          "REQ-7AFE9904"
+        ]
+      }
+    },
+    {
+      "case_id": "atomic-interruption",
+      "category": "exact-patch-atomicity",
+      "platforms": [
+        "all"
+      ],
+      "input": {
+        "artifact_surface": "artifact.spec-patch",
+        "preconditions": "all-path-content-and-result-tree-preconditions-valid",
+        "initial_tree": {
+          "spec/capabilities/create-target.md": "absent",
+          "spec/capabilities/replace-target.md": "before-content",
+          "spec/capabilities/delete-target.md": "before-content",
+          "unrelated/user-notes.md": "preserved-user-content"
+        },
+        "operations": [
+          {
+            "operation": "create",
+            "path": "spec/capabilities/create-target.md"
+          },
+          {
+            "operation": "replace",
+            "path": "spec/capabilities/replace-target.md"
+          },
+          {
+            "operation": "delete",
+            "path": "spec/capabilities/delete-target.md"
+          }
+        ],
+        "variants": [
+          {
+            "variant_id": "after-preconditions-before-temporary-writes",
+            "injection_point": "after-all-preconditions-before-first-temporary-write"
+          },
+          {
+            "variant_id": "after-temporary-writes-before-visible-commit",
+            "injection_point": "after-all-temporary-files-are-durable-before-first-visible-replacement"
+          },
+          {
+            "variant_id": "between-visible-replacements",
+            "injection_point": "after-first-visible-replacement-before-remaining-operations"
+          }
+        ]
+      },
+      "expected": {
+        "result_profile": "atomic_interruption_result",
+        "recovery_or_rollback_required": true,
+        "temporary_files_are_authoritative": false,
+        "cli_exit_code": "nonzero",
         "basis_requirements": [
           "REQ-7AFE9904"
         ]
