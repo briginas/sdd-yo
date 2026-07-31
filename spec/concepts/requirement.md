@@ -35,4 +35,3 @@ changes, and removals in a feature branch are candidate changes.
 
 Atomic requirements make specification deltas, approvals, test traceability,
 and semantic conflict reports addressable and reviewable.
-

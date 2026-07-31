@@ -35,4 +35,3 @@ configuration, and protocol schema version.
 Adapters keep the SDD Yo core language- and framework-independent while
 preventing comments or unrelated source strings from masquerading as named
 test coverage.
-

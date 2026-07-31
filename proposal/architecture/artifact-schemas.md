@@ -63,7 +63,7 @@ Rules:
   change a decision subject;
 - `schema_version` is `<major>.<minor>`; an unknown major is rejected.
 - `artifact_type` must match the invoked command and schema.
-- `project_id` must match the selected [SDD Project](../spec/concepts/sdd-project.md).
+- `project_id` must match the selected [SDD Project](../../spec/concepts/sdd-project.md).
 - timestamps are RFC 3339 UTC values and are informational unless a configured
   issuer policy uses them;
 - fingerprints are lowercase SHA-256 hex strings prefixed with `sha256:`;

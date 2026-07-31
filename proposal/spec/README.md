@@ -23,16 +23,16 @@ and merge enforcement to external processes.
 
 ## Domain concepts <!-- sdd:concepts -->
 
-- [CON-EA57C937 — SDD Project](concepts/sdd-project.md)
-- [CON-77D857DB — Document](concepts/document.md)
-- [CON-2C550D5B — Capability](concepts/capability.md)
-- [CON-9F69CC0E — Requirement](concepts/requirement.md)
-- [CON-88F1C731 — Domain Concept](concepts/domain-concept.md)
-- [CON-3E620A28 — Change](concepts/change.md)
-- [CON-FC16381E — Fingerprint](concepts/fingerprint.md)
-- [CON-4365C0F6 — Evidence](concepts/evidence.md)
-- [CON-E2F84A01 — Finding](concepts/finding.md)
-- [CON-90AFB19E — Test Adapter](concepts/test-adapter.md)
+- [CON-EA57C937 — SDD Project](../../spec/concepts/sdd-project.md)
+- [CON-77D857DB — Document](../../spec/concepts/document.md)
+- [CON-2C550D5B — Capability](../../spec/concepts/capability.md)
+- [CON-9F69CC0E — Requirement](../../spec/concepts/requirement.md)
+- [CON-88F1C731 — Domain Concept](../../spec/concepts/domain-concept.md)
+- [CON-3E620A28 — Change](../../spec/concepts/change.md)
+- [CON-FC16381E — Fingerprint](../../spec/concepts/fingerprint.md)
+- [CON-4365C0F6 — Evidence](../../spec/concepts/evidence.md)
+- [CON-E2F84A01 — Finding](../../spec/concepts/finding.md)
+- [CON-90AFB19E — Test Adapter](../../spec/concepts/test-adapter.md)
 
 ## Specification boundary
 

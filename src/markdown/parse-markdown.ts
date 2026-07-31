@@ -347,7 +347,10 @@ export function parseSpecificationDocument(
   const path = pathValue;
   let source: string;
   try {
-    source = new TextDecoder("utf-8", { fatal: true }).decode(bytes).replaceAll(/\r\n?|\r/gu, "\n");
+    source = new TextDecoder("utf-8", { fatal: true })
+      .decode(bytes)
+      .replaceAll(/\r\n?|\r/gu, "\n")
+      .normalize("NFC");
   } catch {
     return failure(diagnostic("SDD_MARKDOWN_INVALID_UTF8", "Document is not valid UTF-8.", path));
   }

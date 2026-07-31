@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 2 / Read-only specification vertical slice
-- Current leaf: 2.3 Graph validation
+- Current leaf: 2.4 Fingerprints
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -28,10 +28,11 @@ of:
 
 The repository contains an approved target specification and architecture, a
 Stage 0 bootstrap verifier, a testable TypeScript library package, generated
-contract types, and safe `sdd` executable wiring. The executable reports a
-technical-unavailable failure because no product command is implemented. The
-target package is intentionally outside canonical `spec/`; the first product
-slices will promote only the Requirements they satisfy.
+contract types, configuration and Markdown parsing, graph validation, the
+first implemented canonical `spec/` subset, and safe `sdd` executable wiring.
+The executable still reports a technical-unavailable failure because no
+product command is implemented. Unimplemented target behavior remains under
+`proposal/spec/` and is promoted only in verified bounded subsets.
 
 The root commit is:
 
@@ -412,21 +413,39 @@ incomplete until graph validation proves fragment reachability and unique
 Capability ownership. Requirement-named tests for those two Requirements
 cover only their parser-local portions and do not claim full satisfaction.
 
-Canonical promotion is deferred as one coherent subset to 2.3. Promoting only
+Canonical promotion was deferred as one coherent subset to 2.3. Promoting only
 the four parser-complete Requirements would require moving shared Concept
 context out of `proposal/spec/` and retargeting the remaining proposal graph;
-doing that before link resolution would either duplicate normative Concept
-copies or create an unverified canonical graph. No Requirement has two
-normative copies in this interim state.
+doing that before link resolution would either have duplicated normative
+Concept copies or created an unverified canonical graph. Milestone 2.3
+completed that promotion without retaining duplicate normative definitions.
 
 ### 2.3 Graph validation
 
-Implement entrypoint reachability, ownership, typed links, relation rules,
-cross-project isolation, and stable diagnostics.
+Status: graph core and first coherent canonical subset complete.
+
+Implemented configured-entrypoint validation, deterministic object ordering,
+index completeness, duplicate identity checks, fragment reachability and
+ownership, portable scope-contained link resolution, exact path-to-identity
+binding, typed Requirement and Concept relations, stable anchors, dependency
+cycle rejection, and stale display-title warnings. Graph errors use stable
+codes and carry deterministic remediation guidance in diagnostic details.
 
 Primary target Requirements:
 `REQ-8D157EBE`, `REQ-99605FAB`, `REQ-F3A241BE`, `REQ-7D93D64A`,
 `REQ-13CF54D6`.
+
+This leaf completes and promotes `REQ-DD91AD0F`, `REQ-8602BF02`,
+`REQ-0EF66B28`, `REQ-EAC56CB1`, `REQ-065A9911`, `REQ-40A38BA1`,
+`REQ-8D157EBE`, `REQ-99605FAB`, and `REQ-F3A241BE`. The canonical graph also
+owns the complete ten-Concept vocabulary needed by this first subset; the
+remaining proposal model links to those canonical Concept definitions rather
+than retaining editable copies.
+
+`REQ-7D93D64A` remains proposed until 2.5 applies the diagnostic remediation
+contract across parser and CLI failures and verifies that a CLI crash cannot
+produce success. `REQ-13CF54D6` remains proposed until 2.4 makes fingerprints
+explicitly uncomputable for unknown or ambiguous graph targets.
 
 ### 2.4 Fingerprints
 
@@ -565,9 +584,8 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 2.3 — Graph validation` is the only active implementation leaf. It
-must complete the graph-wide acceptance criteria in `REQ-DD91AD0F` and
-`REQ-0EF66B28`, validate the parser-produced link and ownership records, and
-create the first coherent canonical specification subset. `REQ-0361538D`
-remains proposed until CLI integration in 2.5 makes its observable Statement
-true.
+`Milestone 2.4 — Fingerprints` is the only active implementation leaf. It must
+canonicalize the parser-produced semantic and structural values, hash exact
+canonical JSON bytes, complete `REQ-13CF54D6`, and keep verification
+fingerprints deferred until TestIndex support. `REQ-0361538D` remains proposed
+until CLI integration in 2.5 makes its observable Statement true.

@@ -25,4 +25,3 @@ independent of its title, document path, and internal document partitioning.
 
 Capabilities give humans a useful reading and QA scope while Requirements
 remain the atomic normative units.
-

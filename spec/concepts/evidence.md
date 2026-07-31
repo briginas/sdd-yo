@@ -37,4 +37,3 @@ product specification.
 
 External evidence keeps the deterministic core provider-neutral and prevents
 approval and QA workflow history from polluting canonical product knowledge.
-

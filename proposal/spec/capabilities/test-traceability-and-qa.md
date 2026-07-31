@@ -22,8 +22,8 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-90AFB19E — Test Adapter](../concepts/test-adapter.md)
-- refers-to: [CON-9F69CC0E — Requirement](../concepts/requirement.md)
+- refers-to: [CON-90AFB19E — Test Adapter](../../../spec/concepts/test-adapter.md)
+- refers-to: [CON-9F69CC0E — Requirement](../../../spec/concepts/requirement.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -50,7 +50,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-90AFB19E — Test Adapter](../concepts/test-adapter.md)
+- refers-to: [CON-90AFB19E — Test Adapter](../../../spec/concepts/test-adapter.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -74,7 +74,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-9F69CC0E — Requirement](../concepts/requirement.md)
+- refers-to: [CON-9F69CC0E — Requirement](../../../spec/concepts/requirement.md)
 - depends-on: [REQ-12E19D70 — Discover tests through language-independent adapters](#req-12e19d70)
 
 ### Statement <!-- sdd:statement -->
@@ -99,7 +99,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-4365C0F6 — Evidence](../concepts/evidence.md)
+- refers-to: [CON-4365C0F6 — Evidence](../../../spec/concepts/evidence.md)
 - depends-on: [REQ-E451458E — Require traceability for automated Requirements](#req-e451458e)
 
 ### Statement <!-- sdd:statement -->
@@ -125,8 +125,8 @@ verification: manual
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-9F69CC0E — Requirement](../concepts/requirement.md)
-- refers-to: [CON-4365C0F6 — Evidence](../concepts/evidence.md)
+- refers-to: [CON-9F69CC0E — Requirement](../../../spec/concepts/requirement.md)
+- refers-to: [CON-4365C0F6 — Evidence](../../../spec/concepts/evidence.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -150,8 +150,8 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-9F69CC0E — Requirement](../concepts/requirement.md)
-- refers-to: [CON-88F1C731 — Domain Concept](../concepts/domain-concept.md)
+- refers-to: [CON-9F69CC0E — Requirement](../../../spec/concepts/requirement.md)
+- refers-to: [CON-88F1C731 — Domain Concept](../../../spec/concepts/domain-concept.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -179,8 +179,8 @@ verification: manual
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-2C550D5B — Capability](../concepts/capability.md)
-- refers-to: [CON-4365C0F6 — Evidence](../concepts/evidence.md)
+- refers-to: [CON-2C550D5B — Capability](../../../spec/concepts/capability.md)
+- refers-to: [CON-4365C0F6 — Evidence](../../../spec/concepts/evidence.md)
 - depends-on: [REQ-89AFB91E — Compute affected Requirements transitively](#req-89afb91e)
 
 ### Statement <!-- sdd:statement -->
@@ -206,7 +206,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-90AFB19E — Test Adapter](../concepts/test-adapter.md)
+- refers-to: [CON-90AFB19E — Test Adapter](../../../spec/concepts/test-adapter.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -231,7 +231,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-90AFB19E — Test Adapter](../concepts/test-adapter.md)
+- refers-to: [CON-90AFB19E — Test Adapter](../../../spec/concepts/test-adapter.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -256,8 +256,8 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-EA57C937 — SDD Project](../concepts/sdd-project.md)
-- refers-to: [CON-90AFB19E — Test Adapter](../concepts/test-adapter.md)
+- refers-to: [CON-EA57C937 — SDD Project](../../../spec/concepts/sdd-project.md)
+- refers-to: [CON-90AFB19E — Test Adapter](../../../spec/concepts/test-adapter.md)
 
 ### Statement <!-- sdd:statement -->
 

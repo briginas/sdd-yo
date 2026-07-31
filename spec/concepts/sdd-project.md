@@ -35,4 +35,3 @@ configuration. Moving the project directory does not change this identity.
 
 Configuration-based identity lets a monorepo contain multiple independent SDD
 Projects without coupling product identity to a mutable path.
-

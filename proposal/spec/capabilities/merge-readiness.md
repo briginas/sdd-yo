@@ -22,8 +22,8 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
-- refers-to: [CON-4365C0F6 — Evidence](../concepts/evidence.md)
+- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
+- refers-to: [CON-4365C0F6 — Evidence](../../../spec/concepts/evidence.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -48,7 +48,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-E2F84A01 — Finding](../concepts/finding.md)
+- refers-to: [CON-E2F84A01 — Finding](../../../spec/concepts/finding.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -99,8 +99,8 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-4365C0F6 — Evidence](../concepts/evidence.md)
-- refers-to: [CON-FC16381E — Fingerprint](../concepts/fingerprint.md)
+- refers-to: [CON-4365C0F6 — Evidence](../../../spec/concepts/evidence.md)
+- refers-to: [CON-FC16381E — Fingerprint](../../../spec/concepts/fingerprint.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -126,7 +126,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -152,8 +152,8 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
-- refers-to: [CON-E2F84A01 — Finding](../concepts/finding.md)
+- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
+- refers-to: [CON-E2F84A01 — Finding](../../../spec/concepts/finding.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -178,7 +178,7 @@ verification: manual
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-4365C0F6 — Evidence](../concepts/evidence.md)
+- refers-to: [CON-4365C0F6 — Evidence](../../../spec/concepts/evidence.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -202,8 +202,8 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-4365C0F6 — Evidence](../concepts/evidence.md)
-- refers-to: [CON-E2F84A01 — Finding](../concepts/finding.md)
+- refers-to: [CON-4365C0F6 — Evidence](../../../spec/concepts/evidence.md)
+- refers-to: [CON-E2F84A01 — Finding](../../../spec/concepts/finding.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -229,7 +229,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -252,8 +252,8 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
-- refers-to: [CON-FC16381E — Fingerprint](../concepts/fingerprint.md)
+- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
+- refers-to: [CON-FC16381E — Fingerprint](../../../spec/concepts/fingerprint.md)
 
 ### Statement <!-- sdd:statement -->
 

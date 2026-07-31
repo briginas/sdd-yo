@@ -458,9 +458,9 @@ function validateCoverage(manifests: ParsedManifest[], inventory: Inventory): vo
   }
 }
 
-async function validateProposalModel(proposalFiles: string[], manifests: ParsedManifest[], inventory: Inventory): Promise<void> {
+async function validateSpecificationModels(modelFiles: string[], manifests: ParsedManifest[], inventory: Inventory): Promise<void> {
   const definitions = new Map<string, string>();
-  for (const file of proposalFiles.filter((item) => item.endsWith(".md"))) {
+  for (const file of modelFiles.filter((item) => item.endsWith(".md"))) {
     const text = await readFile(file, "utf8");
     const candidates = [
       ...text.matchAll(/^\s*id:\s*((?:CAP|CON)-[0-9A-F]{8})\s*$/gm),
@@ -470,7 +470,13 @@ async function validateProposalModel(proposalFiles: string[], manifests: ParsedM
       const id = match[1];
       if (!id) continue;
       const previous = definitions.get(id);
-      assert(!previous, file, "S0_DUPLICATE_MODEL_ID", `${id} is already defined in ${previous ? relative(previous) : "the proposal"}`);
+      const splitCapability =
+        id.startsWith("CAP-") &&
+        previous !== undefined &&
+        path.basename(previous) === path.basename(file) &&
+        [previous, file].some((candidate) => relative(candidate).startsWith("proposal/spec/capabilities/")) &&
+        [previous, file].some((candidate) => relative(candidate).startsWith("spec/capabilities/"));
+      assert(!previous || splitCapability, file, "S0_DUPLICATE_MODEL_ID", `${id} is already defined in ${previous ? relative(previous) : "the specification models"}`);
       if (!previous) definitions.set(id, file);
     }
 
@@ -490,7 +496,7 @@ async function validateProposalModel(proposalFiles: string[], manifests: ParsedM
   for (const family of inventory.fixture_families ?? []) for (const id of family.requirements ?? []) referencedRequirements.add(id);
   for (const { value } of manifests) for (const id of value.requirements ?? []) referencedRequirements.add(id);
   for (const id of referencedRequirements) {
-    assert(definitions.has(id), path.join(repositoryRoot, "contracts", "v1", "inventory.json"), "S0_UNKNOWN_REQUIREMENT", `referenced Requirement ${id} has no proposal definition`);
+    assert(definitions.has(id), path.join(repositoryRoot, "contracts", "v1", "inventory.json"), "S0_UNKNOWN_REQUIREMENT", `referenced Requirement ${id} has no proposal or canonical definition`);
   }
 }
 
@@ -586,9 +592,11 @@ async function main(): Promise<void> {
   await validateJsonl(manifests);
 
   const proposalFiles = await walk(path.join(repositoryRoot, "proposal"));
-  if (inventory) await validateProposalModel(proposalFiles, manifests, inventory);
+  const canonicalFiles = await walk(path.join(repositoryRoot, "spec"));
+  if (inventory) await validateSpecificationModels([...proposalFiles, ...canonicalFiles], manifests, inventory);
   const documentationFiles = [
     ...proposalFiles,
+    ...canonicalFiles,
     path.join(repositoryRoot, "IMPLEMENTATION_PLAN.md"),
   ];
   if (await exists(path.join(repositoryRoot, "docs"))) documentationFiles.push(...(await walk(path.join(repositoryRoot, "docs"))));

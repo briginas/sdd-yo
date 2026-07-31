@@ -38,4 +38,3 @@ permanent resolved state.
 
 Findings surface judgment without delegating final semantic authority to a
 model.
-

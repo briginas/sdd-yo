@@ -28,4 +28,3 @@ and digest value.
 
 Canonical fingerprints bind approvals and evidence to meaning while avoiding
 invalidations caused only by formatting or file movement.
-

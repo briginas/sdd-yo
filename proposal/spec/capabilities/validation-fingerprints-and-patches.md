@@ -11,33 +11,6 @@ sdd:
 Provide deterministic structural validation, stable meaning-aware
 fingerprints, safe exact patch preparation, and reproducible Git comparison.
 
-<a id="req-f3a241be"></a>
-
-## REQ-F3A241BE — Parse the specification deterministically
-
-```sdd
-kind: invariant
-verification: automated
-```
-
-### Relations <!-- sdd:relations -->
-
-- refers-to: [CON-77D857DB — Document](../concepts/document.md)
-- refers-to: [CON-EA57C937 — SDD Project](../concepts/sdd-project.md)
-
-### Statement <!-- sdd:statement -->
-
-Identical UTF-8 specification content and configuration shall produce the same
-parsed object graph on every supported platform.
-
-### Acceptance criteria <!-- sdd:acceptance -->
-
-- Line endings and Unicode are normalized.
-- Markdown is parsed to an AST rather than interpreted with regular
-  expressions alone.
-- Unknown or duplicate machine markers block validation.
-- Object ordering is deterministic.
-
 <a id="req-7d93d64a"></a>
 
 ## REQ-7D93D64A — Enforce mechanical graph invariants
@@ -49,8 +22,8 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-EA57C937 — SDD Project](../concepts/sdd-project.md)
-- refers-to: [CON-77D857DB — Document](../concepts/document.md)
+- refers-to: [CON-EA57C937 — SDD Project](../../../spec/concepts/sdd-project.md)
+- refers-to: [CON-77D857DB — Document](../../../spec/concepts/document.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -78,9 +51,9 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-2C550D5B — Capability](../concepts/capability.md)
-- refers-to: [CON-9F69CC0E — Requirement](../concepts/requirement.md)
-- refers-to: [CON-88F1C731 — Domain Concept](../concepts/domain-concept.md)
+- refers-to: [CON-2C550D5B — Capability](../../../spec/concepts/capability.md)
+- refers-to: [CON-9F69CC0E — Requirement](../../../spec/concepts/requirement.md)
+- refers-to: [CON-88F1C731 — Domain Concept](../../../spec/concepts/domain-concept.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -108,8 +81,8 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-77D857DB — Document](../concepts/document.md)
-- refers-to: [CON-FC16381E — Fingerprint](../concepts/fingerprint.md)
+- refers-to: [CON-77D857DB — Document](../../../spec/concepts/document.md)
+- refers-to: [CON-FC16381E — Fingerprint](../../../spec/concepts/fingerprint.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -133,7 +106,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-FC16381E — Fingerprint](../concepts/fingerprint.md)
+- refers-to: [CON-FC16381E — Fingerprint](../../../spec/concepts/fingerprint.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -159,7 +132,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-FC16381E — Fingerprint](../concepts/fingerprint.md)
+- refers-to: [CON-FC16381E — Fingerprint](../../../spec/concepts/fingerprint.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -186,8 +159,8 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-FC16381E — Fingerprint](../concepts/fingerprint.md)
-- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+- refers-to: [CON-FC16381E — Fingerprint](../../../spec/concepts/fingerprint.md)
+- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -211,7 +184,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -262,7 +235,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
 - depends-on: [REQ-A8739118 — Prepare approved proposals against current integration state](proposal-modes-and-workflow-gates.md#req-a8739118)
 
 ### Statement <!-- sdd:statement -->
@@ -288,7 +261,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-EA57C937 — SDD Project](../concepts/sdd-project.md)
+- refers-to: [CON-EA57C937 — SDD Project](../../../spec/concepts/sdd-project.md)
 
 ### Statement <!-- sdd:statement -->
 

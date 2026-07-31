@@ -35,4 +35,3 @@ changing product semantics.
 
 Separating human reading structure from semantic identity allows the
 specification to evolve without ID churn.
-

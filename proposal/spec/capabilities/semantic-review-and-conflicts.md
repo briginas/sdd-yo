@@ -22,8 +22,8 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-E2F84A01 — Finding](../concepts/finding.md)
-- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+- refers-to: [CON-E2F84A01 — Finding](../../../spec/concepts/finding.md)
+- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -48,7 +48,7 @@ verification: manual
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-E2F84A01 — Finding](../concepts/finding.md)
+- refers-to: [CON-E2F84A01 — Finding](../../../spec/concepts/finding.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -72,8 +72,8 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-E2F84A01 — Finding](../concepts/finding.md)
-- refers-to: [CON-FC16381E — Fingerprint](../concepts/fingerprint.md)
+- refers-to: [CON-E2F84A01 — Finding](../../../spec/concepts/finding.md)
+- refers-to: [CON-FC16381E — Fingerprint](../../../spec/concepts/fingerprint.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -97,7 +97,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-E2F84A01 — Finding](../concepts/finding.md)
+- refers-to: [CON-E2F84A01 — Finding](../../../spec/concepts/finding.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -122,8 +122,8 @@ verification: manual
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-E2F84A01 — Finding](../concepts/finding.md)
-- refers-to: [CON-4365C0F6 — Evidence](../concepts/evidence.md)
+- refers-to: [CON-E2F84A01 — Finding](../../../spec/concepts/finding.md)
+- refers-to: [CON-4365C0F6 — Evidence](../../../spec/concepts/evidence.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -148,7 +148,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-E2F84A01 — Finding](../concepts/finding.md)
+- refers-to: [CON-E2F84A01 — Finding](../../../spec/concepts/finding.md)
 - depends-on: [REQ-20AAA622 — Require human resolution of review findings](#req-20aaa622)
 
 ### Statement <!-- sdd:statement -->
@@ -172,8 +172,8 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-E2F84A01 — Finding](../concepts/finding.md)
-- refers-to: [CON-FC16381E — Fingerprint](../concepts/fingerprint.md)
+- refers-to: [CON-E2F84A01 — Finding](../../../spec/concepts/finding.md)
+- refers-to: [CON-FC16381E — Fingerprint](../../../spec/concepts/fingerprint.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -197,7 +197,7 @@ verification: manual
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-E2F84A01 — Finding](../concepts/finding.md)
+- refers-to: [CON-E2F84A01 — Finding](../../../spec/concepts/finding.md)
 - depends-on: [REQ-18F84CE2 — Keep AI semantic analysis optional](#req-18f84ce2)
 
 ### Statement <!-- sdd:statement -->
@@ -223,7 +223,7 @@ verification: manual
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-E2F84A01 — Finding](../concepts/finding.md)
+- refers-to: [CON-E2F84A01 — Finding](../../../spec/concepts/finding.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -246,8 +246,8 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-88F1C731 — Domain Concept](../concepts/domain-concept.md)
-- refers-to: [CON-9F69CC0E — Requirement](../concepts/requirement.md)
+- refers-to: [CON-88F1C731 — Domain Concept](../../../spec/concepts/domain-concept.md)
+- refers-to: [CON-9F69CC0E — Requirement](../../../spec/concepts/requirement.md)
 
 ### Statement <!-- sdd:statement -->
 

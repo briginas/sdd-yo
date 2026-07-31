@@ -22,8 +22,8 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-EA57C937 — SDD Project](../concepts/sdd-project.md)
-- refers-to: [CON-77D857DB — Document](../concepts/document.md)
+- refers-to: [CON-EA57C937 — SDD Project](../../../spec/concepts/sdd-project.md)
+- refers-to: [CON-77D857DB — Document](../../../spec/concepts/document.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -50,7 +50,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-EA57C937 — SDD Project](../concepts/sdd-project.md)
+- refers-to: [CON-EA57C937 — SDD Project](../../../spec/concepts/sdd-project.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -75,8 +75,8 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-EA57C937 — SDD Project](../concepts/sdd-project.md)
-- refers-to: [CON-2C550D5B — Capability](../concepts/capability.md)
+- refers-to: [CON-EA57C937 — SDD Project](../../../spec/concepts/sdd-project.md)
+- refers-to: [CON-2C550D5B — Capability](../../../spec/concepts/capability.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -101,8 +101,8 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-EA57C937 — SDD Project](../concepts/sdd-project.md)
-- refers-to: [CON-2C550D5B — Capability](../concepts/capability.md)
+- refers-to: [CON-EA57C937 — SDD Project](../../../spec/concepts/sdd-project.md)
+- refers-to: [CON-2C550D5B — Capability](../../../spec/concepts/capability.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -127,7 +127,7 @@ verification: manual
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-EA57C937 — SDD Project](../concepts/sdd-project.md)
+- refers-to: [CON-EA57C937 — SDD Project](../../../spec/concepts/sdd-project.md)
 - depends-on: [REQ-784F200F — Support incremental adoption](#req-784f200f)
 
 ### Statement <!-- sdd:statement -->
@@ -154,7 +154,7 @@ verification: manual
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
 - depends-on: [REQ-784F200F — Support incremental adoption](#req-784f200f)
 
 ### Statement <!-- sdd:statement -->
@@ -181,7 +181,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-EA57C937 — SDD Project](../concepts/sdd-project.md)
+- refers-to: [CON-EA57C937 — SDD Project](../../../spec/concepts/sdd-project.md)
 
 ### Statement <!-- sdd:statement -->
 

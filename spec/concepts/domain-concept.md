@@ -26,4 +26,3 @@ its title and document path.
 Domain Concepts centralize reusable vocabulary and make indirect semantic
 impact discoverable. Verifiable rules about a concept remain separate
 Requirements rather than hidden prose.
-

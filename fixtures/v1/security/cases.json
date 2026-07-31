@@ -42,7 +42,7 @@
     "proposal/spec/capabilities/multi-project-cli-and-skill.md#req-f91f7d11",
     "proposal/spec/capabilities/merge-readiness.md#req-e85a06c3",
     "proposal/spec/capabilities/merge-readiness.md#req-220945c2",
-    "proposal/spec/concepts/evidence.md#identity",
+    "spec/concepts/evidence.md#identity",
     "proposal/architecture/security.md#path-traversal-and-symlink-escape",
     "proposal/architecture/security.md#command-injection",
     "proposal/architecture/security.md#malicious-adapter-output",

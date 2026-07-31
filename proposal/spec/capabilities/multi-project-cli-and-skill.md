@@ -23,7 +23,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-EA57C937 — SDD Project](../concepts/sdd-project.md)
+- refers-to: [CON-EA57C937 — SDD Project](../../../spec/concepts/sdd-project.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -47,7 +47,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-EA57C937 — SDD Project](../concepts/sdd-project.md)
+- refers-to: [CON-EA57C937 — SDD Project](../../../spec/concepts/sdd-project.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -72,8 +72,8 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-EA57C937 — SDD Project](../concepts/sdd-project.md)
-- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+- refers-to: [CON-EA57C937 — SDD Project](../../../spec/concepts/sdd-project.md)
+- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -98,7 +98,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-4365C0F6 — Evidence](../concepts/evidence.md)
+- refers-to: [CON-4365C0F6 — Evidence](../../../spec/concepts/evidence.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -123,8 +123,8 @@ verification: manual
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
-- refers-to: [CON-E2F84A01 — Finding](../concepts/finding.md)
+- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
+- refers-to: [CON-E2F84A01 — Finding](../../../spec/concepts/finding.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -151,8 +151,8 @@ verification: manual
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-77D857DB — Document](../concepts/document.md)
-- refers-to: [CON-90AFB19E — Test Adapter](../concepts/test-adapter.md)
+- refers-to: [CON-77D857DB — Document](../../../spec/concepts/document.md)
+- refers-to: [CON-90AFB19E — Test Adapter](../../../spec/concepts/test-adapter.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -179,7 +179,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-EA57C937 — SDD Project](../concepts/sdd-project.md)
+- refers-to: [CON-EA57C937 — SDD Project](../../../spec/concepts/sdd-project.md)
 
 ### Statement <!-- sdd:statement -->
 

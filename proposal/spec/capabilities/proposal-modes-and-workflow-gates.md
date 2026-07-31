@@ -22,7 +22,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -46,7 +46,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
 - depends-on: [REQ-E26A859E — Support exactly three synchronization modes](#req-e26a859e)
 
 ### Statement <!-- sdd:statement -->
@@ -72,7 +72,7 @@ verification: manual
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
 - depends-on: [REQ-E26A859E — Support exactly three synchronization modes](#req-e26a859e)
 
 ### Statement <!-- sdd:statement -->
@@ -100,8 +100,8 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
-- refers-to: [CON-9F69CC0E — Requirement](../concepts/requirement.md)
+- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
+- refers-to: [CON-9F69CC0E — Requirement](../../../spec/concepts/requirement.md)
 - depends-on: [REQ-E26A859E — Support exactly three synchronization modes](#req-e26a859e)
 
 ### Statement <!-- sdd:statement -->
@@ -127,8 +127,8 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
-- refers-to: [CON-4365C0F6 — Evidence](../concepts/evidence.md)
+- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
+- refers-to: [CON-4365C0F6 — Evidence](../../../spec/concepts/evidence.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -151,8 +151,8 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
-- refers-to: [CON-FC16381E — Fingerprint](../concepts/fingerprint.md)
+- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
+- refers-to: [CON-FC16381E — Fingerprint](../../../spec/concepts/fingerprint.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -178,7 +178,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
 - depends-on: [REQ-E80F09C6 — Validate proposals without changing the working tree](#req-e80f09c6)
 
 ### Statement <!-- sdd:statement -->
@@ -205,8 +205,8 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
-- refers-to: [CON-4365C0F6 — Evidence](../concepts/evidence.md)
+- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
+- refers-to: [CON-4365C0F6 — Evidence](../../../spec/concepts/evidence.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -231,7 +231,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -255,7 +255,7 @@ verification: manual
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
 
 ### Statement <!-- sdd:statement -->
 
@@ -279,7 +279,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
 
 ### Statement <!-- sdd:statement -->
 

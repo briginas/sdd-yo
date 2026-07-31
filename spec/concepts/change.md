@@ -42,4 +42,3 @@ merge gates rather than by a hidden CLI state machine.
 
 Changes are transient because Git preserves history while the integration
 branch specification contains only current implemented behavior.
-
