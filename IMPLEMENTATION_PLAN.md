@@ -201,11 +201,17 @@ Primary target Requirements:
 
 ### 0.5 Gate truth tables
 
-- [ ] Encode all valid and invalid `spec-code`, `spec`, and `code` mode input
-      combinations.
+- [x] **0.5a — Synchronization-mode truth tables.** Encode the complete
+      decision-relevant valid and invalid `spec-code`, `spec`, and `code`
+      input partitions, including approval-mode binding and target Requirement
+      drift. Target Requirements: `REQ-E26A859E`, `REQ-983914F3`,
+      `REQ-FB76FC6F`, `REQ-13CE0529`, `REQ-7341DBB7`.
 - [ ] Encode Proposal, Branch Preparation, Verification, and Merge outcomes.
 - [ ] Cover `PASS`, `REVIEW_REQUIRED`, `BLOCKED`, and technical failure.
 - [ ] Cover stale, missing, negative, and contradictory evidence.
+
+Artifact:
+[`fixtures/v1/gates/modes/cases.json`](fixtures/v1/gates/modes/cases.json).
 
 Primary target Requirements:
 `REQ-E26A859E`, `REQ-983914F3`, `REQ-FB76FC6F`, `REQ-13CE0529`,

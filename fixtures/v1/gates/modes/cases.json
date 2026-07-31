@@ -1,0 +1,522 @@
+{
+  "fixture_manifest_version": "1.0",
+  "status": "bootstrap-fixture-manifest",
+  "fixture_family_id": "mode-and-gate-truth-tables",
+  "leaf": "0.5a",
+  "scope": "Synchronization-mode validity and approval-mode binding only; gate outcome composition, evidence freshness, and technical failures are deferred to later Milestone 0.5 leaves.",
+  "contracts": [
+    "artifact.change-descriptor",
+    "gate.proposal",
+    "gate.branch-preparation",
+    "gate.verification",
+    "gate.merge"
+  ],
+  "requirements": [
+    "REQ-E26A859E",
+    "REQ-983914F3",
+    "REQ-FB76FC6F",
+    "REQ-13CE0529",
+    "REQ-7341DBB7"
+  ],
+  "authorities": [
+    "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-e26a859e",
+    "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-983914f3",
+    "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-fb76fc6f",
+    "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-13ce0529",
+    "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-7341dbb7",
+    "proposal/architecture/artifact-schemas.md#change-descriptor"
+  ],
+  "oracle_semantics": {
+    "classification_values": [
+      "valid",
+      "invalid",
+      "review_required",
+      "not_evaluated"
+    ],
+    "classification_is_gate_wire_status": false,
+    "mode_fields_schema_valid": "Whether the abstract declared_mode and code_targets facts satisfy the ChangeDescriptor mode-field schema constraints; this is not validation of a complete artifact instance.",
+    "invalid": "The declared inputs do not satisfy the selected mode contract.",
+    "review_required": "The mode remains selected, but changed or removed target Requirement state requires human review.",
+    "not_evaluated": "Schema-invalid mode input is rejected before mode-contract evaluation.",
+    "non_determining_inputs": [
+      "tests",
+      "qa"
+    ]
+  },
+  "validity_rules": {
+    "spec-code": {
+      "semantic_delta": "non-empty",
+      "structural_delta": "any",
+      "code_targets": "empty",
+      "implementation_relationship": "corresponding-change",
+      "target_requirements": "not-applicable"
+    },
+    "spec": {
+      "semantic_delta": "non-empty",
+      "structural_delta": "any",
+      "code_targets": "empty",
+      "implementation_relationship": "accepted-existing",
+      "target_requirements": "not-applicable"
+    },
+    "code": {
+      "semantic_delta": "empty",
+      "structural_delta": "empty",
+      "verification_delta": "any",
+      "code_targets": "non-empty",
+      "implementation_relationship": "corresponding-change",
+      "target_requirements": "current"
+    }
+  },
+  "coverage_policy": {
+    "supported_modes": [
+      "spec-code",
+      "spec",
+      "code"
+    ],
+    "unsupported_modes": [
+      "feature",
+      "baseline",
+      "fix",
+      "maintenance",
+      "none"
+    ],
+    "method": "Each valid mode has a positive case for every allowed any-valued dimension, and each decision-changing precondition has an isolated negative or review-required case. Approval binding enumerates the complete declared-mode by approved-mode matrix.",
+    "tests_and_qa_variation_changes_classification": false
+  },
+  "cases": [
+    {
+      "case_id": "spec-code-valid-structural-empty",
+      "input": {
+        "declared_mode": "spec-code",
+        "semantic_delta": "non-empty",
+        "structural_delta": "empty",
+        "code_targets": "empty",
+        "implementation_relationship": "corresponding-change",
+        "target_requirements": "not-applicable"
+      },
+      "expected": {
+        "mode_fields_schema_valid": true,
+        "classification": "valid"
+      }
+    },
+    {
+      "case_id": "spec-code-valid-structural-non-empty",
+      "input": {
+        "declared_mode": "spec-code",
+        "semantic_delta": "non-empty",
+        "structural_delta": "non-empty",
+        "code_targets": "empty",
+        "implementation_relationship": "corresponding-change",
+        "target_requirements": "not-applicable"
+      },
+      "expected": {
+        "mode_fields_schema_valid": true,
+        "classification": "valid"
+      }
+    },
+    {
+      "case_id": "spec-code-empty-required-delta",
+      "input": {
+        "declared_mode": "spec-code",
+        "semantic_delta": "empty",
+        "structural_delta": "empty",
+        "code_targets": "empty",
+        "implementation_relationship": "corresponding-change",
+        "target_requirements": "not-applicable"
+      },
+      "expected": {
+        "mode_fields_schema_valid": true,
+        "classification": "invalid",
+        "basis_requirement": "REQ-983914F3"
+      }
+    },
+    {
+      "case_id": "spec-code-missing-implementation-change",
+      "input": {
+        "declared_mode": "spec-code",
+        "semantic_delta": "non-empty",
+        "structural_delta": "empty",
+        "code_targets": "empty",
+        "implementation_relationship": "unchanged",
+        "target_requirements": "not-applicable"
+      },
+      "expected": {
+        "mode_fields_schema_valid": true,
+        "classification": "invalid",
+        "basis_requirement": "REQ-983914F3"
+      }
+    },
+    {
+      "case_id": "spec-code-code-targets-present",
+      "input": {
+        "declared_mode": "spec-code",
+        "semantic_delta": "non-empty",
+        "structural_delta": "empty",
+        "code_targets": "non-empty",
+        "implementation_relationship": "corresponding-change",
+        "target_requirements": "not-applicable"
+      },
+      "expected": {
+        "mode_fields_schema_valid": false,
+        "classification": "not_evaluated"
+      }
+    },
+    {
+      "case_id": "spec-valid-structural-empty",
+      "input": {
+        "declared_mode": "spec",
+        "semantic_delta": "non-empty",
+        "structural_delta": "empty",
+        "code_targets": "empty",
+        "implementation_relationship": "accepted-existing",
+        "target_requirements": "not-applicable"
+      },
+      "expected": {
+        "mode_fields_schema_valid": true,
+        "classification": "valid"
+      }
+    },
+    {
+      "case_id": "spec-valid-structural-non-empty",
+      "input": {
+        "declared_mode": "spec",
+        "semantic_delta": "non-empty",
+        "structural_delta": "non-empty",
+        "code_targets": "empty",
+        "implementation_relationship": "accepted-existing",
+        "target_requirements": "not-applicable"
+      },
+      "expected": {
+        "mode_fields_schema_valid": true,
+        "classification": "valid"
+      }
+    },
+    {
+      "case_id": "spec-empty-required-delta",
+      "input": {
+        "declared_mode": "spec",
+        "semantic_delta": "empty",
+        "structural_delta": "empty",
+        "code_targets": "empty",
+        "implementation_relationship": "accepted-existing",
+        "target_requirements": "not-applicable"
+      },
+      "expected": {
+        "mode_fields_schema_valid": true,
+        "classification": "invalid",
+        "basis_requirement": "REQ-FB76FC6F"
+      }
+    },
+    {
+      "case_id": "spec-existing-behavior-not-accepted",
+      "input": {
+        "declared_mode": "spec",
+        "semantic_delta": "non-empty",
+        "structural_delta": "empty",
+        "code_targets": "empty",
+        "implementation_relationship": "existing-unaccepted",
+        "target_requirements": "not-applicable"
+      },
+      "expected": {
+        "mode_fields_schema_valid": true,
+        "classification": "invalid",
+        "basis_requirement": "REQ-FB76FC6F"
+      }
+    },
+    {
+      "case_id": "spec-product-behavior-change",
+      "input": {
+        "declared_mode": "spec",
+        "semantic_delta": "non-empty",
+        "structural_delta": "empty",
+        "code_targets": "empty",
+        "implementation_relationship": "corresponding-change",
+        "target_requirements": "not-applicable"
+      },
+      "expected": {
+        "mode_fields_schema_valid": true,
+        "classification": "invalid",
+        "basis_requirement": "REQ-FB76FC6F"
+      }
+    },
+    {
+      "case_id": "spec-code-targets-present",
+      "input": {
+        "declared_mode": "spec",
+        "semantic_delta": "non-empty",
+        "structural_delta": "empty",
+        "code_targets": "non-empty",
+        "implementation_relationship": "accepted-existing",
+        "target_requirements": "not-applicable"
+      },
+      "expected": {
+        "mode_fields_schema_valid": false,
+        "classification": "not_evaluated"
+      }
+    },
+    {
+      "case_id": "code-valid-verification-empty",
+      "input": {
+        "declared_mode": "code",
+        "semantic_delta": "empty",
+        "structural_delta": "empty",
+        "verification_delta": "empty",
+        "code_targets": "non-empty",
+        "implementation_relationship": "corresponding-change",
+        "target_requirements": "current"
+      },
+      "expected": {
+        "mode_fields_schema_valid": true,
+        "classification": "valid"
+      }
+    },
+    {
+      "case_id": "code-valid-verification-non-empty",
+      "input": {
+        "declared_mode": "code",
+        "semantic_delta": "empty",
+        "structural_delta": "empty",
+        "verification_delta": "non-empty",
+        "code_targets": "non-empty",
+        "implementation_relationship": "corresponding-change",
+        "target_requirements": "current"
+      },
+      "expected": {
+        "mode_fields_schema_valid": true,
+        "classification": "valid"
+      }
+    },
+    {
+      "case_id": "code-targets-empty",
+      "input": {
+        "declared_mode": "code",
+        "semantic_delta": "empty",
+        "structural_delta": "empty",
+        "verification_delta": "empty",
+        "code_targets": "empty",
+        "implementation_relationship": "corresponding-change",
+        "target_requirements": "current"
+      },
+      "expected": {
+        "mode_fields_schema_valid": false,
+        "classification": "not_evaluated"
+      }
+    },
+    {
+      "case_id": "code-semantic-spec-drift",
+      "input": {
+        "declared_mode": "code",
+        "semantic_delta": "non-empty",
+        "structural_delta": "empty",
+        "verification_delta": "empty",
+        "code_targets": "non-empty",
+        "implementation_relationship": "corresponding-change",
+        "target_requirements": "current"
+      },
+      "expected": {
+        "mode_fields_schema_valid": true,
+        "classification": "invalid",
+        "basis_requirement": "REQ-13CE0529"
+      }
+    },
+    {
+      "case_id": "code-structural-spec-drift",
+      "input": {
+        "declared_mode": "code",
+        "semantic_delta": "empty",
+        "structural_delta": "non-empty",
+        "verification_delta": "empty",
+        "code_targets": "non-empty",
+        "implementation_relationship": "corresponding-change",
+        "target_requirements": "current"
+      },
+      "expected": {
+        "mode_fields_schema_valid": true,
+        "classification": "invalid",
+        "basis_requirement": "REQ-13CE0529"
+      }
+    },
+    {
+      "case_id": "code-target-requirement-changed",
+      "input": {
+        "declared_mode": "code",
+        "semantic_delta": "empty",
+        "structural_delta": "empty",
+        "verification_delta": "empty",
+        "code_targets": "non-empty",
+        "implementation_relationship": "corresponding-change",
+        "target_requirements": "changed"
+      },
+      "expected": {
+        "mode_fields_schema_valid": true,
+        "classification": "review_required",
+        "basis_requirement": "REQ-13CE0529"
+      }
+    },
+    {
+      "case_id": "code-target-requirement-removed",
+      "input": {
+        "declared_mode": "code",
+        "semantic_delta": "empty",
+        "structural_delta": "empty",
+        "verification_delta": "empty",
+        "code_targets": "non-empty",
+        "implementation_relationship": "corresponding-change",
+        "target_requirements": "removed"
+      },
+      "expected": {
+        "mode_fields_schema_valid": true,
+        "classification": "review_required",
+        "basis_requirement": "REQ-13CE0529"
+      }
+    },
+    {
+      "case_id": "mode-missing",
+      "input": {
+        "declared_mode_present": false
+      },
+      "expected": {
+        "mode_fields_schema_valid": false,
+        "classification": "not_evaluated"
+      }
+    },
+    {
+      "case_id": "mode-unsupported-feature",
+      "input": {
+        "declared_mode": "feature"
+      },
+      "expected": {
+        "mode_fields_schema_valid": false,
+        "classification": "not_evaluated"
+      }
+    },
+    {
+      "case_id": "mode-unsupported-baseline",
+      "input": {
+        "declared_mode": "baseline"
+      },
+      "expected": {
+        "mode_fields_schema_valid": false,
+        "classification": "not_evaluated"
+      }
+    },
+    {
+      "case_id": "mode-unsupported-fix",
+      "input": {
+        "declared_mode": "fix"
+      },
+      "expected": {
+        "mode_fields_schema_valid": false,
+        "classification": "not_evaluated"
+      }
+    },
+    {
+      "case_id": "mode-unsupported-maintenance",
+      "input": {
+        "declared_mode": "maintenance"
+      },
+      "expected": {
+        "mode_fields_schema_valid": false,
+        "classification": "not_evaluated"
+      }
+    },
+    {
+      "case_id": "mode-unsupported-none",
+      "input": {
+        "declared_mode": "none"
+      },
+      "expected": {
+        "mode_fields_schema_valid": false,
+        "classification": "not_evaluated"
+      }
+    }
+  ],
+  "approval_mode_matrix": [
+    {
+      "case_id": "approval-spec-code-spec-code",
+      "declared_mode": "spec-code",
+      "approved_mode": "spec-code",
+      "expected_match": true
+    },
+    {
+      "case_id": "approval-spec-code-spec",
+      "declared_mode": "spec-code",
+      "approved_mode": "spec",
+      "expected_match": false
+    },
+    {
+      "case_id": "approval-spec-code-code",
+      "declared_mode": "spec-code",
+      "approved_mode": "code",
+      "expected_match": false
+    },
+    {
+      "case_id": "approval-spec-spec-code",
+      "declared_mode": "spec",
+      "approved_mode": "spec-code",
+      "expected_match": false
+    },
+    {
+      "case_id": "approval-spec-spec",
+      "declared_mode": "spec",
+      "approved_mode": "spec",
+      "expected_match": true
+    },
+    {
+      "case_id": "approval-spec-code",
+      "declared_mode": "spec",
+      "approved_mode": "code",
+      "expected_match": false
+    },
+    {
+      "case_id": "approval-code-spec-code",
+      "declared_mode": "code",
+      "approved_mode": "spec-code",
+      "expected_match": false
+    },
+    {
+      "case_id": "approval-code-spec",
+      "declared_mode": "code",
+      "approved_mode": "spec",
+      "expected_match": false
+    },
+    {
+      "case_id": "approval-code-code",
+      "declared_mode": "code",
+      "approved_mode": "code",
+      "expected_match": true
+    }
+  ],
+  "inventory_required_case_coverage": {
+    "spec-code-valid": [
+      "spec-code-valid-structural-empty",
+      "spec-code-valid-structural-non-empty"
+    ],
+    "spec-valid": [
+      "spec-valid-structural-empty",
+      "spec-valid-structural-non-empty"
+    ],
+    "code-valid": [
+      "code-valid-verification-empty",
+      "code-valid-verification-non-empty"
+    ],
+    "mode-mismatch": [
+      "approval-spec-code-spec",
+      "approval-spec-code-code",
+      "approval-spec-spec-code",
+      "approval-spec-code",
+      "approval-code-spec-code",
+      "approval-code-spec"
+    ],
+    "empty-required-delta": [
+      "spec-code-empty-required-delta",
+      "spec-empty-required-delta"
+    ],
+    "code-spec-drift": [
+      "code-semantic-spec-drift",
+      "code-structural-spec-drift",
+      "code-target-requirement-changed",
+      "code-target-requirement-removed"
+    ]
+  }
+}
