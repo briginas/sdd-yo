@@ -1,0 +1,39 @@
+{
+  "fixture_manifest_version": "1.0",
+  "status": "bootstrap-fixture-manifest",
+  "fixture_family_id": "markdown-documents",
+  "contracts": [
+    "markdown.index-document",
+    "markdown.capability-document",
+    "markdown.capability-fragment-document",
+    "markdown.requirement-block",
+    "markdown.concept-document"
+  ],
+  "requirements": [
+    "REQ-DD91AD0F",
+    "REQ-8602BF02",
+    "REQ-0EF66B28",
+    "REQ-EAC56CB1",
+    "REQ-8ACBC52D",
+    "REQ-065A9911",
+    "REQ-40A38BA1"
+  ],
+  "cases": [
+    {
+      "case_id": "minimal-valid",
+      "root": "minimal-valid",
+      "entrypoint": "README.md",
+      "parse_valid": true,
+      "graph_valid": true,
+      "expectation": "Accept a connected tree containing only required document and Requirement fields."
+    },
+    {
+      "case_id": "representative-valid",
+      "root": "representative-valid",
+      "entrypoint": "README.md",
+      "parse_valid": true,
+      "graph_valid": true,
+      "expectation": "Accept optional semantic, structural, and explanatory sections with typed relative graph links."
+    }
+  ]
+}

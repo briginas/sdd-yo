@@ -4,8 +4,8 @@
 
 - State: active
 - Current phase: Bootstrap / Stage 0 contract fixtures
-- Current leaf: 0.3 Markdown grammar fixtures
-- Last updated: 2026-07-30
+- Current leaf: 0.3b Invalid Markdown grammar and graph fixtures
+- Last updated: 2026-07-31
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
   [`proposal/architecture/README.md`](proposal/architecture/README.md)
@@ -148,17 +148,26 @@ Artifact:
 
 ### 0.3 Markdown grammar fixtures
 
-- [ ] Add golden index, Capability, Capability fragment, Requirement, and
-      Concept documents.
-- [ ] Add invalid frontmatter, marker, anchor, relation, ownership,
-      reachability, duplicate ID, and portable-link cases.
-- [ ] Add semantic/structural/explanatory change pairs.
-- [ ] Include UTF-8 and normalized line-ending cases.
+- [x] **0.3a — Valid Markdown document goldens.** Add minimal and
+      representative valid trees covering index, Capability, Capability
+      fragment, Requirement, and Concept documents. Target Requirements:
+      `REQ-DD91AD0F`, `REQ-8602BF02`, `REQ-0EF66B28`, `REQ-EAC56CB1`,
+      `REQ-8ACBC52D`, `REQ-065A9911`, `REQ-40A38BA1`.
+- [ ] **0.3b — Invalid Markdown grammar and graph fixtures.** Add invalid
+      frontmatter, marker, anchor, relation, ownership, reachability,
+      duplicate ID, and portable-link cases.
+- [ ] **0.3c — Markdown change-classification pairs.** Add
+      semantic/structural/explanatory change pairs.
+- [ ] **0.3d — Markdown encoding and normalization fixtures.** Add UTF-8 and
+      normalized line-ending cases.
 
 Primary target Requirements:
 `REQ-DD91AD0F`, `REQ-8602BF02`, `REQ-0EF66B28`, `REQ-EAC56CB1`,
 `REQ-8ACBC52D`, `REQ-065A9911`, `REQ-40A38BA1`, `REQ-8D157EBE`,
 `REQ-99605FAB`, `REQ-F3A241BE`, `REQ-7D93D64A`.
+
+Artifact:
+[`fixtures/v1/markdown/documents/cases.json`](fixtures/v1/markdown/documents/cases.json).
 
 ### 0.4 Fingerprint and delta goldens
 
@@ -408,8 +417,9 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 0.3 — Markdown grammar fixtures` is the only active implementation
-leaf. It must add golden version 1 Markdown documents and invalid grammar,
-graph, change-classification, UTF-8, and line-ending cases without adding a
-runtime parser. Runtime schema libraries, generated TypeScript types, and CLI
-behavior remain deferred to Milestone 1.
+`Milestone 0.3b — Invalid Markdown grammar and graph fixtures` is the only
+active implementation leaf. It must add invalid frontmatter, marker, anchor,
+relation, ownership, reachability, duplicate ID, and portable-link cases
+without adding a runtime parser. Change-classification pairs, encoding and
+line-ending cases, runtime schema libraries, generated TypeScript types, and
+CLI behavior remain deferred.
