@@ -1,0 +1,90 @@
+{
+  "fixture_manifest_version": "1.0",
+  "status": "bootstrap-fixture-manifest",
+  "fixture_family_id": "adapter-jsonl",
+  "leaf": "0.6a",
+  "scope": "Valid discovery, execution, and test-selection inputs only; hierarchy edge cases, malformed streams, process failures, JUnit, security, and runtime behavior are deferred.",
+  "contracts": [
+    "adapter.jsonl-test-stream-header",
+    "adapter.jsonl-suite-record",
+    "adapter.jsonl-test-record",
+    "adapter.jsonl-result-record",
+    "adapter.test-selection",
+    "adapter.command-invocation"
+  ],
+  "requirements": [
+    "REQ-12E19D70",
+    "REQ-5A832396",
+    "REQ-20F8CA5C",
+    "REQ-72BA737C"
+  ],
+  "authorities": [
+    "proposal/spec/capabilities/test-traceability-and-qa.md#req-12e19d70",
+    "proposal/spec/capabilities/test-traceability-and-qa.md#req-5a832396",
+    "proposal/spec/capabilities/test-traceability-and-qa.md#req-20f8ca5c",
+    "proposal/spec/capabilities/test-traceability-and-qa.md#req-72ba737c",
+    "proposal/architecture/test-adapters.md#normalized-discovery-protocol",
+    "proposal/architecture/test-adapters.md#normalized-execution-protocol",
+    "proposal/architecture/test-adapters.md#test-selection-file"
+  ],
+  "oracle_semantics": {
+    "stream_encoding": "utf8-json-lines-with-one-json-object-per-line",
+    "first_record": "test_stream-header",
+    "discovery_records_after_header": [
+      "suite",
+      "test"
+    ],
+    "execution_records_after_header": [
+      "result"
+    ],
+    "result_local_ids": "adapter-local IDs that correspond to the selected indexed test refs",
+    "selection_binding": "project_id and test_index_fingerprint identify the exact TestIndex subject",
+    "selection_ordering": "test_refs are unique and canonically sorted"
+  },
+  "cases": [
+    {
+      "case_id": "discover-valid",
+      "path": "discover-valid.jsonl",
+      "operation": "discover",
+      "adapter_id": "unit",
+      "expected_record_counts": {
+        "test_stream": 1,
+        "suite": 1,
+        "test": 2
+      },
+      "expected_test_local_ids": [
+        "test-1",
+        "test-2"
+      ],
+      "expectation": "Accept a language-neutral discovery stream containing one suite, two executable tests, and one optional source location."
+    },
+    {
+      "case_id": "execute-valid",
+      "path": "execute-valid.jsonl",
+      "operation": "execute",
+      "adapter_id": "unit",
+      "test_index_fingerprint": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "expected_record_counts": {
+        "test_stream": 1,
+        "result": 2
+      },
+      "expected_result_local_ids": [
+        "test-1",
+        "test-2"
+      ],
+      "expectation": "Accept an execution stream bound to one TestIndex with one result for each selected local test ID."
+    },
+    {
+      "case_id": "test-selection-valid",
+      "path": "test-selection-valid.json",
+      "schema": "contracts/v1/schemas/test-selection.schema.json",
+      "project_id": "SDD-17EF8B29",
+      "test_index_fingerprint": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "expected_test_refs": [
+        "unit:test-1",
+        "unit:test-2"
+      ],
+      "expectation": "Accept the exact project, TestIndex fingerprint, and deterministic test-ref set passed to an execute command."
+    }
+  ]
+}

@@ -17,7 +17,7 @@
   },
   "metadata": {
     "owner": "SDD Yo maintainers",
-    "last_reviewed": "2026-07-30",
+    "last_reviewed": "2026-07-31",
     "source_of_truth": "Inventory of planned contracts; product Requirements remain authoritative for behavior.",
     "verification_status": "bootstrap-validated",
     "known_staleness_risks": [
@@ -1100,8 +1100,9 @@
       "wire_name": "test_selection",
       "wire_format": "json",
       "version": "1.0",
-      "definition_status": "required-detail-in-stage-0.6",
-      "authority": "proposal/architecture/test-adapters.md#command-adapter",
+      "definition_status": "specified",
+      "materialized_schema": "contracts/v1/schemas/test-selection.schema.json",
+      "authority": "proposal/architecture/test-adapters.md#test-selection-file",
       "requirements": [
         "REQ-20F8CA5C",
         "REQ-72BA737C"
@@ -2004,10 +2005,5 @@
       "rule": "Every fixture family has at least one contract, Requirement, and required case."
     }
   ],
-  "stage_0_2_detail_queue": [
-    {
-      "contract_id": "adapter.test-selection",
-      "reason": "The command protocol names the selection file but does not yet publish its complete schema."
-    }
-  ]
+  "stage_0_2_detail_queue": []
 }

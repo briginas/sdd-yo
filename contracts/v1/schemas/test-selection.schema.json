@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "test-selection.schema.json",
+  "title": "SDD Yo TestSelection",
+  "description": "Version 1 command-adapter selection input bound to one project TestIndex.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "project_id",
+    "test_index_fingerprint",
+    "test_refs"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "project_id": {
+      "$ref": "common.schema.json#/$defs/projectId"
+    },
+    "test_index_fingerprint": {
+      "$ref": "common.schema.json#/$defs/fingerprint"
+    },
+    "test_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/testRef"
+      },
+      "uniqueItems": true,
+      "x-sdd-ordering": "test_ref"
+    }
+  }
+}

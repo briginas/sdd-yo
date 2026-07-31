@@ -108,6 +108,31 @@ Invocation contract:
 The CLI does not search `PATH` differently from the host process, install
 dependencies, start a shell, or retry a failed command silently.
 
+### Test selection file
+
+`SDD_TEST_SELECTION_FILE` names a UTF-8 JSON document with exactly these
+fields:
+
+```json
+{
+  "schema_version": "1.0",
+  "project_id": "SDD-17EF8B29",
+  "test_index_fingerprint": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "test_refs": ["unit:test-1", "unit:test-2"]
+}
+```
+
+- `schema_version` is exactly `1.0` for this contract version;
+- `project_id` identifies the selected SDD Project;
+- `test_index_fingerprint` binds the selection to the exact TestIndex used to
+  choose the tests;
+- `test_refs` contains unique normalized `<adapter-id>:<local-id>` references
+  in canonical ascending order;
+- unknown fields are rejected.
+
+The complete checked-in contract is
+[`test-selection.schema.json`](../../contracts/v1/schemas/test-selection.schema.json).
+
 ## JUnit-compatible importer
 
 The importer accepts XML files or globs resolved within configured project

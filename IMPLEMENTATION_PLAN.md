@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Bootstrap / Stage 0 contract fixtures
-- Current leaf: 0.6 Test adapter contract kit
+- Current leaf: 0.6b JSONL hierarchy and failure matrix
 - Last updated: 2026-07-31
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -232,12 +232,25 @@ Primary target Requirements:
 
 ### 0.6 Test adapter contract kit
 
-- [ ] Add valid discovery and execution JSONL streams.
-- [ ] Cover suite inheritance, multiple Requirements, empty suites, unknown
-      Requirements, duplicate local IDs, cycles, malformed UTF-8, truncation,
-      timeout, overflow, and non-zero exit.
-- [ ] Add representative JUnit fixtures with retained and lost hierarchy.
-- [ ] Keep all fixtures language- and framework-neutral.
+Bounded leaves:
+
+- [x] **0.6a — JSONL happy path and test selection.** Publish the exact
+      TestSelection schema and add valid language-neutral discovery, execution,
+      and selection fixtures. Target Requirements: `REQ-12E19D70`,
+      `REQ-5A832396`, `REQ-20F8CA5C`, `REQ-72BA737C`.
+- [ ] **0.6b — JSONL hierarchy and failure matrix.** Cover suite inheritance,
+      multiple Requirements, empty suites, unknown Requirements, duplicate
+      local IDs, cycles, malformed UTF-8, truncation, timeout, overflow,
+      non-zero exit, forward parents, and record-order normalization. Target
+      Requirements: `REQ-F7CEE6D0`, `REQ-E451458E`.
+- [ ] **0.6c — JUnit contract fixtures.** Add representative JUnit fixtures
+      with retained and lost hierarchy, deterministic derived IDs, status and
+      source mapping, malformed XML, and bounded XML failures.
+
+All adapter fixtures remain language- and framework-neutral.
+
+Artifact:
+[`fixtures/v1/adapters/jsonl/cases.json`](fixtures/v1/adapters/jsonl/cases.json).
 
 Primary target Requirements:
 `REQ-12E19D70`, `REQ-F7CEE6D0`, `REQ-E451458E`, `REQ-5A832396`,
