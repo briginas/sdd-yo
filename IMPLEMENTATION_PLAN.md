@@ -4,8 +4,8 @@
 
 - State: active
 - Current phase: Milestone 2 / Read-only specification vertical slice
-- Current leaf: 2.1 Project resolution and configuration
-- Last updated: 2026-07-31
+- Current leaf: 2.2 Markdown parsing and object identity
+- Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
   [`proposal/architecture/README.md`](proposal/architecture/README.md)
@@ -368,7 +368,11 @@ Promote only the Requirements implemented by the selected leaf.
 
 ### 2.1 Project resolution and configuration
 
-Implement nearest/explicit config resolution and strict schema parsing.
+Status: core implementation complete.
+
+Implemented nearest/explicit config resolution, strict schema parsing, safe
+project-relative configured paths, and stable configuration diagnostics behind
+the provider-neutral library boundary.
 
 Primary target Requirements:
 `REQ-0361538D`.
@@ -376,6 +380,13 @@ Primary target Requirements:
 This leaf establishes configuration isolation used later by
 `REQ-FBB24D6C`; it does not complete cross-project graph validation or the
 project-wide portability guarantee.
+
+Canonical promotion of `REQ-0361538D` is intentionally deferred to 2.5. Its
+Statement promises observable CLI behavior, while 2.1 implements only the
+core library and the current executable still reports product commands as
+unavailable. Requirement-named core tests provide implementation traceability
+without claiming that the CLI Requirement is already canonical or fully
+satisfied.
 
 ### 2.2 Markdown parsing and object identity
 
@@ -532,7 +543,8 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 2.1 — Project resolution and configuration` is the only active
-implementation leaf. It will promote and implement `REQ-0361538D` without
-claiming the broader graph-isolation behavior of `REQ-FBB24D6C`. No Milestone
-2 product behavior is implemented yet.
+`Milestone 2.2 — Markdown parsing and object identity` is the only active
+implementation leaf. Milestone 2.1 core behavior is implemented and tested,
+but `REQ-0361538D` remains proposed until the CLI integration in 2.5 makes its
+observable Statement true. The broader graph-isolation behavior of
+`REQ-FBB24D6C` remains deferred.

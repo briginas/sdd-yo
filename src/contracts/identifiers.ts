@@ -56,3 +56,31 @@ export function isFingerprint(value: unknown): value is Fingerprint {
 export function isGitObjectId(value: unknown): value is GitObjectId {
   return typeof value === "string" && value.length > 0;
 }
+
+const windowsReservedNamePattern = /^(?:CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\..*)?$/iu;
+
+export function isProjectPath(value: unknown): value is ProjectPath {
+  if (
+    typeof value !== "string" ||
+    value.length === 0 ||
+    value.startsWith("/") ||
+    /^[A-Za-z]:/u.test(value) ||
+    value.includes("\\") ||
+    value.includes("\0") ||
+    /[:*?"<>|]/u.test(value)
+  ) {
+    return false;
+  }
+
+  const segments = value.split("/");
+  return segments.every(
+    (segment) =>
+      segment.length > 0 &&
+      segment !== "." &&
+      segment !== ".." &&
+      segment.toLowerCase() !== ".git" &&
+      !segment.endsWith(".") &&
+      !segment.endsWith(" ") &&
+      !windowsReservedNamePattern.test(segment),
+  );
+}

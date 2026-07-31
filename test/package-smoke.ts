@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, readdir, rm, stat } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, rm, stat, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -137,6 +137,14 @@ test("bootstrap package builds, packs, stages, imports, and wires sdd offline", 
     assert.ok((await stat(join(installedPackageRoot, "dist/index.d.ts"))).isFile());
     assert.ok((await stat(join(installedPackageRoot, "dist/schemas/v1/artifacts.generated.d.ts"))).isFile());
     assert.ok((await stat(join(installedPackageRoot, "contracts/v1/schemas/common.schema.json"))).isFile());
+
+    // Exercise the staged tarball with the repository's exact locked runtime
+    // dependency tree, without asking npm to resolve packages or use a network.
+    await symlink(
+      join(repositoryRoot, "node_modules"),
+      join(installedPackageRoot, "node_modules"),
+      process.platform === "win32" ? "junction" : "dir",
+    );
 
     const importProbe = await runCommand(
       process.execPath,

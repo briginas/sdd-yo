@@ -1,0 +1,16 @@
+schema_version: 1
+project_id: SDD-17EF8B29
+spec:
+  root: spec
+  entrypoint: spec/README.md
+adoption:
+  mode: incremental
+git:
+  default_target_ref: main
+ids:
+  suffix_length: 8
+  alphabet: hex-uppercase
+tests:
+  adapters: []
+evidence:
+  allowed_issuers: []

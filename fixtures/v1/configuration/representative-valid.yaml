@@ -1,0 +1,33 @@
+schema_version: 1
+project_id: SDD-17EF8B29
+spec:
+  root: spec
+  entrypoint: spec/README.md
+adoption:
+  mode: incremental
+git:
+  default_target_ref: main
+ids:
+  suffix_length: 8
+  alphabet: hex-uppercase
+tests:
+  adapters:
+    - id: unit
+      type: junit
+      discover:
+        reports:
+          - artifacts/junit/**/*.xml
+    - id: custom
+      type: command
+      protocol: jsonl-v1
+      discover:
+        argv: ["node", "tools/sdd-tests.mjs", "discover"]
+      execute:
+        argv: ["node", "tools/sdd-tests.mjs", "execute"]
+      timeout_ms: 120000
+      max_output_bytes: 16777216
+evidence:
+  allowed_issuers:
+    - local-human
+    - github-review
+    - ci
