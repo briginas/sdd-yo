@@ -8,7 +8,74 @@ import { TextDecoder } from "node:util";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(scriptDirectory, "..");
-const diagnostics = [];
+type Diagnostic = {
+  file: string;
+  code: string;
+  message: string;
+};
+
+type FixtureEntry = Record<string, unknown> & {
+  case_id?: string;
+  pair_id?: string;
+  golden_id?: string;
+  path?: string;
+  file?: string;
+  root?: string;
+  entrypoint?: string;
+  variants?: Array<string | FixtureEntry>;
+  before?: string | FixtureEntry;
+  after?: string | FixtureEntry;
+  parse_valid?: boolean;
+  stream_valid?: boolean;
+  utf8_valid?: boolean;
+};
+
+type FixtureManifest = Record<string, unknown> & {
+  status?: string;
+  fixture_manifest_version?: string;
+  fixture_matrix_version?: string;
+  fixture_family_id?: string;
+  contract_id?: string;
+  contracts?: string[];
+  requirements?: string[];
+  authorities?: string[];
+  schema?: string;
+  manifests?: Array<{ schema?: string; manifest?: string }>;
+  cases?: FixtureEntry[];
+  pairs?: FixtureEntry[];
+  approval_mode_matrix?: FixtureEntry[];
+  delta_goldens?: FixtureEntry[];
+  inventory_required_case_coverage?: Record<string, string[]>;
+};
+
+type InventoryFamily = {
+  fixture_family_id: string;
+  requirements?: string[];
+  required_cases: string[];
+};
+
+type InventoryContract = {
+  contract_id: string;
+  requirements?: string[];
+};
+
+type Inventory = {
+  contracts: InventoryContract[];
+  fixture_families: InventoryFamily[];
+};
+
+type ParsedManifest = {
+  file: string;
+  value: FixtureManifest;
+};
+
+type NamedCollection = {
+  location: string;
+  key: string;
+  names: string[];
+};
+
+const diagnostics: Diagnostic[] = [];
 let checks = 0;
 
 const ID_PATTERNS = {
@@ -18,32 +85,44 @@ const ID_PATTERNS = {
   SDD: /^SDD-[0-9A-F]{8}$/,
 };
 
-function relative(file) {
+function relative(file: string): string {
   return path.relative(repositoryRoot, file).split(path.sep).join("/") || ".";
 }
 
-function record(file, code, message) {
+function record(file: string, code: string, message: string): void {
   diagnostics.push({ file: relative(file), code, message });
 }
 
-function assert(condition, file, code, message) {
+function assert(condition: unknown, file: string, code: string, message: string): void {
   checks += 1;
   if (!condition) record(file, code, message);
 }
 
-async function exists(file) {
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function errorStack(error: unknown): string {
+  return error instanceof Error ? (error.stack ?? error.message) : String(error);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+async function exists(file: string): Promise<boolean> {
   try {
     await stat(file);
     return true;
   } catch (error) {
-    if (error?.code === "ENOENT") return false;
+    if (isRecord(error) && error.code === "ENOENT") return false;
     throw error;
   }
 }
 
-async function walk(directory) {
+async function walk(directory: string): Promise<string[]> {
   const entries = await readdir(directory, { withFileTypes: true });
-  const files = [];
+  const files: string[] = [];
   for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
     const target = path.join(directory, entry.name);
     if (entry.isDirectory()) files.push(...(await walk(target)));
@@ -52,18 +131,18 @@ async function walk(directory) {
   return files;
 }
 
-async function parseJson(file, code = "S0_JSON_PARSE") {
+async function parseJson<T = unknown>(file: string, code = "S0_JSON_PARSE"): Promise<T | undefined> {
   try {
-    return JSON.parse(await readFile(file, "utf8"));
+    return JSON.parse(await readFile(file, "utf8")) as T;
   } catch (error) {
-    record(file, code, error.message);
+    record(file, code, errorMessage(error));
     return undefined;
   } finally {
     checks += 1;
   }
 }
 
-function collectIds(value, output = []) {
+function collectIds(value: unknown, output: string[] = []): string[] {
   if (typeof value === "string") {
     const matches = value.match(/\b(?:CAP|CON|REQ|SDD)-[A-Za-z0-9-]+/g) ?? [];
     output.push(...matches);
@@ -75,19 +154,24 @@ function collectIds(value, output = []) {
   return output;
 }
 
-function validateIds(value, file) {
+function validateIds(value: unknown, file: string): void {
   for (const id of collectIds(value)) {
     const prefix = id.slice(0, 3);
-    assert(ID_PATTERNS[prefix]?.test(id), file, "S0_ID_FORMAT", `invalid identifier ${JSON.stringify(id)}`);
+    const pattern = ID_PATTERNS[prefix as keyof typeof ID_PATTERNS];
+    assert(pattern?.test(id), file, "S0_ID_FORMAT", `invalid identifier ${JSON.stringify(id)}`);
   }
 }
 
-function collectNamedEntries(value, location = "$", output = []) {
+function collectNamedEntries(
+  value: unknown,
+  location = "$",
+  output: NamedCollection[] = [],
+): NamedCollection[] {
   if (Array.isArray(value)) {
     const keys = ["case_id", "golden_id", "pair_id", "variant_id"];
     for (const key of keys) {
-      const named = value.filter((item) => item && typeof item === "object" && typeof item[key] === "string");
-      if (named.length > 0) output.push({ location, key, names: named.map((item) => item[key]) });
+      const named = value.filter(isRecord).filter((item) => typeof item[key] === "string");
+      if (named.length > 0) output.push({ location, key, names: named.map((item) => item[key] as string) });
     }
     if (location.endsWith(".variants") && value.every((item) => typeof item === "string")) {
       output.push({ location, key: "variant", names: value });
@@ -99,9 +183,9 @@ function collectNamedEntries(value, location = "$", output = []) {
   return output;
 }
 
-function validateDuplicateNames(value, file) {
+function validateDuplicateNames(value: unknown, file: string): void {
   for (const collection of collectNamedEntries(value)) {
-    const seen = new Set();
+    const seen = new Set<string>();
     for (const name of collection.names) {
       assert(!seen.has(name), file, "S0_DUPLICATE_FIXTURE_NAME", `duplicate ${collection.key} ${JSON.stringify(name)} at ${collection.location}`);
       seen.add(name);
@@ -109,12 +193,12 @@ function validateDuplicateNames(value, file) {
   }
 }
 
-function localTarget(source, reference) {
-  const [target] = reference.split("#", 1);
+function localTarget(source: string, reference: string): string {
+  const [target = ""] = reference.split("#", 1);
   return path.resolve(path.dirname(source), target);
 }
 
-async function validateTarget(source, reference, code = "S0_MISSING_TARGET") {
+async function validateTarget(source: string, reference: string, code = "S0_MISSING_TARGET"): Promise<boolean> {
   const target = localTarget(source, reference);
   const inRepository = target === repositoryRoot || target.startsWith(`${repositoryRoot}${path.sep}`);
   assert(inRepository, source, "S0_PATH_ESCAPE", `reference escapes the repository: ${JSON.stringify(reference)}`);
@@ -130,7 +214,7 @@ async function validateTarget(source, reference, code = "S0_MISSING_TARGET") {
   return present;
 }
 
-function slugifyHeading(heading) {
+function slugifyHeading(heading: string): string {
   return heading
     .replace(/<!--.*?-->/g, "")
     .trim()
@@ -141,7 +225,7 @@ function slugifyHeading(heading) {
     .replace(/-+/g, "-");
 }
 
-async function validateAnchor(source, reference) {
+async function validateAnchor(source: string, reference: string): Promise<void> {
   const hashIndex = reference.indexOf("#");
   if (hashIndex < 0) return;
   const anchor = decodeURIComponent(reference.slice(hashIndex + 1)).toLowerCase();
@@ -152,21 +236,25 @@ async function validateAnchor(source, reference) {
   const anchors = new Set();
   for (const line of text.split(/\r?\n/)) {
     const heading = /^(#{1,6})\s+(.+?)\s*$/.exec(line);
-    if (heading) anchors.add(slugifyHeading(heading[2]));
-    for (const match of line.matchAll(/<a\s+(?:name|id)=["']([^"']+)["'][^>]*>/gi)) anchors.add(match[1].toLowerCase());
+    if (heading?.[2]) anchors.add(slugifyHeading(heading[2]));
+    for (const match of line.matchAll(/<a\s+(?:name|id)=["']([^"']+)["'][^>]*>/gi)) {
+      const explicitAnchor = match[1];
+      if (explicitAnchor) anchors.add(explicitAnchor.toLowerCase());
+    }
   }
   assert(anchors.has(anchor), source, "S0_MISSING_ANCHOR", `missing anchor #${anchor} in ${relative(target)}`);
 }
 
-async function validateAuthorities(manifest, file) {
+async function validateAuthorities(manifest: FixtureManifest, file: string): Promise<void> {
   for (const authority of manifest.authorities ?? []) {
     if (typeof authority !== "string") continue;
-    const present = await validateTarget(file, path.relative(path.dirname(file), path.join(repositoryRoot, authority.split("#")[0])) + (authority.includes("#") ? `#${authority.split("#")[1]}` : ""));
+    const [authorityPath = "", authorityAnchor] = authority.split("#", 2);
+    const present = await validateTarget(file, path.relative(path.dirname(file), path.join(repositoryRoot, authorityPath)) + (authorityAnchor === undefined ? "" : `#${authorityAnchor}`));
     if (present) await validateAnchor(path.join(repositoryRoot, ".stage-0-root"), authority);
   }
 }
 
-async function validateMarkdownLinks(files) {
+async function validateMarkdownLinks(files: string[]): Promise<void> {
   for (const file of files.filter((item) => item.endsWith(".md"))) {
     const text = await readFile(file, "utf8");
     let inFence = false;
@@ -181,7 +269,7 @@ async function validateMarkdownLinks(files) {
       })
       .join("\n");
     for (const match of prose.matchAll(/(?<!!)\[[^\]]*\]\(([^)]+)\)/g)) {
-      const reference = match[1].trim().replace(/^<|>$/g, "");
+      const reference = match[1]?.trim().replace(/^<|>$/g, "") ?? "";
       if (!reference || /^(?:https?:|mailto:)/i.test(reference)) continue;
       const present = reference.startsWith("#")
         ? true
@@ -191,26 +279,31 @@ async function validateMarkdownLinks(files) {
   }
 }
 
-function decodeJsonPointer(root, fragment) {
+function decodeJsonPointer(root: unknown, fragment: string): unknown {
   if (!fragment || fragment === "#") return root;
   if (!fragment.startsWith("#/")) return undefined;
-  return fragment
+  const parts = fragment
     .slice(2)
     .split("/")
-    .map((part) => decodeURIComponent(part).replaceAll("~1", "/").replaceAll("~0", "~"))
-    .reduce((current, part) => current?.[part], root);
+    .map((part) => decodeURIComponent(part).replaceAll("~1", "/").replaceAll("~0", "~"));
+  let current = root;
+  for (const part of parts) {
+    if (!isRecord(current) && !Array.isArray(current)) return undefined;
+    current = (current as Record<string, unknown>)[part];
+  }
+  return current;
 }
 
-function collectSchemaRefs(value, output = []) {
+function collectSchemaRefs(value: unknown, output: string[] = []): string[] {
   if (Array.isArray(value)) value.forEach((item) => collectSchemaRefs(item, output));
-  else if (value && typeof value === "object") {
+  else if (isRecord(value)) {
     if (typeof value.$ref === "string") output.push(value.$ref);
     Object.values(value).forEach((item) => collectSchemaRefs(item, output));
   }
   return output;
 }
 
-async function validateSchemaRefs(schemaFiles, parsedJson) {
+async function validateSchemaRefs(schemaFiles: string[], parsedJson: Map<string, unknown>): Promise<void> {
   for (const file of schemaFiles) {
     const schema = parsedJson.get(file);
     if (!schema) continue;
@@ -225,9 +318,9 @@ async function validateSchemaRefs(schemaFiles, parsedJson) {
   }
 }
 
-function manifestCaseIds(manifest) {
-  const ids = new Set();
-  for (const key of ["cases", "pairs", "approval_mode_matrix", "delta_goldens"]) {
+function manifestCaseIds(manifest: FixtureManifest): Set<string> {
+  const ids = new Set<string>();
+  for (const key of ["cases", "pairs", "approval_mode_matrix", "delta_goldens"] as const) {
     for (const item of manifest[key] ?? []) {
       for (const idKey of ["case_id", "pair_id", "golden_id"]) {
         if (typeof item[idKey] === "string") ids.add(item[idKey]);
@@ -237,7 +330,7 @@ function manifestCaseIds(manifest) {
   return ids;
 }
 
-async function validateManifestReferences(manifest, file) {
+async function validateManifestReferences(manifest: FixtureManifest, file: string): Promise<void> {
   if (typeof manifest.schema === "string") await validateTarget(file, manifest.schema);
 
   for (const entry of manifest.manifests ?? []) {
@@ -255,14 +348,15 @@ async function validateManifestReferences(manifest, file) {
     }
     for (const variant of item.variants ?? []) {
       if (typeof variant === "string") await validateTarget(file, variant);
-      if (typeof variant.root === "string" && typeof variant.entrypoint === "string") {
+      else if (typeof variant.root === "string" && typeof variant.entrypoint === "string") {
         await validateTarget(file, path.join(variant.root, variant.entrypoint));
       }
     }
-    for (const side of ["before", "after"]) {
-      if (typeof item[side] === "string") await validateTarget(file, item[side]);
-      else if (typeof item[side]?.root === "string" && typeof item[side]?.entrypoint === "string") {
-        await validateTarget(file, path.join(item[side].root, item[side].entrypoint));
+    for (const side of ["before", "after"] as const) {
+      const sideValue = item[side];
+      if (typeof sideValue === "string") await validateTarget(file, sideValue);
+      else if (sideValue && typeof sideValue.root === "string" && typeof sideValue.entrypoint === "string") {
+        await validateTarget(file, path.join(sideValue.root, sideValue.entrypoint));
       }
     }
   }
@@ -270,10 +364,10 @@ async function validateManifestReferences(manifest, file) {
   await validateAuthorities(manifest, file);
 }
 
-function validateFingerprintGoldens(manifest, file) {
-  function visit(value) {
+function validateFingerprintGoldens(manifest: FixtureManifest, file: string): void {
+  function visit(value: unknown): void {
     if (Array.isArray(value)) value.forEach(visit);
-    else if (value && typeof value === "object") {
+    else if (isRecord(value)) {
       if (typeof value.canonical_json_utf8 === "string" && typeof value.expected_fingerprint === "string") {
         const actual = `sha256:${createHash("sha256").update(value.canonical_json_utf8, "utf8").digest("hex")}`;
         assert(actual === value.expected_fingerprint, file, "S0_FINGERPRINT_MISMATCH", `expected ${value.expected_fingerprint}, calculated ${actual}`);
@@ -284,8 +378,8 @@ function validateFingerprintGoldens(manifest, file) {
   visit(manifest);
 }
 
-async function validateJsonl(manifests) {
-  const declarations = new Map();
+async function validateJsonl(manifests: ParsedManifest[]): Promise<void> {
+  const declarations = new Map<string, FixtureEntry>();
   for (const { file, value } of manifests) {
     for (const item of value.cases ?? []) {
       if (typeof item.path === "string" && item.path.endsWith(".jsonl")) {
@@ -310,7 +404,7 @@ async function validateJsonl(manifests) {
       checks += 1;
     } catch (error) {
       checks += 1;
-      record(file, "S0_JSONL_UTF8", error.message);
+      record(file, "S0_JSONL_UTF8", errorMessage(error));
       continue;
     }
     for (const [index, line] of text.split(/\r?\n/).entries()) {
@@ -320,15 +414,15 @@ async function validateJsonl(manifests) {
         checks += 1;
       } catch (error) {
         checks += 1;
-        record(file, "S0_JSONL_PARSE", `line ${index + 1}: ${error.message}`);
+        record(file, "S0_JSONL_PARSE", `line ${index + 1}: ${errorMessage(error)}`);
       }
     }
   }
 }
 
-function validateCoverage(manifests, inventory) {
+function validateCoverage(manifests: ParsedManifest[], inventory: Inventory): void {
   const families = new Map(inventory.fixture_families.map((family) => [family.fixture_family_id, family]));
-  const byFamily = new Map();
+  const byFamily = new Map<string, ParsedManifest[]>();
   for (const entry of manifests) {
     const familyId = entry.value.fixture_family_id;
     if (!familyId) continue;
@@ -338,8 +432,10 @@ function validateCoverage(manifests, inventory) {
   }
 
   for (const [familyId, entries] of byFamily) {
+    const firstEntry = entries[0];
+    if (!firstEntry) continue;
     const inventoryFamily = families.get(familyId);
-    assert(Boolean(inventoryFamily), entries[0].file, "S0_UNKNOWN_FIXTURE_FAMILY", `fixture family ${JSON.stringify(familyId)} is absent from inventory`);
+    assert(Boolean(inventoryFamily), firstEntry.file, "S0_UNKNOWN_FIXTURE_FAMILY", `fixture family ${JSON.stringify(familyId)} is absent from inventory`);
     if (!inventoryFamily) continue;
 
     const actualIds = new Set(entries.flatMap((entry) => [...manifestCaseIds(entry.value)]));
@@ -354,7 +450,7 @@ function validateCoverage(manifests, inventory) {
     for (const requiredCase of inventoryFamily.required_cases) {
       const mapped = coverage.get(requiredCase);
       const covered = mapped ? Array.isArray(mapped.caseIds) && mapped.caseIds.length > 0 : actualIds.has(requiredCase);
-      assert(covered, entries[0].file, "S0_TRUTH_TABLE_INCOMPLETE", `required case ${JSON.stringify(requiredCase)} is not covered for family ${familyId}`);
+      assert(covered, firstEntry.file, "S0_TRUTH_TABLE_INCOMPLETE", `required case ${JSON.stringify(requiredCase)} is not covered for family ${familyId}`);
       for (const caseId of mapped?.caseIds ?? []) {
         assert(actualIds.has(caseId), mapped.file, "S0_COVERAGE_TARGET", `coverage target ${JSON.stringify(caseId)} does not name a case in family ${familyId}`);
       }
@@ -362,8 +458,8 @@ function validateCoverage(manifests, inventory) {
   }
 }
 
-async function validateProposalModel(proposalFiles, manifests, inventory) {
-  const definitions = new Map();
+async function validateProposalModel(proposalFiles: string[], manifests: ParsedManifest[], inventory: Inventory): Promise<void> {
+  const definitions = new Map<string, string>();
   for (const file of proposalFiles.filter((item) => item.endsWith(".md"))) {
     const text = await readFile(file, "utf8");
     const candidates = [
@@ -371,22 +467,25 @@ async function validateProposalModel(proposalFiles, manifests, inventory) {
       ...text.matchAll(/^##\s+(REQ-[0-9A-F]{8})\b.*$/gm),
     ].sort((a, b) => a.index - b.index);
     for (const match of candidates) {
-      const previous = definitions.get(match[1]);
-      assert(!previous, file, "S0_DUPLICATE_MODEL_ID", `${match[1]} is already defined in ${previous ? relative(previous) : "the proposal"}`);
-      if (!previous) definitions.set(match[1], file);
+      const id = match[1];
+      if (!id) continue;
+      const previous = definitions.get(id);
+      assert(!previous, file, "S0_DUPLICATE_MODEL_ID", `${id} is already defined in ${previous ? relative(previous) : "the proposal"}`);
+      if (!previous) definitions.set(id, file);
     }
 
     const requirementMatches = [...text.matchAll(/^##\s+(REQ-[0-9A-F]{8})\b.*$/gm)];
     for (const [index, match] of requirementMatches.entries()) {
       const end = requirementMatches[index + 1]?.index ?? text.length;
       const block = text.slice(match.index, end);
-      assert(/```sdd\s+[\s\S]*?\bkind:\s*\S+[\s\S]*?\bverification:\s*\S+[\s\S]*?```/.test(block), file, "S0_REQUIREMENT_SHAPE", `${match[1]} is missing its kind and verification metadata block`);
-      assert(/^### Statement\s+<!--\s*sdd:statement\s*-->\s*$/m.test(block), file, "S0_REQUIREMENT_SHAPE", `${match[1]} is missing its Statement section`);
-      assert(/^### Acceptance criteria\s+<!--\s*sdd:acceptance\s*-->\s*$/m.test(block), file, "S0_REQUIREMENT_SHAPE", `${match[1]} is missing its Acceptance criteria section`);
+      const id = match[1] ?? "unknown Requirement";
+      assert(/```sdd\s+[\s\S]*?\bkind:\s*\S+[\s\S]*?\bverification:\s*\S+[\s\S]*?```/.test(block), file, "S0_REQUIREMENT_SHAPE", `${id} is missing its kind and verification metadata block`);
+      assert(/^### Statement\s+<!--\s*sdd:statement\s*-->\s*$/m.test(block), file, "S0_REQUIREMENT_SHAPE", `${id} is missing its Statement section`);
+      assert(/^### Acceptance criteria\s+<!--\s*sdd:acceptance\s*-->\s*$/m.test(block), file, "S0_REQUIREMENT_SHAPE", `${id} is missing its Acceptance criteria section`);
     }
   }
 
-  const referencedRequirements = new Set();
+  const referencedRequirements = new Set<string>();
   for (const contract of inventory.contracts ?? []) for (const id of contract.requirements ?? []) referencedRequirements.add(id);
   for (const family of inventory.fixture_families ?? []) for (const id of family.requirements ?? []) referencedRequirements.add(id);
   for (const { value } of manifests) for (const id of value.requirements ?? []) referencedRequirements.add(id);
@@ -395,20 +494,23 @@ async function validateProposalModel(proposalFiles, manifests, inventory) {
   }
 }
 
-async function main() {
-  const nodeMajor = Number.parseInt(process.versions.node.split(".")[0], 10);
-  assert(nodeMajor >= 22, path.join(repositoryRoot, "scripts", "verify-stage-0.mjs"), "S0_NODE_VERSION", `Node.js 22 or newer is required; found ${process.versions.node}`);
+async function main(): Promise<void> {
+  const [nodeMajorText = "0", nodeMinorText = "0"] = process.versions.node.split(".");
+  const nodeMajor = Number.parseInt(nodeMajorText, 10);
+  const nodeMinor = Number.parseInt(nodeMinorText, 10);
+  const supportedNode = nodeMajor > 22 || (nodeMajor === 22 && nodeMinor >= 18);
+  assert(supportedNode, path.join(repositoryRoot, "scripts", "verify-stage-0.ts"), "S0_NODE_VERSION", `Node.js 22.18 or newer is required; found ${process.versions.node}`);
 
   const contractsRoot = path.join(repositoryRoot, "contracts", "v1");
   const fixturesRoot = path.join(repositoryRoot, "fixtures", "v1");
   const contractFiles = await walk(contractsRoot);
   const fixtureFiles = await walk(fixturesRoot);
   const manifestFiles = fixtureFiles.filter((file) => path.basename(file) === "cases.json");
-  const manifests = [];
-  const parsedJson = new Map();
+  const manifests: ParsedManifest[] = [];
+  const parsedJson = new Map<string, unknown>();
 
   for (const file of manifestFiles) {
-    const value = await parseJson(file, "S0_MANIFEST_PARSE");
+    const value = await parseJson<FixtureManifest>(file, "S0_MANIFEST_PARSE");
     if (!value) continue;
     manifests.push({ file, value });
     parsedJson.set(file, value);
@@ -426,8 +528,8 @@ async function main() {
     await validateManifestReferences(value, file);
   }
 
-  const intentionallyMalformedJson = new Set();
-  const declaredArtifactJson = new Set();
+  const intentionallyMalformedJson = new Set<string>();
+  const declaredArtifactJson = new Set<string>();
   for (const { file, value } of manifests) {
     for (const item of value.cases ?? []) {
       if (value.contract_id?.startsWith("artifact.") && typeof item.path === "string" && item.path.endsWith(".json")) {
@@ -464,7 +566,7 @@ async function main() {
   }
 
   const inventoryFile = path.join(contractsRoot, "inventory.json");
-  const inventory = parsedJson.get(inventoryFile);
+  const inventory = parsedJson.get(inventoryFile) as Inventory | undefined;
   if (inventory) {
     const contractIds = inventory.contracts.map((contract) => contract.contract_id);
     assert(new Set(contractIds).size === contractIds.length, inventoryFile, "S0_DUPLICATE_CONTRACT", "inventory contains duplicate contract_id values");
@@ -493,7 +595,7 @@ async function main() {
   await validateMarkdownLinks(documentationFiles);
 
   for (const file of [...contractFiles, ...fixtureFiles, ...documentationFiles]) {
-    if (!/\.(?:json|jsonl|md|mjs)$/.test(file)) continue;
+    if (!/\.(?:json|jsonl|md|ts)$/.test(file)) continue;
     const text = await readFile(file, "utf8");
     for (const [index, line] of text.split(/\r?\n/).entries()) {
       if (/[ \t]+$/.test(line)) record(file, "S0_TRAILING_WHITESPACE", `line ${index + 1} has trailing whitespace`);
@@ -518,7 +620,7 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(`scripts/verify-stage-0.mjs [S0_INTERNAL_ERROR] ${error.stack ?? error.message}`);
+  console.error(`scripts/verify-stage-0.ts [S0_INTERNAL_ERROR] ${errorStack(error)}`);
   console.error("Stage 0 verification failed: 1 error");
   process.exitCode = 1;
 });

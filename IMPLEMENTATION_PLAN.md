@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 1 / Project scaffold and contract types
-- Current leaf: 1.1 Direct TypeScript bootstrap verifier
+- Current leaf: 1.2 Remaining testable scaffold
 - Last updated: 2026-07-31
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -293,7 +293,7 @@ Mode: repository maintenance until a public command produces defined behavior.
 
 Bounded leaves:
 
-- [ ] **1.1 — Direct TypeScript bootstrap verifier.** Add the minimum
+- [x] **1.1 — Direct TypeScript bootstrap verifier.** Add the minimum
       `package.json`, lockfile, and strict `tsconfig.json`; pin TypeScript and
       Node.js type definitions as development dependencies; rename
       `scripts/verify-stage-0.mjs` to `scripts/verify-stage-0.ts`; execute it
@@ -304,8 +304,10 @@ Bounded leaves:
       and type-only imports. This leaf does not add product runtime code,
       source/test directories, a test runner, formatter, build output, schema
       validation dependencies, or public `sdd` behavior.
-- [ ] Complete the remaining scaffold: source/test directories, build, test,
-      format-check, and their exact repository scripts.
+- [ ] **1.2 — Remaining testable scaffold.** Add source/test directories,
+      build, test, format-check, and their exact repository scripts. Keep
+      dependency selection and product contract types in their later bounded
+      leaves.
 - [ ] Select and pin the smallest dependency set after focused spikes.
 - [ ] Define branded IDs, schema versions, diagnostics, result envelopes, and
       injected platform interfaces.
@@ -487,7 +489,7 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 1.1 — Direct TypeScript bootstrap verifier` is the only active
-implementation leaf. It establishes strict static checking for the existing
-bootstrap command without adding product runtime behavior or absorbing the
-remaining project scaffold.
+`Milestone 1.2 — Remaining testable scaffold` is the only active
+implementation leaf. It adds the source/test directory skeleton and exact
+build, test, and format-check commands without selecting product dependencies,
+defining contract types, generating schemas, or adding public `sdd` behavior.

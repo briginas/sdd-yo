@@ -6,15 +6,17 @@ produce an SDD gate result, and does not claim Requirement test coverage.
 
 ## Command
 
-Run the verifier with Node.js 22 or newer from any directory inside or outside
-the repository:
+Run the verifier from the repository root with Node.js 22.18 or newer:
 
 ```text
-node scripts/verify-stage-0.mjs
+npm run verify:stage-0
 ```
 
-The command has no package or third-party dependency. A successful run writes
-one line to standard output and exits with status `0`:
+The package script executes `node scripts/verify-stage-0.ts` directly using
+Node.js type stripping. The verifier has no third-party runtime dependency;
+the pinned TypeScript development dependency provides the authoritative static
+check through `npm run typecheck`. A successful verifier run writes one line
+to standard output and exits with status `0`:
 
 ```text
 Stage 0 verification passed: <N> checks
@@ -36,8 +38,8 @@ message. An incomplete or crashed run is not a pass.
 
 The verifier performs these checks:
 
-1. It requires Node.js 22 or newer and discovers the repository relative to
-   the verifier file rather than the caller's working directory.
+1. It requires Node.js 22.18 or newer and discovers the repository relative
+   to the verifier file rather than the caller's working directory.
 2. It parses every contract and fixture JSON file except artifact fixtures
    explicitly declared with `parse_valid: false`. A fixture declared malformed
    must remain malformed.
@@ -80,7 +82,7 @@ The verifier performs these checks:
 
 | Code | Failure |
 | --- | --- |
-| `S0_NODE_VERSION` | The running Node.js major version is older than 22. |
+| `S0_NODE_VERSION` | The running Node.js version is older than 22.18. |
 | `S0_MANIFEST_PARSE` | A fixture manifest or matrix is not valid JSON. |
 | `S0_MANIFEST_SHAPE` | A manifest has the wrong version, status, or primary collection. |
 | `S0_JSON_PARSE` | A contract or non-negative fixture JSON file is malformed. |
