@@ -11,6 +11,31 @@ sdd:
 Provide deterministic structural validation, stable meaning-aware
 fingerprints, safe exact patch preparation, and reproducible Git comparison.
 
+<a id="req-13cf54d6"></a>
+
+## REQ-13CF54D6 — Resolve graph targets by stable identity
+
+```sdd
+kind: invariant
+verification: automated
+```
+
+### Relations <!-- sdd:relations -->
+
+- refers-to: [CON-77D857DB — Document](../concepts/document.md)
+- refers-to: [CON-FC16381E — Fingerprint](../concepts/fingerprint.md)
+
+### Statement <!-- sdd:statement -->
+
+Validation and canonicalization shall resolve specification links to stable
+object IDs rather than treating paths or display titles as semantic identity.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- Moving a file without changing target ID preserves semantic identity.
+- Unknown or ambiguous targets make relevant fingerprints uncomputable.
+- Paths remain validated for human navigation.
+
 <a id="req-f3a241be"></a>
 
 ## REQ-F3A241BE — Parse the specification deterministically

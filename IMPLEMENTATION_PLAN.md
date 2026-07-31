@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 2 / Read-only specification vertical slice
-- Current leaf: 2.4 Fingerprints
+- Current leaf: 2.5 First CLI surface
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -458,6 +458,13 @@ Primary target Requirements:
 Verification fingerprints from `REQ-B25091A0` remain incomplete until TestIndex
 support exists.
 
+This leaf implements canonical version 1 semantic and structural projections,
+exact compact UTF-8 JSON bytes, SHA-256 fingerprints, and a validated-graph
+adapter that rejects unknown identities before computation. It completes and
+promotes `REQ-8ACBC52D` and `REQ-13CF54D6`. `REQ-1095E571` remains proposed
+until 2.5 makes its CLI Statement observable. Verification fingerprints remain
+deferred with `REQ-B25091A0` until TestIndex support exists.
+
 ### 2.5 First CLI surface
 
 Implement deterministic JSON and human views for `validate` and `inspect`,
@@ -584,8 +591,9 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 2.4 — Fingerprints` is the only active implementation leaf. It must
-canonicalize the parser-produced semantic and structural values, hash exact
-canonical JSON bytes, complete `REQ-13CF54D6`, and keep verification
-fingerprints deferred until TestIndex support. `REQ-0361538D` remains proposed
-until CLI integration in 2.5 makes its observable Statement true.
+`Milestone 2.5 — First CLI surface` is the only active implementation leaf. It
+must connect project resolution, parsing, graph validation, and fingerprints
+to deterministic `validate` and `inspect` JSON and human views with exit codes
+`0`, `1`, and `3`. `REQ-0361538D`, `REQ-1095E571`, and the CLI-dependent parts
+of `REQ-7D93D64A` remain proposed until this integration makes their Statements
+observable.

@@ -7,6 +7,10 @@ export type RequirementKind = (typeof REQUIREMENT_KINDS)[number];
 export const VERIFICATION_MODES = ["automated", "manual"] as const;
 export type VerificationMode = (typeof VERIFICATION_MODES)[number];
 export type SourcePosition = { readonly line: number; readonly column: number };
+export type CanonicalProseBlock = {
+  readonly type: "paragraph";
+  readonly children: readonly [{ readonly type: "text"; readonly value: string }];
+};
 export type MarkdownLink = { readonly label: string; readonly target: string; readonly position: SourcePosition };
 export type RequirementRelation = {
   readonly type: "refers-to" | "depends-on";
@@ -26,8 +30,11 @@ export type Requirement = {
   readonly verification: VerificationMode;
   readonly owner: CapabilityId;
   readonly statement: string;
+  readonly statement_ast: readonly CanonicalProseBlock[];
   readonly acceptance: readonly string[];
+  readonly acceptance_ast: readonly (readonly CanonicalProseBlock[])[];
   readonly constraints: readonly string[];
+  readonly constraints_ast: readonly (readonly CanonicalProseBlock[])[];
   readonly relations: readonly RequirementRelation[];
   readonly rationale?: string;
   readonly examples?: string;
@@ -55,8 +62,11 @@ export type ConceptDocument = BaseDocument & {
   readonly type: "concept";
   readonly id: ConceptId;
   readonly definition: string;
+  readonly definition_ast: readonly CanonicalProseBlock[];
   readonly identity?: string;
+  readonly identity_ast: readonly CanonicalProseBlock[];
   readonly states: readonly string[];
+  readonly states_ast: readonly (readonly CanonicalProseBlock[])[];
   readonly relations: readonly ConceptRelation[];
   readonly rationale?: string;
   readonly examples?: string;

@@ -70,31 +70,6 @@ reachable canonical specification history of the same SDD Project.
   as prior model object definitions.
 - Parallel-branch collisions are detected against the current integration ref.
 
-<a id="req-13cf54d6"></a>
-
-## REQ-13CF54D6 — Resolve graph targets by stable identity
-
-```sdd
-kind: invariant
-verification: automated
-```
-
-### Relations <!-- sdd:relations -->
-
-- refers-to: [CON-77D857DB — Document](../../../spec/concepts/document.md)
-- refers-to: [CON-FC16381E — Fingerprint](../../../spec/concepts/fingerprint.md)
-
-### Statement <!-- sdd:statement -->
-
-Validation and canonicalization shall resolve specification links to stable
-object IDs rather than treating paths or display titles as semantic identity.
-
-### Acceptance criteria <!-- sdd:acceptance -->
-
-- Moving a file without changing target ID preserves semantic identity.
-- Unknown or ambiguous targets make relevant fingerprints uncomputable.
-- Paths remain validated for human navigation.
-
 <a id="req-1095e571"></a>
 
 ## REQ-1095E571 — Canonicalize objects before hashing

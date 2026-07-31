@@ -15,6 +15,7 @@ import {
   VERIFICATION_MODES,
   type CapabilityDocument,
   type CapabilityFragmentDocument,
+  type CanonicalProseBlock,
   type ConceptDocument,
   type ConceptRelation,
   type IndexDocument,
@@ -81,6 +82,12 @@ function text(node: Node): string {
 function content(nodes: readonly Node[]): string {
   return nodes.map(text).join("\n\n").trim();
 }
+function canonicalProse(nodes: readonly Node[]): readonly CanonicalProseBlock[] {
+  return nodes
+    .map((node) => text(node).trim())
+    .filter(Boolean)
+    .map((value) => ({ type: "paragraph", children: [{ type: "text", value }] }));
+}
 function marker(node: Node): string | undefined {
   if (node.type !== "heading") return undefined;
   const comments = (node.children ?? []).filter((child) => child.type === "html" && child.value?.includes("sdd:"));
@@ -113,6 +120,10 @@ function links(nodes: readonly Node[]): MarkdownLink[] {
 function listItems(nodes: readonly Node[]): string[] {
   const list = nodes.find((node) => node.type === "list");
   return (list?.children ?? []).map((item) => content(item.children ?? [])).filter(Boolean);
+}
+function listItemProse(nodes: readonly Node[]): readonly (readonly CanonicalProseBlock[])[] {
+  const list = nodes.find((node) => node.type === "list");
+  return (list?.children ?? []).map((item) => canonicalProse(item.children ?? [])).filter((item) => item.length > 0);
 }
 function yamlValue(source: string): unknown {
   const document = parseDocument(source, { customTags: [], uniqueKeys: true, version: "1.2" });
@@ -286,6 +297,7 @@ function parseRequirements(
       );
     const statement = content(sections.get("statement") ?? []);
     const acceptance = listItems(sections.get("acceptance") ?? []);
+    const constraints = listItems(sections.get("constraints") ?? []);
     if (statement.length === 0)
       return failure(
         diagnostic(
@@ -316,8 +328,11 @@ function parseRequirements(
       verification: metadata.verification as VerificationMode,
       owner,
       statement,
+      statement_ast: canonicalProse(sections.get("statement") ?? []),
       acceptance,
-      constraints: listItems(sections.get("constraints") ?? []),
+      acceptance_ast: listItemProse(sections.get("acceptance") ?? []),
+      constraints,
+      constraints_ast: listItemProse(sections.get("constraints") ?? []),
       relations: relations.value,
       ...(rationale ? { rationale } : {}),
       ...(examples ? { examples } : {}),
@@ -487,8 +502,11 @@ export function parseSpecificationDocument(
     title,
     id: sdd.id,
     definition: definitionText,
+    definition_ast: canonicalProse(definition.value),
     ...(identityText ? { identity: identityText } : {}),
+    identity_ast: canonicalProse(identity.value),
     states: listItems(states.value),
+    states_ast: listItemProse(states.value),
     relations: relations.value,
     ...(rationaleText ? { rationale: rationaleText } : {}),
     ...(examplesText ? { examples: examplesText } : {}),

@@ -11,33 +11,6 @@ sdd:
 Represent implemented product behavior as a human-readable, machine-validatable
 graph of Documents, Capabilities, Requirements, and Domain Concepts.
 
-<a id="req-8acbc52d"></a>
-
-## REQ-8ACBC52D — Separate normative and explanatory content
-
-```sdd
-kind: invariant
-verification: automated
-```
-
-### Relations <!-- sdd:relations -->
-
-- refers-to: [CON-9F69CC0E — Requirement](../../../spec/concepts/requirement.md)
-
-### Statement <!-- sdd:statement -->
-
-Requirement statement, acceptance criteria, and constraints shall be
-normative, while title, rationale, examples, purpose, and general introduction
-shall be explanatory.
-
-### Acceptance criteria <!-- sdd:acceptance -->
-
-- Explanatory changes do not alter the Requirement semantic fingerprint.
-- A prohibition or unsupported behavior is expressed as a constraint
-  Requirement rather than only as a non-goal.
-- Human-visible headings may use any language while machine markers remain
-  fixed.
-
 <a id="req-a44eb430"></a>
 
 ## REQ-A44EB430 — Keep normative behavior repository-local
@@ -90,4 +63,3 @@ only through Git history.
 - Removed IDs remain reserved permanently.
 - Deletion validates dependents, inbound Concept relations, test references,
   and approved semantic scope.
-
