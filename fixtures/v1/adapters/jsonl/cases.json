@@ -2,8 +2,11 @@
   "fixture_manifest_version": "1.0",
   "status": "bootstrap-fixture-manifest",
   "fixture_family_id": "adapter-jsonl",
-  "leaf": "0.6a",
-  "scope": "Valid discovery, execution, and test-selection inputs only; hierarchy edge cases, malformed streams, process failures, JUnit, security, and runtime behavior are deferred.",
+  "completed_leaves": [
+    "0.6a",
+    "0.6b"
+  ],
+  "scope": "Valid discovery, execution, selection, hierarchy, normalization, malformed-stream, and adapter-process failure fixtures; JUnit, security-path, cross-platform path, freshness, and runtime behavior are deferred.",
   "contracts": [
     "adapter.jsonl-test-stream-header",
     "adapter.jsonl-suite-record",
@@ -14,12 +17,16 @@
   ],
   "requirements": [
     "REQ-12E19D70",
+    "REQ-F7CEE6D0",
+    "REQ-E451458E",
     "REQ-5A832396",
     "REQ-20F8CA5C",
     "REQ-72BA737C"
   ],
   "authorities": [
     "proposal/spec/capabilities/test-traceability-and-qa.md#req-12e19d70",
+    "proposal/spec/capabilities/test-traceability-and-qa.md#req-f7cee6d0",
+    "proposal/spec/capabilities/test-traceability-and-qa.md#req-e451458e",
     "proposal/spec/capabilities/test-traceability-and-qa.md#req-5a832396",
     "proposal/spec/capabilities/test-traceability-and-qa.md#req-20f8ca5c",
     "proposal/spec/capabilities/test-traceability-and-qa.md#req-72ba737c",
@@ -39,7 +46,30 @@
     ],
     "result_local_ids": "adapter-local IDs that correspond to the selected indexed test refs",
     "selection_binding": "project_id and test_index_fingerprint identify the exact TestIndex subject",
-    "selection_ordering": "test_refs are unique and canonically sorted"
+    "selection_ordering": "test_refs are unique and canonically sorted",
+    "local_id_scope": "local_id is unique across suite and test records within one discovery stream",
+    "parent_resolution": "parent_id may resolve to a suite declared before or after the child",
+    "hierarchy": "parent links must resolve to suites and form an acyclic graph",
+    "full_name": "join ancestor suite names from root to leaf and the test name with one ASCII space",
+    "requirement_extraction": "scan full_name for standalone case-sensitive REQ-[0-9A-F]{8} IDs, then deduplicate and sort",
+    "empty_suite_coverage": "a suite with no executable test descendants contributes no coverage",
+    "known_requirement_context": [
+      "REQ-12E19D70",
+      "REQ-F7CEE6D0",
+      "REQ-E451458E",
+      "REQ-5A832396",
+      "REQ-20F8CA5C",
+      "REQ-72BA737C"
+    ],
+    "normalized_node_order": "adapter_id then local_id, independent of input record order after the header",
+    "blocking_adapter_failures": [
+      "malformed-jsonl",
+      "truncated-stream",
+      "malformed-utf8",
+      "timeout",
+      "output-overflow",
+      "nonzero-exit"
+    ]
   },
   "cases": [
     {
@@ -56,6 +86,7 @@
         "test-1",
         "test-2"
       ],
+      "stream_valid": true,
       "expectation": "Accept a language-neutral discovery stream containing one suite, two executable tests, and one optional source location."
     },
     {
@@ -72,6 +103,7 @@
         "test-1",
         "test-2"
       ],
+      "stream_valid": true,
       "expectation": "Accept an execution stream bound to one TestIndex with one result for each selected local test ID."
     },
     {
@@ -85,6 +117,181 @@
         "unit:test-2"
       ],
       "expectation": "Accept the exact project, TestIndex fingerprint, and deterministic test-ref set passed to an execute command."
+    },
+    {
+      "case_id": "suite-inheritance",
+      "path": "hierarchy-valid.jsonl",
+      "operation": "discover",
+      "stream_valid": true,
+      "hierarchy_valid": true,
+      "context_valid": true,
+      "expected_tests": [
+        {
+          "local_id": "test-child",
+          "full_name": "Traceability REQ-F7CEE6D0 Automated coverage REQ-E451458E declares REQ-12E19D70 REQ-F7CEE6D0",
+          "requirement_ids": [
+            "REQ-12E19D70",
+            "REQ-E451458E",
+            "REQ-F7CEE6D0"
+          ]
+        }
+      ],
+      "expectation": "Inherit IDs from every ancestor suite, retain an ID declared by the executable test, deduplicate repeated IDs, and sort the computed mapping."
+    },
+    {
+      "case_id": "multiple-requirements",
+      "path": "hierarchy-valid.jsonl",
+      "operation": "discover",
+      "stream_valid": true,
+      "hierarchy_valid": true,
+      "context_valid": true,
+      "expected_test_local_id": "test-child",
+      "expected_requirement_ids": [
+        "REQ-12E19D70",
+        "REQ-E451458E",
+        "REQ-F7CEE6D0"
+      ],
+      "expectation": "Map one executable test to multiple standalone Requirement IDs found in its normalized full name."
+    },
+    {
+      "case_id": "empty-suite",
+      "path": "hierarchy-valid.jsonl",
+      "operation": "discover",
+      "stream_valid": true,
+      "hierarchy_valid": true,
+      "context_valid": true,
+      "suite_local_id": "suite-empty",
+      "expected_executable_descendant_count": 0,
+      "expected_requirement_ids_contributed": [],
+      "expectation": "Do not create coverage from a suite name when the suite has no executable descendants."
+    },
+    {
+      "case_id": "forward-parent",
+      "path": "forward-parent.jsonl",
+      "operation": "discover",
+      "stream_valid": true,
+      "hierarchy_valid": true,
+      "context_valid": true,
+      "expected_tests": [
+        {
+          "local_id": "test-forward",
+          "full_name": "Forward parent REQ-F7CEE6D0 resolves after its child",
+          "requirement_ids": [
+            "REQ-F7CEE6D0"
+          ]
+        }
+      ],
+      "expectation": "Resolve a test parent suite declared later in the same stream."
+    },
+    {
+      "case_id": "cycle",
+      "path": "cycle.jsonl",
+      "operation": "discover",
+      "stream_valid": true,
+      "hierarchy_valid": false,
+      "context_valid": false,
+      "failure": "hierarchy-cycle",
+      "expectation": "Reject a cycle between two suite parent links before computing full names or coverage."
+    },
+    {
+      "case_id": "duplicate-local-id",
+      "path": "duplicate-local-id.jsonl",
+      "operation": "discover",
+      "stream_valid": true,
+      "hierarchy_valid": false,
+      "context_valid": false,
+      "failure": "duplicate-local-id",
+      "expectation": "Reject a local ID reused by a suite and a test in one adapter stream."
+    },
+    {
+      "case_id": "unknown-requirement",
+      "path": "unknown-requirement.jsonl",
+      "operation": "discover",
+      "stream_valid": true,
+      "hierarchy_valid": true,
+      "context_valid": false,
+      "unknown_requirement_ids": [
+        "REQ-FFFFFFFF"
+      ],
+      "failure": "unknown-requirement",
+      "expectation": "Reject a syntactically valid standalone Requirement ID absent from the selected active specification."
+    },
+    {
+      "case_id": "malformed-jsonl",
+      "path": "malformed-jsonl.jsonl",
+      "operation": "discover",
+      "stream_valid": false,
+      "context_valid": false,
+      "failure": "malformed-jsonl",
+      "expectation": "Reject a complete line that is not valid JSON."
+    },
+    {
+      "case_id": "truncated-stream",
+      "path": "truncated-stream.jsonl",
+      "operation": "discover",
+      "stream_valid": false,
+      "context_valid": false,
+      "failure": "truncated-stream",
+      "expectation": "Reject a stream whose final JSON object is truncated."
+    },
+    {
+      "case_id": "non-utf8",
+      "path": "process-failures.json",
+      "scenario_id": "malformed-utf8",
+      "operation": "discover",
+      "stream_valid": false,
+      "context_valid": false,
+      "failure": "malformed-utf8",
+      "expectation": "Reject stdout containing an invalid UTF-8 byte sequence before JSONL parsing."
+    },
+    {
+      "case_id": "timeout",
+      "path": "process-failures.json",
+      "scenario_id": "timeout",
+      "operation": "discover",
+      "stream_valid": false,
+      "context_valid": false,
+      "failure": "timeout",
+      "expectation": "Treat adapter timeout as a blocking adapter failure even when a valid header was emitted."
+    },
+    {
+      "case_id": "output-overflow",
+      "path": "process-failures.json",
+      "scenario_id": "output-overflow",
+      "operation": "discover",
+      "stream_valid": false,
+      "context_valid": false,
+      "failure": "output-overflow",
+      "expectation": "Reject stdout immediately after the configured byte limit is exceeded."
+    },
+    {
+      "case_id": "nonzero-exit",
+      "path": "process-failures.json",
+      "scenario_id": "nonzero-exit",
+      "operation": "discover",
+      "stream_valid": false,
+      "context_valid": false,
+      "failure": "nonzero-exit",
+      "expectation": "Treat a non-zero adapter exit as blocking even when stdout is otherwise valid."
+    },
+    {
+      "case_id": "record-order-normalization",
+      "variants": [
+        "record-order-a.jsonl",
+        "record-order-b.jsonl"
+      ],
+      "operation": "discover",
+      "stream_valid": true,
+      "hierarchy_valid": true,
+      "context_valid": true,
+      "expected_normalized_equivalent": true,
+      "expected_normalized_local_ids": [
+        "suite-a",
+        "suite-z",
+        "test-a",
+        "test-z"
+      ],
+      "expectation": "Normalize the same node set identically despite different record order after the required header."
     }
   ]
 }

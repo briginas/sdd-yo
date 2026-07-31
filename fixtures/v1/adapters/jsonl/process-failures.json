@@ -1,0 +1,96 @@
+{
+  "scenario_format_version": "1.0",
+  "adapter_id": "unit",
+  "operation": "discover",
+  "scenarios": [
+    {
+      "scenario_id": "malformed-utf8",
+      "limits": {
+        "timeout_ms": 1000,
+        "max_output_bytes": 4096
+      },
+      "stdout_chunks": [
+        {
+          "encoding": "utf8",
+          "text": "{\"schema_version\":\"1.0\",\"record_type\":\"test_stream\",\"operation\":\"discover\",\"adapter_id\":\"unit\"}\n"
+        },
+        {
+          "encoding": "hex",
+          "bytes": "c328"
+        }
+      ],
+      "completion": {
+        "kind": "exit",
+        "exit_code": 0
+      },
+      "expected": {
+        "accepted": false,
+        "blocking_failure": "malformed-utf8"
+      }
+    },
+    {
+      "scenario_id": "timeout",
+      "limits": {
+        "timeout_ms": 50,
+        "max_output_bytes": 4096
+      },
+      "stdout_chunks": [
+        {
+          "encoding": "utf8",
+          "text": "{\"schema_version\":\"1.0\",\"record_type\":\"test_stream\",\"operation\":\"discover\",\"adapter_id\":\"unit\"}\n"
+        }
+      ],
+      "completion": {
+        "kind": "timeout",
+        "elapsed_ms": 51
+      },
+      "expected": {
+        "accepted": false,
+        "blocking_failure": "timeout"
+      }
+    },
+    {
+      "scenario_id": "output-overflow",
+      "limits": {
+        "timeout_ms": 1000,
+        "max_output_bytes": 128
+      },
+      "stdout_chunks": [
+        {
+          "encoding": "ascii-repeat",
+          "byte": "61",
+          "count": 129
+        }
+      ],
+      "completion": {
+        "kind": "output-limit",
+        "observed_stdout_bytes": 129
+      },
+      "expected": {
+        "accepted": false,
+        "blocking_failure": "output-overflow"
+      }
+    },
+    {
+      "scenario_id": "nonzero-exit",
+      "limits": {
+        "timeout_ms": 1000,
+        "max_output_bytes": 4096
+      },
+      "stdout_chunks": [
+        {
+          "encoding": "utf8",
+          "text": "{\"schema_version\":\"1.0\",\"record_type\":\"test_stream\",\"operation\":\"discover\",\"adapter_id\":\"unit\"}\n"
+        }
+      ],
+      "completion": {
+        "kind": "exit",
+        "exit_code": 7
+      },
+      "expected": {
+        "accepted": false,
+        "blocking_failure": "nonzero-exit"
+      }
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{"schema_version":"1.0","record_type":"test_stream","operation":"discover","adapter_id":"unit"}
+{"schema_version":"1.0","record_type":"suite","local_id":"suite-z","parent_id":null,"name":"Root REQ-F7CEE6D0"}
+{"schema_version":"1.0","record_type":"test","local_id":"test-z","parent_id":"suite-z","name":"second"}
+{"schema_version":"1.0","record_type":"suite","local_id":"suite-a","parent_id":null,"name":"Coverage REQ-E451458E"}
+{"schema_version":"1.0","record_type":"test","local_id":"test-a","parent_id":"suite-a","name":"first"}

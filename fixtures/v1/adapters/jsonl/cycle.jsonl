@@ -1,0 +1,4 @@
+{"schema_version":"1.0","record_type":"test_stream","operation":"discover","adapter_id":"unit"}
+{"schema_version":"1.0","record_type":"suite","local_id":"suite-a","parent_id":"suite-b","name":"Cycle A"}
+{"schema_version":"1.0","record_type":"suite","local_id":"suite-b","parent_id":"suite-a","name":"Cycle B"}
+{"schema_version":"1.0","record_type":"test","local_id":"test-cycle","parent_id":"suite-a","name":"must not be indexed REQ-F7CEE6D0"}

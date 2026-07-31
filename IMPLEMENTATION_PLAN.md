@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Bootstrap / Stage 0 contract fixtures
-- Current leaf: 0.6b JSONL hierarchy and failure matrix
+- Current leaf: 0.6c JUnit contract fixtures
 - Last updated: 2026-07-31
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -238,7 +238,7 @@ Bounded leaves:
       TestSelection schema and add valid language-neutral discovery, execution,
       and selection fixtures. Target Requirements: `REQ-12E19D70`,
       `REQ-5A832396`, `REQ-20F8CA5C`, `REQ-72BA737C`.
-- [ ] **0.6b — JSONL hierarchy and failure matrix.** Cover suite inheritance,
+- [x] **0.6b — JSONL hierarchy and failure matrix.** Cover suite inheritance,
       multiple Requirements, empty suites, unknown Requirements, duplicate
       local IDs, cycles, malformed UTF-8, truncation, timeout, overflow,
       non-zero exit, forward parents, and record-order normalization. Target
