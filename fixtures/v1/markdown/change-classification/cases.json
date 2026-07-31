@@ -1,0 +1,56 @@
+{
+  "fixture_manifest_version": "1.0",
+  "status": "bootstrap-fixture-manifest",
+  "fixture_family_id": "markdown-change-classification",
+  "contracts": [
+    "markdown.index-document",
+    "markdown.capability-document",
+    "markdown.requirement-block"
+  ],
+  "requirements": [
+    "REQ-8ACBC52D",
+    "REQ-065A9911",
+    "REQ-1095E571"
+  ],
+  "pairs": [
+    {
+      "case_id": "semantic-only",
+      "before_root": "semantic-only/before",
+      "after_root": "semantic-only/after",
+      "entrypoint": "README.md",
+      "changed_object_id": "REQ-A1000001",
+      "parse_valid": true,
+      "graph_valid": true,
+      "expected_change_classifications": [
+        "semantic"
+      ],
+      "expectation": "Changing only the Requirement statement changes normative meaning without changing structure or explanatory content."
+    },
+    {
+      "case_id": "structural-only",
+      "before_root": "structural-only/before",
+      "after_root": "structural-only/after",
+      "entrypoint": "README.md",
+      "changed_object_id": "REQ-A2000002",
+      "parse_valid": true,
+      "graph_valid": true,
+      "expected_change_classifications": [
+        "structural"
+      ],
+      "expectation": "Changing only the Requirement kind changes structure without changing normative prose or explanatory content."
+    },
+    {
+      "case_id": "explanatory-only",
+      "before_root": "explanatory-only/before",
+      "after_root": "explanatory-only/after",
+      "entrypoint": "README.md",
+      "changed_object_id": "REQ-A3000003",
+      "parse_valid": true,
+      "graph_valid": true,
+      "expected_change_classifications": [
+        "explanatory"
+      ],
+      "expectation": "Changing only the Requirement rationale changes explanatory content without changing semantic or structural inputs."
+    }
+  ]
+}

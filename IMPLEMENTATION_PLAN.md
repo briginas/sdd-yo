@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Bootstrap / Stage 0 contract fixtures
-- Current leaf: 0.3c Markdown change-classification pairs
+- Current leaf: 0.3d Markdown encoding and normalization fixtures
 - Last updated: 2026-07-31
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -158,8 +158,9 @@ Artifact:
       duplicate ID, and portable-link cases. Target Requirements:
       `REQ-F3A241BE`, `REQ-7D93D64A`, `REQ-8D157EBE`, `REQ-99605FAB`,
       `REQ-13CF54D6`, `REQ-FBB24D6C`.
-- [ ] **0.3c — Markdown change-classification pairs.** Add
-      semantic/structural/explanatory change pairs.
+- [x] **0.3c — Markdown change-classification pairs.** Add
+      semantic/structural/explanatory change pairs. Target Requirements:
+      `REQ-8ACBC52D`, `REQ-065A9911`, `REQ-1095E571`.
 - [ ] **0.3d — Markdown encoding and normalization fixtures.** Add UTF-8 and
       normalized line-ending cases.
 
@@ -170,9 +171,10 @@ Primary target Requirements:
 `REQ-FBB24D6C`.
 
 Artifacts:
-[`fixtures/v1/markdown/documents/cases.json`](fixtures/v1/markdown/documents/cases.json)
+[`fixtures/v1/markdown/documents/cases.json`](fixtures/v1/markdown/documents/cases.json),
+[`fixtures/v1/markdown/graph-invalid/cases.json`](fixtures/v1/markdown/graph-invalid/cases.json),
 and
-[`fixtures/v1/markdown/graph-invalid/cases.json`](fixtures/v1/markdown/graph-invalid/cases.json).
+[`fixtures/v1/markdown/change-classification/cases.json`](fixtures/v1/markdown/change-classification/cases.json).
 
 ### 0.4 Fingerprint and delta goldens
 
@@ -422,8 +424,7 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 0.3c — Markdown change-classification pairs` is the only active
-implementation leaf. It must add semantic, structural, and explanatory change
-pairs without adding a runtime parser. Encoding and line-ending cases, runtime
-schema libraries, generated TypeScript types, and CLI behavior remain
-deferred.
+`Milestone 0.3d — Markdown encoding and normalization fixtures` is the only
+active implementation leaf. It must add UTF-8 and normalized line-ending cases
+without adding a runtime parser. Fingerprint and delta truth tables, runtime
+schema libraries, generated TypeScript types, and CLI behavior remain deferred.
