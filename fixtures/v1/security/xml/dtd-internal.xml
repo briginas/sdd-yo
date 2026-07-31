@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE testsuite [
+  <!ELEMENT testsuite (testcase*)>
+  <!ELEMENT testcase EMPTY>
+]>
+<testsuite name="DTD must remain disabled">
+  <testcase name="must not be imported"/>
+</testsuite>

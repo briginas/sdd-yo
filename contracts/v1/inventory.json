@@ -1910,13 +1910,18 @@
       "contracts": [
         "artifact.spec-patch",
         "artifact.candidate-tree-manifest",
+        "adapter.jsonl-test-stream-header",
+        "adapter.jsonl-test-record",
         "adapter.command-invocation",
         "adapter.junit-import"
       ],
       "requirements": [
         "REQ-7AFE9904",
+        "REQ-12E19D70",
+        "REQ-6D8DDDF7",
         "REQ-20F8CA5C",
-        "REQ-1DD46CA9"
+        "REQ-1DD46CA9",
+        "REQ-F91F7D11"
       ],
       "required_cases": [
         "relative-safe-path",
@@ -1929,8 +1934,13 @@
         "symlink-escape",
         "junction-escape",
         "toctou-change",
+        "jsonl-path-traversal",
+        "jsonl-forged-requirement-mapping",
+        "jsonl-line-bytes-overflow",
         "shell-metacharacter-argv",
+        "xml-dtd",
         "xml-external-entity",
+        "xml-entity-expansion",
         "atomic-interruption"
       ]
     },

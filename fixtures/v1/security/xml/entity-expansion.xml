@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE testsuite [
+  <!ENTITY unit "1234567890">
+  <!ENTITY pair "&unit;&unit;">
+  <!ENTITY group "&pair;&pair;&pair;&pair;">
+]>
+<testsuite name="Entity expansion must remain disabled">
+  <testcase name="&group;&group;&group;&group;"/>
+</testsuite>

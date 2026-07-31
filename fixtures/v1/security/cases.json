@@ -2,20 +2,37 @@
   "fixture_manifest_version": "1.0",
   "status": "bootstrap-fixture-manifest",
   "fixture_family_id": "security-path-process",
-  "leaf": "0.7-path-safety-scenarios",
-  "scope": "Declarative project-path and filesystem-race scenarios for SpecPatch and CandidateTreeManifest inputs. The manifest defines portable setup and expected fail-closed decisions without creating host-specific symlinks or junctions. Malicious JSONL and XML, command argv, evidence confusion, prompt injection, atomic interruption, runtime code, and verifier behavior are deferred.",
+  "completed_leaves": [
+    "0.7-path-safety-scenarios",
+    "0.7-malicious-adapter-output"
+  ],
+  "scope": "Declarative project-path, filesystem-race, and malicious adapter-output scenarios. The manifest defines portable setup and fail-closed decisions without creating host-specific links or allowing XML DTD or external-entity processing. Command argv, evidence confusion, prompt injection, atomic interruption, runtime code, and verifier behavior are deferred.",
   "contracts": [
     "artifact.spec-patch",
-    "artifact.candidate-tree-manifest"
+    "artifact.candidate-tree-manifest",
+    "adapter.jsonl-test-stream-header",
+    "adapter.jsonl-test-record",
+    "adapter.junit-import"
   ],
   "requirements": [
-    "REQ-7AFE9904"
+    "REQ-7AFE9904",
+    "REQ-12E19D70",
+    "REQ-6D8DDDF7",
+    "REQ-1DD46CA9",
+    "REQ-F91F7D11"
   ],
   "authorities": [
     "proposal/spec/capabilities/validation-fingerprints-and-patches.md#req-7afe9904",
+    "proposal/spec/capabilities/test-traceability-and-qa.md#req-12e19d70",
+    "proposal/spec/capabilities/test-traceability-and-qa.md#req-6d8dddf7",
+    "proposal/spec/capabilities/multi-project-cli-and-skill.md#req-1dd46ca9",
+    "proposal/spec/capabilities/multi-project-cli-and-skill.md#req-f91f7d11",
     "proposal/architecture/security.md#path-traversal-and-symlink-escape",
+    "proposal/architecture/security.md#malicious-adapter-output",
     "proposal/architecture/security.md#security-validation",
-    "proposal/architecture/fingerprints-and-git.md#specpatch"
+    "proposal/architecture/fingerprints-and-git.md#specpatch",
+    "proposal/architecture/test-adapters.md#normalized-discovery-protocol",
+    "proposal/architecture/test-adapters.md#junit-compatible-importer"
   ],
   "oracle_semantics": {
     "fixture_form": "Scenario definitions describe path-bearing artifact input, filesystem topology, and deterministic mutation hooks. A future platform test materializes the topology inside an isolated temporary project root.",
@@ -24,6 +41,14 @@
     "component_topology_rejection": "Inspect every existing component from the project root to the target without following a symlink or junction outside project scope.",
     "case_collision_rejection": "On a case-insensitive filesystem, reject a target whose normalized spelling aliases a differently cased existing path.",
     "toctou_revalidation": "Revalidate path identity and patch preconditions after validation and before mutation; any change aborts the complete patch.",
+    "jsonl_untrusted_data": "Parse each bounded UTF-8 line as data, reject invalid source paths and adapter-supplied Requirement mappings, and produce no partial TestIndex after rejection.",
+    "xml_parser_mode": "Use a bounded non-networked XML parser with DTD processing and external entities disabled.",
+    "xml_doctype_rejection": "Reject every XML document containing a DOCTYPE before processing internal declarations, resolving an entity, or importing any testcase.",
+    "external_entity_side_effects": {
+      "filesystem_reads": 0,
+      "network_requests": 0,
+      "imported_tests": 0
+    },
     "rejection_result": {
       "accepted": false,
       "patch_operations_applied": 0,
@@ -41,7 +66,6 @@
     ],
     "deferred_inventory_cases": [
       "shell-metacharacter-argv",
-      "xml-external-entity",
       "atomic-interruption"
     ]
   },
@@ -357,6 +381,146 @@
         "reason": "A component identity change after validation aborts the complete patch before any patch operation is applied.",
         "basis_requirements": [
           "REQ-7AFE9904"
+        ]
+      }
+    },
+    {
+      "case_id": "jsonl-path-traversal",
+      "category": "malicious-adapter-output",
+      "path": "jsonl/path-traversal.jsonl",
+      "input_format": "jsonl",
+      "syntax_valid": true,
+      "expected": {
+        "validation_stage": "adapter-record-path-validation",
+        "accepted": false,
+        "failure": "invalid-source-path",
+        "normalized_tests_emitted": 0,
+        "pass_allowed": false,
+        "basis_requirements": [
+          "REQ-12E19D70",
+          "REQ-1DD46CA9"
+        ]
+      }
+    },
+    {
+      "case_id": "jsonl-forged-requirement-mapping",
+      "category": "malicious-adapter-output",
+      "path": "jsonl/forged-requirement-mapping.jsonl",
+      "input_format": "jsonl",
+      "syntax_valid": true,
+      "expected": {
+        "validation_stage": "adapter-record-schema-validation",
+        "accepted": false,
+        "failure": "adapter-supplied-requirement-mapping",
+        "computed_requirement_ids": [],
+        "normalized_tests_emitted": 0,
+        "pass_allowed": false,
+        "basis_requirements": [
+          "REQ-12E19D70",
+          "REQ-1DD46CA9"
+        ]
+      }
+    },
+    {
+      "case_id": "jsonl-line-bytes-overflow",
+      "category": "malicious-adapter-output",
+      "path": "jsonl/line-bytes-overflow.jsonl",
+      "input_format": "jsonl",
+      "limits": {
+        "max_jsonl_line_bytes": 128
+      },
+      "syntax_valid": true,
+      "expected": {
+        "validation_stage": "adapter-stream-limit-validation",
+        "accepted": false,
+        "failure": "jsonl-line-bytes-overflow",
+        "normalized_tests_emitted": 0,
+        "pass_allowed": false,
+        "basis_requirements": [
+          "REQ-12E19D70",
+          "REQ-1DD46CA9"
+        ]
+      }
+    },
+    {
+      "case_id": "xml-dtd",
+      "category": "malicious-adapter-output",
+      "path": "xml/dtd-internal.xml",
+      "report_path": "reports/dtd-internal.xml",
+      "input_format": "xml",
+      "xml_well_formed": true,
+      "expected": {
+        "validation_stage": "xml-parser-policy",
+        "accepted": false,
+        "failure": "dtd-disabled",
+        "dtd_processed": false,
+        "entities_expanded": 0,
+        "imported_tests": 0,
+        "pass_allowed": false,
+        "basis_requirements": [
+          "REQ-6D8DDDF7",
+          "REQ-1DD46CA9",
+          "REQ-F91F7D11"
+        ]
+      }
+    },
+    {
+      "case_id": "xml-external-entity",
+      "category": "malicious-adapter-output",
+      "variants": [
+        {
+          "variant_id": "filesystem-system-entity",
+          "path": "xml/external-entity-file.xml",
+          "report_path": "reports/external-entity-file.xml"
+        },
+        {
+          "variant_id": "network-system-entity",
+          "path": "xml/external-entity-network.xml",
+          "report_path": "reports/external-entity-network.xml"
+        },
+        {
+          "variant_id": "external-parameter-entity",
+          "path": "xml/external-parameter-entity.xml",
+          "report_path": "reports/external-parameter-entity.xml"
+        }
+      ],
+      "input_format": "xml",
+      "xml_well_formed": true,
+      "expected": {
+        "validation_stage": "xml-parser-policy",
+        "accepted": false,
+        "failure": "dtd-or-external-entity-disabled",
+        "dtd_processed": false,
+        "external_entities_resolved": 0,
+        "filesystem_reads": 0,
+        "network_requests": 0,
+        "imported_tests": 0,
+        "pass_allowed": false,
+        "basis_requirements": [
+          "REQ-6D8DDDF7",
+          "REQ-1DD46CA9",
+          "REQ-F91F7D11"
+        ]
+      }
+    },
+    {
+      "case_id": "xml-entity-expansion",
+      "category": "malicious-adapter-output",
+      "path": "xml/entity-expansion.xml",
+      "report_path": "reports/entity-expansion.xml",
+      "input_format": "xml",
+      "xml_well_formed": true,
+      "expected": {
+        "validation_stage": "xml-parser-policy",
+        "accepted": false,
+        "failure": "dtd-disabled",
+        "dtd_processed": false,
+        "entities_expanded": 0,
+        "imported_tests": 0,
+        "pass_allowed": false,
+        "basis_requirements": [
+          "REQ-6D8DDDF7",
+          "REQ-1DD46CA9"
         ]
       }
     }

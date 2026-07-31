@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE testsuite [
+  <!ENTITY secret SYSTEM "file:///fixture-must-not-be-read">
+]>
+<testsuite name="Filesystem entity must remain disabled">
+  <testcase name="&secret;"/>
+</testsuite>

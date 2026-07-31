@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE testsuite [
+  <!ENTITY % remote SYSTEM "https://fixture.invalid/must-not-be-requested.dtd">
+  %remote;
+]>
+<testsuite name="Parameter entity must remain disabled">
+  <testcase name="must not be imported"/>
+</testsuite>
