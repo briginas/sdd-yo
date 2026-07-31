@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 1 / Project scaffold and contract types
-- Current leaf: 1.3 Product dependency spikes
+- Current leaf: 1.4 Foundational contract types and platform interfaces
 - Last updated: 2026-07-31
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -308,13 +308,17 @@ Bounded leaves:
       build, test, format-check, and their exact repository scripts. Keep
       dependency selection and product contract types in their later bounded
       leaves.
-- [ ] **1.3 — Product dependency spikes.** Select and pin the smallest
+- [x] **1.3 — Product dependency spikes.** Select and pin the smallest
       standards-focused dependency set needed by the first production uses.
       Record why Node.js or an existing dependency is insufficient, verify ESM
       and Node.js 22.18+ compatibility, and defer contract/domain types, schema
       generation, package smoke tests, and public `sdd` behavior.
-- [ ] Define branded IDs, schema versions, diagnostics, result envelopes, and
-      injected platform interfaces.
+- [ ] **1.4 — Foundational contract types and platform interfaces.** Define
+      branded IDs, schema versions, diagnostics, result envelopes, and narrow
+      injected filesystem, Git, process, clock, and randomness interfaces.
+      Name the target `REQ-*` identifiers in the implementation handoff, but
+      keep schema generation, config/Markdown/XML parsing, package smoke tests,
+      executable behavior, and Requirement promotion in their later leaves.
 - [ ] Generate JSON Schemas and TypeScript types from one source.
 - [ ] Add package and executable smoke tests without claiming full commands.
 
