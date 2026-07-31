@@ -3,8 +3,8 @@
 ## Status
 
 - State: active
-- Current phase: Bootstrap / Stage 0 contract fixtures
-- Current leaf: 0.8 Stage 0 verifier
+- Current phase: Milestone 1 / Project scaffold and contract types
+- Current leaf: Milestone 1 project scaffold and contract types
 - Last updated: 2026-07-31
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -26,10 +26,10 @@ of:
 
 ## Current state
 
-The repository contains an approved target specification and architecture but
-no executable implementation. The target package is intentionally outside
-canonical `spec/`; the first implemented slices will promote only the
-Requirements they satisfy.
+The repository contains an approved target specification and architecture, a
+Stage 0 bootstrap verifier, and no product runtime or public CLI
+implementation. The target package is intentionally outside canonical `spec/`;
+the first implemented slices will promote only the Requirements they satisfy.
 
 The root commit is:
 
@@ -271,14 +271,21 @@ Primary target Requirements:
 
 ### 0.8 Stage 0 verifier
 
-- [ ] Add one repository command that validates fixture manifests, JSON
+- [x] Add one repository command that validates fixture manifests, JSON
       examples, link targets, ID formats, duplicate fixture names, and truth
       table completeness.
-- [ ] Run it on macOS, Linux, and Windows CI.
-- [ ] Document every check and its failure output.
+- [x] Run it locally on macOS with Node.js 22; defer Linux and Windows
+      execution until those environments are available.
+- [x] Document every check and its failure output in
+      [`docs/stage-0-verifier.md`](docs/stage-0-verifier.md).
 
-Done when all Stage 0 contracts are machine-checkable and no CLI behavior is
-claimed.
+Requirement traceability: this is a bootstrap-only repository command and
+claims no executable Requirement coverage.
+
+Done when the Stage 0 contract surface is machine-checkable on the current
+macOS bootstrap host and no CLI behavior is claimed. Cross-platform execution
+evidence remains deferred without removing Windows- or POSIX-specific fixture
+definitions.
 
 ## Milestone 1 — Project scaffold and contract types
 
@@ -457,6 +464,7 @@ Primary target Requirements:
 
 ## Deferred scope
 
+- Stage 0 verifier execution on Linux and Windows CI.
 - Hosted workflow service or durable workflow database.
 - Automatic branch, commit, push, merge, approval, or QA actions.
 - Cross-project graph relations.
@@ -467,6 +475,6 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 0.8 — Stage 0 verifier` is the only active implementation leaf. It
-must add one repository command that validates the completed Stage 0 fixture
-surface without adding public CLI behavior or claiming production readiness.
+`Milestone 1 — Project scaffold and contract types` is next. Milestone 0.8 did
+not add a package manifest, TypeScript runtime, public `sdd` behavior, or
+dependency-backed Draft 2020-12 instance validation.
