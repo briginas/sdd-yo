@@ -6,9 +6,11 @@
     "node": ">=22.18.0"
   },
   "scripts": {
-    "build": "npm run clean:build && tsc -p tsconfig.build.json",
+    "build": "npm run check:schemas && npm run clean:build && tsc -p tsconfig.build.json",
+    "check:schemas": "node scripts/generate-schema-types.ts --check",
     "clean:build": "node -e \"import('node:fs/promises').then(({ rm }) => rm('dist', { recursive: true, force: true }))\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\" \"*.md\" \"*.json\"",
+    "generate:schemas": "node scripts/generate-schema-types.ts --write",
     "test": "node --test test/*.test.ts",
     "typecheck": "tsc --noEmit",
     "verify:stage-0": "node scripts/verify-stage-0.ts"

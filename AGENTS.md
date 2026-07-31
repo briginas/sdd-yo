@@ -99,6 +99,7 @@ surface and the following full validation commands:
 
 ```text
 npm test
+npm run check:schemas
 npm run build
 npm run typecheck
 npm run format:check
@@ -107,13 +108,16 @@ git diff --check
 ```
 
 `npm test` uses the Node.js test runner directly; it does not require a test
-framework dependency. `npm run build` removes and recreates ignored `dist/`
-output from `src/`. Prettier is a development-only dependency because Node.js
-and TypeScript do not provide a repository formatter. Product dependencies
-remain subject to focused selection in their implementation leaves. The
-format check covers product source, tests, and root Markdown and JSON control
-files; Stage 0 fixture bytes and the existing bootstrap verifier surface remain
-outside this leaf's formatting baseline.
+framework dependency. `npm run check:schemas` regenerates version 1 artifact
+types in memory from the checked-in JSON Schema source and fails on stale or
+unexpected generated output. `npm run build` runs that check before removing
+and recreating ignored `dist/` output from `src/`. Prettier is a
+development-only dependency because Node.js and TypeScript do not provide a
+repository formatter. Product dependencies remain subject to focused
+selection in their implementation leaves. The format check covers product
+source, tests, and root Markdown and JSON control files; Stage 0 fixture bytes
+and the existing bootstrap verifier surface remain outside this leaf's
+formatting baseline.
 
 Never claim a validation command ran when it did not. A failure, crash,
 timeout, unavailable dependency, or incomplete result cannot be reported as a

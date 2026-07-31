@@ -186,7 +186,8 @@
       "required": [
         "code",
         "severity",
-        "message"
+        "message",
+        "details"
       ],
       "properties": {
         "code": {

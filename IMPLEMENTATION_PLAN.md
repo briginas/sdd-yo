@@ -324,11 +324,28 @@ Bounded leaves:
       `REQ-7D93D64A`, `REQ-7C848ED0`, `REQ-F7D39246`, `REQ-41EDF9A3`, and
       `REQ-82256D82`; bootstrap tests do not claim executable Requirement
       coverage.
-- [ ] **1.5 — Schema and type single-source generation.** Generate version 1
+- [x] **1.5 — Schema and type single-source generation.** Generate version 1
       JSON Schemas and TypeScript types from the checked-in schema source,
       verify published schemas byte-for-byte, and keep parsing, executable
-      behavior, package smoke tests, and Requirement promotion deferred.
-- [ ] Add package and executable smoke tests without claiming full commands.
+      behavior, package smoke tests, and Requirement promotion deferred. The
+      inventory-driven generator covers all 16 materialized artifact schemas,
+      follows only checked-in local shared-schema references, and checks the
+      committed TypeScript output for deterministic freshness. Generated
+      shapes preserve the target Requirement mappings recorded by the
+      inventory: `REQ-04F23007`, `REQ-12E19D70`, `REQ-20AAA622`,
+      `REQ-220945C2`, `REQ-2AF962EB`, `REQ-3B9FC7FF`, `REQ-3BF12AAD`,
+      `REQ-5A832396`, `REQ-64DB876B`, `REQ-72BA737C`, `REQ-7341DBB7`,
+      `REQ-7AFE9904`, `REQ-82256D82`, `REQ-89AFB91E`, `REQ-8E2D9A5F`,
+      `REQ-964B9F80`, `REQ-9D265509`, `REQ-A3C3B779`, `REQ-A76942A0`,
+      `REQ-A8739118`, `REQ-ADF9965A`, `REQ-AFD65A03`, `REQ-BCFA15D8`,
+      `REQ-BDAFD401`, `REQ-C11ACC55`, `REQ-CDE94D0B`, `REQ-D5A7A5DF`,
+      `REQ-DFF6BFA6`, `REQ-E26A859E`, `REQ-E451458E`, `REQ-E80F09C6`,
+      `REQ-E85A06C3`, `REQ-F7CEE6D0`, and `REQ-FB66E5D6`. Bootstrap
+      generation tests do not claim executable Requirement coverage.
+- [ ] **1.6 — Package and executable smoke tests.** Add only package/export
+      integrity and executable wiring smoke coverage without claiming full
+      command behavior. Config, Markdown, XML, runtime schema validation,
+      canonical Requirement promotion, and Milestone 2 remain deferred.
 
 Done when a clean clone can install, build, typecheck, test, and validate all
 Stage 0 fixtures deterministically.
@@ -505,8 +522,7 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 1.5 — Schema and type single-source generation` is the only active
-implementation leaf. It generates version 1 TypeScript artifact types from the
-checked-in JSON Schema source and verifies the published schema surface without
-adding parsing, package smoke tests, public `sdd` behavior, or Requirement
-promotion.
+`Milestone 1.6 — Package and executable smoke tests` is the only active
+implementation leaf. It verifies package/export integrity and executable
+wiring without adding full command behavior, config/Markdown/XML parsing,
+runtime schema validation, canonical Requirement promotion, or Milestone 2.
