@@ -92,30 +92,6 @@ semantic and structural specification deltas empty.
 - A changed or removed target Requirement returns `REVIEW_REQUIRED`.
 - Discovering that the contract is wrong requires a new `spec-code` Change.
 
-<a id="req-7341dbb7"></a>
-
-## REQ-7341DBB7 — Bind mode to approval
-
-```sdd
-kind: constraint
-verification: automated
-```
-
-### Relations <!-- sdd:relations -->
-
-- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
-- refers-to: [CON-4365C0F6 — Evidence](../../../spec/concepts/evidence.md)
-
-### Statement <!-- sdd:statement -->
-
-The approved Change mode shall be immutable for the lifetime of that approval.
-
-### Acceptance criteria <!-- sdd:acceptance -->
-
-- Evidence for a different mode is rejected.
-- Changing mode requires a new approval.
-- The CLI does not infer a replacement mode automatically.
-
 <a id="req-e80f09c6"></a>
 
 ## REQ-E80F09C6 — Validate proposals without changing the working tree

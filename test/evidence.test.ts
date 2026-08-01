@@ -20,13 +20,25 @@ import { fingerprintTestInput } from "../src/tests/test-index.ts";
 import type { TestIndex } from "../src/tests/test-index.ts";
 import type { AffectedScope } from "../src/verification/affected-scope.ts";
 import {
+  assessApprovalEvidence,
+  assessGovernanceEvidence,
   assessVerificationEvidence,
   EvidenceInputError,
+  importApprovalEvidenceFile,
+  importGovernanceEvidenceFile,
   importQaEvidenceFile,
+  parseApprovalEvidence,
+  parseGovernanceEvidence,
   parseQaEvidence,
   parseTestExecutionEvidence,
 } from "../src/verification/evidence.ts";
-import type { EvidenceInputLimits, QaEvidence, TestExecutionEvidence } from "../src/verification/evidence.ts";
+import type {
+  ApprovalEvidence,
+  EvidenceInputLimits,
+  GovernanceEvidence,
+  QaEvidence,
+  TestExecutionEvidence,
+} from "../src/verification/evidence.ts";
 
 const limits: EvidenceInputLimits = {
   max_artifact_bytes: 64 * 1024,
@@ -327,4 +339,166 @@ test("REQ-CDE94D0B REQ-C11ACC55 distinguishes missing human evidence from negati
   assert.ok(contradictory.issues.some((issue) => issue.code === "SDD_EVIDENCE_MANUAL_CONTRADICTORY"));
   assert.ok(contradictory.issues.some((issue) => issue.code === "SDD_EVIDENCE_QA_CONTRADICTORY"));
   assert.ok(contradictory.issues.every((issue) => issue.disposition === "BLOCKED"));
+});
+
+function approvalEvidence(): ApprovalEvidence {
+  const input = values();
+  return {
+    schema_version: "1.0",
+    artifact_type: "approval_evidence",
+    project_id: input.projectId,
+    issuer: "product-review",
+    actor: "user:42",
+    decision: "approved",
+    mode: "spec-code",
+    subject: {
+      base_ref: input.integrationRef,
+      semantic_delta_fingerprint: input.adapterFingerprint,
+      structural_delta_fingerprint: input.scopeFingerprint,
+    },
+  };
+}
+
+function assessApproval(evidence: readonly ApprovalEvidence[]) {
+  const input = values();
+  return assessApprovalEvidence({
+    project_id: input.projectId,
+    allowed_issuers: new Set(["product-review"]),
+    mode: "spec-code",
+    base_ref: input.integrationRef,
+    semantic_delta_fingerprint: input.adapterFingerprint,
+    structural_delta_fingerprint: input.scopeFingerprint,
+    evidence,
+  });
+}
+
+function governanceEvidence(): GovernanceEvidence {
+  const input = values();
+  return {
+    schema_version: "1.0",
+    artifact_type: "governance_evidence",
+    project_id: input.projectId,
+    issuer: "governance",
+    actor: "user:12",
+    decision: "approved",
+    subject: {
+      config_fingerprint: input.configFingerprint,
+      project_scope_fingerprint: input.scopeFingerprint,
+      from_adoption_mode: "incremental",
+      to_adoption_mode: "complete",
+    },
+  };
+}
+
+function assessGovernance(evidence: readonly GovernanceEvidence[]) {
+  const input = values();
+  return assessGovernanceEvidence({
+    project_id: input.projectId,
+    allowed_issuers: new Set(["governance"]),
+    config_fingerprint: input.configFingerprint,
+    project_scope_fingerprint: input.scopeFingerprint,
+    from_adoption_mode: "incremental",
+    to_adoption_mode: "complete",
+    evidence,
+  });
+}
+
+test("REQ-7341DBB7 REQ-AFD65A03 strictly parses bounded ApprovalEvidence", async () => {
+  const bytes = await readFile("fixtures/v1/artifacts/evidence/approval-evidence/maximally-representative-valid.json");
+  const parsed = parseApprovalEvidence(bytes, limits);
+  assert.equal(parsed.mode, "spec-code");
+  assert.equal(parsed.decision, "approved");
+  assert.throws(
+    () => parseApprovalEvidence(bytes, { ...limits, max_artifact_bytes: bytes.byteLength - 1 }),
+    (error) => error instanceof EvidenceInputError && error.code === "SDD_EVIDENCE_ARTIFACT_LIMIT_EXCEEDED",
+  );
+  const unknown = new TextEncoder().encode(
+    JSON.stringify({ ...(JSON.parse(bytes.toString("utf8")) as object), unknown: true }),
+  );
+  assert.throws(
+    () => parseApprovalEvidence(unknown, limits),
+    (error) => error instanceof EvidenceInputError && error.code === "SDD_EVIDENCE_ARTIFACT_INVALID",
+  );
+});
+
+test("REQ-E85A06C3 REQ-220945C2 strictly parses GovernanceEvidence transitions", async () => {
+  const bytes = await readFile(
+    "fixtures/v1/artifacts/evidence/governance-evidence/maximally-representative-valid.json",
+  );
+  const parsed = parseGovernanceEvidence(bytes, limits);
+  assert.equal(parsed.subject.from_adoption_mode, "complete");
+  assert.equal(parsed.subject.to_adoption_mode, "incremental");
+  const noOp = new TextEncoder().encode(
+    JSON.stringify({
+      ...parsed,
+      subject: { ...parsed.subject, to_adoption_mode: parsed.subject.from_adoption_mode },
+    }),
+  );
+  assert.throws(
+    () => parseGovernanceEvidence(noOp, limits),
+    (error) => error instanceof EvidenceInputError && error.code === "SDD_EVIDENCE_ARTIFACT_INVALID",
+  );
+});
+
+test("REQ-AFD65A03 REQ-E85A06C3 imports only project-scoped ApprovalEvidence and GovernanceEvidence", async () => {
+  const root = await mkdtemp(join(tmpdir(), "sdd-human-evidence-project-"));
+  const outside = await mkdtemp(join(tmpdir(), "sdd-human-evidence-outside-"));
+  const approvalBytes = await readFile("fixtures/v1/artifacts/evidence/approval-evidence/minimal-valid.json");
+  const governanceBytes = await readFile("fixtures/v1/artifacts/evidence/governance-evidence/minimal-valid.json");
+  await writeFile(join(root, "approval.json"), approvalBytes);
+  await writeFile(join(root, "governance.json"), governanceBytes);
+  await writeFile(join(outside, "approval.json"), approvalBytes);
+  const approvalPath: unknown = "approval.json";
+  const governancePath: unknown = "governance.json";
+  const escapePath: unknown = "escape.json";
+  assert.ok(isProjectPath(approvalPath) && isProjectPath(governancePath) && isProjectPath(escapePath));
+  assert.equal(
+    (await importApprovalEvidenceFile(nodeFileSystem, root, approvalPath, limits)).artifact_type,
+    "approval_evidence",
+  );
+  assert.equal(
+    (await importGovernanceEvidenceFile(nodeFileSystem, root, governancePath, limits)).artifact_type,
+    "governance_evidence",
+  );
+  await symlink(join(outside, "approval.json"), join(root, "escape.json"));
+  await assert.rejects(
+    importApprovalEvidenceFile(nodeFileSystem, root, escapePath, limits),
+    (error) => error instanceof EvidenceInputError && error.code === "SDD_EVIDENCE_FILE_OUT_OF_SCOPE",
+  );
+});
+
+test("REQ-7341DBB7 REQ-AFD65A03 REQ-E85A06C3 assesses exact current ApprovalEvidence subjects", () => {
+  const current = approvalEvidence();
+  assert.deepEqual(assessApproval([current]), { state: "current", issues: [] });
+  assert.equal(assessApproval([]).state, "missing");
+  assert.equal(assessApproval([{ ...current, mode: "spec" }]).state, "stale");
+  assert.equal(
+    assessApproval([
+      {
+        ...current,
+        subject: { ...current.subject, semantic_delta_fingerprint: values().configFingerprint },
+      },
+    ]).state,
+    "stale",
+  );
+  assert.equal(assessApproval([{ ...current, decision: "rejected" }]).state, "negative");
+  assert.equal(assessApproval([current, { ...current, decision: "rejected" }]).state, "contradictory");
+  assert.equal(assessApproval([{ ...current, issuer: "unknown" }]).state, "stale");
+});
+
+test("REQ-E85A06C3 REQ-220945C2 assesses exact governance transitions and decisions", () => {
+  const current = governanceEvidence();
+  assert.deepEqual(assessGovernance([current]), { state: "current", issues: [] });
+  assert.equal(assessGovernance([]).state, "missing");
+  assert.equal(
+    assessGovernance([
+      {
+        ...current,
+        subject: { ...current.subject, project_scope_fingerprint: values().adapterFingerprint },
+      },
+    ]).state,
+    "stale",
+  );
+  assert.equal(assessGovernance([{ ...current, decision: "rejected" }]).state, "negative");
+  assert.equal(assessGovernance([current, { ...current, decision: "rejected" }]).state, "contradictory");
 });

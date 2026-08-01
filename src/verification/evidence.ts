@@ -37,6 +37,38 @@ type ArtifactProvenance = {
   readonly producer?: { readonly name: string; readonly version: string };
 };
 
+export type ApprovalEvidence = ArtifactProvenance & {
+  readonly schema_version: "1.0";
+  readonly artifact_type: "approval_evidence";
+  readonly project_id: ProjectId;
+  readonly issuer: string;
+  readonly actor: string;
+  readonly decision: "approved" | "rejected";
+  readonly mode: "spec-code" | "spec" | "code";
+  readonly subject: {
+    readonly base_ref: GitObjectId;
+    readonly semantic_delta_fingerprint: Fingerprint;
+    readonly structural_delta_fingerprint: Fingerprint;
+  };
+  readonly reason?: string;
+};
+
+export type GovernanceEvidence = ArtifactProvenance & {
+  readonly schema_version: "1.0";
+  readonly artifact_type: "governance_evidence";
+  readonly project_id: ProjectId;
+  readonly issuer: string;
+  readonly actor: string;
+  readonly decision: "approved" | "rejected";
+  readonly subject: {
+    readonly config_fingerprint: Fingerprint;
+    readonly project_scope_fingerprint: Fingerprint;
+    readonly from_adoption_mode: "incremental" | "complete";
+    readonly to_adoption_mode: "incremental" | "complete";
+  };
+  readonly reason?: string;
+};
+
 export type TestExecutionStatus = "passed" | "failed" | "skipped" | "todo" | "disabled" | "xfailed" | "error";
 
 export type TestExecutionEvidence = ArtifactProvenance & {
@@ -200,6 +232,98 @@ function sortedUnique(values: readonly string[]): boolean {
   return (
     new Set(values).size === values.length && values.every((value, index) => index === 0 || value > values[index - 1]!)
   );
+}
+
+export function parseApprovalEvidence(bytes: Uint8Array, limits: EvidenceInputLimits): ApprovalEvidence {
+  const value = parseJson(bytes, limits);
+  if (
+    !isRecord(value) ||
+    !hasExactKeys(
+      value,
+      ["schema_version", "artifact_type", "project_id", "issuer", "actor", "decision", "mode", "subject"],
+      ["created_at", "producer", "reason"],
+    ) ||
+    value.schema_version !== "1.0" ||
+    value.artifact_type !== "approval_evidence" ||
+    !isProjectId(value.project_id) ||
+    !nonEmpty(value.issuer) ||
+    !nonEmpty(value.actor) ||
+    (value.decision !== "approved" && value.decision !== "rejected") ||
+    (value.mode !== "spec-code" && value.mode !== "spec" && value.mode !== "code") ||
+    !isRecord(value.subject) ||
+    !hasExactKeys(value.subject, ["base_ref", "semantic_delta_fingerprint", "structural_delta_fingerprint"]) ||
+    !isGitObjectId(value.subject.base_ref) ||
+    !isFingerprint(value.subject.semantic_delta_fingerprint) ||
+    !isFingerprint(value.subject.structural_delta_fingerprint) ||
+    (value.reason !== undefined && !nonEmpty(value.reason))
+  ) {
+    throw new EvidenceInputError("SDD_EVIDENCE_ARTIFACT_INVALID", "ApprovalEvidence envelope is invalid.");
+  }
+  return {
+    schema_version: "1.0",
+    artifact_type: "approval_evidence",
+    project_id: value.project_id,
+    ...parseProvenance(value),
+    issuer: value.issuer,
+    actor: value.actor,
+    decision: value.decision,
+    mode: value.mode,
+    subject: {
+      base_ref: value.subject.base_ref,
+      semantic_delta_fingerprint: value.subject.semantic_delta_fingerprint,
+      structural_delta_fingerprint: value.subject.structural_delta_fingerprint,
+    },
+    ...(value.reason === undefined ? {} : { reason: value.reason }),
+  };
+}
+
+export function parseGovernanceEvidence(bytes: Uint8Array, limits: EvidenceInputLimits): GovernanceEvidence {
+  const value = parseJson(bytes, limits);
+  if (
+    !isRecord(value) ||
+    !hasExactKeys(
+      value,
+      ["schema_version", "artifact_type", "project_id", "issuer", "actor", "decision", "subject"],
+      ["created_at", "producer", "reason"],
+    ) ||
+    value.schema_version !== "1.0" ||
+    value.artifact_type !== "governance_evidence" ||
+    !isProjectId(value.project_id) ||
+    !nonEmpty(value.issuer) ||
+    !nonEmpty(value.actor) ||
+    (value.decision !== "approved" && value.decision !== "rejected") ||
+    !isRecord(value.subject) ||
+    !hasExactKeys(value.subject, [
+      "config_fingerprint",
+      "project_scope_fingerprint",
+      "from_adoption_mode",
+      "to_adoption_mode",
+    ]) ||
+    !isFingerprint(value.subject.config_fingerprint) ||
+    !isFingerprint(value.subject.project_scope_fingerprint) ||
+    (value.subject.from_adoption_mode !== "incremental" && value.subject.from_adoption_mode !== "complete") ||
+    (value.subject.to_adoption_mode !== "incremental" && value.subject.to_adoption_mode !== "complete") ||
+    value.subject.from_adoption_mode === value.subject.to_adoption_mode ||
+    (value.reason !== undefined && !nonEmpty(value.reason))
+  ) {
+    throw new EvidenceInputError("SDD_EVIDENCE_ARTIFACT_INVALID", "GovernanceEvidence envelope is invalid.");
+  }
+  return {
+    schema_version: "1.0",
+    artifact_type: "governance_evidence",
+    project_id: value.project_id,
+    ...parseProvenance(value),
+    issuer: value.issuer,
+    actor: value.actor,
+    decision: value.decision,
+    subject: {
+      config_fingerprint: value.subject.config_fingerprint,
+      project_scope_fingerprint: value.subject.project_scope_fingerprint,
+      from_adoption_mode: value.subject.from_adoption_mode,
+      to_adoption_mode: value.subject.to_adoption_mode,
+    },
+    ...(value.reason === undefined ? {} : { reason: value.reason }),
+  };
 }
 
 export function parseTestExecutionEvidence(bytes: Uint8Array, limits: EvidenceInputLimits): TestExecutionEvidence {
@@ -390,6 +514,174 @@ export async function importQaEvidenceFile(
   limits: EvidenceInputLimits,
 ): Promise<QaEvidence> {
   return importEvidenceFile(fileSystem, projectRoot, path, limits, parseQaEvidence);
+}
+
+export async function importApprovalEvidenceFile(
+  fileSystem: FileSystem,
+  projectRoot: string,
+  path: ProjectPath,
+  limits: EvidenceInputLimits,
+): Promise<ApprovalEvidence> {
+  return importEvidenceFile(fileSystem, projectRoot, path, limits, parseApprovalEvidence);
+}
+
+export async function importGovernanceEvidenceFile(
+  fileSystem: FileSystem,
+  projectRoot: string,
+  path: ProjectPath,
+  limits: EvidenceInputLimits,
+): Promise<GovernanceEvidence> {
+  return importEvidenceFile(fileSystem, projectRoot, path, limits, parseGovernanceEvidence);
+}
+
+export type HumanDecisionEvidenceIssue = {
+  readonly code:
+    | "SDD_EVIDENCE_APPROVAL_CONTRADICTORY"
+    | "SDD_EVIDENCE_APPROVAL_MISSING"
+    | "SDD_EVIDENCE_APPROVAL_REJECTED"
+    | "SDD_EVIDENCE_GOVERNANCE_CONTRADICTORY"
+    | "SDD_EVIDENCE_GOVERNANCE_MISSING"
+    | "SDD_EVIDENCE_GOVERNANCE_REJECTED"
+    | "SDD_EVIDENCE_ISSUER_UNCONFIGURED"
+    | "SDD_EVIDENCE_SUBJECT_STALE";
+  readonly disposition: "BLOCKED" | "REVIEW_REQUIRED";
+  readonly artifact_type: "approval_evidence" | "governance_evidence";
+  readonly issuer?: string;
+};
+
+export type HumanDecisionEvidenceAssessment = {
+  readonly state: "current" | "missing" | "stale" | "negative" | "contradictory";
+  readonly issues: readonly HumanDecisionEvidenceIssue[];
+};
+
+function humanIssueKey(issue: HumanDecisionEvidenceIssue): string {
+  return [issue.disposition, issue.code, issue.artifact_type, issue.issuer ?? ""].join("\0");
+}
+
+function finishHumanDecisionAssessment(
+  artifactType: HumanDecisionEvidenceIssue["artifact_type"],
+  decisions: ReadonlySet<"approved" | "rejected">,
+  issues: readonly HumanDecisionEvidenceIssue[],
+): HumanDecisionEvidenceAssessment {
+  const prefix = artifactType === "approval_evidence" ? "APPROVAL" : "GOVERNANCE";
+  const finalized = [...issues];
+  let state: HumanDecisionEvidenceAssessment["state"];
+  if (decisions.has("approved") && decisions.has("rejected")) {
+    state = "contradictory";
+    finalized.push({
+      code: `SDD_EVIDENCE_${prefix}_CONTRADICTORY`,
+      disposition: "BLOCKED",
+      artifact_type: artifactType,
+    } as HumanDecisionEvidenceIssue);
+  } else if (decisions.has("rejected")) {
+    state = "negative";
+    finalized.push({
+      code: `SDD_EVIDENCE_${prefix}_REJECTED`,
+      disposition: "BLOCKED",
+      artifact_type: artifactType,
+    } as HumanDecisionEvidenceIssue);
+  } else if (finalized.some((issue) => issue.disposition === "BLOCKED")) {
+    state = "stale";
+  } else if (decisions.has("approved")) {
+    state = "current";
+  } else {
+    state = "missing";
+    finalized.push({
+      code: `SDD_EVIDENCE_${prefix}_MISSING`,
+      disposition: "REVIEW_REQUIRED",
+      artifact_type: artifactType,
+    } as HumanDecisionEvidenceIssue);
+  }
+  return {
+    state,
+    issues: [...new Map(finalized.map((issue) => [humanIssueKey(issue), issue])).values()].toSorted((left, right) => {
+      const leftKey = humanIssueKey(left);
+      const rightKey = humanIssueKey(right);
+      return leftKey < rightKey ? -1 : leftKey > rightKey ? 1 : 0;
+    }),
+  };
+}
+
+export function assessApprovalEvidence(input: {
+  readonly project_id: ProjectId;
+  readonly allowed_issuers: ReadonlySet<string>;
+  readonly mode: ApprovalEvidence["mode"];
+  readonly base_ref: GitObjectId;
+  readonly semantic_delta_fingerprint: Fingerprint;
+  readonly structural_delta_fingerprint: Fingerprint;
+  readonly evidence: readonly ApprovalEvidence[];
+}): HumanDecisionEvidenceAssessment {
+  const issues: HumanDecisionEvidenceIssue[] = [];
+  const decisions = new Set<ApprovalEvidence["decision"]>();
+  for (const evidence of input.evidence) {
+    if (!input.allowed_issuers.has(evidence.issuer)) {
+      issues.push({
+        code: "SDD_EVIDENCE_ISSUER_UNCONFIGURED",
+        disposition: "BLOCKED",
+        artifact_type: evidence.artifact_type,
+        issuer: evidence.issuer,
+      });
+      continue;
+    }
+    if (
+      evidence.project_id !== input.project_id ||
+      evidence.mode !== input.mode ||
+      evidence.subject.base_ref !== input.base_ref ||
+      evidence.subject.semantic_delta_fingerprint !== input.semantic_delta_fingerprint ||
+      evidence.subject.structural_delta_fingerprint !== input.structural_delta_fingerprint
+    ) {
+      issues.push({
+        code: "SDD_EVIDENCE_SUBJECT_STALE",
+        disposition: "BLOCKED",
+        artifact_type: evidence.artifact_type,
+        issuer: evidence.issuer,
+      });
+      continue;
+    }
+    decisions.add(evidence.decision);
+  }
+  return finishHumanDecisionAssessment("approval_evidence", decisions, issues);
+}
+
+export function assessGovernanceEvidence(input: {
+  readonly project_id: ProjectId;
+  readonly allowed_issuers: ReadonlySet<string>;
+  readonly config_fingerprint: Fingerprint;
+  readonly project_scope_fingerprint: Fingerprint;
+  readonly from_adoption_mode: GovernanceEvidence["subject"]["from_adoption_mode"];
+  readonly to_adoption_mode: GovernanceEvidence["subject"]["to_adoption_mode"];
+  readonly evidence: readonly GovernanceEvidence[];
+}): HumanDecisionEvidenceAssessment {
+  const issues: HumanDecisionEvidenceIssue[] = [];
+  const decisions = new Set<GovernanceEvidence["decision"]>();
+  for (const evidence of input.evidence) {
+    if (!input.allowed_issuers.has(evidence.issuer)) {
+      issues.push({
+        code: "SDD_EVIDENCE_ISSUER_UNCONFIGURED",
+        disposition: "BLOCKED",
+        artifact_type: evidence.artifact_type,
+        issuer: evidence.issuer,
+      });
+      continue;
+    }
+    if (
+      evidence.project_id !== input.project_id ||
+      evidence.subject.config_fingerprint !== input.config_fingerprint ||
+      evidence.subject.project_scope_fingerprint !== input.project_scope_fingerprint ||
+      evidence.subject.from_adoption_mode !== input.from_adoption_mode ||
+      evidence.subject.to_adoption_mode !== input.to_adoption_mode
+    ) {
+      issues.push({
+        code: "SDD_EVIDENCE_SUBJECT_STALE",
+        disposition: "BLOCKED",
+        artifact_type: evidence.artifact_type,
+        issuer: evidence.issuer,
+      });
+      continue;
+    }
+    decisions.add(evidence.decision);
+  }
+  return finishHumanDecisionAssessment("governance_evidence", decisions, issues);
 }
 
 export type EvidenceCheck<Id extends string> = {

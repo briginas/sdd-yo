@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 6 / Evidence, findings, and merge readiness
-- Current leaf: 6.1 — Approval and governance evidence
+- Current leaf: 6.2 — Deterministic semantic candidates and input manifest
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -674,13 +674,17 @@ Bounded leaves:
       remaining target contracts. Split evidence, semantic review, gate
       composition, and CLI work into independently verifiable leaves and make
       6.1 the immediate next leaf. No runtime behavior changes in this leaf.
-- [ ] **6.1 — Approval and governance evidence.** Strictly parse bounded,
+- [x] **6.1 — Approval and governance evidence.** Strictly parse bounded,
       project-scoped ApprovalEvidence and GovernanceEvidence; validate allowed
       issuers, exact mode/delta or adoption-transition subjects, negative and
       contradictory decisions, and freshness. Reuse the completed Milestone 4
       TestExecutionEvidence and QAEvidence boundary rather than duplicating it.
       Finding-family artifacts remain 6.3. Target Requirements:
       `REQ-7341DBB7`, `REQ-AFD65A03`, `REQ-E85A06C3`, `REQ-220945C2`.
+      `REQ-7341DBB7` is promoted. This leaf contributes strict approval-delta,
+      governance-subject, issuer, freshness, and decision assessment to the
+      remaining Requirements; their gate-composition claims remain proposed
+      until 6.3, 6.5, and 6.7.
 - [ ] **6.2 — Deterministic semantic candidates and input manifest.** Generate
       stable candidates from overlapping object changes, shared Concepts,
       Requirement dependencies, deletions, and incompatible graph operations;
@@ -788,8 +792,8 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`6.1 — Approval and governance evidence` is active. It adds bounded parsing,
-project-scoped file import, issuer/subject validation, freshness, and
-deterministic decision assessment for ApprovalEvidence and GovernanceEvidence.
-It does not add semantic candidates, Finding-family validation, gate reports,
-CLI operations, or Git side effects.
+`6.2 — Deterministic semantic candidates and input manifest` is active. It
+adds deterministic candidate generation, Concept impact, bounded normative
+context selection, and SemanticAnalysisInputManifest fingerprinting. It does
+not call a model, validate Finding-family artifacts, compose gate reports, add
+CLI operations, or perform Git side effects.

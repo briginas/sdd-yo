@@ -72,3 +72,27 @@ ProposalPackage without modifying the working tree.
 - `semantic_candidates` is present and empty until semantic review is
   evaluated; the package is not human approval and makes no semantic-review
   claim.
+
+<a id="req-7341dbb7"></a>
+
+## REQ-7341DBB7 — Bind mode to approval
+
+```sdd
+kind: constraint
+verification: automated
+```
+
+### Relations <!-- sdd:relations -->
+
+- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+- refers-to: [CON-4365C0F6 — Evidence](../concepts/evidence.md)
+
+### Statement <!-- sdd:statement -->
+
+The approved Change mode shall be immutable for the lifetime of that approval.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- Evidence for a different mode is rejected.
+- Changing mode requires a new approval.
+- The CLI does not infer a replacement mode automatically.
