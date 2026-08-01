@@ -5,6 +5,7 @@ export * from "./graph/index.ts";
 export * from "./init/index.ts";
 export * from "./ids/index.ts";
 export * from "./fingerprint/index.ts";
+export * from "./proposal/index.ts";
 export * from "./markdown/index.ts";
 export * from "./platform/index.ts";
 export * from "./tests/index.ts";

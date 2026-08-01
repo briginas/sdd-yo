@@ -1316,7 +1316,7 @@
       "wire_format": "typed-operation",
       "version": "1.0",
       "definition_status": "specified",
-      "authority": "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-8de9e078",
+      "authority": "spec/capabilities/proposal-modes-and-workflow-gates.md#req-8de9e078",
       "requirements": [
         "REQ-E26A859E",
         "REQ-8DE9E078"

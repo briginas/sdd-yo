@@ -22,6 +22,32 @@ includes an algorithm prefix:
 sha256:<lowercase-hex-digest>
 ```
 
+### Specification-tree fingerprint version 1 byte contract
+
+Proposal inputs bind the complete configured specification tree, not only the
+Markdown documents that contribute graph objects. The tree contains every
+regular UTF-8 file at or below `spec.root`; paths are project-relative,
+portable, unique, and sorted by Unicode code point. Directories do not produce
+entries. Symbolic links and other non-regular entries are invalid.
+
+Each file is hashed as its exact bytes, without newline or Unicode
+normalization. The tree fingerprint hashes one compact UTF-8 JSON value with
+this exact key order and no trailing newline:
+
+```json
+{
+  "canonicalization_version": "1",
+  "files": [
+    { "path": "spec/README.md", "sha256": "sha256:..." },
+    { "path": "spec/capabilities/export.md", "sha256": "sha256:..." }
+  ]
+}
+```
+
+The `files` array is sorted by `path`; every entry uses key order `path`, then
+`sha256`. CandidateTreeManifest content hashes and the resulting tree
+fingerprint are revalidated before graph parsing.
+
 ### Canonical JSON version 1 byte contract
 
 Canonicalization version `1` emits one compact JSON value encoded as UTF-8

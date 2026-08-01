@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 5 / Proposal and exact patch
-- Current leaf: 5.1 Proposal Gate and ProposalPackage generation
+- Current leaf: 5.2 Package-bound mechanical three-way preparation
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -35,8 +35,9 @@ bounded JSONL and JUnit discovery import, normalized suite inheritance, and
 deterministic version 1 TestIndex output, TestIndex-backed trace, and
 verification fingerprints and deltas, deterministic affected Requirement and
 Capability scope, and bounded execution/QA evidence validation are implemented.
-The runtime does not yet implement proposal artifacts, exact patches, or
-Verification and Merge gates.
+The runtime implements deterministic mechanical ProposalPackage generation;
+it does not yet implement proposal preparation, exact patches, or Verification
+and Merge gates.
 Unimplemented target behavior remains under `proposal/spec/` and is promoted
 only in verified bounded subsets.
 
@@ -599,7 +600,7 @@ Mode: `spec-code`.
       inputs, reserve archive ingestion, and make all four preparation states
       explicit. This leaf changes contracts and fixtures only; it implements no
       runtime command and promotes no Requirement.
-- [ ] **5.1 — Proposal Gate and ProposalPackage generation.** Load a selected
+- [x] **5.1 — Proposal Gate and ProposalPackage generation.** Load a selected
       Git base plus a project-directory or CandidateTreeManifest candidate,
       validate the virtual graph, compute semantic and structural deltas and
       affected verification scope, enforce the mechanical three-mode rules,

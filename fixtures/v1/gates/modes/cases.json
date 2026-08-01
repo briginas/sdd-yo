@@ -19,7 +19,7 @@
     "REQ-7341DBB7"
   ],
   "authorities": [
-    "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-e26a859e",
+    "spec/capabilities/proposal-modes-and-workflow-gates.md#req-e26a859e",
     "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-983914f3",
     "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-fb76fc6f",
     "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-13ce0529",

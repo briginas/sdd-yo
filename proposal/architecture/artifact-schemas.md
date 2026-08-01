@@ -153,8 +153,10 @@ Milestone 6 populates semantic candidates and composes the full Proposal Gate.
 
 Candidate content accepted by the version 1 CLI lives in an SDD Project
 directory or CandidateTreeManifest. The schema reserves `archive` as a source
-value, but version 1 commands do not ingest archives. The normalized candidate
-tree and resulting package are identical for identical bytes.
+value, but version 1 commands do not ingest archives. Equivalent normalized
+candidate trees produce identical tree fingerprints, object deltas, code
+targets, and affected scope; `candidate.source` still records the selected
+input form and therefore may differ between a directory and a manifest.
 
 ## SpecPatch
 

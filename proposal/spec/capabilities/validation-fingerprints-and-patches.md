@@ -100,7 +100,7 @@ verification: automated
 ### Relations <!-- sdd:relations -->
 
 - refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
-- depends-on: [REQ-8DE9E078 — Generate a deterministic mechanical ProposalPackage](proposal-modes-and-workflow-gates.md#req-8de9e078)
+- depends-on: [REQ-8DE9E078 — Generate a deterministic mechanical ProposalPackage](../../../spec/capabilities/proposal-modes-and-workflow-gates.md#req-8de9e078)
 
 ### Statement <!-- sdd:statement -->
 

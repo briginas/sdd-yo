@@ -41,6 +41,8 @@ import {
   validateTestIndexSubject,
 } from "../tests/index.ts";
 import type { TestIndex } from "../tests/index.ts";
+import { parseCodeTarget, parseProposalMode, ProposalValidationError, validateProposal } from "../proposal/index.ts";
+import type { ProposalMode, ProposalPackage } from "../proposal/index.ts";
 
 export const VALID_EXIT_CODE = 0 as const;
 export const BLOCKED_EXIT_CODE = 1 as const;
@@ -48,7 +50,7 @@ export const TECHNICAL_FAILURE_EXIT_CODE = 3 as const;
 
 type ExitCode = typeof VALID_EXIT_CODE | typeof BLOCKED_EXIT_CODE | typeof TECHNICAL_FAILURE_EXIT_CODE;
 type OutputFormat = "human" | "json";
-type Command = "init" | "id" | "validate" | "inspect" | "trace" | "diff" | "tests.discover";
+type Command = "init" | "id" | "validate" | "inspect" | "trace" | "diff" | "tests.discover" | "proposal.validate";
 type ResponseCommand = Command | "unknown";
 
 export type CliRuntime = {
@@ -89,6 +91,9 @@ type Invocation = {
   readonly testIndex?: ProjectPath;
   readonly baseTestIndex?: ProjectPath;
   readonly targetTestIndex?: ProjectPath;
+  readonly proposalMode?: ProposalMode;
+  readonly candidatePath?: string;
+  readonly codeTargets: readonly RequirementId[];
 };
 
 export type InitResult = {
@@ -162,6 +167,7 @@ export type CliResponse =
   | CliResponseEnvelope<"trace", "ok", TraceResult>
   | CliResponseEnvelope<"diff", "ok", DiffResult>
   | CliResponseEnvelope<"tests.discover", "ok", TestIndex>
+  | CliResponseEnvelope<"proposal.validate", "ok", ProposalPackage>
   | CliResponseEnvelope<Command, "blocked", { readonly valid: false } | null>
   | CliResponseEnvelope<ResponseCommand, "error", null>;
 
@@ -178,7 +184,12 @@ function cliDiagnostic(
 function parseInvocation(
   argv: readonly string[],
 ): { ok: true; value: Invocation } | { ok: false; diagnostic: Diagnostic } {
-  const command: string | undefined = argv[0] === "tests" && argv[1] === "discover" ? "tests.discover" : argv[0];
+  const command: string | undefined =
+    argv[0] === "tests" && argv[1] === "discover"
+      ? "tests.discover"
+      : argv[0] === "proposal" && argv[1] === "validate"
+        ? "proposal.validate"
+        : argv[0];
   if (
     command !== "init" &&
     command !== "id" &&
@@ -186,7 +197,8 @@ function parseInvocation(
     command !== "inspect" &&
     command !== "trace" &&
     command !== "diff" &&
-    command !== "tests.discover"
+    command !== "tests.discover" &&
+    command !== "proposal.validate"
   )
     return {
       ok: false,
@@ -219,7 +231,14 @@ function parseInvocation(
   let testIndex: ProjectPath | undefined;
   let baseTestIndex: ProjectPath | undefined;
   let targetTestIndex: ProjectPath | undefined;
-  for (let index = command === "tests.discover" ? 2 : 1; index < argv.length; index += 1) {
+  let proposalMode: ProposalMode | undefined;
+  let candidatePath: string | undefined;
+  const codeTargets: RequirementId[] = [];
+  for (
+    let index = command === "tests.discover" || command === "proposal.validate" ? 2 : 1;
+    index < argv.length;
+    index += 1
+  ) {
     const argument = argv[index];
     if (
       argument === "--format" ||
@@ -241,7 +260,10 @@ function parseInvocation(
       argument === "--import-junit" ||
       argument === "--test-index" ||
       argument === "--base-test-index" ||
-      argument === "--target-test-index"
+      argument === "--target-test-index" ||
+      argument === "--mode" ||
+      argument === "--candidate" ||
+      argument === "--code-target"
     ) {
       const value = argv[index + 1];
       if (value === undefined)
@@ -254,7 +276,41 @@ function parseInvocation(
           ),
         };
       index += 1;
-      if (argument === "--format") {
+      if (argument === "--mode") {
+        proposalMode = parseProposalMode(value);
+        if (proposalMode === undefined)
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_PROPOSAL_MODE_INVALID",
+              "The proposal mode is unsupported.",
+              "Use spec-code, spec, or code.",
+            ),
+          };
+      } else if (argument === "--candidate") {
+        if (value.length === 0 || value.includes("\0"))
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_PROPOSAL_CANDIDATE_PATH_INVALID",
+              "The candidate path is invalid.",
+              "Supply an SDD Project directory or CandidateTreeManifest file.",
+            ),
+          };
+        candidatePath = value;
+      } else if (argument === "--code-target") {
+        const target = parseCodeTarget(value);
+        if (target === undefined)
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_PROPOSAL_CODE_TARGET_INVALID",
+              "A code target is not a Requirement ID.",
+              "Use REQ-XXXXXXXX.",
+            ),
+          };
+        codeTargets.push(target);
+      } else if (argument === "--format") {
         if (value !== "human" && value !== "json")
           return {
             ok: false,
@@ -458,13 +514,22 @@ function parseInvocation(
         "Use ID-generation options only with sdd id.",
       ),
     };
-  if (command !== "diff" && (baseRef !== undefined || targetRef !== undefined))
+  if (command !== "diff" && command !== "proposal.validate" && (baseRef !== undefined || targetRef !== undefined))
     return {
       ok: false,
       diagnostic: cliDiagnostic(
         "SDD_CONFIG_CLI_ARGUMENT_INVALID",
         "A diff ref option was used with another command.",
         "Use --base and --target only with sdd diff.",
+      ),
+    };
+  if (command === "proposal.validate" && targetRef !== undefined)
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "--target does not apply to proposal validation.",
+        "Use --base with sdd proposal validate.",
       ),
     };
   if (command === "diff" && (baseRef === undefined || targetRef === undefined))
@@ -474,6 +539,30 @@ function parseInvocation(
         "SDD_GIT_DIFF_REFS_REQUIRED",
         "diff requires base and target Git refs.",
         "Supply both --base and --target.",
+      ),
+    };
+  if (
+    command === "proposal.validate" &&
+    (baseRef === undefined || proposalMode === undefined || candidatePath === undefined)
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_PROPOSAL_INPUTS_REQUIRED",
+        "proposal validate requires mode, base, and candidate inputs.",
+        "Supply --mode, --base, and --candidate.",
+      ),
+    };
+  if (
+    command !== "proposal.validate" &&
+    (proposalMode !== undefined || candidatePath !== undefined || codeTargets.length > 0)
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "A proposal option was used with another command.",
+        "Use proposal options only with sdd proposal validate.",
       ),
     };
   if (command !== "trace" && traceRef !== undefined)
@@ -596,6 +685,9 @@ function parseInvocation(
       ...(testIndex === undefined ? {} : { testIndex }),
       ...(baseTestIndex === undefined ? {} : { baseTestIndex }),
       ...(targetTestIndex === undefined ? {} : { targetTestIndex }),
+      ...(proposalMode === undefined ? {} : { proposalMode }),
+      ...(candidatePath === undefined ? {} : { candidatePath }),
+      codeTargets,
     },
   };
 }
@@ -829,6 +921,17 @@ function humanView(value: CliResponse): string {
   } else if (value.command === "tests.discover" && value.status === "ok") {
     const result = value.result as TestIndex;
     lines.push(`head: ${result.subject.head_ref}`, `tests: ${result.tests.length}`);
+  } else if (value.command === "proposal.validate" && value.status === "ok") {
+    const result = value.result as ProposalPackage;
+    lines.push(
+      `mode: ${result.mode}`,
+      `base: ${result.base.git_ref}`,
+      `base tree: ${result.base.tree_fingerprint}`,
+      `candidate tree: ${result.candidate.tree_fingerprint}`,
+      `semantic: ${result.object_delta.semantic_fingerprint}`,
+      `structural: ${result.object_delta.structural_fingerprint}`,
+      `affected requirements: ${result.affected_scope.requirements.join(", ") || "none"}`,
+    );
   }
   for (const diagnostic of value.diagnostics)
     lines.push(`${diagnostic.severity.toUpperCase()} ${diagnostic.code}: ${diagnostic.message}`);
@@ -1005,14 +1108,16 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
   const inferredCommand: ResponseCommand =
     runtime.argv[0] === "tests" && runtime.argv[1] === "discover"
       ? "tests.discover"
-      : runtime.argv[0] === "init" ||
-          runtime.argv[0] === "id" ||
-          runtime.argv[0] === "inspect" ||
-          runtime.argv[0] === "trace" ||
-          runtime.argv[0] === "diff" ||
-          runtime.argv[0] === "validate"
-        ? runtime.argv[0]
-        : "unknown";
+      : runtime.argv[0] === "proposal" && runtime.argv[1] === "validate"
+        ? "proposal.validate"
+        : runtime.argv[0] === "init" ||
+            runtime.argv[0] === "id" ||
+            runtime.argv[0] === "inspect" ||
+            runtime.argv[0] === "trace" ||
+            runtime.argv[0] === "diff" ||
+            runtime.argv[0] === "validate"
+          ? runtime.argv[0]
+          : "unknown";
   const inferredFormat: OutputFormat = runtime.argv.some(
     (argument, index) => argument === "--format" && runtime.argv[index + 1] === "json",
   )
@@ -1199,6 +1304,59 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
       return TECHNICAL_FAILURE_EXIT_CODE;
     }
     const outputTarget = selectedOutput?.target;
+    if (invocation.command === "proposal.validate") {
+      try {
+        if (
+          invocation.baseRef === undefined ||
+          invocation.proposalMode === undefined ||
+          invocation.candidatePath === undefined
+        ) {
+          throw new Error("Parsed proposal invocation is missing required inputs.");
+        }
+        const reader = await discoverProcessGitReader(runtime.processRunner, project.project_root);
+        const baseRef = await reader.resolveRevision(invocation.baseRef);
+        const result = await validateProposal({
+          fileSystem: runtime.fileSystem,
+          gitReader: reader,
+          project,
+          baseRef,
+          candidatePath: resolve(runtime.workingDirectory, invocation.candidatePath),
+          mode: invocation.proposalMode,
+          codeTargets: invocation.codeTargets,
+        });
+        emit(
+          runtime,
+          invocation.format,
+          response("proposal.validate", project.configuration.project_id, "ok", result, []),
+          outputTarget,
+        );
+        return VALID_EXIT_CODE;
+      } catch (error) {
+        if (error instanceof ProposalValidationError) {
+          emit(
+            runtime,
+            invocation.format,
+            response(
+              "proposal.validate",
+              project.configuration.project_id,
+              error.technical ? "error" : "blocked",
+              null,
+              [error.diagnostic],
+            ),
+            outputTarget,
+          );
+          return error.technical ? TECHNICAL_FAILURE_EXIT_CODE : BLOCKED_EXIT_CODE;
+        }
+        const diagnostic = comparisonTechnicalDiagnostic(error);
+        emit(
+          runtime,
+          invocation.format,
+          response("proposal.validate", project.configuration.project_id, "error", null, [diagnostic]),
+          outputTarget,
+        );
+        return TECHNICAL_FAILURE_EXIT_CODE;
+      }
+    }
     if (invocation.command === "tests.discover") {
       try {
         if (invocation.headRef === undefined) throw new Error("Parsed test discovery invocation has no head ref.");
