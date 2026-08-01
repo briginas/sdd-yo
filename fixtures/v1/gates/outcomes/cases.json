@@ -27,7 +27,7 @@
   ],
   "authorities": [
     "spec/capabilities/proposal-modes-and-workflow-gates.md#req-8de9e078",
-    "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-e80f09c6",
+    "spec/capabilities/proposal-modes-and-workflow-gates.md#req-e80f09c6",
     "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-a8739118",
     "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-9d265509",
     "spec/capabilities/validation-fingerprints-and-patches.md#req-964b9f80",
@@ -66,7 +66,7 @@
     "technical_failure": "Invocation, configuration, I/O, protocol, resource-limit, or internal failure produces no completed gate artifact, has no product status, and maps to CLI exit code 3.",
     "blocked_precedence": "For status-bearing gates, any definite invariant failure, negative decision, or failed required check yields BLOCKED even when a human decision is also pending.",
     "review_required": "REVIEW_REQUIRED applies only when no definite violation is established and a human decision remains necessary.",
-    "proposal_result": "A mechanically valid proposal emits a ProposalPackage. Semantic or quality concerns remain reviewable findings and do not turn the package into human approval.",
+    "proposal_result": "A mechanically valid proposal emits a ProposalPackage. Semantic concerns remain reviewable candidates and do not block the package, declare Findings, or turn it into human approval.",
     "branch_result": "A clean preparation emits ConflictReport and SpecPatch. Textual conflict or a changed affected object returns REVIEW_REQUIRED without a SpecPatch.",
     "composed_evidence_state_oracle": "fixtures/v1/freshness/cases.json"
   },

@@ -146,10 +146,10 @@ A package is the deterministic mechanical output of proposal validation.
 `code_targets` is non-empty only in `code` mode and binds every active target
 Requirement to its semantic and structural fingerprints; it is empty in the
 other modes. `affected_scope` binds the exact affected Requirement and
-Capability sets to their canonical fingerprint. In Milestone 5 the producer
-always emits `semantic_candidates: []`: the field is retained for version 1
-compatibility, but an empty value makes no semantic-review or approval claim.
-Milestone 6 populates semantic candidates and composes the full Proposal Gate.
+Capability sets to their canonical fingerprint. The Proposal Gate populates
+`semantic_candidates` deterministically from the base and candidate graphs.
+Those candidates are review inputs: they do not block an otherwise valid
+package, declare Findings, or grant approval.
 
 Candidate content accepted by the version 1 CLI lives in an SDD Project
 directory or CandidateTreeManifest. The schema reserves `archive` as a source

@@ -69,9 +69,39 @@ ProposalPackage without modifying the working tree.
 - The package includes the selected mode, base and candidate tree
   fingerprints, object-delta fingerprints and object IDs, bound code targets,
   affected-scope fingerprint and IDs, and deterministic diagnostics.
-- `semantic_candidates` is present and empty until semantic review is
-  evaluated; the package is not human approval and makes no semantic-review
-  claim.
+- `semantic_candidates` contains deterministic review candidates derived from
+  the base and candidate graphs; candidates do not block the package, declare
+  a Finding, or grant human approval.
+
+<a id="req-e80f09c6"></a>
+
+## REQ-E80F09C6 — Validate proposals without changing the working tree
+
+```sdd
+kind: behavior
+verification: automated
+```
+
+### Relations <!-- sdd:relations -->
+
+- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+- refers-to: [CON-FC16381E — Fingerprint](../concepts/fingerprint.md)
+- depends-on: [REQ-8DE9E078 — Generate a deterministic mechanical ProposalPackage](proposal-modes-and-workflow-gates.md#req-8de9e078)
+
+### Statement <!-- sdd:statement -->
+
+The Proposal Gate shall apply a proposed specification patch to a virtual base
+state, validate the candidate graph, compute change fingerprints and affected
+scope, and produce reviewable semantic candidates without modifying the
+working tree.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- Proposal validation is deterministic for identical inputs.
+- Mechanical violations block proposal package generation.
+- Semantic concerns are emitted as deterministic review candidates without
+  blocking an otherwise valid package.
+- The proposal result is not itself a Finding or human approval.
 
 <a id="req-7341dbb7"></a>
 

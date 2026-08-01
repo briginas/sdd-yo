@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 6 / Evidence, findings, and merge readiness
-- Current leaf: 6.4 — Full Proposal Gate
+- Current leaf: 6.5 — Approval-bound Branch Preparation Gate
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -659,7 +659,7 @@ Primary target Requirements:
 
 The qualitative mode claims in `REQ-983914F3`, `REQ-FB76FC6F`, and
 `REQ-13CE0529` remain proposed until their implementation/existing-behavior
-and approval evidence is composed. Full Proposal Gate findings in
+and approval evidence is composed. Full Proposal Gate semantic candidates in
 `REQ-E80F09C6`, approval-bound Branch Preparation in `REQ-A8739118`, and
 approved-delta binding in `REQ-AFD65A03` are completed in Milestone 6.
 
@@ -706,11 +706,13 @@ Bounded leaves:
       `REQ-ADF9965A`. Resolution and human-review assessment now contribute to
       the remaining Requirements, whose gate/report composition stays proposed
       until 6.4 and 6.6.
-- [ ] **6.4 — Full Proposal Gate.** Compose mechanical proposal validation with
+- [x] **6.4 — Full Proposal Gate.** Compose mechanical proposal validation with
       deterministic semantic candidates, populate ProposalPackage
       `semantic_candidates`, preserve a read-only working tree, and promote the
       completed observable contract. Approval remains external. Target
-      Requirements: `REQ-E80F09C6`, `REQ-18F84CE2`.
+      Requirements: `REQ-E80F09C6`, `REQ-18F84CE2`. Promote both Requirements.
+      Proposal concerns remain deterministic review candidates rather than
+      Findings and do not block or approve an otherwise valid package.
 - [ ] **6.5 — Approval-bound Branch Preparation Gate.** Compose current
       ApprovalEvidence with mechanical preparation; require exact mode and
       canonical object-delta binding; preserve approval across independent
@@ -798,8 +800,8 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`6.4 — Full Proposal Gate` is active. It composes mechanical proposal
-validation with deterministic semantic candidates, populates ProposalPackage
-`semantic_candidates`, and preserves a read-only working tree. It does not
-approve proposals, prepare or apply branches, compose verification or merge
-reports, add CLI operations, or perform Git side effects.
+`6.5 — Approval-bound Branch Preparation Gate` is active. It composes current
+ApprovalEvidence with mechanical preparation, binds the approved mode and
+object delta, and emits semantic candidates in ConflictReport. It does not
+apply a patch, compose verification or merge reports, add CLI operations, or
+perform Git side effects.

@@ -11,6 +11,30 @@ sdd:
 Surface likely quality and semantic compatibility problems while reserving
 final judgment for authorized humans.
 
+<a id="req-18f84ce2"></a>
+
+## REQ-18F84CE2 — Keep AI semantic analysis optional
+
+```sdd
+kind: constraint
+verification: manual
+```
+
+### Relations <!-- sdd:relations -->
+
+- refers-to: [CON-E2F84A01 — Finding](../concepts/finding.md)
+
+### Statement <!-- sdd:statement -->
+
+Model-assisted semantic analysis shall be an optional accelerator and shall not
+be a trusted decision-maker or a dependency of deterministic core validation.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- Mechanical validation works offline without a model.
+- A human may review candidates when AI is unavailable.
+- The model cannot approve, dismiss, waive, or merge.
+
 <a id="req-dff6bfa6"></a>
 
 ## REQ-DFF6BFA6 — Generate deterministic conflict candidates

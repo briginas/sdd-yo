@@ -92,34 +92,6 @@ semantic and structural specification deltas empty.
 - A changed or removed target Requirement returns `REVIEW_REQUIRED`.
 - Discovering that the contract is wrong requires a new `spec-code` Change.
 
-<a id="req-e80f09c6"></a>
-
-## REQ-E80F09C6 — Validate proposals without changing the working tree
-
-```sdd
-kind: behavior
-verification: automated
-```
-
-### Relations <!-- sdd:relations -->
-
-- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
-- refers-to: [CON-FC16381E — Fingerprint](../../../spec/concepts/fingerprint.md)
-- depends-on: [REQ-8DE9E078 — Generate a deterministic mechanical ProposalPackage](../../../spec/capabilities/proposal-modes-and-workflow-gates.md#req-8de9e078)
-
-### Statement <!-- sdd:statement -->
-
-The Proposal Gate shall apply a proposed specification patch to a virtual base
-state, validate the candidate graph, compute change fingerprints and affected
-scope, and produce reviewable findings without modifying the working tree.
-
-### Acceptance criteria <!-- sdd:acceptance -->
-
-- Proposal validation is deterministic for identical inputs.
-- Mechanical violations prevent proposal approval.
-- Semantic and quality concerns are emitted as findings.
-- The proposal result is not itself human approval.
-
 <a id="req-a8739118"></a>
 
 ## REQ-A8739118 — Prepare approved proposals against current integration state
@@ -132,7 +104,7 @@ verification: automated
 ### Relations <!-- sdd:relations -->
 
 - refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
-- depends-on: [REQ-E80F09C6 — Validate proposals without changing the working tree](#req-e80f09c6)
+- depends-on: [REQ-E80F09C6 — Validate proposals without changing the working tree](../../../spec/capabilities/proposal-modes-and-workflow-gates.md#req-e80f09c6)
 
 ### Statement <!-- sdd:statement -->
 

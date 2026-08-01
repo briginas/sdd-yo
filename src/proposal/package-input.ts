@@ -8,6 +8,7 @@ import {
   isRequirementId,
 } from "../contracts/identifiers.ts";
 import type { FileSystem } from "../platform/filesystem.ts";
+import type { SemanticCandidate } from "../verification/semantic-review.ts";
 import type { ProposalPackage } from "./validate-proposal.ts";
 import { parseProposalMode } from "./validate-proposal.ts";
 
@@ -36,6 +37,28 @@ function sortedUnique(values: readonly string[]): boolean {
 
 function fail(): never {
   throw new ProposalPackageInputError("The ProposalPackage is not a strict version 1 mechanical package.");
+}
+
+function parseSemanticCandidates(value: unknown): readonly SemanticCandidate[] {
+  if (!Array.isArray(value)) return fail();
+  const candidates = value.map((candidate): SemanticCandidate => {
+    if (
+      !record(candidate) ||
+      !exact(candidate, ["objects", "reason"]) ||
+      !Array.isArray(candidate.objects) ||
+      candidate.objects.length === 0 ||
+      !candidate.objects.every(isObjectId) ||
+      !sortedUnique(candidate.objects) ||
+      typeof candidate.reason !== "string" ||
+      candidate.reason.length === 0
+    )
+      return fail();
+    return { objects: candidate.objects, reason: candidate.reason };
+  });
+  if (!sortedUnique(candidates.map((candidate) => `${candidate.objects.join("\0")}\0${candidate.reason}`))) {
+    return fail();
+  }
+  return candidates;
 }
 
 export function parseProposalPackage(value: unknown): ProposalPackage {
@@ -128,13 +151,8 @@ export function parseProposalPackage(value: unknown): ProposalPackage {
     !sortedUnique(value.affected_scope.capabilities)
   )
     return fail();
-  if (
-    !Array.isArray(value.diagnostics) ||
-    value.diagnostics.length !== 0 ||
-    !Array.isArray(value.semantic_candidates) ||
-    value.semantic_candidates.length !== 0
-  )
-    return fail();
+  if (!Array.isArray(value.diagnostics) || value.diagnostics.length !== 0) return fail();
+  const semanticCandidates = parseSemanticCandidates(value.semantic_candidates);
   return {
     schema_version: "1.0",
     artifact_type: "proposal_package",
@@ -167,7 +185,7 @@ export function parseProposalPackage(value: unknown): ProposalPackage {
       capabilities: value.affected_scope.capabilities,
     },
     diagnostics: value.diagnostics as Diagnostic[],
-    semantic_candidates: [],
+    semantic_candidates: semanticCandidates,
   };
 }
 

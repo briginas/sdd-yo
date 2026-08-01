@@ -8,6 +8,8 @@ import { fingerprintValidatedObject } from "../fingerprint/object-fingerprint.ts
 import type { FileSystem } from "../platform/filesystem.ts";
 import type { GitReader } from "../platform/git-reader.ts";
 import { computeAffectedScope } from "../verification/affected-scope.ts";
+import { generateSemanticCandidates } from "../verification/semantic-review.ts";
+import type { SemanticCandidate } from "../verification/semantic-review.ts";
 import { loadBaseSpecificationTree, loadCandidateSpecificationTree, ProposalInputError } from "./specification-tree.ts";
 
 export type ProposalMode = "spec-code" | "spec" | "code";
@@ -37,7 +39,7 @@ export type ProposalPackage = {
     readonly capabilities: readonly string[];
   };
   readonly diagnostics: readonly Diagnostic[];
-  readonly semantic_candidates: readonly [];
+  readonly semantic_candidates: readonly SemanticCandidate[];
 };
 
 export class ProposalValidationError extends Error {
@@ -174,7 +176,7 @@ export async function validateProposal(input: {
         capabilities: scope.affected_capabilities,
       },
       diagnostics: [],
-      semantic_candidates: [],
+      semantic_candidates: generateSemanticCandidates({ base: base.graph, candidate: candidate.tree.graph }),
     };
   } catch (error) {
     if (error instanceof ProposalValidationError) throw error;

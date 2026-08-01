@@ -9,6 +9,7 @@ import test from "node:test";
 
 import { runCli } from "../src/cli/run-cli.ts";
 import type { Fingerprint, ProjectPath } from "../src/contracts/identifiers.ts";
+import { parseProposalPackage } from "../src/proposal/package-input.ts";
 import { fingerprintSpecificationTree } from "../src/proposal/specification-tree.ts";
 import { nodeFileSystem } from "../src/platform/node-filesystem.ts";
 import { nodeProcessRunner } from "../src/platform/node-process-runner.ts";
@@ -84,7 +85,7 @@ test("REQ-8DE9E078 specification-tree fingerprint hashes sorted project paths an
   assert.equal(fingerprintSpecificationTree(files), `sha256:${createHash("sha256").update(canonical).digest("hex")}`);
 });
 
-test("REQ-E26A859E REQ-8DE9E078 proposal validate deterministically emits directory and manifest packages without writes", async () => {
+test("REQ-E26A859E REQ-8DE9E078 REQ-E80F09C6 REQ-18F84CE2 proposal validate deterministically emits directory and manifest packages without writes", async () => {
   const { root, base, projectId } = await repository();
   const candidate = await mkdtemp(join(tmpdir(), "sdd-proposal-candidate-"));
   await cp(join(root, ".sdd"), join(candidate, ".sdd"), { recursive: true });
@@ -150,6 +151,47 @@ test("REQ-E26A859E REQ-8DE9E078 proposal validate deterministically emits direct
     ...envelope.result,
     candidate: { ...envelope.result.candidate, source: "manifest" },
   });
+});
+
+test("REQ-E80F09C6 REQ-18F84CE2 emits deterministic review candidates without blocking or approval", async () => {
+  const { root, base } = await repository();
+  const candidate = await mkdtemp(join(tmpdir(), "sdd-proposal-semantic-candidate-"));
+  await cp(join(root, ".sdd"), join(candidate, ".sdd"), { recursive: true });
+  await cp(join(root, "spec"), join(candidate, "spec"), { recursive: true });
+  const capabilityPath = join(candidate, "spec/capabilities/delivery.md");
+  await writeFile(
+    capabilityPath,
+    `${await readFile(capabilityPath, "utf8")}\n<a id="req-a1000002"></a>\n\n## REQ-A1000002 — Record delivery\n\n\`\`\`sdd\nkind: behavior\nverification: automated\n\`\`\`\n\n### Relations <!-- sdd:relations -->\n\n- depends-on: [REQ-A1000001 — Deliver item](delivery.md#req-a1000001)\n\n### Statement <!-- sdd:statement -->\n\nThe system shall record each delivered item.\n\n### Acceptance criteria <!-- sdd:acceptance -->\n\n- The delivery record is observable.\n`,
+  );
+  const before = (await executeFile("git", ["status", "--porcelain=v1"], { cwd: root })).stdout;
+  const argv = [
+    "proposal",
+    "validate",
+    "--mode",
+    "spec-code",
+    "--base",
+    base,
+    "--candidate",
+    candidate,
+    "--format",
+    "json",
+  ];
+  const first = await execute(argv, root);
+  const second = await execute(argv, root);
+  assert.equal(first.exitCode, 0, first.standardOutput);
+  assert.equal(first.standardOutput, second.standardOutput);
+  const envelope = JSON.parse(first.standardOutput) as {
+    status: string;
+    result: Record<string, unknown> & { diagnostics: readonly unknown[]; semantic_candidates: readonly unknown[] };
+  };
+  assert.equal(envelope.status, "ok");
+  assert.deepEqual(envelope.result.diagnostics, []);
+  assert.deepEqual(envelope.result.semantic_candidates, [
+    { objects: ["REQ-A1000001", "REQ-A1000002"], reason: "requirement-dependency" },
+  ]);
+  assert.deepEqual(parseProposalPackage(envelope.result).semantic_candidates, envelope.result.semantic_candidates);
+  assert.equal(Object.hasOwn(envelope.result, "approval"), false);
+  assert.equal((await executeFile("git", ["status", "--porcelain=v1"], { cwd: root })).stdout, before);
 });
 
 test("REQ-E26A859E REQ-8DE9E078 proposal mechanical mode rules block invalid deltas and bind code targets", async () => {
