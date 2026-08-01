@@ -21,6 +21,8 @@ import { buildCurrentProjectIdentityIndex, ProjectIdentityError } from "../ids/p
 import { fingerprintValidatedObject } from "../fingerprint/object-fingerprint.ts";
 import type { ValidatedSpecificationGraph } from "../graph/validate-graph.ts";
 import { validateSpecificationGraph } from "../graph/validate-graph.ts";
+import type { GraphTrace } from "../graph/query-graph.ts";
+import { directReverseRelations, traceGraphObject } from "../graph/query-graph.ts";
 import { loadSpecificationDocuments } from "../markdown/load-documents.ts";
 import type { CapabilityDocument, ConceptDocument, Requirement, SpecificationDocument } from "../markdown/types.ts";
 import { resolveConfiguredPath, resolveProject } from "../config/resolve-project.ts";
@@ -31,7 +33,7 @@ export const TECHNICAL_FAILURE_EXIT_CODE = 3 as const;
 
 type ExitCode = typeof VALID_EXIT_CODE | typeof BLOCKED_EXIT_CODE | typeof TECHNICAL_FAILURE_EXIT_CODE;
 type OutputFormat = "human" | "json";
-type Command = "init" | "id" | "validate" | "inspect";
+type Command = "init" | "id" | "validate" | "inspect" | "trace";
 type ResponseCommand = Command | "unknown";
 
 export type CliRuntime = {
@@ -96,11 +98,14 @@ export type InspectResult = {
   readonly fingerprints: Readonly<Record<string, string>>;
 };
 
+export type TraceResult = GraphTrace;
+
 export type CliResponse =
   | CliResponseEnvelope<"init", "ok", InitResult>
   | CliResponseEnvelope<"id", "ok", IdResult>
   | CliResponseEnvelope<"validate", "ok", ValidateResult>
   | CliResponseEnvelope<"inspect", "ok", InspectResult>
+  | CliResponseEnvelope<"trace", "ok", TraceResult>
   | CliResponseEnvelope<Command, "blocked", { readonly valid: false } | null>
   | CliResponseEnvelope<ResponseCommand, "error", null>;
 
@@ -118,13 +123,13 @@ function parseInvocation(
   argv: readonly string[],
 ): { ok: true; value: Invocation } | { ok: false; diagnostic: Diagnostic } {
   const command = argv[0];
-  if (command !== "init" && command !== "id" && command !== "validate" && command !== "inspect")
+  if (command !== "init" && command !== "id" && command !== "validate" && command !== "inspect" && command !== "trace")
     return {
       ok: false,
       diagnostic: cliDiagnostic(
         "SDD_CONFIG_CLI_COMMAND_INVALID",
         "The command is missing or unsupported.",
-        "Use sdd init, sdd id, sdd validate, or sdd inspect <object-id>.",
+        "Use sdd init, sdd id, sdd validate, sdd inspect <object-id>, or sdd trace <object-id>.",
       ),
     };
   let format: OutputFormat = "human";
@@ -253,7 +258,8 @@ function parseInvocation(
         };
       includeExplanatory = true;
       index += 1;
-    } else if (command === "inspect" && objectId === undefined && isObjectId(argument)) objectId = argument;
+    } else if ((command === "inspect" || command === "trace") && objectId === undefined && isObjectId(argument))
+      objectId = argument;
     else if (command === "id" && idKind === undefined && isIdKind(argument)) idKind = argument;
     else
       return {
@@ -322,12 +328,12 @@ function parseInvocation(
         "Supply project, capability, requirement, or concept.",
       ),
     };
-  if (command === "inspect" && objectId === undefined)
+  if ((command === "inspect" || command === "trace") && objectId === undefined)
     return {
       ok: false,
       diagnostic: cliDiagnostic(
         "SDD_CONFIG_CLI_OBJECT_ID_REQUIRED",
-        "inspect requires an object ID.",
+        `${command} requires an object ID.`,
         "Supply a CAP, REQ, or CON ID.",
       ),
     };
@@ -424,23 +430,7 @@ function inspectResult(
   if (object === undefined) return undefined;
   const document = owningDocument(graph, objectId);
   if (document === undefined) throw new Error("Validated object has no owning document.");
-  const reverseRelations = [...graph.objects.values()]
-    .flatMap((candidate) =>
-      relations(candidate)
-        .filter((relation) => relation.target_id === objectId)
-        .map((relation) => ({ type: relation.type, source_id: candidate.id })),
-    )
-    .toSorted((left, right) =>
-      left.type !== right.type
-        ? left.type < right.type
-          ? -1
-          : 1
-        : left.source_id < right.source_id
-          ? -1
-          : left.source_id > right.source_id
-            ? 1
-            : 0,
-    );
+  const reverseRelations = directReverseRelations(graph, objectId);
   let value: Record<string, unknown>;
   if ("anchor" in object)
     value = {
@@ -518,6 +508,15 @@ function humanView(value: CliResponse): string {
   } else if (value.command === "inspect" && value.status === "ok") {
     const result = value.result as unknown as { object: { id: string; title: string }; document_path: string };
     lines.push(`${result.object.id} — ${result.object.title}`, `document: ${result.document_path}`);
+  } else if (value.command === "trace" && value.status === "ok") {
+    const result = value.result as TraceResult;
+    lines.push(
+      `object: ${result.object_id}`,
+      `ancestry: ${result.ancestry.join(", ") || "none"}`,
+      `dependencies: ${result.dependencies.join(", ") || "none"}`,
+      `dependents: ${result.dependents.join(", ") || "none"}`,
+      `referrers: ${result.referrers.map((item) => `${item.source_id} (${item.type})`).join(", ") || "none"}`,
+    );
   } else if (value.command === "init" && value.status === "ok") {
     const result = value.result as InitResult;
     lines.push(...result.created_paths.map((path) => `created: ${path}`));
@@ -644,6 +643,7 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
     runtime.argv[0] === "init" ||
     runtime.argv[0] === "id" ||
     runtime.argv[0] === "inspect" ||
+    runtime.argv[0] === "trace" ||
     runtime.argv[0] === "validate"
       ? runtime.argv[0]
       : "unknown";
@@ -890,6 +890,30 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
         runtime,
         invocation.format,
         response(invocation.command, project.configuration.project_id, "ok", result, graph.diagnostics),
+        outputTarget,
+      );
+      return VALID_EXIT_CODE;
+    }
+    if (invocation.command === "trace") {
+      const result = traceGraphObject(graph.value, invocation.objectId!);
+      if (result === undefined) {
+        const diagnostic = cliDiagnostic(
+          "SDD_GRAPH_OBJECT_UNKNOWN",
+          "The requested object does not exist in the active graph.",
+          "Use an active CAP, REQ, or CON ID.",
+        );
+        emit(
+          runtime,
+          invocation.format,
+          response("trace", project.configuration.project_id, "error", null, [diagnostic]),
+          outputTarget,
+        );
+        return TECHNICAL_FAILURE_EXIT_CODE;
+      }
+      emit(
+        runtime,
+        invocation.format,
+        response("trace", project.configuration.project_id, "ok", result, graph.diagnostics),
         outputTarget,
       );
       return VALID_EXIT_CODE;

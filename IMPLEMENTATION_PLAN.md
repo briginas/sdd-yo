@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 3 / Initialization, IDs, trace, and diff
-- Current leaf: 3.3 Graph queries and graph-only trace
+- Current leaf: 3.4 Semantic and structural diff
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -517,7 +517,7 @@ Mode: `spec-code`.
       and block duplicate project IDs in one repository. Wire project-aware
       `sdd id` and validation, then promote `REQ-BFC18F28`, `REQ-2C8E8085`, and
       `REQ-8B656FC5`.
-- [ ] **3.3 — Graph queries and graph-only trace.** Extract deterministic
+- [x] **3.3 — Graph queries and graph-only trace.** Extract deterministic
       reverse-relation queries from `inspect`; implement ownership, transitive
       dependency/dependent closure, direct referrers, and graph-only `trace`
       without executing or claiming tests. Promote `REQ-24073D4F`.

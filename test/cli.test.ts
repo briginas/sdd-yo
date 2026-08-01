@@ -458,6 +458,43 @@ test("REQ-7C848ED0 REQ-1095E571 inspect returns normative data, relations, paths
   assert.ok(conceptValue.result.reverse_relations.some((relation) => relation.source_id === "REQ-0361538D"));
 });
 
+test("REQ-24073D4F trace returns only deterministic graph relationships without test conclusions", async () => {
+  const traced = await execute(["trace", "REQ-DD91AD0F", "--format", "json"]);
+  assert.equal(traced.exitCode, 0, traced.standardOutput);
+  const value = JSON.parse(traced.standardOutput) as {
+    status: string;
+    result: {
+      object_id: string;
+      ancestry: readonly string[];
+      dependencies: readonly string[];
+      dependents: readonly string[];
+      referrers: readonly { type: string; source_id: string }[];
+    };
+  };
+  assert.equal(value.status, "ok");
+  assert.deepEqual(Object.keys(value.result), ["object_id", "ancestry", "dependencies", "dependents", "referrers"]);
+  assert.deepEqual(value.result, {
+    object_id: "REQ-DD91AD0F",
+    ancestry: ["CAP-79E22870"],
+    dependencies: [],
+    dependents: [],
+    referrers: [],
+  });
+  assert.equal("mapped_tests" in value.result, false);
+  assert.equal("coverage" in value.result, false);
+
+  const human = await execute(["trace", "REQ-DD91AD0F"]);
+  assert.equal(human.exitCode, 0);
+  assert.match(human.standardOutput, /^trace: ok\nproject: SDD-17EF8B29\nobject: REQ-DD91AD0F\n/u);
+
+  const missing = await execute(["trace", "REQ-FFFFFFFF", "--format", "json"]);
+  assert.equal(missing.exitCode, 3);
+  assert.equal(
+    (JSON.parse(missing.standardOutput) as { diagnostics: readonly { code: string }[] }).diagnostics[0]?.code,
+    "SDD_GRAPH_OBJECT_UNKNOWN",
+  );
+});
+
 test("REQ-7D93D64A maps blocking validation and technical failures to nonzero exits with remediation", async () => {
   const root = await mkdtemp(join(tmpdir(), "sdd-cli-invalid-"));
   await mkdir(join(root, ".sdd"));

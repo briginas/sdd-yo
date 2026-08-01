@@ -60,3 +60,38 @@ output rendered as a replaceable view over the same result.
 - Paths are project-relative and use `/`.
 - Stable diagnostic codes are available to automation.
 - Unknown newer major schemas are rejected.
+
+<a id="req-24073d4f"></a>
+
+## REQ-24073D4F — Query the active specification graph
+
+```sdd
+kind: behavior
+verification: automated
+```
+
+### Relations <!-- sdd:relations -->
+
+- refers-to: [CON-2C550D5B — Capability](../concepts/capability.md)
+- refers-to: [CON-9F69CC0E — Requirement](../concepts/requirement.md)
+- refers-to: [CON-88F1C731 — Domain Concept](../concepts/domain-concept.md)
+
+### Statement <!-- sdd:statement -->
+
+The CLI shall query one validated active specification graph by stable object
+identity and report deterministic forward and reverse graph relationships
+without executing tests.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- `inspect` reports direct inbound active relations with relation type and
+  source object ID.
+- `trace` reports a selected Requirement's owning Capability, the transitive
+  closure of its outgoing and incoming `depends-on` relations, and direct
+  objects that refer to the selected object.
+- Capability and Domain Concept ancestry and dependency closures are empty.
+- The selected object is excluded from dependency closures, and every set-like
+  result is sorted by canonical object ID.
+- Graph-only `trace` succeeds without a TestIndex and reports neither mapped
+  tests nor test-coverage conclusions.
+- Unknown or inactive object IDs produce a stable non-passing diagnostic.
