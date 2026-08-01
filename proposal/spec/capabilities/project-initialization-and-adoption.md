@@ -11,31 +11,6 @@ sdd:
 Initialize SDD Yo in new or existing Git repositories and establish an honest,
 incremental path from no specification to a governed product contract.
 
-<a id="req-bfc18f28"></a>
-
-## REQ-BFC18F28 — Assign stable project identity
-
-```sdd
-kind: invariant
-verification: automated
-```
-
-### Relations <!-- sdd:relations -->
-
-- refers-to: [CON-EA57C937 — SDD Project](../../../spec/concepts/sdd-project.md)
-
-### Statement <!-- sdd:statement -->
-
-Initialization shall assign the SDD Project one cryptographically random,
-stable `SDD-XXXXXXXX` identifier.
-
-### Acceptance criteria <!-- sdd:acceptance -->
-
-- The identifier uses eight uppercase hexadecimal characters.
-- Moving the project directory does not change the identifier.
-- Duplicate SDD Project identifiers within one Git repository block
-  validation.
-
 <a id="req-784f200f"></a>
 
 ## REQ-784F200F — Support incremental adoption

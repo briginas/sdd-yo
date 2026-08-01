@@ -81,20 +81,43 @@ async function graphObjectIds(
   return new Set(graph.value.objects.keys());
 }
 
+export async function loadCanonicalProjectObjectIdsAt(
+  reader: GitReader,
+  revision: GitObjectId,
+  selectedProjectId: ProjectId,
+): Promise<ReadonlySet<ObjectId>> {
+  const entries = await reader.listEntriesAt(revision);
+  const selected = (await projectsAt(reader, entries)).filter((project) => project.projectId === selectedProjectId);
+  if (selected.length > 1) throw new HistoryIndexError("A reachable tree duplicates the selected project ID.");
+  const project = selected[0];
+  return project === undefined ? new Set() : graphObjectIds(reader, entries, project);
+}
+
 export async function buildCanonicalHistoryIndex(
   reader: GitReader,
   historyTip: GitObjectId,
   selectedProjectId: ProjectId,
 ): Promise<CanonicalHistoryIndex> {
-  const revisions = await reader.listReachableRevisions(historyTip);
+  const blobCache = new Map<GitObjectId, Uint8Array>();
+  const cachedReader: GitReader = {
+    ...reader,
+    readBlob: async (objectId) => {
+      const cached = blobCache.get(objectId);
+      if (cached !== undefined) return cached;
+      const bytes = await reader.readBlob(objectId);
+      blobCache.set(objectId, bytes);
+      return bytes;
+    },
+  };
+  const revisions = await cachedReader.listReachableRevisions(historyTip);
   if (revisions[0] !== historyTip) throw new HistoryIndexError("Reachable history does not start at its resolved tip.");
   const reservedObjectIds = new Set<ObjectId>();
   const reservedProjectIds = new Set<ProjectId>();
   let activeObjectIds: ReadonlySet<ObjectId> | undefined;
 
   for (const [index, revision] of revisions.entries()) {
-    const entries = await reader.listEntriesAt(revision);
-    const projects = await projectsAt(reader, entries);
+    const entries = await cachedReader.listEntriesAt(revision);
+    const projects = await projectsAt(cachedReader, entries);
     for (const project of projects) reservedProjectIds.add(project.projectId);
     const selected = projects.filter((project) => project.projectId === selectedProjectId);
     if (selected.length > 1) throw new HistoryIndexError("A reachable tree duplicates the selected project ID.");
@@ -104,14 +127,14 @@ export async function buildCanonicalHistoryIndex(
     }
     const selectedProject = selected[0];
     if (selectedProject === undefined) throw new HistoryIndexError("Selected project lookup failed.");
-    const objectIds = await graphObjectIds(reader, entries, selectedProject);
+    const objectIds = await graphObjectIds(cachedReader, entries, selectedProject);
     for (const objectId of objectIds) reservedObjectIds.add(objectId);
     if (index === 0) activeObjectIds = objectIds;
   }
 
   return {
     historyTip,
-    status: await reader.historyStatus(),
+    status: await cachedReader.historyStatus(),
     activeObjectIds: activeObjectIds ?? new Set(),
     reservedObjectIds,
     reservedProjectIds,

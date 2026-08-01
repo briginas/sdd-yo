@@ -1,13 +1,47 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, symlink, writeFile } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { mkdir, mkdtemp, readFile, symlink, unlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { promisify } from "node:util";
 import test from "node:test";
 
 import { nodeFileSystem } from "../src/platform/node-filesystem.ts";
 import { nodeProjectWriter } from "../src/platform/node-project-writer.ts";
 import { nodeRandomness } from "../src/platform/node-randomness.ts";
+import { nodeProcessRunner } from "../src/platform/node-process-runner.ts";
 import { runCli } from "../src/cli/run-cli.ts";
+
+const executeFile = promisify(execFile);
+
+const emptyIndex = `---
+sdd:
+  type: index
+---
+# Product specification
+
+## Capabilities <!-- sdd:capabilities -->
+
+## Domain concepts <!-- sdd:concepts -->
+`;
+
+const reusedCapability = `---
+sdd:
+  type: capability
+  id: CAP-A1000001
+---
+
+# Historical capability
+
+## Purpose <!-- sdd:purpose -->
+
+Exercise historical identifier reservation.
+`;
+
+const indexWithCapability = emptyIndex.replace(
+  "## Domain concepts",
+  "- [CAP-A1000001 — Historical capability](capabilities/historical.md)\n\n## Domain concepts",
+);
 
 async function execute(argv: readonly string[], cwd = process.cwd()) {
   const standardOutput: string[] = [];
@@ -18,6 +52,7 @@ async function execute(argv: readonly string[], cwd = process.cwd()) {
     fileSystem: nodeFileSystem,
     projectWriter: nodeProjectWriter,
     randomness: nodeRandomness,
+    processRunner: nodeProcessRunner,
     writeStandardOutput: (message) => standardOutput.push(message),
     writeStandardError: (message) => standardError.push(message),
     writeOutputFile: () => {
@@ -55,7 +90,17 @@ test("REQ-382BBBD6 REQ-BFC18F28 init creates a stable project without overwritin
 
   const validated = await execute(["validate", "--format", "json"], root);
   assert.equal(validated.exitCode, 0, validated.standardOutput);
-  assert.equal((JSON.parse(validated.standardOutput) as { project_id: string }).project_id, value.project_id);
+  const validatedValue = JSON.parse(validated.standardOutput) as {
+    project_id: string;
+    result: { history: { status: string; resolved_ref: string | null } };
+    diagnostics: readonly { code: string; severity: string }[];
+  };
+  assert.equal(validatedValue.project_id, value.project_id);
+  assert.deepEqual(validatedValue.result.history, { status: "incomplete", resolved_ref: null });
+  assert.deepEqual(
+    validatedValue.diagnostics.map(({ code, severity }) => ({ code, severity })),
+    [{ code: "SDD_GIT_HISTORY_INCOMPLETE", severity: "warning" }],
+  );
 
   const repeated = await execute(["init", "--format", "json"], root);
   assert.equal(repeated.exitCode, 3);
@@ -136,15 +181,196 @@ test("REQ-2C8E8085 projectless id rejects invalid counts and history claims", as
   );
 });
 
-test("REQ-2C8E8085 id does not claim unchecked history when a project resolves", async () => {
+test("REQ-2C8E8085 REQ-8B656FC5 project-aware id reserves against complete history", async () => {
   const generated = await execute(["id", "requirement", "--format", "json"]);
-  assert.equal(generated.exitCode, 3);
+  assert.equal(generated.exitCode, 0, generated.standardOutput);
   const value = JSON.parse(generated.standardOutput) as {
     project_id: string;
-    diagnostics: readonly { code: string }[];
+    result: { candidates: readonly string[]; history: { status: string; resolved_ref: string | null } };
   };
   assert.equal(value.project_id, "SDD-17EF8B29");
-  assert.equal(value.diagnostics[0]?.code, "SDD_ID_HISTORY_UNAVAILABLE");
+  assert.equal(value.result.history.status, "complete");
+  assert.equal(typeof value.result.history.resolved_ref, "string");
+  assert.match(value.result.candidates[0] ?? "", /^REQ-[0-9A-F]{8}$/u);
+});
+
+test("REQ-2C8E8085 manual IDs cannot reuse a removed canonical history identity", async () => {
+  const root = await mkdtemp(join(tmpdir(), "sdd-cli-id-reuse-"));
+  await executeFile("git", ["init", "--quiet", "--initial-branch", "main"], { cwd: root });
+  await executeFile("git", ["config", "user.name", "SDD Test"], { cwd: root });
+  await executeFile("git", ["config", "user.email", "sdd@example.invalid"], { cwd: root });
+  assert.equal((await execute(["init", "--format", "json"], root)).exitCode, 0);
+  await writeFile(join(root, "spec/README.md"), indexWithCapability);
+  await writeFile(join(root, "spec/capabilities/historical.md"), reusedCapability);
+  await executeFile("git", ["add", ".sdd/config.yaml", "spec"], { cwd: root });
+  await executeFile("git", ["commit", "--quiet", "-m", "define capability"], { cwd: root });
+  await writeFile(join(root, "spec/README.md"), emptyIndex);
+  await unlink(join(root, "spec/capabilities/historical.md"));
+  await executeFile("git", ["add", "--all"], { cwd: root });
+  await executeFile("git", ["commit", "--quiet", "-m", "remove capability"], { cwd: root });
+
+  await writeFile(join(root, "spec/README.md"), indexWithCapability);
+  await writeFile(join(root, "spec/capabilities/historical.md"), reusedCapability);
+  const validated = await execute(["validate", "--format", "json"], root);
+  assert.equal(validated.exitCode, 1, validated.standardOutput);
+  const value = JSON.parse(validated.standardOutput) as {
+    diagnostics: readonly { code: string; object_id?: string }[];
+  };
+  assert.deepEqual(value.diagnostics[0], {
+    code: "SDD_ID_REUSED",
+    severity: "error",
+    message: "A newly introduced canonical object ID was already defined in reachable project history.",
+    details: {
+      remediation: "Assign the object a new random ID and preserve the historical ID as permanently reserved.",
+    },
+    object_id: "CAP-A1000001",
+  });
+});
+
+test("REQ-BFC18F28 duplicate current project IDs block repository validation", async () => {
+  const root = await mkdtemp(join(tmpdir(), "sdd-cli-project-duplicate-"));
+  await executeFile("git", ["init", "--quiet", "--initial-branch", "main"], { cwd: root });
+  assert.equal((await execute(["init", "--format", "json"], root)).exitCode, 0);
+  await writeFile(join(root, ".gitignore"), "nested/\n");
+  await mkdir(join(root, "nested/.sdd"), { recursive: true });
+  await mkdir(join(root, "nested/spec"), { recursive: true });
+  await writeFile(join(root, "nested/.sdd/config.yaml"), await readFile(join(root, ".sdd/config.yaml")));
+  await writeFile(join(root, "nested/spec/README.md"), emptyIndex);
+
+  const validated = await execute(["validate", "--format", "json"], root);
+  assert.equal(validated.exitCode, 1, validated.standardOutput);
+  assert.equal(
+    (JSON.parse(validated.standardOutput) as { diagnostics: readonly { code: string }[] }).diagnostics[0]?.code,
+    "SDD_ID_PROJECT_DUPLICATE",
+  );
+});
+
+test("REQ-BFC18F28 deleted tracked configs are not current project identities", async () => {
+  const root = await mkdtemp(join(tmpdir(), "sdd-cli-project-deleted-"));
+  await executeFile("git", ["init", "--quiet", "--initial-branch", "main"], { cwd: root });
+  await executeFile("git", ["config", "user.name", "SDD Test"], { cwd: root });
+  await executeFile("git", ["config", "user.email", "sdd@example.invalid"], { cwd: root });
+  assert.equal((await execute(["init", "--format", "json"], root)).exitCode, 0);
+  await mkdir(join(root, "nested/.sdd"), { recursive: true });
+  await mkdir(join(root, "nested/spec"), { recursive: true });
+  const nestedConfig = (await readFile(join(root, ".sdd/config.yaml"), "utf8")).replace(
+    /^project_id: SDD-[0-9A-F]{8}$/mu,
+    "project_id: SDD-A1000002",
+  );
+  await writeFile(join(root, "nested/.sdd/config.yaml"), nestedConfig);
+  await writeFile(join(root, "nested/spec/README.md"), emptyIndex);
+  await executeFile("git", ["add", "."], { cwd: root });
+  await executeFile("git", ["commit", "--quiet", "-m", "two distinct projects"], { cwd: root });
+  await unlink(join(root, "nested/.sdd/config.yaml"));
+
+  const validated = await execute(["validate", "--format", "json"], root);
+  assert.equal(validated.exitCode, 0, validated.standardOutput);
+});
+
+test("REQ-2C8E8085 rejects an ID independently introduced on the working and integration branches", async () => {
+  const root = await mkdtemp(join(tmpdir(), "sdd-cli-parallel-id-"));
+  await executeFile("git", ["init", "--quiet", "--initial-branch", "main"], { cwd: root });
+  await executeFile("git", ["config", "user.name", "SDD Test"], { cwd: root });
+  await executeFile("git", ["config", "user.email", "sdd@example.invalid"], { cwd: root });
+  assert.equal((await execute(["init", "--format", "json"], root)).exitCode, 0);
+  await executeFile("git", ["add", ".sdd/config.yaml", "spec"], { cwd: root });
+  await executeFile("git", ["commit", "--quiet", "-m", "baseline"], { cwd: root });
+  await executeFile("git", ["switch", "--quiet", "-c", "feature"], { cwd: root });
+  await writeFile(join(root, "spec/README.md"), indexWithCapability);
+  await writeFile(join(root, "spec/capabilities/historical.md"), reusedCapability);
+  await executeFile("git", ["add", "spec"], { cwd: root });
+  await executeFile("git", ["commit", "--quiet", "-m", "feature identity"], { cwd: root });
+  await executeFile("git", ["switch", "--quiet", "main"], { cwd: root });
+  await mkdir(join(root, "spec/capabilities"), { recursive: true });
+  await writeFile(join(root, "spec/README.md"), indexWithCapability);
+  await writeFile(join(root, "spec/capabilities/historical.md"), reusedCapability);
+  await executeFile("git", ["add", "spec"], { cwd: root });
+  await executeFile("git", ["commit", "--quiet", "-m", "parallel identity"], { cwd: root });
+  await executeFile("git", ["switch", "--quiet", "feature"], { cwd: root });
+
+  const validated = await execute(["validate", "--format", "json"], root);
+  assert.equal(validated.exitCode, 1, validated.standardOutput);
+  assert.equal(
+    (JSON.parse(validated.standardOutput) as { diagnostics: readonly { code: string }[] }).diagnostics[0]?.code,
+    "SDD_ID_REUSED",
+  );
+});
+
+test("REQ-2C8E8085 unchanged IDs do not require scanning older malformed history", async () => {
+  const root = await mkdtemp(join(tmpdir(), "sdd-cli-unchanged-id-"));
+  await executeFile("git", ["init", "--quiet", "--initial-branch", "main"], { cwd: root });
+  await executeFile("git", ["config", "user.name", "SDD Test"], { cwd: root });
+  await executeFile("git", ["config", "user.email", "sdd@example.invalid"], { cwd: root });
+  assert.equal((await execute(["init", "--format", "json"], root)).exitCode, 0);
+  await writeFile(
+    join(root, "spec/README.md"),
+    emptyIndex.replace("## Domain concepts", "- [CAP-A1000001 — Missing](missing.md)\n\n## Domain concepts"),
+  );
+  await executeFile("git", ["add", ".sdd/config.yaml", "spec"], { cwd: root });
+  await executeFile("git", ["commit", "--quiet", "-m", "old malformed graph"], { cwd: root });
+  await writeFile(join(root, "spec/README.md"), emptyIndex);
+  await executeFile("git", ["add", "spec/README.md"], { cwd: root });
+  await executeFile("git", ["commit", "--quiet", "-m", "valid current graph"], { cwd: root });
+
+  const validated = await execute(["validate", "--format", "json"], root);
+  assert.equal(validated.exitCode, 0, validated.standardOutput);
+  assert.equal(
+    (JSON.parse(validated.standardOutput) as { result: { history: { status: string } } }).result.history.status,
+    "complete",
+  );
+});
+
+test("REQ-8B656FC5 unresolved configured integration refs are technical failures", async () => {
+  const root = await mkdtemp(join(tmpdir(), "sdd-cli-ref-unresolved-"));
+  await executeFile("git", ["init", "--quiet", "--initial-branch", "trunk"], { cwd: root });
+  await executeFile("git", ["config", "user.name", "SDD Test"], { cwd: root });
+  await executeFile("git", ["config", "user.email", "sdd@example.invalid"], { cwd: root });
+  assert.equal((await execute(["init", "--format", "json"], root)).exitCode, 0);
+  await executeFile("git", ["add", ".sdd/config.yaml", "spec"], { cwd: root });
+  await executeFile("git", ["commit", "--quiet", "-m", "trunk only"], { cwd: root });
+
+  const validated = await execute(["validate", "--format", "json"], root);
+  assert.equal(validated.exitCode, 3, validated.standardOutput);
+  assert.equal(
+    (JSON.parse(validated.standardOutput) as { diagnostics: readonly { code: string }[] }).diagnostics[0]?.code,
+    "SDD_GIT_REF_UNRESOLVED",
+  );
+});
+
+test("REQ-8B656FC5 incomplete history warns on validate and blocks reserved ID issuance", async () => {
+  const origin = await mkdtemp(join(tmpdir(), "sdd-cli-shallow-origin-"));
+  await executeFile("git", ["init", "--quiet", "--initial-branch", "main"], { cwd: origin });
+  await executeFile("git", ["config", "user.name", "SDD Test"], { cwd: origin });
+  await executeFile("git", ["config", "user.email", "sdd@example.invalid"], { cwd: origin });
+  assert.equal((await execute(["init", "--format", "json"], origin)).exitCode, 0);
+  await executeFile("git", ["add", ".sdd/config.yaml", "spec"], { cwd: origin });
+  await executeFile("git", ["commit", "--quiet", "-m", "initial"], { cwd: origin });
+  await writeFile(join(origin, "README.md"), "second commit\n");
+  await executeFile("git", ["add", "README.md"], { cwd: origin });
+  await executeFile("git", ["commit", "--quiet", "-m", "second"], { cwd: origin });
+
+  const parent = await mkdtemp(join(tmpdir(), "sdd-cli-shallow-clone-"));
+  const clone = join(parent, "project");
+  await executeFile("git", ["clone", "--quiet", "--depth", "1", `file://${origin}`, clone]);
+  const validated = await execute(["validate", "--format", "json"], clone);
+  assert.equal(validated.exitCode, 0, validated.standardOutput);
+  const validationValue = JSON.parse(validated.standardOutput) as {
+    result: { history: { status: string } };
+    diagnostics: readonly { code: string; severity: string }[];
+  };
+  assert.equal(validationValue.result.history.status, "incomplete");
+  assert.ok(
+    validationValue.diagnostics.some(
+      (diagnostic) => diagnostic.code === "SDD_GIT_HISTORY_INCOMPLETE" && diagnostic.severity === "warning",
+    ),
+  );
+
+  const generated = await execute(["id", "concept", "--format", "json"], clone);
+  assert.equal(generated.exitCode, 3, generated.standardOutput);
+  assert.equal(
+    (JSON.parse(generated.standardOutput) as { diagnostics: readonly { code: string }[] }).diagnostics[0]?.code,
+    "SDD_GIT_HISTORY_INCOMPLETE",
+  );
 });
 
 test("REQ-0361538D REQ-7C848ED0 validate emits deterministic versioned JSON and a human view", async () => {
@@ -158,7 +384,11 @@ test("REQ-0361538D REQ-7C848ED0 validate emits deterministic versioned JSON and 
     command: string;
     project_id: string;
     status: string;
-    result: { valid: boolean; fingerprints: readonly { id: string }[] };
+    result: {
+      valid: boolean;
+      history: { status: string; resolved_ref: string | null };
+      fingerprints: readonly { id: string }[];
+    };
     diagnostics: readonly { details: { remediation?: string } }[];
   };
   assert.equal(value.schema_version, "1.0");
@@ -166,6 +396,8 @@ test("REQ-0361538D REQ-7C848ED0 validate emits deterministic versioned JSON and 
   assert.equal(value.project_id, "SDD-17EF8B29");
   assert.equal(value.status, "ok");
   assert.equal(value.result.valid, true);
+  assert.equal(value.result.history.status, "complete");
+  assert.equal(typeof value.result.history.resolved_ref, "string");
   assert.deepEqual(
     value.result.fingerprints.map((item) => item.id),
     value.result.fingerprints.map((item) => item.id).toSorted(),
@@ -288,6 +520,7 @@ test("REQ-7C848ED0 writes primary output to a project-relative target and accept
     fileSystem: nodeFileSystem,
     projectWriter: nodeProjectWriter,
     randomness: nodeRandomness,
+    processRunner: nodeProcessRunner,
     writeStandardOutput: (message) => standardOutput.push(message),
     writeStandardError: () => {},
     writeOutputFile: (path, content) => {
@@ -309,6 +542,7 @@ test("REQ-7D93D64A converts an injected output crash to exit 3 without a passing
     fileSystem: nodeFileSystem,
     projectWriter: nodeProjectWriter,
     randomness: nodeRandomness,
+    processRunner: nodeProcessRunner,
     writeStandardOutput: (message) => standardOutput.push(message),
     writeStandardError: (message) => standardError.push(message),
     writeOutputFile: () => {

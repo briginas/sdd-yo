@@ -6,6 +6,7 @@ export type GitReader = {
   findMergeBase(left: GitObjectId, right: GitObjectId): Promise<GitObjectId | undefined>;
   historyStatus(): Promise<"complete" | "incomplete">;
   listReachableRevisions(revision: GitObjectId): Promise<readonly GitObjectId[]>;
+  listWorkingTreeConfigPaths(): Promise<readonly ProjectPath[]>;
   listEntriesAt(revision: GitObjectId, root?: ProjectPath): Promise<readonly GitTreeEntry[]>;
   listFilesAt(revision: GitObjectId, root: ProjectPath): Promise<readonly ProjectPath[]>;
   readBlob(objectId: GitObjectId): Promise<Uint8Array>;

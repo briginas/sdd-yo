@@ -81,6 +81,7 @@ function fakeReader(
     findMergeBase: async () => undefined,
     historyStatus: async () => status,
     listReachableRevisions: async () => revisions as GitObjectId[],
+    listWorkingTreeConfigPaths: async () => [],
     listEntriesAt: async (revision) =>
       Object.keys(snapshots[revision] ?? {}).map((path, index) => entry(path, `${revision}-object-${index}`)),
     listFilesAt: async () => [],

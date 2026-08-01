@@ -98,6 +98,7 @@ test("bootstrap foundational generic envelopes and injected boundaries are struc
     findMergeBase: async () => undefined,
     historyStatus: async () => "complete" as const,
     listReachableRevisions: async () => [],
+    listWorkingTreeConfigPaths: async () => [],
     listEntriesAt: async () => [],
     listFilesAt: async () => [],
     readBlob: async () => new Uint8Array(),

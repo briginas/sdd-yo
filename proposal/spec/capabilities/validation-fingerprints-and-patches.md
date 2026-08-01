@@ -11,36 +11,6 @@ sdd:
 Provide deterministic structural validation, stable meaning-aware
 fingerprints, safe exact patch preparation, and reproducible Git comparison.
 
-<a id="req-2c8e8085"></a>
-
-## REQ-2C8E8085 — Generate and reserve random object IDs
-
-```sdd
-kind: invariant
-verification: automated
-```
-
-### Relations <!-- sdd:relations -->
-
-- refers-to: [CON-2C550D5B — Capability](../../../spec/concepts/capability.md)
-- refers-to: [CON-9F69CC0E — Requirement](../../../spec/concepts/requirement.md)
-- refers-to: [CON-88F1C731 — Domain Concept](../../../spec/concepts/domain-concept.md)
-
-### Statement <!-- sdd:statement -->
-
-The CLI shall generate cryptographically random uppercase eight-hex IDs and
-shall permanently reject reuse of an object ID previously defined in the
-reachable canonical specification history of the same SDD Project.
-
-### Acceptance criteria <!-- sdd:acceptance -->
-
-- Supported prefixes are `CAP`, `REQ`, `CON`, and `SDD`.
-- Manual IDs pass the same validation.
-- Only newly introduced IDs require historical lookup.
-- Arbitrary prose, test fixture, or noncanonical proposal mentions do not count
-  as prior model object definitions.
-- Parallel-branch collisions are detected against the current integration ref.
-
 <a id="req-b25091a0"></a>
 
 ## REQ-B25091A0 — Separate semantic, structural, and verification fingerprints
@@ -204,38 +174,6 @@ deltas remain intact.
 - Semantic conflicts are analyzed after a clean textual merge.
 - The working tree remains unchanged until explicit apply.
 
-<a id="req-8b656fc5"></a>
-
-## REQ-8B656FC5 — Report canonical history completeness
-
-```sdd
-kind: constraint
-verification: automated
-```
-
-### Relations <!-- sdd:relations -->
-
-- refers-to: [CON-EA57C937 — SDD Project](../../../spec/concepts/sdd-project.md)
-
-### Statement <!-- sdd:statement -->
-
-Ordinary validation shall report whether reachable canonical Git history was
-sufficient for the requested identifier-reuse and comparison checks and shall
-not present an incomplete historical check as complete.
-
-### Acceptance criteria <!-- sdd:acceptance -->
-
-- Complete reachable history reports historical validation as complete.
-- Shallow or otherwise incomplete history may produce an otherwise valid
-  ordinary-validation result only with a stable warning and machine-readable
-  incomplete status.
-- An explicitly requested comparison ref that cannot be resolved is a
-  technical failure, not a successful incomplete comparison.
-- Git object IDs are opaque non-empty strings; no hash algorithm or fixed
-  length is inferred.
-- Rewritten or unreachable history is outside the guarantee, and ordinary
-  validation emits no merge-readiness conclusion.
-
 <a id="req-fdd51416"></a>
 
 ## REQ-FDD51416 — Require sufficient Git history for strict merge validation
@@ -248,7 +186,7 @@ verification: automated
 ### Relations <!-- sdd:relations -->
 
 - refers-to: [CON-EA57C937 — SDD Project](../../../spec/concepts/sdd-project.md)
-- depends-on: [REQ-8B656FC5 — Report canonical history completeness](#req-8b656fc5)
+- depends-on: [REQ-8B656FC5 — Report canonical history completeness](../../../spec/capabilities/validation-fingerprints-and-patches.md#req-8b656fc5)
 
 ### Statement <!-- sdd:statement -->
 

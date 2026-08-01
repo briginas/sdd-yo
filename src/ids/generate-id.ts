@@ -28,7 +28,12 @@ export function generateRandomId(kind: IdKind, randomness: Randomness): Generate
   return `${prefixes[kind]}-${suffix}` as GeneratedId;
 }
 
-export function generateRandomIds(kind: IdKind, count: number, randomness: Randomness): readonly GeneratedId[] {
+export function generateRandomIds(
+  kind: IdKind,
+  count: number,
+  randomness: Randomness,
+  forbidden: ReadonlySet<GeneratedId> = new Set(),
+): readonly GeneratedId[] {
   if (!Number.isSafeInteger(count) || count < 1 || count > MAX_GENERATED_ID_COUNT) {
     throw new RangeError(`ID count must be between 1 and ${MAX_GENERATED_ID_COUNT}.`);
   }
@@ -36,7 +41,8 @@ export function generateRandomIds(kind: IdKind, count: number, randomness: Rando
   const values = new Set<GeneratedId>();
   const maximumAttempts = count * 32;
   for (let attempts = 0; values.size < count && attempts < maximumAttempts; attempts += 1) {
-    values.add(generateRandomId(kind, randomness));
+    const candidate = generateRandomId(kind, randomness);
+    if (!forbidden.has(candidate)) values.add(candidate);
   }
   if (values.size !== count) throw new Error("Unique random ID generation exhausted its retry budget.");
   return [...values];

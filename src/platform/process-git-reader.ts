@@ -6,7 +6,7 @@ import type { ProcessResult, ProcessRunner } from "./process-runner.ts";
 const decoder = new TextDecoder("utf-8", { fatal: true });
 
 export class GitReadError extends Error {
-  readonly code: "GIT_COMMAND_FAILED" | "GIT_OUTPUT_INVALID" | "GIT_REF_UNRESOLVED";
+  readonly code: "GIT_COMMAND_FAILED" | "GIT_OUTPUT_INVALID" | "GIT_REF_UNRESOLVED" | "GIT_REPOSITORY_UNAVAILABLE";
 
   constructor(code: GitReadError["code"], message: string) {
     super(message);
@@ -71,6 +71,15 @@ function parseTreeEntries(bytes: Uint8Array): readonly GitTreeEntry[] {
   return entries.toSorted((left, right) => (left.path < right.path ? -1 : left.path > right.path ? 1 : 0));
 }
 
+function parsePaths(bytes: Uint8Array): readonly ProjectPath[] {
+  const records = decode(bytes).split("\0");
+  if (records.at(-1) === "") records.pop();
+  if (!records.every(isProjectPath)) {
+    throw new GitReadError("GIT_OUTPUT_INVALID", "Git emitted an invalid repository path.");
+  }
+  return records.toSorted();
+}
+
 export function createProcessGitReader(runner: ProcessRunner, repositoryRoot: string): GitReader {
   const readBlob = async (objectId: GitObjectId): Promise<Uint8Array> => {
     const result = await runGit(runner, repositoryRoot, ["cat-file", "blob", objectId]);
@@ -132,6 +141,31 @@ export function createProcessGitReader(runner: ProcessRunner, repositoryRoot: st
       }
       return values;
     },
+    listWorkingTreeConfigPaths: async () => {
+      const visible = await runGit(runner, repositoryRoot, [
+        "ls-files",
+        "-z",
+        "--cached",
+        "--others",
+        "--exclude-standard",
+        "--",
+        ".sdd/config.yaml",
+        ":(glob)**/.sdd/config.yaml",
+      ]);
+      if (visible.exitCode !== 0) throw failure(visible);
+      const ignored = await runGit(runner, repositoryRoot, [
+        "ls-files",
+        "-z",
+        "--others",
+        "--ignored",
+        "--exclude-standard",
+        "--",
+        ".sdd/config.yaml",
+        ":(glob)**/.sdd/config.yaml",
+      ]);
+      if (ignored.exitCode !== 0) throw failure(ignored);
+      return [...new Set([...parsePaths(visible.standardOutput), ...parsePaths(ignored.standardOutput)])].toSorted();
+    },
     listEntriesAt,
     listFilesAt: async (revision, root) =>
       (await listEntriesAt(revision, root)).filter((entry) => entry.kind === "file").map((entry) => entry.path),
@@ -150,7 +184,9 @@ export function createProcessGitReader(runner: ProcessRunner, repositoryRoot: st
 
 export async function discoverProcessGitReader(runner: ProcessRunner, startDirectory: string): Promise<GitReader> {
   const result = await runGit(runner, startDirectory, ["rev-parse", "--show-toplevel"]);
-  if (result.exitCode !== 0) throw failure(result);
+  if (result.exitCode !== 0) {
+    throw new GitReadError("GIT_REPOSITORY_UNAVAILABLE", "The selected project is not inside a Git repository.");
+  }
   const repositoryRoot = decode(result.standardOutput).trim();
   if (repositoryRoot.length === 0 || repositoryRoot.includes("\0") || repositoryRoot.includes("\n")) {
     throw new GitReadError("GIT_OUTPUT_INVALID", "Git repository root is invalid.");

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { isObjectId } from "../src/contracts/identifiers.ts";
 import { generateRandomId, generateRandomIds } from "../src/ids/generate-id.ts";
 import type { Randomness } from "../src/platform/randomness.ts";
 
@@ -44,6 +45,21 @@ test("REQ-2C8E8085 retries batch collisions and fails closed when uniqueness can
 
   const constant: Randomness = { randomBytes: () => Uint8Array.from([0, 0, 0, 1]) };
   assert.throws(() => generateRandomIds("requirement", 2, constant), /retry budget/u);
+});
+
+test("REQ-2C8E8085 retries candidates permanently reserved by canonical history", () => {
+  const reservedValue: unknown = "CAP-00000001";
+  assert.ok(isObjectId(reservedValue));
+  const values = generateRandomIds(
+    "capability",
+    1,
+    sequenceRandomness([
+      [0, 0, 0, 1],
+      [0, 0, 0, 2],
+    ]),
+    new Set([reservedValue]),
+  );
+  assert.deepEqual(values, ["CAP-00000002"]);
 });
 
 test("REQ-2C8E8085 rejects invalid batch sizes and malformed randomness output", () => {

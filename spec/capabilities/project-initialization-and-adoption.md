@@ -38,3 +38,28 @@ creating a Git branch or commit.
   `spec/concepts/`.
 - Existing unrelated files are preserved.
 - An existing conflicting SDD Project is not overwritten.
+
+<a id="req-bfc18f28"></a>
+
+## REQ-BFC18F28 — Assign stable project identity
+
+```sdd
+kind: invariant
+verification: automated
+```
+
+### Relations <!-- sdd:relations -->
+
+- refers-to: [CON-EA57C937 — SDD Project](../concepts/sdd-project.md)
+
+### Statement <!-- sdd:statement -->
+
+Initialization shall assign the SDD Project one cryptographically random,
+stable `SDD-XXXXXXXX` identifier.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- The identifier uses eight uppercase hexadecimal characters.
+- Moving the project directory does not change the identifier.
+- Duplicate SDD Project identifiers within one Git repository block
+  validation.
