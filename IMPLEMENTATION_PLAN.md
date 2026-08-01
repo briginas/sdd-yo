@@ -802,11 +802,19 @@ Bounded leaves:
         runtime suite, and SDD graph validation pass without changing project
         identity or formatter configuration. Record the post-init formatting
         boundary and resolution of `OBS-YO-002`.
-  - [ ] **7.1c — First baseline contract clarification.** Select the exact
+  - [x] **7.1c — First baseline contract clarification.** Select the exact
         accepted Milestone 3 behavior, Requirement set, existing test mapping,
         adapter approach, approval inputs, and QA boundary for the first `spec`
         Change. Do not edit the `yo` specification, tests, or runtime in this
         clarification leaf.
+  - [ ] **7.1d — Baseline authoring and traceability.** In one `spec` Change,
+        define the selected Capability and five Requirements in `yo`, configure
+        the JUnit adapter and selected evidence issuers, confirm the imported
+        Node JUnit hierarchy, and add exact Requirement IDs only to the mapped
+        test or ancestor-suite names needed for traceability. Validate the
+        candidate graph, unchanged runtime suite, formatting, and TestIndex.
+        Do not change runtime behavior, fabricate human evidence, or run the
+        Approval, Verification, or Merge gates in this authoring leaf.
 - [ ] **7.2 — Polyglot or multi-framework project.** Select and onboard one
       existing project, then govern one real Change end to end and record the
       same observation set.
@@ -856,8 +864,9 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 7.1b is complete. Clarify and approve 7.1c before defining the first
-governed Capability or changing tests in `yo`. Select only the accepted
-Milestone 3 behavior, bounded Requirement set, existing test mapping, adapter
-approach, approval inputs, and QA boundary; do not edit the `yo` specification,
-tests, or runtime in that clarification leaf.
+Milestone 7.1c is complete. Approve 7.1d before mutating `yo`. Define only the
+selected approval-gated patch Capability and its five Requirements, configure
+the JUnit and evidence trust boundary, and add traceability IDs to the mapped
+test surface. Keep observable runtime behavior unchanged and leave approval,
+QA, evidence decisions, and gate execution to later separately approved
+leaves.

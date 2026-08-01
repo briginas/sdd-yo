@@ -8,8 +8,8 @@
 - Adoption mode: `incremental`.
 - First Change mode: `spec`.
 - First governed Capability: the completed approval-gated exact patch behavior.
-- Onboarding status: incremental SDD Project initialized; first governed
-  Capability not started.
+- Onboarding status: incremental SDD Project initialized; first baseline
+  contract clarified; first governed Capability not yet authored.
 
 The repository owner selected this study boundary on 2026-08-01. That planning
 decision is not SDD ApprovalEvidence, QAEvidence, a gate result, or permission
@@ -26,6 +26,122 @@ planned context-compaction or allowlisted-validation milestones in `yo`.
 The study begins from the existing project structure. Production code and tests
 must not be reorganized merely to accommodate SDD Yo. SDD Yo remains advisory:
 its reports do not protect branches or authorize merges.
+
+## First baseline contract clarification
+
+Milestone 7.1c selected the contract for the first `spec` Change without
+editing `yo`. The accepted behavior is the completed Milestone 3 vertical
+slice in which a model may propose bounded exact replacements for one existing
+text file, while trusted harness code owns target authorization, the complete
+immutable preview, terminal approval, revalidation, atomic application, and a
+single safe result.
+
+The first Capability will contain exactly these five automated Requirements:
+
+1. accept only bounded, exact, non-overlapping replacements against one
+   original UTF-8 text version, preserving its BOM and dominant line endings;
+2. authorize exactly one existing regular target inside the approved workspace
+   and reject traversal, sensitive paths, symlinks, and non-regular targets;
+3. prepare a complete immutable preview and apply nothing unless an available
+   interactive terminal receives explicit `y` or `yes` approval for it;
+4. reauthorize the target, verify the approved base and result immediately
+   before a same-directory atomic replacement, preserving the file mode and
+   leaving the target intact on conflict, abort, timeout, or write failure;
+5. resolve every proposal call exactly once with ordered, sanitized runtime
+   lifecycle events and an outcome that states whether the patch was applied.
+
+These descriptions select the Requirement boundaries but do not define SDD
+objects. Stable `REQ-XXXXXXXX` identifiers will be generated only when the
+separately approved baseline-authoring leaf creates the canonical objects in
+`yo`.
+
+### Existing test mapping
+
+The following current test anchors are the selected evidence surface. The
+baseline-authoring leaf may add the eventual Requirement ID to these test or
+ancestor-suite names, but it must not change their assertions or runtime
+behavior.
+
+- **Exact replacement contract:** suites `proposePatchArgumentsSchema` in
+  `src/runtime/patch-contracts.test.ts` and `preparePatchTransform` in
+  `src/runtime/patch-transform.test.ts`.
+- **Authorized target:** suite `resolvePatchTarget` in
+  `src/runtime/patch-preparer.test.ts`.
+- **Immutable preview and explicit approval:** suite `preparePatchProposal` in
+  `src/runtime/patch-preparer.test.ts`; every test in
+  `src/runtime/patch-approval.test.ts` and `src/terminal-approval.test.ts`; and
+  test `renders a chat patch preview but denies it in non-interactive mode` in
+  `src/cli-app.test.ts`.
+- **Revalidation and atomic application:** suite `applyPatchProposal` in
+  `src/runtime/patch-applier.test.ts`.
+- **Single result and safe lifecycle:** tests `dispatches an approved patch
+with separate safe authorization and lifecycle evidence`, `fails closed
+after preparation when approval is absent, denied, or aborted`, `does not
+prepare a patch after invalid arguments or a path-policy denial`, `fails
+closed when propose_patch has no approval infrastructure`, and `maps
+conflicts, timeouts, and failures without writing an unapproved result` in
+  `src/runtime/tool-dispatcher.test.ts`; tests `propagates approved sequential
+patch calls as safe ordered lifecycle events`, `denies an unapproved patch
+and lets the model recover with a read-only result`, and `records a conflict
+before a read and approved reproposal while isolating lifecycle observers`
+  in `src/runtime/agent-loop.test.ts`; and tests `completes an inspected,
+approved patch through chat and reports its exact outcome` and `reuses the
+active chat input for approval without adding an approval response to the
+conversation` in `src/cli-app.test.ts`.
+
+The exact rename count and percentage will be measured after importing a
+representative JUnit report, because SDD traceability may inherit one ID from a
+retained ancestor suite. The mapping above remains the boundary if the report
+loses hierarchy; in that case IDs must be present in the normalized leaf test
+names instead.
+
+### Adapter and evidence boundary
+
+The first Change will use one required adapter named `unit`, with type `junit`,
+and a repository-scoped report such as `artifacts/junit/yo.xml`. The host will
+run the unchanged full `node:test` suite with Node's built-in JUnit reporter;
+SDD Yo will import that report with an explicit `--adapter unit` selection. No
+custom JSONL adapter, shell command, selective-test executor, or
+TypeScript-specific behavior will be added to SDD Yo for this Change.
+
+Before test names are edited, the baseline-authoring leaf must generate one
+representative report and confirm whether Node's JUnit output retains the
+required suite hierarchy and stable test identity. A failure of that check
+does not permit guessed mappings: it requires an explicit clarification of the
+adapter or rename plan.
+
+The future project configuration will allow these local evidence issuer names:
+
+- `local-product-review` for ApprovalEvidence supplied by the actual Spec
+  Approver;
+- `local-test-run` for TestExecutionEvidence derived from the authorized full
+  suite run;
+- `local-qa` for QAEvidence supplied by the actual QA tester.
+
+Issuer authentication, actor authorization, and artifact creation remain
+external human workflow responsibilities. The first approval must bind
+`spec` mode, the resolved base commit, and the exact semantic and structural
+delta fingerprints. It must not be inferred from this clarification, the old
+Milestone 3 approval, a passing test run, or repository ownership.
+
+### Baseline QA boundary
+
+All five Requirements are automated and must have current mapped passing test
+results at the candidate head. Baseline QA independently covers the Capability
+at that same head and its resolved integration commit. The authorized QA
+tester will review at least one explicitly approved application, one
+non-interactive or declined no-write outcome, and one stale-source conflict on
+a temporary workspace fixture, then decide the Capability as a whole. No
+manual Requirement decision is expected unless authoring changes a Requirement
+to `verification: manual`.
+
+The full unchanged `yo` suite, project formatting, SDD graph validation, and
+the imported TestIndex must also pass. A live provider or paid request is not
+required for deterministic coverage and will not be performed without
+separate authorization. This clarification creates no ApprovalEvidence,
+TestExecutionEvidence, QAEvidence, gate result, or permission to mutate `yo`.
+The runtime lifecycle events named above are not versioned SDD Evidence
+artifacts.
 
 ## Initialization result
 
