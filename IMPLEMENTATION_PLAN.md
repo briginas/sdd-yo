@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 4 / Test discovery and QA scope
-- Current leaf: 4.2 JUnit-compatible import
+- Current leaf: 4.3 Deterministic TestIndex and suite-name inheritance
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -552,7 +552,11 @@ Mode: `spec-code`.
       Requirement IDs, or handle execution and QA evidence in this leaf.
       Contributes to `REQ-20F8CA5C` and `REQ-72BA737C`; their remaining
       TestIndex and execution behavior stays proposed until later leaves.
-- [ ] **4.2 — JUnit-compatible import.**
+- [x] **4.2 — JUnit-compatible import.** Import bounded, non-networked XML;
+      preserve producer hierarchy, names, status, source, and time; report lost
+      hierarchy without guessing from framework-specific names. Contributes to
+      `REQ-6D8DDDF7` and `REQ-12E19D70`; observable TestIndex behavior stays
+      proposed until 4.3.
 - [ ] **4.3 — Deterministic TestIndex and suite-name inheritance.**
 - [ ] **4.4 — Test-backed trace and verification fingerprints.** Enrich `trace`
       with mapped tests and add verification fingerprints and verification
@@ -650,9 +654,9 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 4.2 — JUnit-compatible import` is the only active implementation
-leaf. It imports bounded, non-networked JUnit-compatible XML while preserving
-available suite hierarchy, executable test status, and source data. The project
-TestIndex, Requirement-ID inheritance, test-backed trace and fingerprints,
-affected scope, and execution and QA evidence validation remain in Milestones
-4.3 through 4.6.
+`Milestone 4.3 — Deterministic TestIndex and suite-name inheritance` is the
+only active implementation leaf. It validates imported hierarchies, constructs
+normalized full test names, extracts standalone Requirement IDs, rejects
+unknown IDs, unions configured adapter discoveries deterministically, and emits
+the version 1 TestIndex. Test-backed trace and fingerprints, affected scope,
+and execution and QA evidence validation remain in Milestones 4.4 through 4.6.
