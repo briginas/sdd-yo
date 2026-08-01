@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 3 / Initialization, IDs, trace, and diff
-- Current leaf: 3.2b Git snapshot and history boundary
+- Current leaf: 3.2c Historical reservation and project identity
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -503,7 +503,7 @@ Mode: `spec-code`.
       collision-retrying cryptographic generation for `SDD`, `CAP`, `REQ`, and
       `CON` prefixes plus bounded `--count`. Expose projectless `sdd id` with
       machine-readable historical status `unchecked`; do not claim reservation.
-- [ ] **3.2b — Git snapshot and history boundary.** Implement the production
+- [x] **3.2b — Git snapshot and history boundary.** Implement the production
       argv-array Git adapter, resolve mutable refs once, read configured graphs
       from opaque object IDs, enumerate reachable history, and detect shallow
       or otherwise incomplete history without assuming a hash algorithm.

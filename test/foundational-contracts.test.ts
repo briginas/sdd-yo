@@ -89,12 +89,16 @@ test("bootstrap foundational generic envelopes and injected boundaries are struc
     realPath: async (path: string) => path,
   } satisfies FileSystem;
   const gitReader = {
+    repositoryRoot: "/repo",
     resolveRevision: async () => {
       const value: unknown = "opaque-object-id";
       assert.ok(isGitObjectId(value));
       return value;
     },
     findMergeBase: async () => undefined,
+    historyStatus: async () => "complete" as const,
+    listReachableRevisions: async () => [],
+    listEntriesAt: async () => [],
     listFilesAt: async () => [],
     readFileAt: async () => undefined,
   } satisfies GitReader;

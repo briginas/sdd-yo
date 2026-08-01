@@ -5,6 +5,7 @@ export type ProcessRequest = {
   readonly environment?: Readonly<Record<string, string>>;
   readonly standardInput?: Uint8Array;
   readonly timeoutMilliseconds?: number;
+  readonly maxOutputBytes?: number;
 };
 
 export type ProcessResult = {
