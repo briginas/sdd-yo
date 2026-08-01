@@ -4,6 +4,7 @@ import type { ProjectId, ProjectPath } from "../contracts/identifiers.ts";
 import type { FileSystem } from "../platform/filesystem.ts";
 import type { ProjectWriter } from "../platform/project-writer.ts";
 import type { Randomness } from "../platform/randomness.ts";
+import { generateRandomId } from "../ids/generate-id.ts";
 
 const encoder = new TextEncoder();
 
@@ -29,14 +30,6 @@ export type InitializeProjectDependencies = {
   readonly writer: ProjectWriter;
   readonly randomness: Randomness;
 };
-
-function projectId(randomness: Randomness): ProjectId {
-  const suffix = [...randomness.randomBytes(4)]
-    .map((value) => value.toString(16).padStart(2, "0"))
-    .join("")
-    .toUpperCase();
-  return `SDD-${suffix}` as ProjectId;
-}
 
 function configSource(id: ProjectId, specPath: ProjectPath, adoption: "incremental" | "complete"): string {
   const entrypoint = `${specPath}/README.md`;
@@ -116,7 +109,7 @@ export async function initializeProject(
     }
   }
 
-  const id = projectId(dependencies.randomness);
+  const id = generateRandomId("project", dependencies.randomness) as ProjectId;
   for (const relativePath of directories) await dependencies.writer.createDirectory(resolve(root, relativePath));
   const contents = [configSource(id, options.specPath, options.adoption), indexSource()] as const;
   for (let index = 0; index < files.length; index += 1) {

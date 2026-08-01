@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 3 / Initialization, IDs, trace, and diff
-- Current leaf: 3.2a Random ID primitives and projectless issuance
+- Current leaf: 3.2b Git snapshot and history boundary
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -499,7 +499,7 @@ Mode: `spec-code`.
       unrelated files, reject conflicting or unsafe targets, and assign one
       stable random project ID. Promote `REQ-382BBBD6`; `REQ-BFC18F28` remains
       proposed until repository-wide duplicate project-ID validation exists.
-- [ ] **3.2a — Random ID primitives and projectless issuance.** Implement
+- [x] **3.2a — Random ID primitives and projectless issuance.** Implement
       collision-retrying cryptographic generation for `SDD`, `CAP`, `REQ`, and
       `CON` prefixes plus bounded `--count`. Expose projectless `sdd id` with
       machine-readable historical status `unchecked`; do not claim reservation.

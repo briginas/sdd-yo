@@ -3,6 +3,7 @@ export * from "./cli/index.ts";
 export * from "./config/index.ts";
 export * from "./graph/index.ts";
 export * from "./init/index.ts";
+export * from "./ids/index.ts";
 export * from "./fingerprint/index.ts";
 export * from "./markdown/index.ts";
 export * from "./platform/index.ts";

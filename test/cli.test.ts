@@ -94,6 +94,59 @@ test("REQ-382BBBD6 init rejects a symbolic-link path component before writing", 
   await assert.rejects(readFile(join(outside, "specification/README.md")), /ENOENT/u);
 });
 
+test("REQ-2C8E8085 projectless id emits unique candidates with unchecked history", async () => {
+  const root = await mkdtemp(join(tmpdir(), "sdd-cli-id-projectless-"));
+  const generated = await execute(["id", "requirement", "--count", "3", "--format", "json"], root);
+  assert.equal(generated.exitCode, 0, generated.standardOutput);
+  const value = JSON.parse(generated.standardOutput) as {
+    command: string;
+    project_id: null;
+    status: string;
+    result: { candidates: readonly string[]; history: { status: string; resolved_ref: null } };
+  };
+  assert.equal(value.command, "id");
+  assert.equal(value.project_id, null);
+  assert.equal(value.status, "ok");
+  assert.equal(value.result.candidates.length, 3);
+  assert.equal(new Set(value.result.candidates).size, 3);
+  assert.ok(value.result.candidates.every((candidate) => /^REQ-[0-9A-F]{8}$/u.test(candidate)));
+  assert.deepEqual(value.result.history, { status: "unchecked", resolved_ref: null });
+
+  const human = await execute(["id", "concept"], root);
+  assert.equal(human.exitCode, 0);
+  assert.match(human.standardOutput, /^id: ok\nCON-[0-9A-F]{8}\nhistory: unchecked\n$/u);
+});
+
+test("REQ-2C8E8085 projectless id rejects invalid counts and history claims", async () => {
+  const root = await mkdtemp(join(tmpdir(), "sdd-cli-id-invalid-"));
+  for (const count of ["0", "257", "1.5", "01"]) {
+    const invalid = await execute(["id", "project", "--count", count, "--format", "json"], root);
+    assert.equal(invalid.exitCode, 3, count);
+    assert.equal(
+      (JSON.parse(invalid.standardOutput) as { diagnostics: readonly { code: string }[] }).diagnostics[0]?.code,
+      "SDD_ID_COUNT_INVALID",
+    );
+  }
+
+  const history = await execute(["id", "capability", "--history-ref", "main", "--format", "json"], root);
+  assert.equal(history.exitCode, 3);
+  assert.equal(
+    (JSON.parse(history.standardOutput) as { diagnostics: readonly { code: string }[] }).diagnostics[0]?.code,
+    "SDD_ID_HISTORY_REF_REQUIRES_PROJECT",
+  );
+});
+
+test("REQ-2C8E8085 id does not claim unchecked history when a project resolves", async () => {
+  const generated = await execute(["id", "requirement", "--format", "json"]);
+  assert.equal(generated.exitCode, 3);
+  const value = JSON.parse(generated.standardOutput) as {
+    project_id: string;
+    diagnostics: readonly { code: string }[];
+  };
+  assert.equal(value.project_id, "SDD-17EF8B29");
+  assert.equal(value.diagnostics[0]?.code, "SDD_ID_HISTORY_UNAVAILABLE");
+});
+
 test("REQ-0361538D REQ-7C848ED0 validate emits deterministic versioned JSON and a human view", async () => {
   const first = await execute(["validate", "--format", "json"]);
   const second = await execute(["validate", "--format", "json"]);

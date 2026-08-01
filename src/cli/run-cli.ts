@@ -8,6 +8,8 @@ import type { FileSystem } from "../platform/filesystem.ts";
 import type { ProjectWriter } from "../platform/project-writer.ts";
 import type { Randomness } from "../platform/randomness.ts";
 import { initializeProject } from "../init/initialize-project.ts";
+import type { GeneratedId, IdKind } from "../ids/generate-id.ts";
+import { generateRandomIds, isIdKind, MAX_GENERATED_ID_COUNT } from "../ids/generate-id.ts";
 import { fingerprintValidatedObject } from "../fingerprint/object-fingerprint.ts";
 import type { ValidatedSpecificationGraph } from "../graph/validate-graph.ts";
 import { validateSpecificationGraph } from "../graph/validate-graph.ts";
@@ -21,7 +23,7 @@ export const TECHNICAL_FAILURE_EXIT_CODE = 3 as const;
 
 type ExitCode = typeof VALID_EXIT_CODE | typeof BLOCKED_EXIT_CODE | typeof TECHNICAL_FAILURE_EXIT_CODE;
 type OutputFormat = "human" | "json";
-type Command = "init" | "validate" | "inspect";
+type Command = "init" | "id" | "validate" | "inspect";
 type ResponseCommand = Command | "unknown";
 
 export type CliRuntime = {
@@ -46,10 +48,21 @@ type Invocation = {
   readonly root?: string;
   readonly specPath?: ProjectPath;
   readonly adoption?: "incremental" | "complete";
+  readonly idKind?: IdKind;
+  readonly count?: number;
+  readonly historyRef?: string;
 };
 
 export type InitResult = {
   readonly created_paths: readonly ProjectPath[];
+};
+
+export type IdResult = {
+  readonly candidates: readonly GeneratedId[];
+  readonly history: {
+    readonly status: "unchecked";
+    readonly resolved_ref: null;
+  };
 };
 
 export type ValidateResult = {
@@ -72,6 +85,7 @@ export type InspectResult = {
 
 export type CliResponse =
   | CliResponseEnvelope<"init", "ok", InitResult>
+  | CliResponseEnvelope<"id", "ok", IdResult>
   | CliResponseEnvelope<"validate", "ok", ValidateResult>
   | CliResponseEnvelope<"inspect", "ok", InspectResult>
   | CliResponseEnvelope<Command, "blocked", { readonly valid: false } | null>
@@ -86,13 +100,13 @@ function parseInvocation(
   argv: readonly string[],
 ): { ok: true; value: Invocation } | { ok: false; diagnostic: Diagnostic } {
   const command = argv[0];
-  if (command !== "init" && command !== "validate" && command !== "inspect")
+  if (command !== "init" && command !== "id" && command !== "validate" && command !== "inspect")
     return {
       ok: false,
       diagnostic: cliDiagnostic(
         "SDD_CONFIG_CLI_COMMAND_INVALID",
         "The command is missing or unsupported.",
-        "Use sdd init, sdd validate, or sdd inspect <object-id>.",
+        "Use sdd init, sdd id, sdd validate, or sdd inspect <object-id>.",
       ),
     };
   let format: OutputFormat = "human";
@@ -104,6 +118,9 @@ function parseInvocation(
   let root: string | undefined;
   let specPath: ProjectPath | undefined;
   let adoption: "incremental" | "complete" | undefined;
+  let idKind: IdKind | undefined;
+  let count: number | undefined;
+  let historyRef: string | undefined;
   for (let index = 1; index < argv.length; index += 1) {
     const argument = argv[index];
     if (
@@ -113,7 +130,9 @@ function parseInvocation(
       argument === "--output" ||
       argument === "--root" ||
       argument === "--spec-path" ||
-      argument === "--adoption"
+      argument === "--adoption" ||
+      argument === "--count" ||
+      argument === "--history-ref"
     ) {
       const value = argv[index + 1];
       if (value === undefined)
@@ -162,6 +181,34 @@ function parseInvocation(
             ),
           };
         adoption = value;
+      } else if (argument === "--count") {
+        const parsedCount = Number(value);
+        if (
+          !Number.isSafeInteger(parsedCount) ||
+          parsedCount < 1 ||
+          parsedCount > MAX_GENERATED_ID_COUNT ||
+          String(parsedCount) !== value
+        )
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_ID_COUNT_INVALID",
+              "The requested ID count is invalid.",
+              `Use an integer from 1 through ${MAX_GENERATED_ID_COUNT}.`,
+            ),
+          };
+        count = parsedCount;
+      } else if (argument === "--history-ref") {
+        if (value.length === 0 || value.includes("\0"))
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_ID_HISTORY_REF_INVALID",
+              "The history ref is invalid.",
+              "Supply a non-empty Git ref.",
+            ),
+          };
+        historyRef = value;
       } else {
         if (!isProjectPath(value))
           return {
@@ -189,6 +236,7 @@ function parseInvocation(
       includeExplanatory = true;
       index += 1;
     } else if (command === "inspect" && objectId === undefined && isObjectId(argument)) objectId = argument;
+    else if (command === "id" && idKind === undefined && isIdKind(argument)) idKind = argument;
     else
       return {
         ok: false,
@@ -229,6 +277,33 @@ function parseInvocation(
         "Use initialization options only with sdd init.",
       ),
     };
+  if (command === "id" && outputPath !== undefined)
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "Projectless ID output cannot select a project-relative output file.",
+        "Read the ID result from standard output.",
+      ),
+    };
+  if (command !== "id" && (idKind !== undefined || count !== undefined || historyRef !== undefined))
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "An ID-generation option was used with another command.",
+        "Use ID-generation options only with sdd id.",
+      ),
+    };
+  if (command === "id" && idKind === undefined)
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_ID_KIND_REQUIRED",
+        "id requires an ID kind.",
+        "Supply project, capability, requirement, or concept.",
+      ),
+    };
   if (command === "inspect" && objectId === undefined)
     return {
       ok: false,
@@ -238,7 +313,7 @@ function parseInvocation(
         "Supply a CAP, REQ, or CON ID.",
       ),
     };
-  if (command === "validate" && includeExplanatory)
+  if (command !== "inspect" && includeExplanatory)
     return {
       ok: false,
       diagnostic: cliDiagnostic(
@@ -260,6 +335,9 @@ function parseInvocation(
       ...(root === undefined ? {} : { root }),
       ...(specPath === undefined ? {} : { specPath }),
       ...(adoption === undefined ? {} : { adoption }),
+      ...(idKind === undefined ? {} : { idKind }),
+      ...(command === "id" ? { count: count ?? 1 } : {}),
+      ...(historyRef === undefined ? {} : { historyRef }),
     },
   };
 }
@@ -424,6 +502,9 @@ function humanView(value: CliResponse): string {
   } else if (value.command === "init" && value.status === "ok") {
     const result = value.result as InitResult;
     lines.push(...result.created_paths.map((path) => `created: ${path}`));
+  } else if (value.command === "id" && value.status === "ok") {
+    const result = value.result as IdResult;
+    lines.push(...result.candidates, `history: ${result.history.status}`);
   }
   for (const diagnostic of value.diagnostics)
     lines.push(`${diagnostic.severity.toUpperCase()} ${diagnostic.code}: ${diagnostic.message}`);
@@ -487,7 +568,10 @@ async function resolveSafeOutputTarget(
 export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
   const parsed = parseInvocation(runtime.argv);
   const inferredCommand: ResponseCommand =
-    runtime.argv[0] === "init" || runtime.argv[0] === "inspect" || runtime.argv[0] === "validate"
+    runtime.argv[0] === "init" ||
+    runtime.argv[0] === "id" ||
+    runtime.argv[0] === "inspect" ||
+    runtime.argv[0] === "validate"
       ? runtime.argv[0]
       : "unknown";
   const inferredFormat: OutputFormat = runtime.argv.some(
@@ -533,6 +617,56 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
         invocation.format,
         response("init", initialized.value.projectId, "ok", { created_paths: initialized.value.createdPaths }, []),
       );
+      return VALID_EXIT_CODE;
+    }
+    if (invocation.command === "id") {
+      const selected = await resolveProject(
+        runtime.fileSystem,
+        invocation.configPath === undefined
+          ? {
+              kind: "nearest",
+              start_directory:
+                invocation.cwd === undefined
+                  ? runtime.workingDirectory
+                  : resolve(runtime.workingDirectory, invocation.cwd),
+            }
+          : { kind: "explicit", config_path: invocation.configPath, working_directory: runtime.workingDirectory },
+      );
+      if (selected.ok) {
+        const diagnostic = cliDiagnostic(
+          "SDD_ID_HISTORY_UNAVAILABLE",
+          "Project-aware ID reservation is unavailable.",
+          "Run projectless ID generation outside an SDD Project until Git history checks are available.",
+        );
+        emit(
+          runtime,
+          invocation.format,
+          response("id", selected.value.configuration.project_id, "error", null, [diagnostic]),
+        );
+        return TECHNICAL_FAILURE_EXIT_CODE;
+      }
+      const noProject = selected.diagnostics.every((diagnostic) => diagnostic.code === "SDD_CONFIG_NOT_FOUND");
+      if (!noProject || invocation.configPath !== undefined) {
+        emit(runtime, invocation.format, response("id", null, "error", null, selected.diagnostics));
+        return TECHNICAL_FAILURE_EXIT_CODE;
+      }
+      if (invocation.historyRef !== undefined) {
+        const diagnostic = cliDiagnostic(
+          "SDD_ID_HISTORY_REF_REQUIRES_PROJECT",
+          "A projectless ID cannot check a history ref.",
+          "Remove --history-ref or select an SDD Project after project-aware history support is implemented.",
+        );
+        emit(runtime, invocation.format, response("id", null, "error", null, [diagnostic]));
+        return TECHNICAL_FAILURE_EXIT_CODE;
+      }
+      if (invocation.idKind === undefined || invocation.count === undefined) {
+        throw new Error("Parsed ID invocation is missing required values.");
+      }
+      const result: IdResult = {
+        candidates: generateRandomIds(invocation.idKind, invocation.count, runtime.randomness),
+        history: { status: "unchecked", resolved_ref: null },
+      };
+      emit(runtime, invocation.format, response("id", null, "ok", result, []));
       return VALID_EXIT_CODE;
     }
     const selected = await resolveProject(
