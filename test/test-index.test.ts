@@ -15,6 +15,7 @@ import {
   isProjectPath,
   isRequirementId,
   parseDiscoveryJsonl,
+  parseTestIndex,
   TestIndexError,
 } from "../src/index.ts";
 import type {
@@ -167,4 +168,43 @@ test("REQ-12E19D70 TestIndex input fingerprints are canonical and version-safe",
   const right = fingerprintTestInput({ a: [2, 1], z: "é" });
   assert.equal(left, right);
   assert.ok(isFingerprint(left));
+});
+
+test("REQ-B25091A0 supplied TestIndex input is strict, bounded, and canonical", () => {
+  const value = {
+    schema_version: "1.0",
+    artifact_type: "test_index",
+    project_id: "SDD-17EF8B29",
+    subject: {
+      head_ref: "head-commit",
+      config_fingerprint: `sha256:${"1".repeat(64)}`,
+      adapter_fingerprints: { unit: `sha256:${"2".repeat(64)}` },
+    },
+    tests: [
+      {
+        test_ref: "unit:case",
+        adapter_id: "unit",
+        local_id: "case",
+        full_name: "covers REQ-12E19D70",
+        requirement_ids: ["REQ-12E19D70"],
+      },
+    ],
+  };
+  const bytes = new TextEncoder().encode(JSON.stringify(value));
+  assert.deepEqual(parseTestIndex(bytes, bytes.byteLength), value);
+  assert.throws(() => parseTestIndex(bytes, bytes.byteLength - 1), /byte limit/u);
+  assert.throws(
+    () => parseTestIndex(new TextEncoder().encode(JSON.stringify({ ...value, unexpected: true })), 10_000),
+    /envelope or subject/u,
+  );
+  assert.throws(
+    () =>
+      parseTestIndex(
+        new TextEncoder().encode(
+          JSON.stringify({ ...value, tests: [{ ...value.tests[0], test_ref: "unit:another" }] }),
+        ),
+        10_000,
+      ),
+    /test entry/u,
+  );
 });

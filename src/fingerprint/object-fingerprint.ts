@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import type { Fingerprint } from "../contracts/identifiers.ts";
 import type { ObjectId } from "../contracts/identifiers.ts";
 import type { ValidatedSpecificationGraph } from "../graph/validate-graph.ts";
+import type { TestIndex } from "../tests/test-index.ts";
 import type {
   CapabilityDocument,
   CapabilityFragmentDocument,
@@ -9,7 +10,8 @@ import type {
   Requirement,
 } from "../markdown/types.ts";
 
-export type FingerprintClass = "semantic" | "structural";
+export type FingerprintClass = "semantic" | "structural" | "verification";
+export type GraphFingerprintClass = Exclude<FingerprintClass, "verification">;
 export type FingerprintProjection = { readonly object: Record<string, unknown> };
 
 function nfc(value: unknown): unknown {
@@ -55,12 +57,14 @@ export function canonicalObjectValue(
             acceptance: canonicalProse(object.acceptance),
             constraints: canonicalProse(object.constraints),
           }
-        : {
-            kind: object.kind,
-            owner_capability_id: object.owner_capability_id,
-            refers_to_ids: strings(object.refers_to_ids),
-            depends_on_ids: strings(object.depends_on_ids),
-          };
+        : fingerprintClass === "structural"
+          ? {
+              kind: object.kind,
+              owner_capability_id: object.owner_capability_id,
+              refers_to_ids: strings(object.refers_to_ids),
+              depends_on_ids: strings(object.depends_on_ids),
+            }
+          : { verification: object.verification, test_refs: strings(object.test_refs) };
   else if (type === "concept")
     canonicalValue =
       fingerprintClass === "semantic"
@@ -162,7 +166,36 @@ export function projectValidatedObject(graph: ValidatedSpecificationGraph, objec
 export function fingerprintValidatedObject(
   graph: ValidatedSpecificationGraph,
   objectId: ObjectId,
-  fingerprintClass: FingerprintClass,
+  fingerprintClass: GraphFingerprintClass,
 ): Fingerprint {
   return fingerprintObject(projectValidatedObject(graph, objectId), fingerprintClass);
+}
+
+export function projectValidatedRequirementVerification(
+  graph: ValidatedSpecificationGraph,
+  testIndex: TestIndex,
+  requirementId: ObjectId,
+): FingerprintProjection {
+  const object = graph.objects.get(requirementId);
+  if (object === undefined || !("anchor" in object)) {
+    throw new Error(`Cannot fingerprint unknown Requirement ${requirementId}.`);
+  }
+  return {
+    object: {
+      object_type: "requirement",
+      object_id: object.id,
+      verification: object.verification,
+      test_refs: testIndex.tests
+        .filter((test) => test.requirement_ids.includes(object.id))
+        .map((test) => test.test_ref),
+    },
+  };
+}
+
+export function fingerprintValidatedRequirementVerification(
+  graph: ValidatedSpecificationGraph,
+  testIndex: TestIndex,
+  requirementId: ObjectId,
+): Fingerprint {
+  return fingerprintObject(projectValidatedRequirementVerification(graph, testIndex, requirementId), "verification");
 }

@@ -3,8 +3,9 @@ import { createHash } from "node:crypto";
 import { isFingerprint, isObjectId } from "../contracts/identifiers.ts";
 import type { Fingerprint, ObjectId } from "../contracts/identifiers.ts";
 import type { ValidatedSpecificationGraph } from "../graph/validate-graph.ts";
-import { fingerprintValidatedObject } from "./object-fingerprint.ts";
-import type { FingerprintClass } from "./object-fingerprint.ts";
+import type { TestIndex } from "../tests/test-index.ts";
+import { fingerprintValidatedObject, fingerprintValidatedRequirementVerification } from "./object-fingerprint.ts";
+import type { GraphFingerprintClass } from "./object-fingerprint.ts";
 
 export type DeltaObjectType = "capability" | "requirement" | "concept";
 export type ObjectDeltaEntry =
@@ -38,6 +39,8 @@ export type GraphObjectDelta = {
   readonly semantic: CanonicalObjectDelta;
   readonly structural: CanonicalObjectDelta;
 };
+
+export type VerificationObjectDelta = CanonicalObjectDelta;
 
 function objectType(id: ObjectId): DeltaObjectType {
   if (id.startsWith("CAP-")) return "capability";
@@ -91,7 +94,11 @@ export function canonicalizeObjectDelta(entriesInput: readonly ObjectDeltaEntry[
   return { entries, canonicalBytes, fingerprint: fingerprintValue };
 }
 
-function applicable(graph: ValidatedSpecificationGraph, id: ObjectId, fingerprintClass: FingerprintClass): boolean {
+function applicable(
+  graph: ValidatedSpecificationGraph,
+  id: ObjectId,
+  fingerprintClass: GraphFingerprintClass,
+): boolean {
   const object = graph.objects.get(id);
   if (object === undefined) return false;
   return fingerprintClass === "structural" || "anchor" in object || object.type === "concept";
@@ -100,7 +107,7 @@ function applicable(graph: ValidatedSpecificationGraph, id: ObjectId, fingerprin
 function computeClassDelta(
   before: ValidatedSpecificationGraph,
   after: ValidatedSpecificationGraph,
-  fingerprintClass: FingerprintClass,
+  fingerprintClass: GraphFingerprintClass,
 ): CanonicalObjectDelta {
   const entries: ObjectDeltaEntry[] = [];
   const ids = new Set<ObjectId>([...before.objects.keys(), ...after.objects.keys()]);
@@ -131,4 +138,48 @@ export function computeGraphObjectDelta(
     semantic: computeClassDelta(before, after, "semantic"),
     structural: computeClassDelta(before, after, "structural"),
   };
+}
+
+export function computeVerificationObjectDelta(
+  before: ValidatedSpecificationGraph,
+  beforeIndex: TestIndex,
+  after: ValidatedSpecificationGraph,
+  afterIndex: TestIndex,
+): VerificationObjectDelta {
+  const entries: ObjectDeltaEntry[] = [];
+  const ids = new Set<ObjectId>([...before.objects.keys(), ...after.objects.keys()]);
+  for (const id of ids) {
+    const beforeObject = before.objects.get(id);
+    const afterObject = after.objects.get(id);
+    const beforeApplicable = beforeObject !== undefined && "anchor" in beforeObject;
+    const afterApplicable = afterObject !== undefined && "anchor" in afterObject;
+    if (!beforeApplicable && afterApplicable) {
+      entries.push({
+        operation: "add",
+        type: "requirement",
+        id,
+        after: fingerprintValidatedRequirementVerification(after, afterIndex, id),
+      });
+    } else if (beforeApplicable && !afterApplicable) {
+      entries.push({
+        operation: "delete",
+        type: "requirement",
+        id,
+        before: fingerprintValidatedRequirementVerification(before, beforeIndex, id),
+      });
+    } else if (beforeApplicable && afterApplicable) {
+      const beforeFingerprint = fingerprintValidatedRequirementVerification(before, beforeIndex, id);
+      const afterFingerprint = fingerprintValidatedRequirementVerification(after, afterIndex, id);
+      if (beforeFingerprint !== afterFingerprint) {
+        entries.push({
+          operation: "modify",
+          type: "requirement",
+          id,
+          before: beforeFingerprint,
+          after: afterFingerprint,
+        });
+      }
+    }
+  }
+  return canonicalizeObjectDelta(entries);
 }

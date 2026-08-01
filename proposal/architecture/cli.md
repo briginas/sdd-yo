@@ -116,12 +116,16 @@ Requirement, and `referrers` contains direct inbound active relations with
 relation type and source ID. Capability and Concept ancestry and dependency
 closures are empty. Set-like arrays are sorted by object ID. TestIndex-backed
 mapped tests are an additive test-traceability behavior and are not required
-for graph-only trace.
+for graph-only trace. A supplied TestIndex must match the selected project,
+resolved Git subject, and active Requirement identities. For a worktree trace,
+`HEAD` and the worktree graph must have equal semantic and structural
+fingerprints before the HEAD-bound index is accepted.
 
 ### `sdd diff`
 
 ```text
-sdd diff --base <git-ref> --target <git-ref>
+sdd diff --base <git-ref> --target <git-ref> \
+  [--base-test-index <path> --target-test-index <path>]
 ```
 
 Produces semantic and structural object-delta entries and fingerprints between
@@ -139,6 +143,9 @@ class contains `entries`, the exact compact `canonical_json_utf8` string, and
 its `fingerprint`. `validate --changed-from` uses the same class fields under a
 `comparison` result, reports the resolved `changed_from_ref`, and compares it
 to the selected worktree graph rather than claiming a target Git object ID.
+Supplying both subject-matched TestIndexes adds `verification` to
+`available_classes`, removes it from `unavailable_classes`, and adds its
+independently canonicalized delta. Supplying only one index is invalid.
 
 ### `sdd proposal validate`
 

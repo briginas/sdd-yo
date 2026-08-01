@@ -63,7 +63,8 @@ evidence:
 `git.default_target_ref` is a convenience default only. Strict gate artifacts
 always record resolved commit IDs.
 
-`tests.import_limits` bounds explicit JSONL and JUnit file imports. Version 1
+`tests.import_limits` bounds explicit JSONL, TestIndex JSON, and JUnit file
+imports. `max_jsonl_bytes` also bounds a supplied TestIndex. Version 1
 uses the values shown above when this optional mapping is absent, preserving
 existing project configuration while keeping every import bounded. An explicit
 JUnit import is bound to exactly one configured JUnit adapter selected with

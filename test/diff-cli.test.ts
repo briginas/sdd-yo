@@ -79,12 +79,19 @@ The system shall deliver the item once.
 - A delivered item is recorded.
 `;
 
-async function createComparisonRepository(): Promise<{ root: string; base: string; target: string }> {
+async function createComparisonRepository(): Promise<{
+  root: string;
+  base: string;
+  target: string;
+  projectId: string;
+}> {
   const root = await mkdtemp(join(tmpdir(), "sdd-cli-diff-"));
   await executeFile("git", ["init", "--quiet", "--initial-branch", "main"], { cwd: root });
   await executeFile("git", ["config", "user.name", "SDD Test"], { cwd: root });
   await executeFile("git", ["config", "user.email", "sdd@example.invalid"], { cwd: root });
-  assert.equal((await execute(["init", "--format", "json"], root)).exitCode, 0);
+  const initialized = await execute(["init", "--format", "json"], root);
+  assert.equal(initialized.exitCode, 0);
+  const projectId = (JSON.parse(initialized.standardOutput) as { project_id: string }).project_id;
   await executeFile("git", ["add", ".sdd/config.yaml", "spec"], { cwd: root });
   await executeFile("git", ["commit", "--quiet", "-m", "empty graph"], { cwd: root });
   const base = (await executeFile("git", ["rev-parse", "HEAD"], { cwd: root })).stdout.trim();
@@ -95,7 +102,38 @@ async function createComparisonRepository(): Promise<{ root: string; base: strin
   await executeFile("git", ["add", "spec"], { cwd: root });
   await executeFile("git", ["commit", "--quiet", "-m", "add delivery"], { cwd: root });
   const target = (await executeFile("git", ["rev-parse", "HEAD"], { cwd: root })).stdout.trim();
-  return { root, base, target };
+  return { root, base, target, projectId };
+}
+
+const fingerprint = (character: string): string => `sha256:${character.repeat(64)}`;
+
+async function writeTestIndex(
+  root: string,
+  path: string,
+  projectId: string,
+  headRef: string,
+  tests: readonly { readonly test_ref: string; readonly requirement_ids: readonly string[] }[],
+): Promise<void> {
+  await writeFile(
+    join(root, path),
+    JSON.stringify({
+      schema_version: "1.0",
+      artifact_type: "test_index",
+      project_id: projectId,
+      subject: {
+        head_ref: headRef,
+        config_fingerprint: fingerprint("1"),
+        adapter_fingerprints: { unit: fingerprint("2") },
+      },
+      tests: tests.map((item) => ({
+        test_ref: item.test_ref,
+        adapter_id: "unit",
+        local_id: item.test_ref.slice("unit:".length),
+        full_name: `Delivery ${item.requirement_ids.join(" ")}`,
+        requirement_ids: item.requirement_ids,
+      })),
+    }),
+  );
 }
 
 test("REQ-24A372E7 diff reports deterministic Git-ref semantic and structural classes", async () => {
@@ -220,4 +258,76 @@ test("REQ-24A372E7 unresolved diff refs produce a stable technical failure", asy
     (JSON.parse(missing.standardOutput) as { diagnostics: readonly { code: string }[] }).diagnostics[0]?.code,
     "SDD_GIT_REF_UNRESOLVED",
   );
+});
+
+test("REQ-B25091A0 diff exposes verification only from two subject-matched TestIndexes", async () => {
+  const { root, base, target, projectId } = await createComparisonRepository();
+  await writeTestIndex(root, "base-index.json", projectId, base, []);
+  await writeTestIndex(root, "target-index.json", projectId, target, [
+    { test_ref: "unit:delivery", requirement_ids: ["REQ-C1000001"] },
+  ]);
+  const compared = await execute(
+    [
+      "diff",
+      "--base",
+      base,
+      "--target",
+      target,
+      "--base-test-index",
+      "base-index.json",
+      "--target-test-index",
+      "target-index.json",
+      "--format",
+      "json",
+    ],
+    root,
+  );
+  assert.equal(compared.exitCode, 0, compared.standardOutput);
+  const result = (
+    JSON.parse(compared.standardOutput) as {
+      result: {
+        available_classes: readonly string[];
+        unavailable_classes: readonly string[];
+        deltas: { verification: { entries: readonly { operation: string; id: string }[] } };
+      };
+    }
+  ).result;
+  assert.deepEqual(result.available_classes, ["semantic", "structural", "verification"]);
+  assert.deepEqual(result.unavailable_classes, []);
+  assert.deepEqual(
+    result.deltas.verification.entries.map((entry) => [entry.operation, entry.id]),
+    [["add", "REQ-C1000001"]],
+  );
+
+  const incomplete = await execute(
+    ["diff", "--base", base, "--target", target, "--base-test-index", "base-index.json", "--format", "json"],
+    root,
+  );
+  assert.equal(incomplete.exitCode, 3);
+  assert.equal(
+    (JSON.parse(incomplete.standardOutput) as { diagnostics: readonly { code: string }[] }).diagnostics[0]?.code,
+    "SDD_ADAPTER_TEST_INDEX_PAIR_REQUIRED",
+  );
+});
+
+test("REQ-24073D4F REQ-B25091A0 trace adds mapped tests only when a matching TestIndex is supplied", async () => {
+  const { root, target, projectId } = await createComparisonRepository();
+  await writeTestIndex(root, "target-index.json", projectId, target, [
+    { test_ref: "unit:delivery", requirement_ids: ["REQ-C1000001"] },
+  ]);
+  const traced = await execute(
+    ["trace", "REQ-C1000001", "--ref", target, "--test-index", "target-index.json", "--format", "json"],
+    root,
+  );
+  assert.equal(traced.exitCode, 0, traced.standardOutput);
+  const mapped = (
+    JSON.parse(traced.standardOutput) as {
+      result: { mapped_tests: readonly { test_ref: string; full_name: string }[] };
+    }
+  ).result.mapped_tests;
+  assert.deepEqual(mapped, [{ test_ref: "unit:delivery", full_name: "Delivery REQ-C1000001" }]);
+
+  const graphOnly = await execute(["trace", "REQ-C1000001", "--ref", target, "--format", "json"], root);
+  assert.equal(graphOnly.exitCode, 0, graphOnly.standardOutput);
+  assert.equal("mapped_tests" in (JSON.parse(graphOnly.standardOutput) as { result: object }).result, false);
 });

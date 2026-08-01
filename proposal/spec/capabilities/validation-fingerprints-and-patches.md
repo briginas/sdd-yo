@@ -11,33 +11,6 @@ sdd:
 Provide deterministic structural validation, stable meaning-aware
 fingerprints, safe exact patch preparation, and reproducible Git comparison.
 
-<a id="req-b25091a0"></a>
-
-## REQ-B25091A0 — Separate semantic, structural, and verification fingerprints
-
-```sdd
-kind: invariant
-verification: automated
-```
-
-### Relations <!-- sdd:relations -->
-
-- refers-to: [CON-FC16381E — Fingerprint](../../../spec/concepts/fingerprint.md)
-
-### Statement <!-- sdd:statement -->
-
-Every applicable object and Change shall expose separate semantic, structural,
-and verification fingerprints.
-
-### Acceptance criteria <!-- sdd:acceptance -->
-
-- Semantic fingerprints cover normative Requirement meaning and semantic
-  Concept definition.
-- Structural fingerprints cover type, kind, ownership, and active relations.
-- Verification fingerprints cover verification mode and computed test
-  references.
-- Approval binds semantic and structural deltas, not verification deltas.
-
 <a id="req-afd65a03"></a>
 
 ## REQ-AFD65A03 — Fingerprint approved object deltas

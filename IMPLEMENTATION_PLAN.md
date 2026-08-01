@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 4 / Test discovery and QA scope
-- Current leaf: 4.4 Test-backed trace and verification fingerprints
+- Current leaf: 4.5 Affected verification and QA scope
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -32,9 +32,9 @@ contract types, configuration and Markdown parsing, graph validation, the
 first implemented canonical `spec/` subset, and implemented `sdd init`, `id`,
 `validate`, `inspect`, `trace`, and `diff` operations. Test adapter declarations,
 bounded JSONL and JUnit discovery import, normalized suite inheritance, and
-deterministic version 1 TestIndex output are implemented. The runtime does not
-yet enrich trace with tests, compute verification fingerprints or affected QA
-scope, or validate test and QA evidence.
+deterministic version 1 TestIndex output, TestIndex-backed trace, and
+verification fingerprints and deltas are implemented. The runtime does not yet
+compute affected QA scope or validate test and QA evidence.
 Unimplemented target behavior remains under `proposal/spec/` and is promoted
 only in verified bounded subsets.
 
@@ -563,9 +563,10 @@ Mode: `spec-code`.
       validate hierarchy and active Requirement mappings, union adapters by
       namespace, emit `sdd tests discover`, and promote `REQ-12E19D70`,
       `REQ-F7CEE6D0`, `REQ-6D8DDDF7`, and `REQ-72BA737C`.
-- [ ] **4.4 — Test-backed trace and verification fingerprints.** Enrich `trace`
-      with mapped tests and add verification fingerprints and verification
-      deltas without changing graph-only trace semantics.
+- [x] **4.4 — Test-backed trace and verification fingerprints.** Enrich `trace`
+      from a subject-matched TestIndex, add deterministic Requirement
+      verification fingerprints, and expose verification deltas only from a
+      complete base/target TestIndex pair without changing graph-only trace.
 - [ ] **4.5 — Affected verification and QA scope.** Compute affected
       Requirements and Capabilities.
 - [ ] **4.6 — Execution and QA evidence validation.** Validate freshness and
@@ -659,9 +660,7 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 4.4 — Test-backed trace and verification fingerprints` is the only
-active implementation leaf. It enriches trace from an explicitly supplied
-TestIndex and adds deterministic verification fingerprints and deltas while
-preserving graph-only trace behavior when no TestIndex is supplied. Affected
-scope and execution and QA evidence validation remain in Milestones 4.5 and
-4.6.
+`Milestone 4.5 — Affected verification and QA scope` is the only active
+implementation leaf. It computes transitive affected Requirements and owning
+Capabilities from the available change classes. Execution and QA evidence
+validation remains in Milestone 4.6.

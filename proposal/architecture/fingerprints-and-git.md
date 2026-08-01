@@ -161,6 +161,9 @@ The canonical delta format also supports the verification class, but a command
 must not report that class as available until both graph snapshots have a
 TestIndex-derived verification fingerprint. An unavailable class is distinct
 from the exact empty delta `[]` for an available unchanged class.
+Version 1 `diff` accepts an optional pair of base and target TestIndex paths;
+each index must match the selected project, resolved snapshot ref, and active
+Requirement identities. A partial pair is invalid.
 
 ### Approval binding
 

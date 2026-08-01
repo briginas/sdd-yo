@@ -1,6 +1,6 @@
 import type { Diagnostic } from "../contracts/diagnostics.ts";
 import { isDiagnosticCode } from "../contracts/diagnostics.ts";
-import type { GitObjectId, ObjectId, ProjectId, ProjectPath } from "../contracts/identifiers.ts";
+import type { GitObjectId, ObjectId, ProjectId, ProjectPath, RequirementId } from "../contracts/identifiers.ts";
 import { isObjectId, isProjectPath, isRequirementId } from "../contracts/identifiers.ts";
 import type { CliResponseEnvelope } from "../contracts/result.ts";
 import { resolve } from "node:path";
@@ -22,7 +22,7 @@ import {
 import { buildCurrentProjectIdentityIndex, ProjectIdentityError } from "../ids/project-identity.ts";
 import { fingerprintValidatedObject } from "../fingerprint/object-fingerprint.ts";
 import type { ObjectDeltaEntry } from "../fingerprint/object-delta.ts";
-import { computeGraphObjectDelta } from "../fingerprint/object-delta.ts";
+import { computeGraphObjectDelta, computeVerificationObjectDelta } from "../fingerprint/object-delta.ts";
 import type { ValidatedSpecificationGraph } from "../graph/validate-graph.ts";
 import { validateSpecificationGraph } from "../graph/validate-graph.ts";
 import type { GraphTrace } from "../graph/query-graph.ts";
@@ -36,6 +36,9 @@ import {
   JunitImportError,
   ProjectTestDiscoveryError,
   TestIndexError,
+  TestIndexInputError,
+  importTestIndexFile,
+  validateTestIndexSubject,
 } from "../tests/index.ts";
 import type { TestIndex } from "../tests/index.ts";
 
@@ -77,11 +80,15 @@ type Invocation = {
   readonly historyRef?: string;
   readonly baseRef?: string;
   readonly targetRef?: string;
+  readonly traceRef?: string;
   readonly changedFrom?: string;
   readonly headRef?: string;
   readonly adapterIds: readonly string[];
   readonly importJsonl: readonly ProjectPath[];
   readonly importJunit: readonly ProjectPath[];
+  readonly testIndex?: ProjectPath;
+  readonly baseTestIndex?: ProjectPath;
+  readonly targetTestIndex?: ProjectPath;
 };
 
 export type InitResult = {
@@ -119,7 +126,8 @@ export type InspectResult = {
   readonly fingerprints: Readonly<Record<string, string>>;
 };
 
-export type TraceResult = GraphTrace;
+export type MappedTest = Pick<TestIndex["tests"][number], "test_ref" | "full_name" | "source">;
+export type TraceResult = GraphTrace & { readonly mapped_tests?: readonly MappedTest[] };
 
 export type DeltaClassResult = {
   readonly entries: readonly ObjectDeltaEntry[];
@@ -128,11 +136,12 @@ export type DeltaClassResult = {
 };
 
 export type DeltaClassesResult = {
-  readonly available_classes: readonly ["semantic", "structural"];
-  readonly unavailable_classes: readonly ["verification"];
+  readonly available_classes: readonly ("semantic" | "structural" | "verification")[];
+  readonly unavailable_classes: readonly ("semantic" | "structural" | "verification")[];
   readonly deltas: {
     readonly semantic: DeltaClassResult;
     readonly structural: DeltaClassResult;
+    readonly verification?: DeltaClassResult;
   };
 };
 
@@ -201,11 +210,15 @@ function parseInvocation(
   let historyRef: string | undefined;
   let baseRef: string | undefined;
   let targetRef: string | undefined;
+  let traceRef: string | undefined;
   let changedFrom: string | undefined;
   let headRef: string | undefined;
   const adapterIds: string[] = [];
   const importJsonl: ProjectPath[] = [];
   const importJunit: ProjectPath[] = [];
+  let testIndex: ProjectPath | undefined;
+  let baseTestIndex: ProjectPath | undefined;
+  let targetTestIndex: ProjectPath | undefined;
   for (let index = command === "tests.discover" ? 2 : 1; index < argv.length; index += 1) {
     const argument = argv[index];
     if (
@@ -220,11 +233,15 @@ function parseInvocation(
       argument === "--history-ref" ||
       argument === "--base" ||
       argument === "--target" ||
+      argument === "--ref" ||
       argument === "--changed-from" ||
       argument === "--head" ||
       argument === "--adapter" ||
       argument === "--import-jsonl" ||
-      argument === "--import-junit"
+      argument === "--import-junit" ||
+      argument === "--test-index" ||
+      argument === "--base-test-index" ||
+      argument === "--target-test-index"
     ) {
       const value = argv[index + 1];
       if (value === undefined)
@@ -305,7 +322,8 @@ function parseInvocation(
         argument === "--base" ||
         argument === "--target" ||
         argument === "--changed-from" ||
-        argument === "--head"
+        argument === "--head" ||
+        argument === "--ref"
       ) {
         if (value.length === 0 || value.includes("\0"))
           return {
@@ -319,7 +337,8 @@ function parseInvocation(
         if (argument === "--base") baseRef = value;
         else if (argument === "--target") targetRef = value;
         else if (argument === "--changed-from") changedFrom = value;
-        else headRef = value;
+        else if (argument === "--head") headRef = value;
+        else traceRef = value;
       } else if (argument === "--adapter") {
         if (!/^[a-z][a-z0-9-]{0,31}$/u.test(value))
           return {
@@ -331,7 +350,13 @@ function parseInvocation(
             ),
           };
         adapterIds.push(value);
-      } else if (argument === "--import-jsonl" || argument === "--import-junit") {
+      } else if (
+        argument === "--import-jsonl" ||
+        argument === "--import-junit" ||
+        argument === "--test-index" ||
+        argument === "--base-test-index" ||
+        argument === "--target-test-index"
+      ) {
         if (!isProjectPath(value))
           return {
             ok: false,
@@ -342,7 +367,10 @@ function parseInvocation(
             ),
           };
         if (argument === "--import-jsonl") importJsonl.push(value);
-        else importJunit.push(value);
+        else if (argument === "--import-junit") importJunit.push(value);
+        else if (argument === "--test-index") testIndex = value;
+        else if (argument === "--base-test-index") baseTestIndex = value;
+        else targetTestIndex = value;
       } else {
         if (!isProjectPath(value))
           return {
@@ -448,6 +476,42 @@ function parseInvocation(
         "Supply both --base and --target.",
       ),
     };
+  if (command !== "trace" && traceRef !== undefined)
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "--ref was used with another command.",
+        "Use --ref only with sdd trace.",
+      ),
+    };
+  if (command !== "trace" && testIndex !== undefined)
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "--test-index was used with another command.",
+        "Use --test-index only with sdd trace.",
+      ),
+    };
+  if (command !== "diff" && (baseTestIndex !== undefined || targetTestIndex !== undefined))
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "A diff TestIndex option was used with another command.",
+        "Use --base-test-index and --target-test-index only with sdd diff.",
+      ),
+    };
+  if (command === "diff" && (baseTestIndex === undefined) !== (targetTestIndex === undefined))
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_ADAPTER_TEST_INDEX_PAIR_REQUIRED",
+        "Verification diff requires both base and target TestIndex inputs.",
+        "Supply both --base-test-index and --target-test-index, or neither.",
+      ),
+    };
   if (command !== "validate" && changedFrom !== undefined)
     return {
       ok: false,
@@ -523,11 +587,15 @@ function parseInvocation(
       ...(historyRef === undefined ? {} : { historyRef }),
       ...(baseRef === undefined ? {} : { baseRef }),
       ...(targetRef === undefined ? {} : { targetRef }),
+      ...(traceRef === undefined ? {} : { traceRef }),
       ...(changedFrom === undefined ? {} : { changedFrom }),
       ...(headRef === undefined ? {} : { headRef }),
       adapterIds: [...new Set(adapterIds)],
       importJsonl,
       importJunit,
+      ...(testIndex === undefined ? {} : { testIndex }),
+      ...(baseTestIndex === undefined ? {} : { baseTestIndex }),
+      ...(targetTestIndex === undefined ? {} : { targetTestIndex }),
     },
   };
 }
@@ -670,6 +738,7 @@ function validateResult(
 function deltaClassesResult(
   before: ValidatedSpecificationGraph,
   after: ValidatedSpecificationGraph,
+  indexes?: { readonly before: TestIndex; readonly after: TestIndex },
 ): DeltaClassesResult {
   const delta = computeGraphObjectDelta(before, after);
   const view = (value: typeof delta.semantic): DeltaClassResult => ({
@@ -677,11 +746,35 @@ function deltaClassesResult(
     canonical_json_utf8: new TextDecoder().decode(value.canonicalBytes),
     fingerprint: value.fingerprint,
   });
+  if (indexes === undefined)
+    return {
+      available_classes: ["semantic", "structural"],
+      unavailable_classes: ["verification"],
+      deltas: { semantic: view(delta.semantic), structural: view(delta.structural) },
+    };
+  const verification = computeVerificationObjectDelta(before, indexes.before, after, indexes.after);
   return {
-    available_classes: ["semantic", "structural"],
-    unavailable_classes: ["verification"],
-    deltas: { semantic: view(delta.semantic), structural: view(delta.structural) },
+    available_classes: ["semantic", "structural", "verification"],
+    unavailable_classes: [],
+    deltas: { semantic: view(delta.semantic), structural: view(delta.structural), verification: view(verification) },
   };
+}
+
+function mappedTrace(trace: GraphTrace, index: TestIndex): TraceResult {
+  return {
+    ...trace,
+    mapped_tests: index.tests
+      .filter((test) => test.requirement_ids.some((id) => id === trace.object_id))
+      .map((test) => ({
+        test_ref: test.test_ref,
+        full_name: test.full_name,
+        ...(test.source === undefined ? {} : { source: test.source }),
+      })),
+  };
+}
+
+function knownRequirementIds(graph: ValidatedSpecificationGraph): ReadonlySet<RequirementId> {
+  return new Set([...graph.objects.keys()].filter(isRequirementId));
 }
 
 function humanView(value: CliResponse): string {
@@ -698,7 +791,9 @@ function humanView(value: CliResponse): string {
         `changed from: ${result.comparison.changed_from_ref}`,
         `semantic: ${result.comparison.deltas.semantic.fingerprint}`,
         `structural: ${result.comparison.deltas.structural.fingerprint}`,
-        "verification: unavailable",
+        result.comparison.deltas.verification === undefined
+          ? "verification: unavailable"
+          : `verification: ${result.comparison.deltas.verification.fingerprint}`,
       );
   } else if (value.command === "inspect" && value.status === "ok") {
     const result = value.result as unknown as { object: { id: string; title: string }; document_path: string };
@@ -712,6 +807,8 @@ function humanView(value: CliResponse): string {
       `dependents: ${result.dependents.join(", ") || "none"}`,
       `referrers: ${result.referrers.map((item) => `${item.source_id} (${item.type})`).join(", ") || "none"}`,
     );
+    if (result.mapped_tests !== undefined)
+      lines.push(`mapped tests: ${result.mapped_tests.map((test) => test.test_ref).join(", ") || "none"}`);
   } else if (value.command === "diff" && value.status === "ok") {
     const result = value.result as DiffResult;
     lines.push(
@@ -719,7 +816,9 @@ function humanView(value: CliResponse): string {
       `target: ${result.target_ref}`,
       `semantic: ${result.deltas.semantic.fingerprint}`,
       `structural: ${result.deltas.structural.fingerprint}`,
-      "verification: unavailable",
+      result.deltas.verification === undefined
+        ? "verification: unavailable"
+        : `verification: ${result.deltas.verification.fingerprint}`,
     );
   } else if (value.command === "init" && value.status === "ok") {
     const result = value.result as InitResult;
@@ -797,7 +896,8 @@ function adapterTechnicalDiagnostic(error: unknown): Diagnostic {
     error instanceof AdapterImportError ||
     error instanceof JunitImportError ||
     error instanceof ProjectTestDiscoveryError ||
-    error instanceof TestIndexError
+    error instanceof TestIndexError ||
+    error instanceof TestIndexInputError
   ) {
     return cliDiagnostic(
       error.code,
@@ -1192,10 +1292,29 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
           );
           return TECHNICAL_FAILURE_EXIT_CODE;
         }
+        let verificationIndexes: { readonly before: TestIndex; readonly after: TestIndex } | undefined;
+        if (invocation.baseTestIndex !== undefined && invocation.targetTestIndex !== undefined) {
+          const maxBytes = project.configuration.tests.import_limits.max_jsonl_bytes;
+          const [beforeIndex, afterIndex] = await Promise.all([
+            importTestIndexFile(runtime.fileSystem, project.project_root, invocation.baseTestIndex, maxBytes),
+            importTestIndexFile(runtime.fileSystem, project.project_root, invocation.targetTestIndex, maxBytes),
+          ]);
+          validateTestIndexSubject(beforeIndex, {
+            project_id: project.configuration.project_id,
+            head_ref: baseRef,
+            known_requirement_ids: knownRequirementIds(baseGraph),
+          });
+          validateTestIndexSubject(afterIndex, {
+            project_id: project.configuration.project_id,
+            head_ref: targetRef,
+            known_requirement_ids: knownRequirementIds(targetGraph),
+          });
+          verificationIndexes = { before: beforeIndex, after: afterIndex };
+        }
         const result: DiffResult = {
           base_ref: baseRef,
           target_ref: targetRef,
-          ...deltaClassesResult(baseGraph, targetGraph),
+          ...deltaClassesResult(baseGraph, targetGraph, verificationIndexes),
         };
         emit(
           runtime,
@@ -1206,13 +1325,82 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
         return VALID_EXIT_CODE;
       } catch (error) {
         const diagnostic =
-          error instanceof HistoryIndexError
-            ? projectSnapshotInvalidDiagnostic()
-            : comparisonTechnicalDiagnostic(error);
+          error instanceof TestIndexInputError
+            ? adapterTechnicalDiagnostic(error)
+            : error instanceof HistoryIndexError
+              ? projectSnapshotInvalidDiagnostic()
+              : comparisonTechnicalDiagnostic(error);
         emit(
           runtime,
           invocation.format,
           response("diff", project.configuration.project_id, "error", null, [diagnostic]),
+          outputTarget,
+        );
+        return TECHNICAL_FAILURE_EXIT_CODE;
+      }
+    }
+    if (invocation.command === "trace" && invocation.traceRef !== undefined) {
+      try {
+        const reader = await discoverProcessGitReader(runtime.processRunner, project.project_root);
+        const resolvedRef = await reader.resolveRevision(invocation.traceRef);
+        const traceGraph = await loadCanonicalProjectGraphAt(reader, resolvedRef, project.configuration.project_id);
+        if (traceGraph === undefined) {
+          emit(
+            runtime,
+            invocation.format,
+            response("trace", project.configuration.project_id, "error", null, [projectSnapshotMissingDiagnostic()]),
+            outputTarget,
+          );
+          return TECHNICAL_FAILURE_EXIT_CODE;
+        }
+        const graphTrace = traceGraphObject(traceGraph, invocation.objectId!);
+        if (graphTrace === undefined) {
+          const diagnostic = cliDiagnostic(
+            "SDD_GRAPH_OBJECT_UNKNOWN",
+            "The requested object does not exist in the selected graph.",
+            "Use an active CAP, REQ, or CON ID.",
+          );
+          emit(
+            runtime,
+            invocation.format,
+            response("trace", project.configuration.project_id, "error", null, [diagnostic]),
+            outputTarget,
+          );
+          return TECHNICAL_FAILURE_EXIT_CODE;
+        }
+        let result: TraceResult = graphTrace;
+        if (invocation.testIndex !== undefined) {
+          const index = await importTestIndexFile(
+            runtime.fileSystem,
+            project.project_root,
+            invocation.testIndex,
+            project.configuration.tests.import_limits.max_jsonl_bytes,
+          );
+          validateTestIndexSubject(index, {
+            project_id: project.configuration.project_id,
+            head_ref: resolvedRef,
+            known_requirement_ids: knownRequirementIds(traceGraph),
+          });
+          result = mappedTrace(graphTrace, index);
+        }
+        emit(
+          runtime,
+          invocation.format,
+          response("trace", project.configuration.project_id, "ok", result, []),
+          outputTarget,
+        );
+        return VALID_EXIT_CODE;
+      } catch (error) {
+        const diagnostic =
+          error instanceof TestIndexInputError
+            ? adapterTechnicalDiagnostic(error)
+            : error instanceof HistoryIndexError
+              ? projectSnapshotInvalidDiagnostic()
+              : comparisonTechnicalDiagnostic(error);
+        emit(
+          runtime,
+          invocation.format,
+          response("trace", project.configuration.project_id, "error", null, [diagnostic]),
           outputTarget,
         );
         return TECHNICAL_FAILURE_EXIT_CODE;
@@ -1280,8 +1468,8 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
       return VALID_EXIT_CODE;
     }
     if (invocation.command === "trace") {
-      const result = traceGraphObject(graph.value, invocation.objectId!);
-      if (result === undefined) {
+      const graphTrace = traceGraphObject(graph.value, invocation.objectId!);
+      if (graphTrace === undefined) {
         const diagnostic = cliDiagnostic(
           "SDD_GRAPH_OBJECT_UNKNOWN",
           "The requested object does not exist in the active graph.",
@@ -1294,6 +1482,48 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
           outputTarget,
         );
         return TECHNICAL_FAILURE_EXIT_CODE;
+      }
+      let result: TraceResult = graphTrace;
+      if (invocation.testIndex !== undefined) {
+        try {
+          const reader = await discoverProcessGitReader(runtime.processRunner, project.project_root);
+          const headRef = await reader.resolveRevision("HEAD");
+          const headGraph = await loadCanonicalProjectGraphAt(reader, headRef, project.configuration.project_id);
+          if (headGraph === undefined) throw new HistoryIndexError("Project missing from the HEAD snapshot.");
+          const worktreeDelta = computeGraphObjectDelta(headGraph, graph.value);
+          if (worktreeDelta.semantic.entries.length > 0 || worktreeDelta.structural.entries.length > 0) {
+            throw new TestIndexInputError(
+              "SDD_ADAPTER_TEST_INDEX_SUBJECT_MISMATCH",
+              "The worktree graph differs from the TestIndex Git subject.",
+            );
+          }
+          const index = await importTestIndexFile(
+            runtime.fileSystem,
+            project.project_root,
+            invocation.testIndex,
+            project.configuration.tests.import_limits.max_jsonl_bytes,
+          );
+          validateTestIndexSubject(index, {
+            project_id: project.configuration.project_id,
+            head_ref: headRef,
+            known_requirement_ids: knownRequirementIds(graph.value),
+          });
+          result = mappedTrace(graphTrace, index);
+        } catch (error) {
+          const diagnostic =
+            error instanceof TestIndexInputError
+              ? adapterTechnicalDiagnostic(error)
+              : error instanceof HistoryIndexError
+                ? projectSnapshotInvalidDiagnostic()
+                : comparisonTechnicalDiagnostic(error);
+          emit(
+            runtime,
+            invocation.format,
+            response("trace", project.configuration.project_id, "error", null, [diagnostic]),
+            outputTarget,
+          );
+          return TECHNICAL_FAILURE_EXIT_CODE;
+        }
       }
       emit(
         runtime,

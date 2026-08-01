@@ -23,16 +23,11 @@ type Cases = {
     expected_fingerprint?: string;
   }[];
 };
-test("REQ-8ACBC52D REQ-1095E571 canonical object bytes and fingerprints", async () => {
+test("REQ-8ACBC52D REQ-1095E571 REQ-B25091A0 canonical object bytes and fingerprints", async () => {
   const root = "fixtures/v1/fingerprints/objects";
   const manifest = JSON.parse(await readFile(`${root}/cases.json`, "utf8")) as Cases;
   for (const item of manifest.cases) {
-    if (
-      item.model_path === undefined ||
-      item.fingerprint_class === undefined ||
-      item.fingerprint_class === "verification"
-    )
-      continue;
+    if (item.model_path === undefined || item.fingerprint_class === undefined) continue;
     const projection = JSON.parse(await readFile(`${root}/${item.model_path}`, "utf8")) as {
       object: Record<string, unknown>;
     };
@@ -53,7 +48,7 @@ test("REQ-8ACBC52D REQ-1095E571 canonical object bytes and fingerprints", async 
     for (const expectedId of item.expected_equal_to_case_ids) {
       const fingerprintClass = goldenCases.get(expectedId)?.fingerprint_class;
       assert.notEqual(fingerprintClass, undefined, expectedId);
-      if (fingerprintClass === undefined || fingerprintClass === "verification") continue;
+      if (fingerprintClass === undefined) continue;
       assert.equal(
         fingerprintObject(projections[0]!, fingerprintClass),
         fingerprintObject(projections[1]!, fingerprintClass),

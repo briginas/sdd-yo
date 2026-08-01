@@ -41,6 +41,33 @@ reachable canonical specification history of the same SDD Project.
   as prior model object definitions.
 - Parallel-branch collisions are detected against the current integration ref.
 
+<a id="req-b25091a0"></a>
+
+## REQ-B25091A0 — Separate semantic, structural, and verification fingerprints
+
+```sdd
+kind: invariant
+verification: automated
+```
+
+### Relations <!-- sdd:relations -->
+
+- refers-to: [CON-FC16381E — Fingerprint](../concepts/fingerprint.md)
+
+### Statement <!-- sdd:statement -->
+
+Every applicable object and Change shall expose separate semantic, structural,
+and verification fingerprints.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- Semantic fingerprints cover normative Requirement meaning and semantic
+  Concept definition.
+- Structural fingerprints cover type, kind, ownership, and active relations.
+- Verification fingerprints cover verification mode and computed test
+  references.
+- Approval binds semantic and structural deltas, not verification deltas.
+
 <a id="req-24a372e7"></a>
 
 ## REQ-24A372E7 — Compute semantic and structural object deltas

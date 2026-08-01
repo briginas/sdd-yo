@@ -5,8 +5,14 @@ import { join, relative } from "node:path";
 import test from "node:test";
 
 import { isProjectPath } from "../src/contracts/identifiers.ts";
-import { canonicalizeObjectDelta, computeGraphObjectDelta } from "../src/fingerprint/object-delta.ts";
+import {
+  canonicalizeObjectDelta,
+  computeGraphObjectDelta,
+  computeVerificationObjectDelta,
+} from "../src/fingerprint/object-delta.ts";
 import type { ObjectDeltaEntry } from "../src/fingerprint/object-delta.ts";
+import type { Fingerprint, GitObjectId, ProjectId, RequirementId } from "../src/contracts/identifiers.ts";
+import type { TestIndex } from "../src/tests/test-index.ts";
 import { validateSpecificationGraph } from "../src/graph/validate-graph.ts";
 import type { ValidatedSpecificationGraph } from "../src/graph/validate-graph.ts";
 import { parseSpecificationDocument } from "../src/markdown/parse-markdown.ts";
@@ -127,5 +133,33 @@ test("REQ-24A372E7 rejects duplicate object identities in one fingerprint-class 
         },
       ]),
     /does not change/u,
+  );
+});
+
+test("REQ-B25091A0 computes verification deltas from mode and mapped test references", async () => {
+  const graph = await graphAt("fixtures/v1/markdown/change-classification/semantic-only/before");
+  const index = (testRefs: readonly string[]): TestIndex => ({
+    schema_version: "1.0",
+    artifact_type: "test_index",
+    project_id: "SDD-A1000001" as ProjectId,
+    subject: {
+      head_ref: "head" as GitObjectId,
+      config_fingerprint: `sha256:${"1".repeat(64)}` as Fingerprint,
+      adapter_fingerprints: { unit: `sha256:${"2".repeat(64)}` as Fingerprint },
+    },
+    tests: testRefs.map((testRef) => ({
+      test_ref: testRef,
+      adapter_id: "unit",
+      local_id: testRef.slice("unit:".length),
+      full_name: `REQ-A1000001 ${testRef}`,
+      requirement_ids: ["REQ-A1000001" as RequirementId],
+    })),
+  });
+  const unchanged = computeVerificationObjectDelta(graph, index(["unit:a"]), graph, index(["unit:a"]));
+  assert.equal(canonicalJson(unchanged), "[]");
+  const changed = computeVerificationObjectDelta(graph, index(["unit:a"]), graph, index(["unit:a", "unit:b"]));
+  assert.deepEqual(
+    changed.entries.map((entry) => [entry.operation, entry.type, entry.id]),
+    [["modify", "requirement", "REQ-A1000001"]],
   );
 });

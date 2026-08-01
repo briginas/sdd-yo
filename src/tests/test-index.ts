@@ -16,6 +16,7 @@ export type TestIndexEntry = {
   readonly source?: {
     readonly path: ProjectPath;
     readonly line?: number;
+    readonly column?: number;
   };
 };
 
@@ -23,6 +24,8 @@ export type TestIndex = {
   readonly schema_version: "1.0";
   readonly artifact_type: "test_index";
   readonly project_id: ProjectId;
+  readonly created_at?: string;
+  readonly producer?: { readonly name: string; readonly version: string };
   readonly subject: {
     readonly head_ref: GitObjectId;
     readonly config_fingerprint: Fingerprint;
