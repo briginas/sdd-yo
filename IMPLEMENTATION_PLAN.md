@@ -3,8 +3,8 @@
 ## Status
 
 - State: active
-- Current phase: Milestone 4 / Test discovery and QA scope
-- Current leaf: 4.6 Execution and QA evidence validation
+- Current phase: Milestone 5 / Proposal and exact patch
+- Current leaf: ProposalPackage validation
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -33,9 +33,10 @@ first implemented canonical `spec/` subset, and implemented `sdd init`, `id`,
 `validate`, `inspect`, `trace`, and `diff` operations. Test adapter declarations,
 bounded JSONL and JUnit discovery import, normalized suite inheritance, and
 deterministic version 1 TestIndex output, TestIndex-backed trace, and
-verification fingerprints and deltas, and deterministic affected Requirement
-and Capability scope are implemented. The runtime does not yet validate test
-and QA evidence.
+verification fingerprints and deltas, deterministic affected Requirement and
+Capability scope, and bounded execution/QA evidence validation are implemented.
+The runtime does not yet implement proposal artifacts, exact patches, or
+Verification and Merge gates.
 Unimplemented target behavior remains under `proposal/spec/` and is promoted
 only in verified bounded subsets.
 
@@ -573,8 +574,12 @@ Mode: `spec-code`.
       semantic Concept impact, transitive reverse dependencies, and former
       owners of deleted Requirements. This contributes the pure scope
       computation for `REQ-89AFB91E`; the Verification Gate remains in 4.6.
-- [ ] **4.6 — Execution and QA evidence validation.** Validate freshness and
-      coverage.
+- [x] **4.6 — Execution and QA evidence validation.** Strictly parse bounded,
+      project-scoped TestExecutionEvidence and QAEvidence; validate issuer,
+      project, ref, configuration, adapter, TestIndex, and affected-scope
+      freshness; and compute deterministic automated, manual, and Capability
+      coverage with blocking versus review-required issue classifications.
+      VerificationReport and readiness-status composition remain Milestone 6.
 
 Primary target Capability:
 `CAP-15DBC157`.
@@ -664,7 +669,6 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 4.6 — Execution and QA evidence validation` is the only active
-implementation leaf. It validates TestExecutionEvidence and QAEvidence
-freshness and coverage against the subject-matched TestIndex and affected
-scope, then emits the deterministic VerificationReport.
+`Milestone 5 — Proposal and exact patch` is now active. Its first bounded leaf
+is ProposalPackage validation for the three synchronization modes; exact patch
+preparation and application remain subsequent leaves.

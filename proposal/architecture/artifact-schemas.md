@@ -277,6 +277,28 @@ Capability coverage and manual Requirement decisions are evaluated
 independently. A general `passed` value cannot imply an omitted manual
 Requirement.
 
+### Execution and QA evidence validation boundary
+
+The version 1 core strictly parses TestExecutionEvidence and QAEvidence under
+explicit artifact byte, array-item, string-byte, and nesting-depth limits.
+File imports resolve real paths, accept only regular files inside the selected
+project, and reject symlink escape.
+
+Evidence assessment accepts only configured issuer names and exact current
+subjects. Test execution binds project, head, configuration, and the canonical
+TestIndex fingerprint. QA binds project, head, integration ref, and the
+affected-scope fingerprint. The TestIndex itself must match the project, head,
+configuration, current adapter fingerprints, and active Requirement context.
+
+For each affected automated Requirement, coverage requires at least one mapped
+test and execution requires exactly one current `passed` result for every
+mapped test. Missing, duplicate, non-passing, or out-of-index results are
+blocking. Manual Requirement decisions and Capability QA are independent:
+missing current human evidence is review-required, while failed or
+contradictory current evidence is blocking. The core returns deterministic
+satisfied/unsatisfied partitions and sorted issue classifications; Milestone 6
+owns readiness-status composition and VerificationReport/MergeReport emission.
+
 ## GovernanceEvidence
 
 Governance evidence records an authorized human decision to move a project
