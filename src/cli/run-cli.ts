@@ -5,6 +5,9 @@ import { isObjectId, isProjectPath } from "../contracts/identifiers.ts";
 import type { CliResponseEnvelope } from "../contracts/result.ts";
 import { resolve } from "node:path";
 import type { FileSystem } from "../platform/filesystem.ts";
+import type { ProjectWriter } from "../platform/project-writer.ts";
+import type { Randomness } from "../platform/randomness.ts";
+import { initializeProject } from "../init/initialize-project.ts";
 import { fingerprintValidatedObject } from "../fingerprint/object-fingerprint.ts";
 import type { ValidatedSpecificationGraph } from "../graph/validate-graph.ts";
 import { validateSpecificationGraph } from "../graph/validate-graph.ts";
@@ -18,13 +21,15 @@ export const TECHNICAL_FAILURE_EXIT_CODE = 3 as const;
 
 type ExitCode = typeof VALID_EXIT_CODE | typeof BLOCKED_EXIT_CODE | typeof TECHNICAL_FAILURE_EXIT_CODE;
 type OutputFormat = "human" | "json";
-type Command = "validate" | "inspect";
+type Command = "init" | "validate" | "inspect";
 type ResponseCommand = Command | "unknown";
 
 export type CliRuntime = {
   readonly argv: readonly string[];
   readonly workingDirectory: string;
   readonly fileSystem: FileSystem;
+  readonly projectWriter: ProjectWriter;
+  readonly randomness: Randomness;
   readonly writeStandardOutput: (message: string) => void;
   readonly writeStandardError: (message: string) => void;
   readonly writeOutputFile: (path: string, message: string) => void;
@@ -38,6 +43,13 @@ type Invocation = {
   readonly objectId?: ObjectId;
   readonly outputPath?: ProjectPath;
   readonly includeExplanatory: boolean;
+  readonly root?: string;
+  readonly specPath?: ProjectPath;
+  readonly adoption?: "incremental" | "complete";
+};
+
+export type InitResult = {
+  readonly created_paths: readonly ProjectPath[];
 };
 
 export type ValidateResult = {
@@ -59,6 +71,7 @@ export type InspectResult = {
 };
 
 export type CliResponse =
+  | CliResponseEnvelope<"init", "ok", InitResult>
   | CliResponseEnvelope<"validate", "ok", ValidateResult>
   | CliResponseEnvelope<"inspect", "ok", InspectResult>
   | CliResponseEnvelope<Command, "blocked", { readonly valid: false } | null>
@@ -73,13 +86,13 @@ function parseInvocation(
   argv: readonly string[],
 ): { ok: true; value: Invocation } | { ok: false; diagnostic: Diagnostic } {
   const command = argv[0];
-  if (command !== "validate" && command !== "inspect")
+  if (command !== "init" && command !== "validate" && command !== "inspect")
     return {
       ok: false,
       diagnostic: cliDiagnostic(
         "SDD_CONFIG_CLI_COMMAND_INVALID",
         "The command is missing or unsupported.",
-        "Use sdd validate or sdd inspect <object-id>.",
+        "Use sdd init, sdd validate, or sdd inspect <object-id>.",
       ),
     };
   let format: OutputFormat = "human";
@@ -88,9 +101,20 @@ function parseInvocation(
   let objectId: ObjectId | undefined;
   let outputPath: ProjectPath | undefined;
   let includeExplanatory = false;
+  let root: string | undefined;
+  let specPath: ProjectPath | undefined;
+  let adoption: "incremental" | "complete" | undefined;
   for (let index = 1; index < argv.length; index += 1) {
     const argument = argv[index];
-    if (argument === "--format" || argument === "--config" || argument === "--cwd" || argument === "--output") {
+    if (
+      argument === "--format" ||
+      argument === "--config" ||
+      argument === "--cwd" ||
+      argument === "--output" ||
+      argument === "--root" ||
+      argument === "--spec-path" ||
+      argument === "--adoption"
+    ) {
       const value = argv[index + 1];
       if (value === undefined)
         return {
@@ -115,7 +139,30 @@ function parseInvocation(
         format = value;
       } else if (argument === "--config") configPath = value;
       else if (argument === "--cwd") cwd = value;
-      else {
+      else if (argument === "--root") root = value;
+      else if (argument === "--spec-path") {
+        if (!isProjectPath(value))
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_CONFIG_CLI_SPEC_PATH_INVALID",
+              "The specification path must be project-relative and portable.",
+              "Use a path inside the selected project without traversal segments.",
+            ),
+          };
+        specPath = value;
+      } else if (argument === "--adoption") {
+        if (value !== "incremental" && value !== "complete")
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_CONFIG_CLI_ADOPTION_INVALID",
+              "The adoption mode is unsupported.",
+              "Use incremental or complete.",
+            ),
+          };
+        adoption = value;
+      } else {
         if (!isProjectPath(value))
           return {
             ok: false,
@@ -161,6 +208,27 @@ function parseInvocation(
         "Select exactly one project resolution option.",
       ),
     };
+  if (
+    command === "init" &&
+    (configPath !== undefined || cwd !== undefined || outputPath !== undefined || includeExplanatory)
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "An option does not apply to init.",
+        "Use --root, --spec-path, --adoption, --format, or --quiet with init.",
+      ),
+    };
+  if (command !== "init" && (root !== undefined || specPath !== undefined || adoption !== undefined))
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "An initialization option was used with another command.",
+        "Use initialization options only with sdd init.",
+      ),
+    };
   if (command === "inspect" && objectId === undefined)
     return {
       ok: false,
@@ -189,6 +257,9 @@ function parseInvocation(
       ...(objectId === undefined ? {} : { objectId }),
       ...(outputPath === undefined ? {} : { outputPath }),
       includeExplanatory,
+      ...(root === undefined ? {} : { root }),
+      ...(specPath === undefined ? {} : { specPath }),
+      ...(adoption === undefined ? {} : { adoption }),
     },
   };
 }
@@ -350,6 +421,9 @@ function humanView(value: CliResponse): string {
   } else if (value.command === "inspect" && value.status === "ok") {
     const result = value.result as unknown as { object: { id: string; title: string }; document_path: string };
     lines.push(`${result.object.id} — ${result.object.title}`, `document: ${result.document_path}`);
+  } else if (value.command === "init" && value.status === "ok") {
+    const result = value.result as InitResult;
+    lines.push(...result.created_paths.map((path) => `created: ${path}`));
   }
   for (const diagnostic of value.diagnostics)
     lines.push(`${diagnostic.severity.toUpperCase()} ${diagnostic.code}: ${diagnostic.message}`);
@@ -413,7 +487,9 @@ async function resolveSafeOutputTarget(
 export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
   const parsed = parseInvocation(runtime.argv);
   const inferredCommand: ResponseCommand =
-    runtime.argv[0] === "inspect" || runtime.argv[0] === "validate" ? runtime.argv[0] : "unknown";
+    runtime.argv[0] === "init" || runtime.argv[0] === "inspect" || runtime.argv[0] === "validate"
+      ? runtime.argv[0]
+      : "unknown";
   const inferredFormat: OutputFormat = runtime.argv.some(
     (argument, index) => argument === "--format" && runtime.argv[index + 1] === "json",
   )
@@ -425,6 +501,40 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
   }
   const invocation = parsed.value;
   try {
+    if (invocation.command === "init") {
+      const initialized = await initializeProject(
+        { fileSystem: runtime.fileSystem, writer: runtime.projectWriter, randomness: runtime.randomness },
+        {
+          root: resolve(runtime.workingDirectory, invocation.root ?? "."),
+          specPath: invocation.specPath ?? ("spec" as ProjectPath),
+          adoption: invocation.adoption ?? "incremental",
+        },
+      );
+      if (!initialized.ok) {
+        const failure = initialized.failure;
+        const diagnostic = cliDiagnostic(
+          failure.code === "TARGET_CONFLICT"
+            ? "SDD_INIT_TARGET_CONFLICT"
+            : failure.code === "ROOT_INVALID"
+              ? "SDD_INIT_ROOT_INVALID"
+              : "SDD_INIT_TARGET_UNSAFE",
+          failure.code === "TARGET_CONFLICT"
+            ? "Initialization would overwrite an existing SDD Project file."
+            : failure.code === "ROOT_INVALID"
+              ? "The initialization root is not an existing directory."
+              : "An initialization target is unsafe.",
+          "Select an existing project root whose initialization targets do not conflict.",
+        );
+        emit(runtime, invocation.format, response("init", null, "error", null, [diagnostic]));
+        return TECHNICAL_FAILURE_EXIT_CODE;
+      }
+      emit(
+        runtime,
+        invocation.format,
+        response("init", initialized.value.projectId, "ok", { created_paths: initialized.value.createdPaths }, []),
+      );
+      return VALID_EXIT_CODE;
+    }
     const selected = await resolveProject(
       runtime.fileSystem,
       invocation.configPath === undefined

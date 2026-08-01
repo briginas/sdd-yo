@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
 import { nodeFileSystem } from "../src/platform/node-filesystem.ts";
+import { nodeProjectWriter } from "../src/platform/node-project-writer.ts";
+import { nodeRandomness } from "../src/platform/node-randomness.ts";
 import { runCli } from "../src/cli/run-cli.ts";
 
 async function execute(argv: readonly string[], cwd = process.cwd()) {
@@ -14,6 +16,8 @@ async function execute(argv: readonly string[], cwd = process.cwd()) {
     argv,
     workingDirectory: cwd,
     fileSystem: nodeFileSystem,
+    projectWriter: nodeProjectWriter,
+    randomness: nodeRandomness,
     writeStandardOutput: (message) => standardOutput.push(message),
     writeStandardError: (message) => standardError.push(message),
     writeOutputFile: () => {
@@ -22,6 +26,73 @@ async function execute(argv: readonly string[], cwd = process.cwd()) {
   });
   return { exitCode, standardOutput: standardOutput.join(""), standardError: standardError.join("") };
 }
+
+test("REQ-382BBBD6 REQ-BFC18F28 init creates a stable project without overwriting unrelated files", async () => {
+  const root = await mkdtemp(join(tmpdir(), "sdd-cli-init-"));
+  await mkdir(join(root, "spec"));
+  await writeFile(join(root, "README.md"), "keep me\n");
+  await writeFile(join(root, "spec/notes.txt"), "keep this too\n");
+
+  const initialized = await execute(["init", "--format", "json"], root);
+  assert.equal(initialized.exitCode, 0, initialized.standardOutput);
+  const value = JSON.parse(initialized.standardOutput) as {
+    project_id: string;
+    status: string;
+    result: { created_paths: readonly string[] };
+  };
+  assert.equal(value.status, "ok");
+  assert.match(value.project_id, /^SDD-[0-9A-F]{8}$/u);
+  assert.deepEqual(value.result.created_paths, [
+    ".sdd/config.yaml",
+    "spec/README.md",
+    "spec/capabilities",
+    "spec/concepts",
+  ]);
+  assert.equal(await readFile(join(root, "README.md"), "utf8"), "keep me\n");
+  assert.equal(await readFile(join(root, "spec/notes.txt"), "utf8"), "keep this too\n");
+  const configBefore = await readFile(join(root, ".sdd/config.yaml"), "utf8");
+  assert.match(configBefore, new RegExp(`project_id: ${value.project_id}`, "u"));
+
+  const validated = await execute(["validate", "--format", "json"], root);
+  assert.equal(validated.exitCode, 0, validated.standardOutput);
+  assert.equal((JSON.parse(validated.standardOutput) as { project_id: string }).project_id, value.project_id);
+
+  const repeated = await execute(["init", "--format", "json"], root);
+  assert.equal(repeated.exitCode, 3);
+  assert.equal(
+    (JSON.parse(repeated.standardOutput) as { diagnostics: readonly { code: string }[] }).diagnostics[0]?.code,
+    "SDD_INIT_TARGET_CONFLICT",
+  );
+  assert.equal(await readFile(join(root, ".sdd/config.yaml"), "utf8"), configBefore);
+});
+
+test("REQ-382BBBD6 init honors portable spec paths and adoption mode", async () => {
+  const root = await mkdtemp(join(tmpdir(), "sdd-cli-init-options-"));
+  const initialized = await execute(
+    ["init", "--spec-path", "docs/specification", "--adoption", "complete", "--format", "json"],
+    root,
+  );
+  assert.equal(initialized.exitCode, 0, initialized.standardOutput);
+  const config = await readFile(join(root, ".sdd/config.yaml"), "utf8");
+  assert.match(config, /root: "docs\/specification"\n  entrypoint: "docs\/specification\/README\.md"/u);
+  assert.match(config, /mode: complete/u);
+  assert.match(await readFile(join(root, "docs/specification/README.md"), "utf8"), /sdd:capabilities/u);
+});
+
+test("REQ-382BBBD6 init rejects a symbolic-link path component before writing", async () => {
+  const root = await mkdtemp(join(tmpdir(), "sdd-cli-init-symlink-"));
+  const outside = await mkdtemp(join(tmpdir(), "sdd-cli-init-outside-"));
+  await symlink(outside, join(root, "docs"));
+
+  const initialized = await execute(["init", "--spec-path", "docs/specification", "--format", "json"], root);
+  assert.equal(initialized.exitCode, 3);
+  assert.equal(
+    (JSON.parse(initialized.standardOutput) as { diagnostics: readonly { code: string }[] }).diagnostics[0]?.code,
+    "SDD_INIT_TARGET_UNSAFE",
+  );
+  await assert.rejects(readFile(join(root, ".sdd/config.yaml")), /ENOENT/u);
+  await assert.rejects(readFile(join(outside, "specification/README.md")), /ENOENT/u);
+});
 
 test("REQ-0361538D REQ-7C848ED0 validate emits deterministic versioned JSON and a human view", async () => {
   const first = await execute(["validate", "--format", "json"]);
@@ -162,6 +233,8 @@ test("REQ-7C848ED0 writes primary output to a project-relative target and accept
     argv: ["validate", "--format", "json", "--output", "test/validation.json", "--quiet"],
     workingDirectory: process.cwd(),
     fileSystem: nodeFileSystem,
+    projectWriter: nodeProjectWriter,
+    randomness: nodeRandomness,
     writeStandardOutput: (message) => standardOutput.push(message),
     writeStandardError: () => {},
     writeOutputFile: (path, content) => {
@@ -181,6 +254,8 @@ test("REQ-7D93D64A converts an injected output crash to exit 3 without a passing
     argv: ["validate", "--format", "json", "--output", "test/crash.json"],
     workingDirectory: process.cwd(),
     fileSystem: nodeFileSystem,
+    projectWriter: nodeProjectWriter,
+    randomness: nodeRandomness,
     writeStandardOutput: (message) => standardOutput.push(message),
     writeStandardError: (message) => standardError.push(message),
     writeOutputFile: () => {

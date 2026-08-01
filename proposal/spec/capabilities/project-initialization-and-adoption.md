@@ -11,34 +11,6 @@ sdd:
 Initialize SDD Yo in new or existing Git repositories and establish an honest,
 incremental path from no specification to a governed product contract.
 
-<a id="req-382bbbd6"></a>
-
-## REQ-382BBBD6 — Initialize an SDD Project
-
-```sdd
-kind: behavior
-verification: automated
-```
-
-### Relations <!-- sdd:relations -->
-
-- refers-to: [CON-EA57C937 — SDD Project](../../../spec/concepts/sdd-project.md)
-- refers-to: [CON-77D857DB — Document](../../../spec/concepts/document.md)
-
-### Statement <!-- sdd:statement -->
-
-The CLI shall initialize an SDD Project by creating a configuration file,
-specification entrypoint, capability directory, and concept directory without
-creating a Git branch or commit.
-
-### Acceptance criteria <!-- sdd:acceptance -->
-
-- Initialization creates `.sdd/config.yaml`.
-- Initialization creates `spec/README.md`, `spec/capabilities/`, and
-  `spec/concepts/`.
-- Existing unrelated files are preserved.
-- An existing conflicting SDD Project is not overwritten.
-
 <a id="req-bfc18f28"></a>
 
 ## REQ-BFC18F28 — Assign stable project identity
@@ -194,4 +166,3 @@ its configured adoption mode without presenting incremental scope as complete.
 - Human output distinguishes `PASS (governed scope only)` from complete
   project `PASS`.
 - Missing or invalid adoption configuration blocks strict processing.
-

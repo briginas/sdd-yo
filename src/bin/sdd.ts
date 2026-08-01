@@ -2,12 +2,16 @@
 
 import { runCli } from "../cli/run-cli.js";
 import { nodeFileSystem } from "../platform/node-filesystem.js";
+import { nodeProjectWriter } from "../platform/node-project-writer.js";
+import { nodeRandomness } from "../platform/node-randomness.js";
 import { writeFileSync } from "node:fs";
 
 process.exitCode = await runCli({
   argv: process.argv.slice(2),
   workingDirectory: process.cwd(),
   fileSystem: nodeFileSystem,
+  projectWriter: nodeProjectWriter,
+  randomness: nodeRandomness,
   writeStandardOutput: (message: string): void => {
     process.stdout.write(message);
   },

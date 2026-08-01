@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 3 / Initialization, IDs, trace, and diff
-- Current leaf: 3.1 Non-overwriting project initialization
+- Current leaf: 3.2 Random IDs and canonical-history reservation
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -493,9 +493,16 @@ byte-identical JSON/fingerprints across repeated runs.
 
 Mode: `spec-code`.
 
-- [ ] Implement non-overwriting `sdd init`.
-- [ ] Implement cryptographically random IDs and canonical-history reuse
-      checks.
+- [x] **3.1 — Non-overwriting project initialization.** Implement `sdd init`
+      with injected cryptographic randomness and exclusive project writes.
+      Create the version 1 config and minimal specification tree, preserve
+      unrelated files, reject conflicting or unsafe targets, and assign one
+      stable random project ID. Promote `REQ-382BBBD6`; `REQ-BFC18F28` remains
+      proposed until repository-wide duplicate project-ID validation exists.
+- [ ] **3.2 — Random IDs and canonical-history reservation.** Implement
+      `sdd id` for project and model-object prefixes, manual/new-ID validation,
+      integration-ref collision checks, and reachable canonical-history reuse
+      rejection.
 - [ ] Implement reverse relations, `trace`, object deltas, and `diff`.
 - [ ] Handle shallow history and opaque Git object IDs.
 

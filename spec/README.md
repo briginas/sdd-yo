@@ -10,6 +10,7 @@ Remaining target behavior stays under `proposal/spec/` until promotion.
 
 ## Capabilities <!-- sdd:capabilities -->
 
+- [CAP-0B417FC4 — Project initialization and adoption](capabilities/project-initialization-and-adoption.md)
 - [CAP-79E22870 — Specification model and authoring](capabilities/specification-model-and-authoring.md)
 - [CAP-E309CBCB — Validation, fingerprints, and exact patches](capabilities/validation-fingerprints-and-patches.md)
 - [CAP-404305F6 — Multi-project CLI and skill integration](capabilities/multi-project-cli-and-skill.md)
