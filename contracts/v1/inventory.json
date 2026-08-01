@@ -1347,7 +1347,7 @@
       "wire_format": "typed-operation",
       "version": "1.0",
       "definition_status": "specified",
-      "authority": "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-a8739118",
+      "authority": "spec/capabilities/proposal-modes-and-workflow-gates.md#req-a8739118",
       "requirements": [
         "REQ-A8739118",
         "REQ-964B9F80",

@@ -3,9 +3,14 @@ import { createHash } from "node:crypto";
 import type { ResolvedProject } from "../config/types.ts";
 import type { Fingerprint, GitObjectId, ObjectId, ProjectPath } from "../contracts/identifiers.ts";
 import { isFingerprint } from "../contracts/identifiers.ts";
+import { computeGraphObjectDelta } from "../fingerprint/object-delta.ts";
 import type { ValidatedSpecificationGraph } from "../graph/validate-graph.ts";
 import type { FileSystem } from "../platform/filesystem.ts";
 import type { GitReader } from "../platform/git-reader.ts";
+import { assessApprovalEvidence } from "../verification/evidence.ts";
+import type { ApprovalEvidence, HumanDecisionEvidenceIssue } from "../verification/evidence.ts";
+import { generateSemanticCandidates } from "../verification/semantic-review.ts";
+import type { SemanticCandidate } from "../verification/semantic-review.ts";
 import { parseProposalPackage } from "./package-input.ts";
 import {
   buildSpecificationTree,
@@ -34,7 +39,7 @@ export type ConflictReport = {
   readonly merge_base: GitObjectId;
   readonly config_fingerprint: Fingerprint;
   readonly mechanical_conflicts: readonly MechanicalConflict[];
-  readonly semantic_candidates: readonly [];
+  readonly semantic_candidates: readonly SemanticCandidate[];
   readonly input_fingerprint: Fingerprint;
 };
 
@@ -42,6 +47,22 @@ export type PreparedProposal = {
   readonly report: ConflictReport;
   readonly integration_tree: SpecificationTree;
   readonly prepared_tree?: SpecificationTree;
+  readonly affected_object_changed: boolean;
+};
+
+export type PreparationGateIssue =
+  | HumanDecisionEvidenceIssue
+  | {
+      readonly code:
+        | "SDD_PREPARE_AFFECTED_OBJECT_CHANGED"
+        | "SDD_PREPARE_ID_REUSE_BLOCKED"
+        | "SDD_PREPARE_MECHANICAL_CONFLICT";
+      readonly disposition: "BLOCKED" | "REVIEW_REQUIRED";
+    };
+
+export type ApprovedPreparedProposal = PreparedProposal & {
+  readonly status: "ok" | "review_required" | "blocked";
+  readonly issues: readonly PreparationGateIssue[];
 };
 
 export class ProposalPreparationError extends Error {
@@ -357,6 +378,18 @@ export async function prepareProposal(input: {
     }
   }
   const conflicts = uniqueConflicts([...merged.conflicts, ...driftConflicts(base, candidate.tree, branch), ...idReuse]);
+  const integrationDelta = computeGraphObjectDelta(base.graph, integration.graph);
+  const integrationChanged = new Set(
+    [...integrationDelta.semantic.entries, ...integrationDelta.structural.entries].map((entry) => entry.id),
+  );
+  const affectedObjects = new Set<ObjectId>([
+    ...packageValue.affected_scope.requirements,
+    ...packageValue.affected_scope.capabilities,
+    ...packageValue.object_delta.added,
+    ...packageValue.object_delta.modified,
+    ...packageValue.object_delta.deleted,
+  ]);
+  const affectedObjectChanged = [...integrationChanged].some((id) => affectedObjects.has(id));
   const configFingerprint = fingerprintInput(input.project.configuration);
   const inputFingerprint = fingerprintInput({
     canonicalization_version: "1",
@@ -376,15 +409,21 @@ export async function prepareProposal(input: {
     merge_base: mergeBase,
     config_fingerprint: configFingerprint,
     mechanical_conflicts: conflicts,
-    semantic_candidates: [],
+    semantic_candidates: generateSemanticCandidates({
+      base: base.graph,
+      candidate: candidate.tree.graph,
+      comparison: integration.graph,
+    }),
     input_fingerprint: inputFingerprint,
   };
-  if (conflicts.length > 0) return { report, integration_tree: integration };
+  if (conflicts.length > 0)
+    return { report, integration_tree: integration, affected_object_changed: affectedObjectChanged };
   try {
     return {
       report,
       integration_tree: integration,
       prepared_tree: buildSpecificationTree(merged.files, input.project.configuration),
+      affected_object_changed: affectedObjectChanged,
     };
   } catch {
     throw new ProposalPreparationError(
@@ -392,4 +431,62 @@ export async function prepareProposal(input: {
       "The mechanically merged specification tree is invalid.",
     );
   }
+}
+
+function approvalEvidenceKey(value: ApprovalEvidence): string {
+  return JSON.stringify(canonicalValue(value));
+}
+
+export async function prepareApprovedProposal(input: {
+  readonly fileSystem: FileSystem;
+  readonly gitReader: GitReader;
+  readonly project: ResolvedProject;
+  readonly package: unknown;
+  readonly candidatePath: string;
+  readonly branchHead: GitObjectId;
+  readonly integrationRef: GitObjectId;
+  readonly approvalEvidence: readonly ApprovalEvidence[];
+}): Promise<ApprovedPreparedProposal> {
+  const packageValue = parseProposalPackage(input.package);
+  const prepared = await prepareProposal(input);
+  const approval = assessApprovalEvidence({
+    project_id: input.project.configuration.project_id,
+    allowed_issuers: new Set(input.project.configuration.evidence.allowed_issuers),
+    mode: packageValue.mode,
+    base_ref: packageValue.base.git_ref,
+    semantic_delta_fingerprint: packageValue.object_delta.semantic_fingerprint,
+    structural_delta_fingerprint: packageValue.object_delta.structural_fingerprint,
+    evidence: input.approvalEvidence,
+  });
+  const issues: PreparationGateIssue[] = [...approval.issues];
+  if (prepared.report.mechanical_conflicts.some((conflict) => conflict.kind === "id_reuse")) {
+    issues.push({ code: "SDD_PREPARE_ID_REUSE_BLOCKED", disposition: "BLOCKED" });
+  } else if (prepared.report.mechanical_conflicts.length > 0) {
+    issues.push({ code: "SDD_PREPARE_MECHANICAL_CONFLICT", disposition: "REVIEW_REQUIRED" });
+  }
+  if (prepared.affected_object_changed) {
+    issues.push({ code: "SDD_PREPARE_AFFECTED_OBJECT_CHANGED", disposition: "REVIEW_REQUIRED" });
+  }
+  const status = issues.some((issue) => issue.disposition === "BLOCKED")
+    ? "blocked"
+    : issues.some((issue) => issue.disposition === "REVIEW_REQUIRED")
+      ? "review_required"
+      : "ok";
+  const report = {
+    ...prepared.report,
+    input_fingerprint: fingerprintInput({
+      canonicalization_version: "1",
+      mechanical_input_fingerprint: prepared.report.input_fingerprint,
+      approval_evidence: input.approvalEvidence.toSorted((left, right) =>
+        approvalEvidenceKey(left) < approvalEvidenceKey(right)
+          ? -1
+          : approvalEvidenceKey(left) > approvalEvidenceKey(right)
+            ? 1
+            : 0,
+      ),
+    }),
+  };
+  if (status === "ok") return { ...prepared, report, status, issues };
+  const { prepared_tree: _preparedTree, ...withoutPreparedTree } = prepared;
+  return { ...withoutPreparedTree, report, status, issues };
 }

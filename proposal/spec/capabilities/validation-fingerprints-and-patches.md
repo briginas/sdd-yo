@@ -11,32 +11,6 @@ sdd:
 Provide deterministic structural validation, stable meaning-aware
 fingerprints, safe exact patch preparation, and reproducible Git comparison.
 
-<a id="req-afd65a03"></a>
-
-## REQ-AFD65A03 — Fingerprint approved object deltas
-
-```sdd
-kind: invariant
-verification: automated
-```
-
-### Relations <!-- sdd:relations -->
-
-- refers-to: [CON-FC16381E — Fingerprint](../../../spec/concepts/fingerprint.md)
-- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
-- depends-on: [REQ-24A372E7 — Compute semantic and structural object deltas](../../../spec/capabilities/validation-fingerprints-and-patches.md#req-24a372e7)
-
-### Statement <!-- sdd:statement -->
-
-Approval shall bind a canonical sorted object delta of add, modify, and delete
-operations rather than the fingerprint of the entire specification tree.
-
-### Acceptance criteria <!-- sdd:acceptance -->
-
-- Independent integration-branch additions do not invalidate approval.
-- Modify and delete operations include expected before fingerprints.
-- Add operations include expected after fingerprints.
-
 <a id="req-fdd51416"></a>
 
 ## REQ-FDD51416 — Require sufficient Git history for strict merge validation

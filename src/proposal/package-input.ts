@@ -170,8 +170,8 @@ export function parseProposalPackage(value: unknown): ProposalPackage {
     code_targets: value.code_targets.map((target) => {
       const normalized = target as {
         readonly requirement_id: ProposalPackage["code_targets"][number]["requirement_id"];
-        readonly semantic_fingerprint: string;
-        readonly structural_fingerprint: string;
+        readonly semantic_fingerprint: ProposalPackage["code_targets"][number]["semantic_fingerprint"];
+        readonly structural_fingerprint: ProposalPackage["code_targets"][number]["structural_fingerprint"];
       };
       return {
         requirement_id: normalized.requirement_id,

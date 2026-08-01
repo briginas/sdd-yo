@@ -48,7 +48,7 @@ import {
   importProposalPackage,
   parseCodeTarget,
   parseProposalMode,
-  prepareProposal,
+  prepareApprovedProposal,
   ProposalInputError,
   ProposalApplyError,
   ProposalPackageInputError,
@@ -58,11 +58,19 @@ import {
   validateProposal,
 } from "../proposal/index.ts";
 import type { ConflictReport, ProposalMode, ProposalPackage, SpecPatch } from "../proposal/index.ts";
+import { importApprovalEvidenceFile } from "../verification/evidence.ts";
+import type { EvidenceInputLimits } from "../verification/evidence.ts";
 
 export const VALID_EXIT_CODE = 0 as const;
 export const BLOCKED_EXIT_CODE = 1 as const;
 export const REVIEW_REQUIRED_EXIT_CODE = 2 as const;
 export const TECHNICAL_FAILURE_EXIT_CODE = 3 as const;
+const CLI_EVIDENCE_LIMITS: EvidenceInputLimits = {
+  max_artifact_bytes: 1024 * 1024,
+  max_array_items: 10_000,
+  max_string_bytes: 256 * 1024,
+  max_nesting_depth: 32,
+};
 
 type ExitCode =
   | typeof VALID_EXIT_CODE
@@ -127,6 +135,7 @@ type Invocation = {
   readonly packagePath?: string;
   readonly branchHeadRef?: string;
   readonly integrationRef?: string;
+  readonly approvalPaths: readonly ProjectPath[];
   readonly patchPath?: string;
   readonly worktreePath?: string;
 };
@@ -280,6 +289,7 @@ function parseInvocation(
   let packagePath: string | undefined;
   let branchHeadRef: string | undefined;
   let integrationRef: string | undefined;
+  const approvalPaths: ProjectPath[] = [];
   let patchPath: string | undefined;
   let worktreePath: string | undefined;
   for (
@@ -321,6 +331,7 @@ function parseInvocation(
       argument === "--package" ||
       argument === "--branch-head" ||
       argument === "--integration-ref" ||
+      argument === "--approval" ||
       argument === "--patch" ||
       argument === "--worktree"
     ) {
@@ -335,7 +346,18 @@ function parseInvocation(
           ),
         };
       index += 1;
-      if (argument === "--patch" || argument === "--worktree") {
+      if (argument === "--approval") {
+        if (!isProjectPath(value))
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_PREPARE_APPROVAL_PATH_INVALID",
+              "An ApprovalEvidence path is not project-relative and portable.",
+              "Supply a regular ApprovalEvidence file inside the selected project.",
+            ),
+          };
+        approvalPaths.push(value);
+      } else if (argument === "--patch" || argument === "--worktree") {
         if (value.length === 0 || value.includes("\0"))
           return {
             ok: false,
@@ -689,7 +711,10 @@ function parseInvocation(
     };
   if (
     command !== "proposal.prepare" &&
-    (packagePath !== undefined || branchHeadRef !== undefined || integrationRef !== undefined)
+    (packagePath !== undefined ||
+      branchHeadRef !== undefined ||
+      integrationRef !== undefined ||
+      approvalPaths.length > 0)
   )
     return {
       ok: false,
@@ -847,6 +872,7 @@ function parseInvocation(
       ...(packagePath === undefined ? {} : { packagePath }),
       ...(branchHeadRef === undefined ? {} : { branchHeadRef }),
       ...(integrationRef === undefined ? {} : { integrationRef }),
+      approvalPaths,
       ...(patchPath === undefined ? {} : { patchPath }),
       ...(worktreePath === undefined ? {} : { worktreePath }),
     },
@@ -1539,12 +1565,17 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
         )
           throw new Error("Parsed proposal preparation invocation is missing required inputs.");
         const reader = await discoverProcessGitReader(runtime.processRunner, project.project_root);
-        const [packageValue, branchHead, integrationRef] = await Promise.all([
+        const [packageValue, branchHead, integrationRef, approvalEvidence] = await Promise.all([
           importProposalPackage(runtime.fileSystem, resolve(runtime.workingDirectory, invocation.packagePath)),
           reader.resolveRevision(invocation.branchHeadRef),
           reader.resolveRevision(invocation.integrationRef),
+          Promise.all(
+            invocation.approvalPaths.map((path) =>
+              importApprovalEvidenceFile(runtime.fileSystem, project.project_root, path, CLI_EVIDENCE_LIMITS),
+            ),
+          ),
         ]);
-        const prepared = await prepareProposal({
+        const prepared = await prepareApprovedProposal({
           fileSystem: runtime.fileSystem,
           gitReader: reader,
           project,
@@ -1552,16 +1583,26 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
           candidatePath: resolve(runtime.workingDirectory, invocation.candidatePath),
           branchHead,
           integrationRef,
+          approvalEvidence,
         });
         const specPatch =
-          prepared.prepared_tree === undefined
+          prepared.status !== "ok" || prepared.prepared_tree === undefined
             ? null
             : generateSpecPatch({
                 project_id: project.configuration.project_id,
                 integration: prepared.integration_tree,
                 prepared: prepared.prepared_tree,
               });
-        const status = specPatch === null ? "review_required" : "ok";
+        const status = prepared.status;
+        const diagnostics = prepared.issues.map((issue) =>
+          cliDiagnostic(
+            issue.code,
+            issue.code === "SDD_EVIDENCE_APPROVAL_MISSING"
+              ? "Current ApprovalEvidence is required before branch preparation can emit a SpecPatch."
+              : "Branch preparation did not satisfy an approval or preparation gate condition.",
+            "Supply current configured ApprovalEvidence or resolve the reported preparation condition.",
+          ),
+        );
         emit(
           runtime,
           invocation.format,
@@ -1570,11 +1611,15 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
             project.configuration.project_id,
             status,
             { conflict_report: prepared.report, spec_patch: specPatch },
-            [],
+            diagnostics,
           ),
           outputTarget,
         );
-        return specPatch === null ? REVIEW_REQUIRED_EXIT_CODE : VALID_EXIT_CODE;
+        return status === "ok"
+          ? VALID_EXIT_CODE
+          : status === "review_required"
+            ? REVIEW_REQUIRED_EXIT_CODE
+            : BLOCKED_EXIT_CODE;
       } catch (error) {
         const mechanicalCode =
           error instanceof ProposalPreparationError &&

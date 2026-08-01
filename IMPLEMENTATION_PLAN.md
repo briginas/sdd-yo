@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 6 / Evidence, findings, and merge readiness
-- Current leaf: 6.5 — Approval-bound Branch Preparation Gate
+- Current leaf: 6.6 — Verification Gate and VerificationReport
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -713,12 +713,13 @@ Bounded leaves:
       Requirements: `REQ-E80F09C6`, `REQ-18F84CE2`. Promote both Requirements.
       Proposal concerns remain deterministic review candidates rather than
       Findings and do not block or approve an otherwise valid package.
-- [ ] **6.5 — Approval-bound Branch Preparation Gate.** Compose current
+- [x] **6.5 — Approval-bound Branch Preparation Gate.** Compose current
       ApprovalEvidence with mechanical preparation; require exact mode and
       canonical object-delta binding; preserve approval across independent
       integration additions; emit semantic candidates in ConflictReport; and
       withhold SpecPatch for review-required or blocked preparation. Target
-      Requirements: `REQ-AFD65A03`, `REQ-7341DBB7`, `REQ-A8739118`.
+      Requirements: `REQ-AFD65A03`, `REQ-7341DBB7`, `REQ-A8739118`. Promote
+      `REQ-AFD65A03` and `REQ-A8739118`; `REQ-7341DBB7` was promoted in 6.1.
 - [ ] **6.6 — Verification Gate and VerificationReport.** Compose affected
       scope, TestIndex, execution evidence, manual Requirement decisions, QA,
       and finding state into deterministic satisfied/unsatisfied partitions,
@@ -800,8 +801,8 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`6.5 — Approval-bound Branch Preparation Gate` is active. It composes current
-ApprovalEvidence with mechanical preparation, binds the approved mode and
-object delta, and emits semantic candidates in ConflictReport. It does not
-apply a patch, compose verification or merge reports, add CLI operations, or
-perform Git side effects.
+`6.6 — Verification Gate and VerificationReport` is active. It composes
+affected scope, TestIndex, execution evidence, manual Requirement decisions,
+QA, and finding state into deterministic partitions and one readiness status.
+It does not prepare or apply patches, compose MergeReport, add unrelated CLI
+operations, or perform Git side effects.

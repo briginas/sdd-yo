@@ -126,3 +126,30 @@ The approved Change mode shall be immutable for the lifetime of that approval.
 - Evidence for a different mode is rejected.
 - Changing mode requires a new approval.
 - The CLI does not infer a replacement mode automatically.
+
+<a id="req-a8739118"></a>
+
+## REQ-A8739118 — Prepare approved proposals against current integration state
+
+```sdd
+kind: behavior
+verification: automated
+```
+
+### Relations <!-- sdd:relations -->
+
+- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+- depends-on: [REQ-E80F09C6 — Validate proposals without changing the working tree](proposal-modes-and-workflow-gates.md#req-e80f09c6)
+
+### Statement <!-- sdd:statement -->
+
+The Branch Preparation Gate shall transfer an approved object delta from its
+base commit to the current integration ref through three-way analysis and emit
+a new exact patch without modifying the working tree.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- Independent integration-branch changes do not invalidate approval.
+- A changed affected object returns `REVIEW_REQUIRED`.
+- A newly occupied ID blocks preparation.
+- The prepared semantic and structural deltas match the approved deltas.

@@ -257,10 +257,10 @@ any fixed digest length from it.
 6. verify the package semantic and structural deltas remain identical;
 7. emit a new exact SpecPatch whose before hashes match files in `M`.
 
-Mechanical preparation does not consume ApprovalEvidence and does not claim
-that a candidate is approved. Milestone 6 composes approval validation and
-semantic candidates with this operation to implement the full Branch
-Preparation Gate.
+The Branch Preparation Gate composes mechanical preparation with explicit
+ApprovalEvidence. Approval binds the exact project, configured issuer, mode,
+base object ID, and canonical semantic and structural object-delta
+fingerprints. Independent integration additions do not invalidate approval.
 
 No working-tree write occurs before explicit apply.
 
@@ -291,9 +291,11 @@ project configuration. `input_fingerprint` applies it to this exact value:
 Because keys are recursively sorted before encoding, their presentation order
 above is explanatory rather than byte-significant. Conflict entries are
 deduplicated and sorted by `path`, `kind`, then optional `object_id`.
-Mechanical preparation always emits `semantic_candidates: []` and makes no
-approval conclusion. The public preparation command emits a SpecPatch only
-for a conflict-free validated prepared tree.
+The ConflictReport emits deterministic semantic candidates for the proposal
+and current integration changes. Its final input fingerprint also binds the
+canonical ApprovalEvidence set. The public preparation command emits a
+SpecPatch only when approval is current and preparation is conflict-free with
+no changed affected object.
 
 ## SpecPatch
 

@@ -397,7 +397,9 @@ semantic problem exists.
 
 A ConflictReport binds integration ref, branch head, merge base, configuration,
 mechanical conflicts, deterministic semantic candidates, and their combined
-fingerprint.
+fingerprint. Approval-bound preparation also includes the canonical
+ApprovalEvidence set in that input fingerprint without embedding authority or
+signature claims into the report.
 
 A VerificationReport binds the same selected project to exact head,
 integration, configuration, and affected-scope fingerprints. It reports

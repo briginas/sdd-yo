@@ -17,6 +17,7 @@ import {
 } from "../src/proposal/package-input.ts";
 import {
   mergeSpecificationTrees,
+  prepareApprovedProposal,
   prepareProposal,
   ProposalPreparationError,
 } from "../src/proposal/prepare-proposal.ts";
@@ -317,7 +318,7 @@ test("REQ-7AFE9904 REQ-964B9F80 candidate mutation between preparation revalidat
   assert.equal(mutated, true);
 });
 
-test("package-added active identity in integration emits sorted id_reuse and no prepared tree", async () => {
+test("REQ-AFD65A03 REQ-A8739118 package-added active identity in integration is blocked without a prepared tree", async () => {
   const fixture = await repository(true);
   const candidate = await candidateFrom(fixture.root);
   await mkdir(join(candidate, "spec/capabilities"), { recursive: true });
@@ -374,6 +375,40 @@ test("package-added active identity in integration emits sorted id_reuse and no 
         (left.object_id ?? "").localeCompare(right.object_id ?? ""),
     ),
   );
+  const approved = await prepareApprovedProposal({
+    fileSystem: nodeFileSystem,
+    gitReader: fixture.reader,
+    project: {
+      ...fixture.project,
+      configuration: {
+        ...fixture.project.configuration,
+        evidence: { allowed_issuers: ["product-review"] },
+      },
+    },
+    package: packageValue,
+    candidatePath: candidate,
+    branchHead,
+    integrationRef,
+    approvalEvidence: [
+      {
+        schema_version: "1.0",
+        artifact_type: "approval_evidence",
+        project_id: packageValue.project_id,
+        issuer: "product-review",
+        actor: "user:1",
+        decision: "approved",
+        mode: packageValue.mode,
+        subject: {
+          base_ref: packageValue.base.git_ref,
+          semantic_delta_fingerprint: packageValue.object_delta.semantic_fingerprint,
+          structural_delta_fingerprint: packageValue.object_delta.structural_fingerprint,
+        },
+      },
+    ],
+  });
+  assert.equal(approved.status, "blocked");
+  assert.equal(approved.prepared_tree, undefined);
+  assert.ok(approved.issues.some((issue) => issue.code === "SDD_PREPARE_ID_REUSE_BLOCKED"));
 });
 
 async function cliPreparationFixture() {
@@ -395,6 +430,27 @@ async function cliPreparationFixture() {
   });
   const packagePath = join(fixture.root, "proposal-package.json");
   await writeFile(packagePath, JSON.stringify(packageValue));
+  const configPath = join(fixture.root, ".sdd/config.yaml");
+  await writeFile(
+    configPath,
+    (await readFile(configPath, "utf8")).replace("allowed_issuers: []", "allowed_issuers: [product-review]"),
+  );
+  const approvalValue = {
+    schema_version: "1.0",
+    artifact_type: "approval_evidence",
+    project_id: packageValue.project_id,
+    issuer: "product-review",
+    actor: "user:1",
+    decision: "approved",
+    mode: packageValue.mode,
+    subject: {
+      base_ref: packageValue.base.git_ref,
+      semantic_delta_fingerprint: packageValue.object_delta.semantic_fingerprint,
+      structural_delta_fingerprint: packageValue.object_delta.structural_fingerprint,
+    },
+  } as const;
+  const approvalPath = join(fixture.root, "approval.json");
+  await writeFile(approvalPath, JSON.stringify(approvalValue));
   await cp(join(candidate, "spec"), join(fixture.root, "spec"), { recursive: true, force: true });
   await executeFile("git", ["add", "spec"], { cwd: fixture.root });
   await executeFile("git", ["commit", "--quiet", "-m", "candidate"], { cwd: fixture.root });
@@ -412,11 +468,13 @@ async function cliPreparationFixture() {
     branchHead,
     "--integration-ref",
     fixture.base,
+    "--approval",
+    "approval.json",
   ];
-  return { ...fixture, candidate, packagePath, packageValue, branchHead, argv };
+  return { ...fixture, candidate, packagePath, packageValue, branchHead, approvalPath, approvalValue, argv };
 }
 
-test("REQ-964B9F80 REQ-3BF12AAD proposal prepare CLI emits stable JSON and human output without writes", async () => {
+test("REQ-AFD65A03 REQ-A8739118 REQ-7341DBB7 proposal prepare CLI requires current approval and emits a read-only exact patch", async () => {
   const fixture = await cliPreparationFixture();
   const before = (await executeFile("git", ["status", "--porcelain=v1"], { cwd: fixture.root })).stdout;
   const json = await executeCli([...fixture.argv, "--format", "json"], fixture.root);
@@ -436,6 +494,50 @@ test("REQ-964B9F80 REQ-3BF12AAD proposal prepare CLI emits stable JSON and human
   assert.match(human.standardOutput, /^proposal\.prepare: ok$/mu);
   assert.match(human.standardOutput, /^spec patch operations: [1-9][0-9]*$/mu);
   assert.equal((await executeFile("git", ["status", "--porcelain=v1"], { cwd: fixture.root })).stdout, before);
+});
+
+test("REQ-AFD65A03 REQ-A8739118 REQ-7341DBB7 withholds SpecPatch for missing stale rejected or contradictory approval", async () => {
+  const fixture = await cliPreparationFixture();
+  const withoutApproval = fixture.argv.slice(0, -2);
+  const missing = await executeCli([...withoutApproval, "--format", "json"], fixture.root);
+  assert.equal(missing.exitCode, 2, missing.standardOutput);
+  assert.equal((JSON.parse(missing.standardOutput) as any).status, "review_required");
+  assert.equal((JSON.parse(missing.standardOutput) as any).result.spec_patch, null);
+
+  await writeFile(fixture.approvalPath, JSON.stringify({ ...fixture.approvalValue, mode: "spec" }));
+  const staleMode = await executeCli([...fixture.argv, "--format", "json"], fixture.root);
+  assert.equal(staleMode.exitCode, 1, staleMode.standardOutput);
+  assert.equal((JSON.parse(staleMode.standardOutput) as any).result.spec_patch, null);
+
+  await writeFile(
+    fixture.approvalPath,
+    JSON.stringify({
+      ...fixture.approvalValue,
+      subject: { ...fixture.approvalValue.subject, semantic_delta_fingerprint: hash("stale") },
+    }),
+  );
+  const staleDelta = await executeCli([...fixture.argv, "--format", "json"], fixture.root);
+  assert.equal(staleDelta.exitCode, 1, staleDelta.standardOutput);
+
+  await writeFile(fixture.approvalPath, JSON.stringify({ ...fixture.approvalValue, decision: "rejected" }));
+  const rejected = await executeCli([...fixture.argv, "--format", "json"], fixture.root);
+  assert.equal(rejected.exitCode, 1, rejected.standardOutput);
+
+  await writeFile(fixture.approvalPath, JSON.stringify(fixture.approvalValue));
+  await writeFile(
+    join(fixture.root, "rejected.json"),
+    JSON.stringify({ ...fixture.approvalValue, decision: "rejected" }),
+  );
+  const contradictory = await executeCli(
+    [...fixture.argv, "--approval", "rejected.json", "--format", "json"],
+    fixture.root,
+  );
+  assert.equal(contradictory.exitCode, 1, contradictory.standardOutput);
+  assert.ok(
+    (JSON.parse(contradictory.standardOutput) as any).diagnostics.some(
+      (diagnostic: any) => diagnostic.code === "SDD_EVIDENCE_APPROVAL_CONTRADICTORY",
+    ),
+  );
 });
 
 test("REQ-964B9F80 proposal prepare CLI returns review_required with a null patch for branch drift", async () => {
@@ -459,6 +561,59 @@ test("REQ-964B9F80 proposal prepare CLI returns review_required with a null patc
   assert.ok(value.result.conflict_report.mechanical_conflicts.length > 0);
 });
 
+test("REQ-A8739118 returns review_required for changed affected objects and emits semantic candidates", async () => {
+  const fixture = await cliPreparationFixture();
+  await executeFile("git", ["checkout", "--quiet", "--detach", fixture.base], { cwd: fixture.root });
+  const capabilityPath = join(fixture.root, "spec/capabilities/delivery.md");
+  await writeFile(
+    capabilityPath,
+    (await readFile(capabilityPath, "utf8")).replace("Delivery is recorded.", "Delivery is durably recorded."),
+  );
+  await executeFile("git", ["add", "spec"], { cwd: fixture.root });
+  await executeFile("git", ["commit", "--quiet", "-m", "integration affected change"], { cwd: fixture.root });
+  const integrationRef = (await executeFile("git", ["rev-parse", "HEAD"], { cwd: fixture.root })).stdout.trim();
+  const argv = fixture.argv.map((value, index, values) =>
+    values[index - 1] === "--integration-ref" ? integrationRef : value,
+  );
+  const result = await executeCli([...argv, "--format", "json"], fixture.root);
+  assert.equal(result.exitCode, 2, result.standardOutput);
+  const value = JSON.parse(result.standardOutput) as any;
+  assert.equal(value.status, "review_required");
+  assert.equal(value.result.spec_patch, null);
+  assert.ok(
+    value.result.conflict_report.semantic_candidates.some(
+      (candidate: any) => candidate.reason === "overlapping-object-change",
+    ),
+  );
+  assert.ok(value.diagnostics.some((diagnostic: any) => diagnostic.code === "SDD_PREPARE_AFFECTED_OBJECT_CHANGED"));
+});
+
+test("REQ-AFD65A03 REQ-A8739118 preserves approval across independent integration additions", async () => {
+  const fixture = await cliPreparationFixture();
+  await executeFile("git", ["checkout", "--quiet", "--detach", fixture.base], { cwd: fixture.root });
+  await writeFile(
+    join(fixture.root, "spec/README.md"),
+    (await readFile(join(fixture.root, "spec/README.md"), "utf8")).replace(
+      "- [CAP-A1000001 — Delivery](capabilities/delivery.md)",
+      "- [CAP-A1000001 — Delivery](capabilities/delivery.md)\n- [CAP-A1000002 — Independent](capabilities/independent.md)",
+    ),
+  );
+  await writeFile(
+    join(fixture.root, "spec/capabilities/independent.md"),
+    `---\nsdd:\n  type: capability\n  id: CAP-A1000002\n---\n\n# Independent\n\n## Purpose <!-- sdd:purpose -->\n\nTrack independent work.\n\n<a id="req-a1000002"></a>\n\n## REQ-A1000002 — Track independently\n\n\`\`\`sdd\nkind: behavior\nverification: automated\n\`\`\`\n\n### Relations <!-- sdd:relations -->\n\n### Statement <!-- sdd:statement -->\n\nThe system shall track independent work.\n\n### Acceptance criteria <!-- sdd:acceptance -->\n\n- Independent work is observable.\n`,
+  );
+  await executeFile("git", ["add", "spec"], { cwd: fixture.root });
+  await executeFile("git", ["commit", "--quiet", "-m", "integration independent addition"], { cwd: fixture.root });
+  const integrationRef = (await executeFile("git", ["rev-parse", "HEAD"], { cwd: fixture.root })).stdout.trim();
+  const argv = fixture.argv.map((value, index, values) =>
+    values[index - 1] === "--integration-ref" ? integrationRef : value,
+  );
+  const result = await executeCli([...argv, "--format", "json"], fixture.root);
+  assert.equal(result.exitCode, 0, result.standardOutput);
+  assert.equal((JSON.parse(result.standardOutput) as any).status, "ok");
+  assert.ok((JSON.parse(result.standardOutput) as any).result.spec_patch);
+});
+
 test("proposal prepare CLI separates stale mechanical blocks from malformed and ref technical failures", async () => {
   const fixture = await cliPreparationFixture();
   await writeFile(
@@ -478,7 +633,10 @@ test("proposal prepare CLI separates stale mechanical blocks from malformed and 
   assert.equal((JSON.parse(malformed.standardOutput) as any).diagnostics[0].code, "SDD_PREPARE_PACKAGE_INVALID");
 
   await writeFile(fixture.packagePath, JSON.stringify(fixture.packageValue));
-  const unresolved = await executeCli([...fixture.argv.slice(0, -1), "missing-ref", "--format", "json"], fixture.root);
+  const unresolvedArgs = fixture.argv.map((value, index, values) =>
+    values[index - 1] === "--integration-ref" ? "missing-ref" : value,
+  );
+  const unresolved = await executeCli([...unresolvedArgs, "--format", "json"], fixture.root);
   assert.equal(unresolved.exitCode, 3, unresolved.standardOutput);
   const missing = await executeCli(["proposal", "prepare", "--package", fixture.packagePath], fixture.root);
   assert.equal(missing.exitCode, 3);

@@ -101,6 +101,32 @@ fingerprints.
 - Computation emits no approval, gate, or merge-readiness conclusion and does
   not claim a verification delta.
 
+<a id="req-afd65a03"></a>
+
+## REQ-AFD65A03 — Fingerprint approved object deltas
+
+```sdd
+kind: invariant
+verification: automated
+```
+
+### Relations <!-- sdd:relations -->
+
+- refers-to: [CON-FC16381E — Fingerprint](../concepts/fingerprint.md)
+- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+- depends-on: [REQ-24A372E7 — Compute semantic and structural object deltas](validation-fingerprints-and-patches.md#req-24a372e7)
+
+### Statement <!-- sdd:statement -->
+
+Approval shall bind a canonical sorted object delta of add, modify, and delete
+operations rather than the fingerprint of the entire specification tree.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- Independent integration-branch additions do not invalidate approval.
+- Modify and delete operations include expected before fingerprints.
+- Add operations include expected after fingerprints.
+
 <a id="req-7d93d64a"></a>
 
 ## REQ-7D93D64A — Enforce mechanical graph invariants

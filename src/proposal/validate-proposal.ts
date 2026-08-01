@@ -1,7 +1,14 @@
 import type { ResolvedProject } from "../config/types.ts";
 import type { Diagnostic } from "../contracts/diagnostics.ts";
 import { isDiagnosticCode } from "../contracts/diagnostics.ts";
-import type { GitObjectId, ObjectId, RequirementId } from "../contracts/identifiers.ts";
+import type {
+  CapabilityId,
+  Fingerprint,
+  GitObjectId,
+  ObjectId,
+  ProjectId,
+  RequirementId,
+} from "../contracts/identifiers.ts";
 import { isRequirementId } from "../contracts/identifiers.ts";
 import { computeGraphObjectDelta } from "../fingerprint/object-delta.ts";
 import { fingerprintValidatedObject } from "../fingerprint/object-fingerprint.ts";
@@ -17,26 +24,26 @@ export type ProposalMode = "spec-code" | "spec" | "code";
 export type ProposalPackage = {
   readonly schema_version: "1.0";
   readonly artifact_type: "proposal_package";
-  readonly project_id: string;
+  readonly project_id: ProjectId;
   readonly mode: ProposalMode;
-  readonly base: { readonly git_ref: string; readonly tree_fingerprint: string };
-  readonly candidate: { readonly source: "directory" | "manifest"; readonly tree_fingerprint: string };
+  readonly base: { readonly git_ref: GitObjectId; readonly tree_fingerprint: Fingerprint };
+  readonly candidate: { readonly source: "directory" | "manifest"; readonly tree_fingerprint: Fingerprint };
   readonly object_delta: {
-    readonly semantic_fingerprint: string;
-    readonly structural_fingerprint: string;
+    readonly semantic_fingerprint: Fingerprint;
+    readonly structural_fingerprint: Fingerprint;
     readonly added: readonly ObjectId[];
     readonly modified: readonly ObjectId[];
     readonly deleted: readonly ObjectId[];
   };
   readonly code_targets: readonly {
     readonly requirement_id: RequirementId;
-    readonly semantic_fingerprint: string;
-    readonly structural_fingerprint: string;
+    readonly semantic_fingerprint: Fingerprint;
+    readonly structural_fingerprint: Fingerprint;
   }[];
   readonly affected_scope: {
-    readonly fingerprint: string;
-    readonly requirements: readonly string[];
-    readonly capabilities: readonly string[];
+    readonly fingerprint: Fingerprint;
+    readonly requirements: readonly RequirementId[];
+    readonly capabilities: readonly CapabilityId[];
   };
   readonly diagnostics: readonly Diagnostic[];
   readonly semantic_candidates: readonly SemanticCandidate[];

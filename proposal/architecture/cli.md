@@ -46,11 +46,12 @@ General commands use:
 `2`. A crash, panic, uncaught exception, or incomplete result must never exit
 `0`.
 
-`proposal prepare` returns `0` with an exact SpecPatch when preparation is
-clean, `2` with `status: "review_required"` and a null patch when mechanical
-conflicts exist, `1` for stale or mismatched mechanical package bindings, and
-`3` for malformed inputs, I/O, unresolved refs, missing merge bases, or other
-technical failures.
+`proposal prepare` returns `0` with an exact SpecPatch when approval and
+preparation are current and clean, `2` with `status: "review_required"` and a
+null patch when approval is missing or review is required, `1` for stale,
+rejected, contradictory, mismatched, or definitely blocked inputs, and `3` for
+malformed inputs, I/O, unresolved refs, missing merge bases, or other technical
+failures.
 
 ## Commands
 
@@ -173,7 +174,8 @@ existing-behavior, approval, or semantic-review claims.
 
 ```text
 sdd proposal prepare --package <path> --candidate <path> \
-  --branch-head <git-ref> --integration-ref <git-ref>
+  --branch-head <git-ref> --integration-ref <git-ref> \
+  [--approval <project-relative-path> ...]
 ```
 
 Performs mechanical three-way analysis and emits a ConflictReport plus an exact
@@ -181,8 +183,11 @@ Performs mechanical three-way analysis and emits a ConflictReport plus an exact
 or CandidateTreeManifest supplied again and revalidated against the package
 candidate-tree and object-delta fingerprints; `H` is `--branch-head`; and `M`
 is `--integration-ref`. It reads refs and candidate state but does not write
-them. ApprovalEvidence validation and approval-bound Branch Preparation Gate
-composition are separate Milestone 6 behavior.
+them. ApprovalEvidence must name the exact project, configured issuer, approved
+mode, base object ID, and semantic and structural delta fingerprints. Missing
+approval or reviewable preparation drift withholds SpecPatch and returns
+`review_required`; stale, negative, contradictory, or definite blocker state
+returns `blocked`.
 
 The stable result value is:
 
@@ -193,9 +198,9 @@ The stable result value is:
 }
 ```
 
-For a mechanical conflict the same shape is returned with
-`"spec_patch": null`, envelope status `review_required`, and exit code `2`.
-The clean and conflict results never modify the worktree or Git state.
+Whenever approval or preparation does not permit patch emission, the same
+shape is returned with `"spec_patch": null`. The clean, review-required, and
+blocked results never modify the worktree or Git state.
 
 ### `sdd proposal apply`
 
