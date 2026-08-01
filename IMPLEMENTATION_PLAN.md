@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 4 / Test discovery and QA scope
-- Current leaf: 4.5 Affected verification and QA scope
+- Current leaf: 4.6 Execution and QA evidence validation
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -33,8 +33,9 @@ first implemented canonical `spec/` subset, and implemented `sdd init`, `id`,
 `validate`, `inspect`, `trace`, and `diff` operations. Test adapter declarations,
 bounded JSONL and JUnit discovery import, normalized suite inheritance, and
 deterministic version 1 TestIndex output, TestIndex-backed trace, and
-verification fingerprints and deltas are implemented. The runtime does not yet
-compute affected QA scope or validate test and QA evidence.
+verification fingerprints and deltas, and deterministic affected Requirement
+and Capability scope are implemented. The runtime does not yet validate test
+and QA evidence.
 Unimplemented target behavior remains under `proposal/spec/` and is promoted
 only in verified bounded subsets.
 
@@ -567,8 +568,11 @@ Mode: `spec-code`.
       from a subject-matched TestIndex, add deterministic Requirement
       verification fingerprints, and expose verification deltas only from a
       complete base/target TestIndex pair without changing graph-only trace.
-- [ ] **4.5 — Affected verification and QA scope.** Compute affected
-      Requirements and Capabilities.
+- [x] **4.5 — Affected verification and QA scope.** Compute a deterministic,
+      fingerprinted scope from direct Requirement changes, code targets,
+      semantic Concept impact, transitive reverse dependencies, and former
+      owners of deleted Requirements. This contributes the pure scope
+      computation for `REQ-89AFB91E`; the Verification Gate remains in 4.6.
 - [ ] **4.6 — Execution and QA evidence validation.** Validate freshness and
       coverage.
 
@@ -660,7 +664,7 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 4.5 — Affected verification and QA scope` is the only active
-implementation leaf. It computes transitive affected Requirements and owning
-Capabilities from the available change classes. Execution and QA evidence
-validation remains in Milestone 4.6.
+`Milestone 4.6 — Execution and QA evidence validation` is the only active
+implementation leaf. It validates TestExecutionEvidence and QAEvidence
+freshness and coverage against the subject-matched TestIndex and affected
+scope, then emits the deterministic VerificationReport.

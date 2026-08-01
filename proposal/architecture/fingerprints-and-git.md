@@ -165,6 +165,26 @@ Version 1 `diff` accepts an optional pair of base and target TestIndex paths;
 each index must match the selected project, resolved snapshot ref, and active
 Requirement identities. A partial pair is invalid.
 
+### Affected scope fingerprint
+
+Affected-scope computation starts with added or modified active Requirements,
+explicit active `code` targets, and active Requirements that refer to a
+semantically changed Concept. It expands that set through transitive reverse
+`depends-on` edges in the target graph. QA scope contains the target owner of
+every affected active Requirement and the former owner of every deleted
+Requirement; deleted Requirements themselves are excluded from the active
+verification set.
+
+The version 1 affected-scope fingerprint hashes compact UTF-8 JSON with this
+exact key order:
+
+```text
+canonicalization_version, affected_requirements, affected_capabilities
+```
+
+Both ID arrays are deduplicated and sorted by stable ID. The fingerprint is
+SHA-256 over those exact bytes.
+
 ### Approval binding
 
 Approval binds the explicit Change `mode` together with the semantic and
