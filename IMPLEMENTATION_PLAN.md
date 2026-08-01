@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 4 / Test discovery and QA scope
-- Current leaf: 4.1 JSONL discovery import and command adapter boundary
+- Current leaf: 4.2 JUnit-compatible import
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -545,11 +545,13 @@ merge-history enforcement in `REQ-FDD51416` remains Milestone 6 work.
 
 Mode: `spec-code`.
 
-- [ ] **4.1 — JSONL discovery import and command adapter boundary.** Import
+- [x] **4.1 — JSONL discovery import and command adapter boundary.** Import
       versioned discovery JSONL from project-scoped files and configured
       argv-array commands, with bounded process and stream failure handling.
       Do not import JUnit, build the project TestIndex, extract inherited
       Requirement IDs, or handle execution and QA evidence in this leaf.
+      Contributes to `REQ-20F8CA5C` and `REQ-72BA737C`; their remaining
+      TestIndex and execution behavior stays proposed until later leaves.
 - [ ] **4.2 — JUnit-compatible import.**
 - [ ] **4.3 — Deterministic TestIndex and suite-name inheritance.**
 - [ ] **4.4 — Test-backed trace and verification fingerprints.** Enrich `trace`
@@ -648,9 +650,9 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 4.1 — JSONL discovery import and command adapter boundary` is the
-only active implementation leaf. It imports versioned discovery JSONL from
-project-scoped files and configured argv-array commands, including bounded
-process and stream failure handling. JUnit import, the project TestIndex,
-Requirement-ID inheritance, test-backed trace and fingerprints, affected scope,
-and execution and QA evidence validation remain in Milestones 4.2 through 4.6.
+`Milestone 4.2 — JUnit-compatible import` is the only active implementation
+leaf. It imports bounded, non-networked JUnit-compatible XML while preserving
+available suite hierarchy, executable test status, and source data. The project
+TestIndex, Requirement-ID inheritance, test-backed trace and fingerprints,
+affected scope, and execution and QA evidence validation remain in Milestones
+4.3 through 4.6.

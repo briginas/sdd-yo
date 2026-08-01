@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 
+import { ProcessRunError } from "./process-runner.ts";
 import type { ProcessRequest, ProcessResult, ProcessRunner } from "./process-runner.ts";
 
 const DEFAULT_MAX_OUTPUT_BYTES = 16 * 1024 * 1024;
@@ -9,7 +10,12 @@ export const nodeProcessRunner: ProcessRunner = {
     new Promise((resolve, reject) => {
       const child = spawn(request.executable, request.arguments, {
         cwd: request.workingDirectory,
-        env: request.environment === undefined ? process.env : { ...process.env, ...request.environment },
+        env:
+          request.inheritEnvironment === false
+            ? request.environment
+            : request.environment === undefined
+              ? process.env
+              : { ...process.env, ...request.environment },
         shell: false,
         stdio: "pipe",
       });
@@ -27,18 +33,23 @@ export const nodeProcessRunner: ProcessRunner = {
       const collect = (target: Uint8Array[], chunk: Buffer): void => {
         outputBytes += chunk.length;
         if (outputBytes > maximum) {
-          fail(new Error("Process output exceeded the configured byte limit."));
+          fail(new ProcessRunError("OUTPUT_LIMIT", "Process output exceeded the configured byte limit."));
           return;
         }
         target.push(new Uint8Array(chunk));
       };
       child.stdout.on("data", (chunk: Buffer) => collect(standardOutput, chunk));
       child.stderr.on("data", (chunk: Buffer) => collect(standardError, chunk));
-      child.on("error", (error) => fail(error));
+      child.on("error", (error) =>
+        fail(new ProcessRunError("SPAWN_FAILED", "Process could not be started.", { cause: error })),
+      );
       const timeout =
         request.timeoutMilliseconds === undefined
           ? undefined
-          : setTimeout(() => fail(new Error("Process exceeded the configured timeout.")), request.timeoutMilliseconds);
+          : setTimeout(
+              () => fail(new ProcessRunError("TIMEOUT", "Process exceeded the configured timeout.")),
+              request.timeoutMilliseconds,
+            );
       child.on("close", (exitCode, signal) => {
         if (timeout !== undefined) clearTimeout(timeout);
         if (settled) return;

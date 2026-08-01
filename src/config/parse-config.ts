@@ -9,6 +9,7 @@ import type { ConfigurationResult } from "./result.ts";
 import type { CommandTestAdapter, JunitTestAdapter, ProjectConfiguration, TestAdapter } from "./types.ts";
 
 type UnknownRecord = Record<string, unknown>;
+const adapterIdPattern = /^[a-z][a-z0-9-]{0,31}$/u;
 
 function diagnostic(
   codeValue: string,
@@ -90,7 +91,7 @@ function parseAdapter(
 ): ConfigurationResult<TestAdapter> {
   const field = `tests.adapters[${index}]`;
   if (!isRecord(value) || typeof value.type !== "string") return failure(invalidField(field, location));
-  if (typeof value.id !== "string" || value.id.length === 0 || value.id.includes("\0")) {
+  if (typeof value.id !== "string" || !adapterIdPattern.test(value.id)) {
     return failure(invalidField(`${field}.id`, location));
   }
 

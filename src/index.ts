@@ -7,4 +7,5 @@ export * from "./ids/index.ts";
 export * from "./fingerprint/index.ts";
 export * from "./markdown/index.ts";
 export * from "./platform/index.ts";
+export * from "./tests/index.ts";
 export type * from "./schemas/index.ts";
