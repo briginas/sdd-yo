@@ -264,6 +264,36 @@ Preparation Gate.
 
 No working-tree write occurs before explicit apply.
 
+### ConflictReport input fingerprints
+
+Mechanical preparation fingerprints the selected project configuration and
+the complete preparation input without depending on JSON input key order. The
+version 1 canonical input function recursively sorts object keys by Unicode
+code point, preserves array order, normalizes strings to NFC, emits compact
+JSON as UTF-8 without a byte-order mark or trailing newline, and hashes those
+exact bytes with SHA-256.
+
+`config_fingerprint` applies that function directly to the parsed selected
+project configuration. `input_fingerprint` applies it to this exact value:
+
+```json
+{
+  "canonicalization_version": "1",
+  "package": { "...": "the strict normalized ProposalPackage value" },
+  "candidate_tree_fingerprint": "sha256:...",
+  "branch_head": "resolved-H",
+  "integration_ref": "resolved-M",
+  "merge_base": "resolved-merge-base",
+  "config_fingerprint": "sha256:..."
+}
+```
+
+Because keys are recursively sorted before encoding, their presentation order
+above is explanatory rather than byte-significant. Conflict entries are
+deduplicated and sorted by `path`, `kind`, then optional `object_id`.
+Milestone 5.2 always emits `semantic_candidates: []` and does not emit a
+SpecPatch or approval conclusion.
+
 ## SpecPatch
 
 ```json

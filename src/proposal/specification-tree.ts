@@ -42,6 +42,17 @@ export class ProposalInputError extends Error {
   }
 }
 
+export function compareUnicodeCodePoints(left: string, right: string): number {
+  const leftPoints = [...left].map((value) => value.codePointAt(0)!);
+  const rightPoints = [...right].map((value) => value.codePointAt(0)!);
+  const length = Math.min(leftPoints.length, rightPoints.length);
+  for (let index = 0; index < length; index += 1) {
+    if (leftPoints[index]! < rightPoints[index]!) return -1;
+    if (leftPoints[index]! > rightPoints[index]!) return 1;
+  }
+  return leftPoints.length - rightPoints.length;
+}
+
 function hash(bytes: Uint8Array): Fingerprint {
   const value = `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
   if (!isFingerprint(value)) throw new Error("SHA-256 generation failed.");
@@ -57,9 +68,7 @@ function decodeUtf8(bytes: Uint8Array, code = "SDD_PROPOSAL_FILE_NOT_UTF8"): str
 }
 
 export function fingerprintSpecificationTree(filesInput: readonly SpecificationTreeFile[]): Fingerprint {
-  const files = [...filesInput].toSorted((left, right) =>
-    left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
-  );
+  const files = [...filesInput].toSorted((left, right) => compareUnicodeCodePoints(left.path, right.path));
   const canonical = encoder.encode(
     JSON.stringify({
       canonicalization_version: "1",
@@ -76,9 +85,7 @@ function validateTreeFiles(
   if (filesInput.length > MAX_TREE_FILES) {
     throw new ProposalInputError("SDD_PROPOSAL_CANDIDATE_LIMIT_EXCEEDED", "The candidate contains too many files.");
   }
-  const files = [...filesInput].toSorted((left, right) =>
-    left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
-  );
+  const files = [...filesInput].toSorted((left, right) => compareUnicodeCodePoints(left.path, right.path));
   let bytes = 0;
   let previous: string | undefined;
   for (const file of files) {
@@ -125,7 +132,10 @@ function graphFromFiles(
   return graph.value;
 }
 
-function tree(filesInput: readonly SpecificationTreeFile[], config: ProjectConfiguration): SpecificationTree {
+export function buildSpecificationTree(
+  filesInput: readonly SpecificationTreeFile[],
+  config: ProjectConfiguration,
+): SpecificationTree {
   const files = validateTreeFiles(filesInput, config.spec.root);
   return { files, fingerprint: fingerprintSpecificationTree(files), graph: graphFromFiles(files, config) };
 }
@@ -192,7 +202,7 @@ export async function loadBaseSpecificationTree(
     const bytes = await reader.readBlob(entry.objectId);
     files.push({ path: local, sha256: hash(bytes), content_utf8: decodeUtf8(bytes) });
   }
-  return tree(files, match.config);
+  return buildSpecificationTree(files, match.config);
 }
 
 async function walkDirectory(
@@ -202,7 +212,7 @@ async function walkDirectory(
 ): Promise<readonly SpecificationTreeFile[]> {
   const absolute = resolve(root, ...path.split("/"));
   const entries = [...(await fileSystem.readDirectory(absolute))].toSorted((left, right) =>
-    left.name < right.name ? -1 : left.name > right.name ? 1 : 0,
+    compareUnicodeCodePoints(left.name, right.name),
   );
   const files: SpecificationTreeFile[] = [];
   for (const entry of entries) {
@@ -271,7 +281,7 @@ async function loadCandidateDirectory(
       "The candidate specification root resolves outside the candidate project.",
     );
   }
-  return tree(await walkDirectory(fileSystem, realRoot, parsed.value.spec.root), parsed.value);
+  return buildSpecificationTree(await walkDirectory(fileSystem, realRoot, parsed.value.spec.root), parsed.value);
 }
 
 type CandidateManifest = {
@@ -388,7 +398,7 @@ export async function loadCandidateSpecificationTree(input: {
       "The candidate manifest is bound to a different base specification tree.",
     );
   const paths = manifest.files.map((file) => file.path);
-  if (paths.some((path, index) => index > 0 && paths[index - 1]! >= path))
+  if (paths.some((path, index) => index > 0 && compareUnicodeCodePoints(paths[index - 1]!, path) >= 0))
     throw new ProposalInputError(
       "SDD_PROPOSAL_MANIFEST_ORDER_INVALID",
       "Candidate manifest files must be strictly path-sorted.",
@@ -398,5 +408,5 @@ export async function loadCandidateSpecificationTree(input: {
     sha256: file.sha256 as Fingerprint,
     content_utf8: file.content_utf8,
   }));
-  return { source: "manifest", tree: tree(files, input.selected.configuration) };
+  return { source: "manifest", tree: buildSpecificationTree(files, input.selected.configuration) };
 }

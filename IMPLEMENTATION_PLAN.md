@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 5 / Proposal and exact patch
-- Current leaf: 5.2 Package-bound mechanical three-way preparation
+- Current leaf: 5.3 Exact create/replace/delete SpecPatch
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -35,9 +35,10 @@ bounded JSONL and JUnit discovery import, normalized suite inheritance, and
 deterministic version 1 TestIndex output, TestIndex-backed trace, and
 verification fingerprints and deltas, deterministic affected Requirement and
 Capability scope, and bounded execution/QA evidence validation are implemented.
-The runtime implements deterministic mechanical ProposalPackage generation;
-it does not yet implement proposal preparation, exact patches, or Verification
-and Merge gates.
+The runtime implements deterministic mechanical ProposalPackage generation and
+the package-bound read-only preparation core with ConflictReport output. The
+public preparation CLI, exact patches, and Verification and Merge gates remain
+unimplemented.
 Unimplemented target behavior remains under `proposal/spec/` and is promoted
 only in verified bounded subsets.
 
@@ -610,20 +611,25 @@ Mode: `spec-code`.
       bound to their fingerprints. Emit `semantic_candidates: []` and make no
       implementation-behavior, existing-behavior, approval, or semantic-review
       claim. Promote only `REQ-E26A859E` and `REQ-8DE9E078`.
-- [ ] **5.2 — Package-bound mechanical three-way preparation.** Implement
-      `proposal prepare` with explicit package, candidate, branch-head, and
-      integration-ref inputs. Take `B` from `package.base.git_ref`, revalidate
-      the exact `P` candidate bytes and deltas against the package, resolve
-      explicit `H` and `M`, perform read-only three-way comparison, and emit
-      mechanical conflicts or a prepared tree. Do not validate
-      ApprovalEvidence, generate semantic candidates, compose `REQ-A8739118`,
-      or emit a SpecPatch yet. This leaf contributes the comparison and
-      conflict-analysis portion of `REQ-964B9F80` without promoting it.
+- [x] **5.2 — Package-bound mechanical three-way preparation.** Implement the
+      core preparation library with explicit package, candidate, resolved
+      branch-head, and resolved integration-ref inputs. Take `B` from
+      `package.base.git_ref`, revalidate the exact `P` candidate bytes and all
+      package bindings, require a merge base for `H` and `M`, perform read-only
+      line-aware three-way comparison, and emit a deterministic ConflictReport
+      plus an internal validated prepared tree only when clean. Public
+      `proposal prepare` CLI wiring is deferred to 5.3 so 5.2 exposes no
+      temporary response shape. Do not validate ApprovalEvidence, generate
+      semantic candidates, compose `REQ-A8739118`, or emit a SpecPatch yet.
+      This leaf contributes the comparison and conflict-analysis portion of
+      `REQ-964B9F80` without promoting it.
 - [ ] **5.3 — Exact create/replace/delete SpecPatch.** Convert a clean prepared
       tree into deterministically path-sorted exact file operations with before
       and after hashes and whole-tree fingerprints. Do not apply the patch or
       add fuzzy, partial, force, Git-write, or approval behavior. Promote
-      `REQ-964B9F80` and `REQ-3BF12AAD`.
+      `REQ-964B9F80` and `REQ-3BF12AAD`. Wire the public `proposal prepare` CLI
+      only once this leaf can return the stable ConflictReport and SpecPatch
+      response together.
 - [ ] **5.4 — Safe all-or-nothing proposal apply.** Implement the only
       post-initialization specification write operation with project/spec-root
       containment, path traversal, symlink, `.git`, binary, duplicate-target,

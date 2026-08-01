@@ -57,6 +57,16 @@ test("REQ-8DE9E078 specification-tree fingerprint hashes sorted project paths an
   const files = [
     { path: "spec/z.md" as ProjectPath, sha256: `sha256:${"2".repeat(64)}` as Fingerprint, content_utf8: "ignored" },
     {
+      path: "spec/\u{10000}.md" as ProjectPath,
+      sha256: `sha256:${"3".repeat(64)}` as Fingerprint,
+      content_utf8: "ignored astral",
+    },
+    {
+      path: "spec/\u{e000}.md" as ProjectPath,
+      sha256: `sha256:${"4".repeat(64)}` as Fingerprint,
+      content_utf8: "ignored private use",
+    },
+    {
       path: "spec/a.md" as ProjectPath,
       sha256: `sha256:${"1".repeat(64)}` as Fingerprint,
       content_utf8: "ignored too",
@@ -67,6 +77,8 @@ test("REQ-8DE9E078 specification-tree fingerprint hashes sorted project paths an
     files: [
       { path: "spec/a.md", sha256: `sha256:${"1".repeat(64)}` },
       { path: "spec/z.md", sha256: `sha256:${"2".repeat(64)}` },
+      { path: "spec/\u{e000}.md", sha256: `sha256:${"4".repeat(64)}` },
+      { path: "spec/\u{10000}.md", sha256: `sha256:${"3".repeat(64)}` },
     ],
   });
   assert.equal(fingerprintSpecificationTree(files), `sha256:${createHash("sha256").update(canonical).digest("hex")}`);
