@@ -10,6 +10,8 @@
     "base",
     "candidate",
     "object_delta",
+    "code_targets",
+    "affected_scope",
     "diagnostics",
     "semantic_candidates"
   ],
@@ -84,6 +86,34 @@
         }
       }
     },
+    "code_targets": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/codeTarget"
+      },
+      "uniqueItems": true,
+      "x-sdd-ordering": "requirement_id"
+    },
+    "affected_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fingerprint",
+        "requirements",
+        "capabilities"
+      ],
+      "properties": {
+        "fingerprint": {
+          "$ref": "common.schema.json#/$defs/fingerprint"
+        },
+        "requirements": {
+          "$ref": "#/$defs/requirementIds"
+        },
+        "capabilities": {
+          "$ref": "#/$defs/capabilityIds"
+        }
+      }
+    },
     "diagnostics": {
       "type": "array",
       "items": {
@@ -107,11 +137,53 @@
         "$ref": "common.schema.json#/$defs/objectId"
       },
       "x-sdd-ordering": "object_id"
+    },
+    "requirementIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "common.schema.json#/$defs/requirementId"
+      },
+      "x-sdd-ordering": "requirement_id"
+    },
+    "capabilityIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "common.schema.json#/$defs/capabilityId"
+      },
+      "x-sdd-ordering": "capability_id"
     }
   },
   "allOf": [
     {
       "$ref": "common.schema.json#/$defs/artifactEnvelope"
+    },
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "code"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "then": {
+        "properties": {
+          "code_targets": {
+            "minItems": 1
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "code_targets": {
+            "maxItems": 0
+          }
+        }
+      }
     }
   ]
 }

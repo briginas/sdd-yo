@@ -51,6 +51,8 @@ export type SDDYoCandidateTreeManifest = ArtifactEnvelope & {
  * Version 1 deterministic Proposal Gate output.
  */
 export type SDDYoProposalPackage = ArtifactEnvelope & {
+  [k: string]: unknown | undefined;
+} & {
   artifact_type?: "proposal_package";
   mode: "spec-code" | "spec" | "code";
   base: {
@@ -68,11 +70,19 @@ export type SDDYoProposalPackage = ArtifactEnvelope & {
     modified: ObjectIds;
     deleted: ObjectIds;
   };
+  code_targets: CodeTarget[];
+  affected_scope: {
+    fingerprint: string;
+    requirements: RequirementIds;
+    capabilities: CapabilityIds;
+  };
   diagnostics: Diagnostic[];
   semantic_candidates: SemanticCandidate[];
   [k: string]: unknown | undefined;
 };
 export type ObjectIds = string[];
+export type RequirementIds = string[];
+export type CapabilityIds = string[];
 /**
  * Version 1 exact specification file operations.
  */
@@ -303,8 +313,8 @@ export type SDDYoVerificationReport = ArtifactEnvelope & {
   integration_ref: string;
   config_fingerprint: string;
   affected_scope_fingerprint: string;
-  affected_requirements: RequirementIds;
-  affected_capabilities: CapabilityIds;
+  affected_requirements: RequirementIds1;
+  affected_capabilities: CapabilityIds1;
   test_coverage: RequirementCheck;
   test_execution: RequirementCheck;
   manual_verification: RequirementCheck;
@@ -314,8 +324,8 @@ export type SDDYoVerificationReport = ArtifactEnvelope & {
   diagnostics: Diagnostic[];
   [k: string]: unknown | undefined;
 };
-export type RequirementIds = string[];
-export type CapabilityIds = string[];
+export type RequirementIds1 = string[];
+export type CapabilityIds1 = string[];
 /**
  * Version 1 deterministic Merge Gate readiness report.
  */
@@ -337,8 +347,8 @@ export type SDDYoMergeReport = ArtifactEnvelope & {
   };
   affected_scope: {
     fingerprint: string;
-    requirements: RequirementIds1;
-    capabilities: CapabilityIds1;
+    requirements: RequirementIds2;
+    capabilities: CapabilityIds2;
   };
   test_summary: CheckSummary;
   qa_summary: CheckSummary;
@@ -369,8 +379,8 @@ export type SDDYoMergeReport = ArtifactEnvelope & {
   ];
   [k: string]: unknown | undefined;
 };
-export type RequirementIds1 = string[];
-export type CapabilityIds1 = string[];
+export type RequirementIds2 = string[];
+export type CapabilityIds2 = string[];
 
 export interface ArtifactEnvelope {
   schema_version: "1.0";
@@ -425,12 +435,12 @@ export interface Analyzer {
   version: string;
 }
 export interface RequirementCheck {
-  satisfied: RequirementIds;
-  unsatisfied: RequirementIds;
+  satisfied: RequirementIds1;
+  unsatisfied: RequirementIds1;
 }
 export interface CapabilityCheck {
-  satisfied: CapabilityIds;
-  unsatisfied: CapabilityIds;
+  satisfied: CapabilityIds1;
+  unsatisfied: CapabilityIds1;
 }
 export interface FindingSummary {
   finding_id: string;

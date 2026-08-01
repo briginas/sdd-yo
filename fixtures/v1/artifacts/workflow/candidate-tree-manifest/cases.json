@@ -4,7 +4,7 @@
   "contract_id": "artifact.candidate-tree-manifest",
   "schema": "../../../../../contracts/v1/schemas/candidate-tree-manifest.schema.json",
   "requirements": [
-    "REQ-E80F09C6",
+    "REQ-8DE9E078",
     "REQ-3BF12AAD"
   ],
   "context": {

@@ -9,7 +9,7 @@
       "schema": "../../../contracts/v1/schemas/candidate-tree-manifest.schema.json",
       "manifest": "workflow/candidate-tree-manifest/cases.json",
       "requirements": [
-        "REQ-E80F09C6",
+        "REQ-8DE9E078",
         "REQ-3BF12AAD"
       ]
     },
@@ -18,9 +18,8 @@
       "schema": "../../../contracts/v1/schemas/proposal-package.schema.json",
       "manifest": "workflow/proposal-package/cases.json",
       "requirements": [
-        "REQ-E80F09C6",
-        "REQ-A3C3B779",
-        "REQ-AFD65A03"
+        "REQ-8DE9E078",
+        "REQ-A3C3B779"
       ]
     },
     {

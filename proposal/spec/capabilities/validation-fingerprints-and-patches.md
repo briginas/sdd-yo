@@ -100,18 +100,21 @@ verification: automated
 ### Relations <!-- sdd:relations -->
 
 - refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
-- depends-on: [REQ-A8739118 — Prepare approved proposals against current integration state](proposal-modes-and-workflow-gates.md#req-a8739118)
+- depends-on: [REQ-8DE9E078 — Generate a deterministic mechanical ProposalPackage](proposal-modes-and-workflow-gates.md#req-8de9e078)
 
 ### Statement <!-- sdd:statement -->
 
-Proposal preparation shall compare base, approved candidate, and current
-integration states and produce a new exact patch only when approved object
-deltas remain intact.
+Proposal preparation shall compare the package base, package-bound candidate,
+branch head, and current integration states and produce a new exact patch only
+when the revalidated candidate object deltas remain identical to the package.
 
 ### Acceptance criteria <!-- sdd:acceptance -->
 
 - Text conflicts return `REVIEW_REQUIRED`.
-- Semantic conflicts are analyzed after a clean textual merge.
+- The exact candidate bytes are revalidated against the package candidate tree
+  fingerprint and object-delta fingerprints before preparation.
+- Semantic conflict candidates are analyzed separately after a clean textual
+  merge and are not claimed by mechanical preparation.
 - The working tree remains unchanged until explicit apply.
 
 <a id="req-fdd51416"></a>

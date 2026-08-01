@@ -17,6 +17,12 @@
     "modified": [],
     "deleted": []
   },
+  "code_targets": [],
+  "affected_scope": {
+    "fingerprint": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+    "requirements": [],
+    "capabilities": []
+  },
   "diagnostics": [],
   "semantic_candidates": []
 }

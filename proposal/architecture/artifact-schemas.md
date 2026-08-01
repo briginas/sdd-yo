@@ -131,14 +131,30 @@ invalid; hash revalidation is a runtime check over schema-valid input.
     "modified": ["CON-88F1C731"],
     "deleted": []
   },
+  "code_targets": [],
+  "affected_scope": {
+    "fingerprint": "sha256:...",
+    "requirements": ["REQ-7F3A2C91"],
+    "capabilities": ["CAP-CB22A5A3"]
+  },
   "diagnostics": [],
   "semantic_candidates": []
 }
 ```
 
-A package is the deterministic output of Proposal Gate. Candidate content may
-live in a directory, archive, or virtual stdin manifest, but the normalized
-candidate tree and resulting package are identical for identical bytes.
+A package is the deterministic mechanical output of proposal validation.
+`code_targets` is non-empty only in `code` mode and binds every active target
+Requirement to its semantic and structural fingerprints; it is empty in the
+other modes. `affected_scope` binds the exact affected Requirement and
+Capability sets to their canonical fingerprint. In Milestone 5 the producer
+always emits `semantic_candidates: []`: the field is retained for version 1
+compatibility, but an empty value makes no semantic-review or approval claim.
+Milestone 6 populates semantic candidates and composes the full Proposal Gate.
+
+Candidate content accepted by the version 1 CLI lives in an SDD Project
+directory or CandidateTreeManifest. The schema reserves `archive` as a source
+value, but version 1 commands do not ingest archives. The normalized candidate
+tree and resulting package are identical for identical bytes.
 
 ## SpecPatch
 

@@ -29,6 +29,16 @@
       "CAP-ABCDEF12"
     ]
   },
+  "code_targets": [],
+  "affected_scope": {
+    "fingerprint": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+    "requirements": [
+      "REQ-1234ABCD"
+    ],
+    "capabilities": [
+      "CAP-ABCDEF12"
+    ]
+  },
   "diagnostics": [
     {
       "code": "SDD_EXAMPLE_WARNING",

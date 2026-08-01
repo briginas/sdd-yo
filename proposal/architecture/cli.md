@@ -154,19 +154,29 @@ sdd proposal validate --mode spec-code|spec|code --base <git-ref> \
   --candidate <path> [--code-target <REQ-ID> ...]
 ```
 
-Evaluates Proposal Gate and emits a `ProposalPackage`. `code` mode requires
-targets and unchanged candidate specification. Other modes require the
-appropriate non-empty object delta.
+Mechanically validates a candidate and emits a deterministic
+`ProposalPackage`. In version 1, `--candidate` accepts either an SDD Project
+directory or a CandidateTreeManifest file; archive ingestion is reserved for a
+future CLI version. `spec-code` and `spec` require a non-empty semantic delta.
+`code` requires empty semantic and structural deltas plus one or more active
+Requirement targets, whose semantic and structural fingerprints are captured
+in the package. This operation does not validate implementation-behavior,
+existing-behavior, approval, or semantic-review claims.
 
 ### `sdd proposal prepare`
 
 ```text
-sdd proposal prepare --package <path> --branch-base <git-ref> \
-  [--integration-ref <git-ref>]
+sdd proposal prepare --package <path> --candidate <path> \
+  --branch-head <git-ref> --integration-ref <git-ref>
 ```
 
-Performs three-way analysis and emits a ConflictReport plus an exact
-`SpecPatch`. It reads refs and worktree state but does not write them.
+Performs mechanical three-way analysis and emits a ConflictReport plus an exact
+`SpecPatch`. `B` is `package.base.git_ref`; `P` is the exact candidate directory
+or CandidateTreeManifest supplied again and revalidated against the package
+candidate-tree and object-delta fingerprints; `H` is `--branch-head`; and `M`
+is `--integration-ref`. It reads refs and candidate state but does not write
+them. ApprovalEvidence validation and approval-bound Branch Preparation Gate
+composition are separate Milestone 6 behavior.
 
 ### `sdd proposal apply`
 

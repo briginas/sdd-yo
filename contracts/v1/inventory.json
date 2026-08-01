@@ -449,7 +449,7 @@
       "materialized_schema": "contracts/v1/schemas/candidate-tree-manifest.schema.json",
       "authority": "proposal/architecture/artifact-schemas.md#candidatetreemanifest",
       "requirements": [
-        "REQ-E80F09C6",
+        "REQ-8DE9E078",
         "REQ-3BF12AAD"
       ],
       "required_fields": [
@@ -482,9 +482,8 @@
       "materialized_schema": "contracts/v1/schemas/proposal-package.schema.json",
       "authority": "proposal/architecture/artifact-schemas.md#proposalpackage",
       "requirements": [
-        "REQ-E80F09C6",
-        "REQ-A3C3B779",
-        "REQ-AFD65A03"
+        "REQ-8DE9E078",
+        "REQ-A3C3B779"
       ],
       "required_fields": [
         "schema_version",
@@ -494,6 +493,8 @@
         "base",
         "candidate",
         "object_delta",
+        "code_targets",
+        "affected_scope",
         "diagnostics",
         "semantic_candidates"
       ],
@@ -1315,13 +1316,10 @@
       "wire_format": "typed-operation",
       "version": "1.0",
       "definition_status": "specified",
-      "authority": "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-e80f09c6",
+      "authority": "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-8de9e078",
       "requirements": [
-        "REQ-E80F09C6",
         "REQ-E26A859E",
-        "REQ-983914F3",
-        "REQ-FB76FC6F",
-        "REQ-13CE0529"
+        "REQ-8DE9E078"
       ],
       "required_fields": [
         "project",

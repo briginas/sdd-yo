@@ -140,6 +140,44 @@ The approved Change mode shall be immutable for the lifetime of that approval.
 - Changing mode requires a new approval.
 - The CLI does not infer a replacement mode automatically.
 
+<a id="req-8de9e078"></a>
+
+## REQ-8DE9E078 — Generate a deterministic mechanical ProposalPackage
+
+```sdd
+kind: behavior
+verification: automated
+```
+
+### Relations <!-- sdd:relations -->
+
+- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
+- refers-to: [CON-FC16381E — Fingerprint](../../../spec/concepts/fingerprint.md)
+- depends-on: [REQ-E26A859E — Support exactly three synchronization modes](#req-e26a859e)
+
+### Statement <!-- sdd:statement -->
+
+Proposal validation shall load a selected Git base and virtual candidate,
+validate the candidate graph, compute semantic and structural deltas and
+affected scope, enforce the mechanical mode rules, and emit a deterministic
+ProposalPackage without modifying the working tree.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- Identical base, candidate bytes, mode, and code targets produce an identical
+  decision-bearing package value.
+- `spec-code` and `spec` require a non-empty semantic delta; whether behavior
+  is correspondingly implemented or already accepted is not mechanically
+  claimed by this operation.
+- `code` requires empty semantic and structural deltas and one or more active
+  Requirement targets bound to their semantic and structural fingerprints.
+- The package includes the selected mode, base and candidate tree
+  fingerprints, object-delta fingerprints and object IDs, bound code targets,
+  affected-scope fingerprint and IDs, and deterministic diagnostics.
+- `semantic_candidates` is present and empty until semantic review is
+  evaluated; the package is not human approval and makes no semantic-review
+  claim.
+
 <a id="req-e80f09c6"></a>
 
 ## REQ-E80F09C6 — Validate proposals without changing the working tree
@@ -153,6 +191,7 @@ verification: automated
 
 - refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
 - refers-to: [CON-FC16381E — Fingerprint](../../../spec/concepts/fingerprint.md)
+- depends-on: [REQ-8DE9E078 — Generate a deterministic mechanical ProposalPackage](#req-8de9e078)
 
 ### Statement <!-- sdd:statement -->
 
@@ -292,4 +331,3 @@ records.
 - Git and external workflow systems preserve history.
 - No canonical `status` field is added to active objects.
 - Abandoned branches never become canonical product truth.
-

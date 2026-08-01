@@ -11,6 +11,7 @@
     "gate.merge"
   ],
   "requirements": [
+    "REQ-8DE9E078",
     "REQ-E80F09C6",
     "REQ-A8739118",
     "REQ-964B9F80",
@@ -25,6 +26,7 @@
     "REQ-41EDF9A3"
   ],
   "authorities": [
+    "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-8de9e078",
     "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-e80f09c6",
     "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-a8739118",
     "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-9d265509",
@@ -85,7 +87,7 @@
         ],
         "cli_exit_code": 0,
         "basis_requirements": [
-          "REQ-E80F09C6"
+          "REQ-8DE9E078"
         ]
       }
     },
@@ -125,7 +127,7 @@
         ],
         "cli_exit_code": 1,
         "basis_requirements": [
-          "REQ-E80F09C6"
+          "REQ-8DE9E078"
         ]
       }
     },

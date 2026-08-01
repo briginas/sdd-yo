@@ -2,25 +2,25 @@
   "schema_version": "1.0",
   "artifact_type": "proposal_package",
   "project_id": "SDD-17EF8B29",
-  "mode": "spec",
+  "mode": "code",
   "base": {
     "git_ref": "base-commit",
     "tree_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
   },
   "candidate": {
-    "source": "directory",
-    "tree_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+    "source": "manifest",
+    "tree_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
   },
   "object_delta": {
-    "semantic_fingerprint": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
-    "structural_fingerprint": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+    "semantic_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "structural_fingerprint": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
     "added": [],
     "modified": [],
     "deleted": []
   },
   "code_targets": [],
   "affected_scope": {
-    "fingerprint": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+    "fingerprint": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
     "requirements": [],
     "capabilities": []
   },

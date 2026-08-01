@@ -4,9 +4,8 @@
   "contract_id": "artifact.proposal-package",
   "schema": "../../../../../contracts/v1/schemas/proposal-package.schema.json",
   "requirements": [
-    "REQ-E80F09C6",
-    "REQ-A3C3B779",
-    "REQ-AFD65A03"
+    "REQ-8DE9E078",
+    "REQ-A3C3B779"
   ],
   "context": {
     "project_id": "SDD-17EF8B29",
@@ -33,6 +32,14 @@
           "base_git_ref": "base-commit",
           "base_tree_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
           "candidate_tree_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+        }
+      },
+      {
+        "case": "code-mode-valid.json",
+        "subject": {
+          "base_git_ref": "base-commit",
+          "base_tree_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "candidate_tree_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
         }
       }
     ]
@@ -102,6 +109,18 @@
     },
     {
       "path": "schema-boundary-invalid.json",
+      "parse_valid": true,
+      "schema_valid": false,
+      "context_valid": false
+    },
+    {
+      "path": "code-mode-valid.json",
+      "parse_valid": true,
+      "schema_valid": true,
+      "context_valid": true
+    },
+    {
+      "path": "code-mode-empty-target-invalid.json",
       "parse_valid": true,
       "schema_valid": false,
       "context_valid": false

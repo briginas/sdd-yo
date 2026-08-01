@@ -195,8 +195,8 @@ under another mode does not match the approval subject.
 ## Git model
 
 ```text
-B = proposal base commit
-P = approved candidate specification
+B = package base commit
+P = package-bound candidate specification
 H = current branch head
 M = current integration commit
 ```
@@ -204,8 +204,8 @@ M = current integration commit
 Comparisons:
 
 ```text
-B → P  approved target delta
-P → H  post-approval drift
+B → P  package-bound target delta
+P → H  candidate-to-branch drift
 B → M  concurrent integration changes
 B → H  branch delta
 H ↔ M  final integration compatibility
@@ -220,13 +220,21 @@ any fixed digest length from it.
 
 ## Branch preparation
 
-1. read file and object states for `B`, `P`, and `M`;
-2. perform an internal three-way textual merge;
-3. stop for textual conflicts;
-4. parse and validate the merged candidate;
-5. verify the approved semantic and structural deltas remain identical;
-6. recompute semantic candidates against `M`;
+1. read `B` from `package.base.git_ref`, `P` from the explicitly supplied
+   candidate, `H` from the explicit branch-head ref, and `M` from the explicit
+   integration ref;
+2. revalidate the exact `P` bytes against the package candidate-tree and
+   object-delta fingerprints;
+3. perform an internal three-way textual merge;
+4. stop for textual conflicts;
+5. parse and validate the merged candidate;
+6. verify the package semantic and structural deltas remain identical;
 7. emit a new exact SpecPatch whose before hashes match files in `M`.
+
+Mechanical preparation does not consume ApprovalEvidence and does not claim
+that a candidate is approved. Milestone 6 composes approval validation and
+semantic candidates with this operation to implement the full Branch
+Preparation Gate.
 
 No working-tree write occurs before explicit apply.
 

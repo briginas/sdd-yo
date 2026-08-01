@@ -43,12 +43,13 @@ a greenfield repository is insufficient.
 
 ### Modes and gates
 
-- `spec-code`: require an approved non-empty semantic delta and current
-  implementation/test/QA evidence.
-- `spec`: require an approved non-empty semantic delta plus baseline QA against
-  existing accepted behavior.
+- Mechanical `spec-code` and `spec` proposal validation: require a non-empty
+  semantic delta without claiming implementation or existing-behavior
+  acceptance.
 - `code`: reject any specification semantic or structural delta and require
   exact active Requirement target fingerprints.
+- Full gate composition: require approval and the applicable current
+  implementation/test/QA or baseline evidence.
 - Reject mode changes after approval.
 - Verify all four gates independently from explicit artifacts.
 - Verify maintenance changes outside the SDD modes do not create invented
@@ -58,8 +59,9 @@ a greenfield repository is insufficient.
 
 - Exercise merge-base cases where proposal base equals, precedes, and diverges
   from branch base.
-- Detect textual conflicts, delete/modify conflicts, overlapping object
-  changes, and clean-text semantic candidates.
+- Revalidate explicitly supplied candidate bytes against their ProposalPackage;
+  detect textual conflicts, delete/modify conflicts, and overlapping object
+  changes mechanically; evaluate clean-text semantic candidates separately.
 - Reject stale before-hashes and result fingerprints.
 - Verify all-or-nothing create/replace/delete under injected failures.
 - Verify no command creates a branch, commit, tag, push, or merge.

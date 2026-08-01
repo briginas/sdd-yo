@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 5 / Proposal and exact patch
-- Current leaf: ProposalPackage validation
+- Current leaf: 5.1 Proposal Gate and ProposalPackage generation
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -591,15 +591,61 @@ affected scope in `REQ-89AFB91E`.
 
 Mode: `spec-code`.
 
-- [ ] Implement ProposalPackage validation for all three modes.
-- [ ] Implement Git three-way comparison and conflict candidates.
-- [ ] Implement exact create/replace/delete SpecPatch.
-- [ ] Implement path/symlink safety and all-or-nothing apply.
-- [ ] Add interruption and stale-base tests.
+- [x] **5.0 — Proposal workflow contract alignment.** Separate mechanical
+      proposal validation and package-bound preparation from Milestone 6
+      approval, semantic findings, and full gate composition. Add the
+      mechanical `REQ-8DE9E078`, bind ProposalPackage code targets and affected
+      scope, make directory and CandidateTreeManifest the version 1 candidate
+      inputs, reserve archive ingestion, and make all four preparation states
+      explicit. This leaf changes contracts and fixtures only; it implements no
+      runtime command and promotes no Requirement.
+- [ ] **5.1 — Proposal Gate and ProposalPackage generation.** Load a selected
+      Git base plus a project-directory or CandidateTreeManifest candidate,
+      validate the virtual graph, compute semantic and structural deltas and
+      affected verification scope, enforce the mechanical three-mode rules,
+      and emit a deterministic ProposalPackage without changing the worktree.
+      `spec-code` and `spec` require a non-empty semantic delta. `code` requires
+      empty semantic and structural deltas plus non-empty active code targets
+      bound to their fingerprints. Emit `semantic_candidates: []` and make no
+      implementation-behavior, existing-behavior, approval, or semantic-review
+      claim. Promote only `REQ-E26A859E` and `REQ-8DE9E078`.
+- [ ] **5.2 — Package-bound mechanical three-way preparation.** Implement
+      `proposal prepare` with explicit package, candidate, branch-head, and
+      integration-ref inputs. Take `B` from `package.base.git_ref`, revalidate
+      the exact `P` candidate bytes and deltas against the package, resolve
+      explicit `H` and `M`, perform read-only three-way comparison, and emit
+      mechanical conflicts or a prepared tree. Do not validate
+      ApprovalEvidence, generate semantic candidates, compose `REQ-A8739118`,
+      or emit a SpecPatch yet. This leaf contributes the comparison and
+      conflict-analysis portion of `REQ-964B9F80` without promoting it.
+- [ ] **5.3 — Exact create/replace/delete SpecPatch.** Convert a clean prepared
+      tree into deterministically path-sorted exact file operations with before
+      and after hashes and whole-tree fingerprints. Do not apply the patch or
+      add fuzzy, partial, force, Git-write, or approval behavior. Promote
+      `REQ-964B9F80` and `REQ-3BF12AAD`.
+- [ ] **5.4 — Safe all-or-nothing proposal apply.** Implement the only
+      post-initialization specification write operation with project/spec-root
+      containment, path traversal, symlink, `.git`, binary, duplicate-target,
+      before/after hash, and result-tree checks plus rollback-safe atomic
+      replacement. Preserve unrelated worktree changes and create no Git
+      branch, commit, push, or merge. This leaf contributes the safe apply
+      implementation for `REQ-7AFE9904` without promoting it before the
+      interruption proof.
+- [ ] **5.5 — Stale-base and interruption proof.** Add race and failure
+      injection across candidate revalidation, before-hash checks, staging,
+      replacement, and rollback; prove stale inputs cannot apply and failures
+      leave no partial final specification. Promote `REQ-7AFE9904` and complete
+      Milestone 5 validation without broadening runtime behavior.
 
 Primary target Requirements:
-`REQ-E80F09C6`, `REQ-A8739118`, `REQ-3BF12AAD`, `REQ-7AFE9904`,
-`REQ-964B9F80`, `REQ-AFD65A03`.
+`REQ-E26A859E`, `REQ-8DE9E078`, `REQ-964B9F80`, `REQ-3BF12AAD`,
+`REQ-7AFE9904`.
+
+The qualitative mode claims in `REQ-983914F3`, `REQ-FB76FC6F`, and
+`REQ-13CE0529` remain proposed until their implementation/existing-behavior
+and approval evidence is composed. Full Proposal Gate findings in
+`REQ-E80F09C6`, approval-bound Branch Preparation in `REQ-A8739118`, and
+approved-delta binding in `REQ-AFD65A03` are completed in Milestone 6.
 
 ## Milestone 6 — Evidence, findings, and merge readiness
 
@@ -608,6 +654,10 @@ Mode: `spec-code`.
 - [ ] Validate approval, test, QA, governance, and finding artifacts.
 - [ ] Generate deterministic semantic candidates.
 - [ ] Validate optional model findings without calling a provider in core.
+- [ ] Compose mechanical proposal validation with semantic findings to
+      complete `REQ-E80F09C6`.
+- [ ] Bind approved object deltas and compose ApprovalEvidence with mechanical
+      preparation to complete `REQ-AFD65A03` and `REQ-A8739118`.
 - [ ] Implement finding resolution eligibility and freshness.
 - [ ] Implement Verification and Merge gates and deterministic MergeReport.
 - [ ] Confirm that no code path performs Git merge side effects.
@@ -615,7 +665,9 @@ Mode: `spec-code`.
 Primary target Capabilities:
 `CAP-F31EF876`, `CAP-205F5DBC`.
 
-Also completes Concept impact in `REQ-B5815BB5`, the full CLI surface in
+Also completes the qualitative synchronization-mode claims in
+`REQ-983914F3`, `REQ-FB76FC6F`, and `REQ-13CE0529`, Concept impact in
+`REQ-B5815BB5`, the full CLI surface in
 `REQ-F7D39246`, strict history enforcement in `REQ-FDD51416`, and
 merge-specific exit mapping in `REQ-41EDF9A3`.
 
@@ -669,6 +721,7 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 5 — Proposal and exact patch` is now active. Its first bounded leaf
-is ProposalPackage validation for the three synchronization modes; exact patch
-preparation and application remain subsequent leaves.
+`Milestone 5 — Proposal and exact patch` is active. The contract-alignment leaf
+5.0 is complete. The next bounded leaf is 5.1 mechanical Proposal Gate and
+ProposalPackage generation; preparation, exact patch construction, and apply
+remain subsequent leaves.
