@@ -6,7 +6,14 @@ import { isProjectId, isProjectPath } from "../contracts/identifiers.ts";
 import type { ProjectPath } from "../contracts/identifiers.ts";
 import { CONFIG_SCHEMA_VERSION_V1 } from "../contracts/versions.ts";
 import type { ConfigurationResult } from "./result.ts";
-import type { CommandTestAdapter, JunitTestAdapter, ProjectConfiguration, TestAdapter } from "./types.ts";
+import { DEFAULT_TEST_IMPORT_LIMITS } from "./types.ts";
+import type {
+  CommandTestAdapter,
+  JunitTestAdapter,
+  ProjectConfiguration,
+  TestAdapter,
+  TestImportLimits,
+} from "./types.ts";
 
 type UnknownRecord = Record<string, unknown>;
 const adapterIdPattern = /^[a-z][a-z0-9-]{0,31}$/u;
@@ -78,6 +85,23 @@ function parseArgv(value: unknown): readonly string[] | undefined {
   if (!Array.isArray(value) || value.length === 0) return undefined;
   if (!value.every((item) => typeof item === "string" && item.length > 0 && !item.includes("\0"))) return undefined;
   return value;
+}
+
+function parseImportLimits(value: unknown, location: ProjectPath | undefined): ConfigurationResult<TestImportLimits> {
+  if (!isRecord(value)) return failure(invalidField("tests.import_limits", location));
+  const fields = ["max_jsonl_bytes", "max_report_bytes", "max_xml_depth", "max_suite_count", "max_test_count"] as const;
+  const keyError = exactKeys(value, fields, "tests.import_limits", location);
+  if (keyError !== undefined) return failure(keyError);
+  for (const field of fields) {
+    if (!Number.isSafeInteger(value[field]) || (value[field] as number) < 1) {
+      return failure(invalidField(`tests.import_limits.${field}`, location));
+    }
+  }
+  return {
+    ok: true,
+    value: Object.fromEntries(fields.map((field) => [field, value[field]])) as TestImportLimits,
+    diagnostics: [],
+  };
 }
 
 function isProjectPattern(value: unknown): value is string {
@@ -217,7 +241,7 @@ function parseValue(value: unknown, location: ProjectPath | undefined): Configur
   if (value.ids.alphabet !== "hex-uppercase") return failure(invalidField("ids.alphabet", location));
 
   if (!isRecord(value.tests)) return failure(invalidField("tests", location));
-  const testsError = exactKeys(value.tests, ["adapters"], "tests", location);
+  const testsError = exactKeys(value.tests, ["adapters"], "tests", location, ["import_limits"]);
   if (testsError !== undefined) return failure(testsError);
   if (!Array.isArray(value.tests.adapters)) return failure(invalidField("tests.adapters", location));
   const adapters: TestAdapter[] = [];
@@ -238,6 +262,11 @@ function parseValue(value: unknown, location: ProjectPath | undefined): Configur
     adapterIds.add(parsed.value.id);
     adapters.push(parsed.value);
   }
+  const importLimits =
+    value.tests.import_limits === undefined
+      ? { ok: true as const, value: DEFAULT_TEST_IMPORT_LIMITS, diagnostics: [] as const }
+      : parseImportLimits(value.tests.import_limits, location);
+  if (!importLimits.ok) return importLimits;
 
   if (!isRecord(value.evidence)) return failure(invalidField("evidence", location));
   const evidenceError = exactKeys(value.evidence, ["allowed_issuers"], "evidence", location);
@@ -261,7 +290,7 @@ function parseValue(value: unknown, location: ProjectPath | undefined): Configur
       adoption: { mode: value.adoption.mode },
       git: { default_target_ref: value.git.default_target_ref },
       ids: { suffix_length: 8, alphabet: "hex-uppercase" },
-      tests: { adapters },
+      tests: { adapters, import_limits: importLimits.value },
       evidence: { allowed_issuers: value.evidence.allowed_issuers },
     },
     diagnostics: [],

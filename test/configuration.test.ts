@@ -39,6 +39,13 @@ describe("REQ-0361538D project configuration", () => {
     if (!minimal.ok) return;
     assert.equal(minimal.value.project_id, "SDD-17EF8B29");
     assert.deepEqual(minimal.value.tests.adapters, []);
+    assert.deepEqual(minimal.value.tests.import_limits, {
+      max_jsonl_bytes: 16_777_216,
+      max_report_bytes: 16_777_216,
+      max_xml_depth: 64,
+      max_suite_count: 100_000,
+      max_test_count: 100_000,
+    });
 
     const representative = parseProjectConfiguration(await fixture("representative-valid.yaml"));
     assert.equal(representative.ok, true);

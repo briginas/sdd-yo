@@ -16,8 +16,8 @@
     "REQ-12E19D70"
   ],
   "authorities": [
-    "proposal/spec/capabilities/test-traceability-and-qa.md#req-6d8dddf7",
-    "proposal/spec/capabilities/test-traceability-and-qa.md#req-12e19d70",
+    "spec/capabilities/test-traceability-and-qa.md#req-6d8dddf7",
+    "spec/capabilities/test-traceability-and-qa.md#req-12e19d70",
     "proposal/architecture/test-adapters.md#junit-compatible-importer",
     "proposal/architecture/security.md#malicious-adapter-output",
     "proposal/architecture/security.md#denial-of-service"

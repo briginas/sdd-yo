@@ -46,6 +46,12 @@ tests:
         argv: ["node", "tools/sdd-tests.mjs", "execute"]
       timeout_ms: 120000
       max_output_bytes: 16777216
+  import_limits:
+    max_jsonl_bytes: 16777216
+    max_report_bytes: 16777216
+    max_xml_depth: 64
+    max_suite_count: 100000
+    max_test_count: 100000
 
 evidence:
   allowed_issuers:
@@ -56,6 +62,12 @@ evidence:
 
 `git.default_target_ref` is a convenience default only. Strict gate artifacts
 always record resolved commit IDs.
+
+`tests.import_limits` bounds explicit JSONL and JUnit file imports. Version 1
+uses the values shown above when this optional mapping is absent, preserving
+existing project configuration while keeping every import bounded. An explicit
+JUnit import is bound to exactly one configured JUnit adapter selected with
+`--adapter <id>`; the CLI never infers an adapter namespace from a report path.
 
 ## Schema behavior
 

@@ -181,6 +181,9 @@ sdd tests discover --head <git-ref> [--adapter <id> ...] \
 
 Runs or imports configured discovery protocols and emits a normalized
 `TestIndex`. Command execution remains subject to host permission policy.
+Each `--import-junit` path requires exactly one selected configured JUnit
+adapter so the imported local IDs have an explicit namespace. JSONL imports
+declare their adapter ID in the required stream header.
 
 ### `sdd findings validate`
 

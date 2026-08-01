@@ -14,6 +14,11 @@ process.exitCode = await runCli({
   projectWriter: nodeProjectWriter,
   randomness: nodeRandomness,
   processRunner: nodeProcessRunner,
+  adapterEnvironment: Object.fromEntries(
+    ["PATH", "PATHEXT", "SystemRoot", "SYSTEMROOT"]
+      .map((name) => [name, process.env[name]] as const)
+      .filter((entry): entry is readonly [string, string] => entry[1] !== undefined),
+  ),
   writeStandardOutput: (message: string): void => {
     process.stdout.write(message);
   },

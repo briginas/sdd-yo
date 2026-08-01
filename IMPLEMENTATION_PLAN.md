@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 4 / Test discovery and QA scope
-- Current leaf: 4.3 Deterministic TestIndex and suite-name inheritance
+- Current leaf: 4.4 Test-backed trace and verification fingerprints
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -30,10 +30,11 @@ The repository contains an approved target specification and architecture, a
 Stage 0 bootstrap verifier, a testable TypeScript library package, generated
 contract types, configuration and Markdown parsing, graph validation, the
 first implemented canonical `spec/` subset, and implemented `sdd init`, `id`,
-`validate`, `inspect`, `trace`, and `diff` operations. Test adapter declarations
-are parsed from project configuration and their version 1 contracts and Stage 0
-fixtures exist, but the runtime does not yet import test discovery, build a
-TestIndex, compute affected QA scope, or validate test and QA evidence.
+`validate`, `inspect`, `trace`, and `diff` operations. Test adapter declarations,
+bounded JSONL and JUnit discovery import, normalized suite inheritance, and
+deterministic version 1 TestIndex output are implemented. The runtime does not
+yet enrich trace with tests, compute verification fingerprints or affected QA
+scope, or validate test and QA evidence.
 Unimplemented target behavior remains under `proposal/spec/` and is promoted
 only in verified bounded subsets.
 
@@ -557,7 +558,11 @@ Mode: `spec-code`.
       hierarchy without guessing from framework-specific names. Contributes to
       `REQ-6D8DDDF7` and `REQ-12E19D70`; observable TestIndex behavior stays
       proposed until 4.3.
-- [ ] **4.3 — Deterministic TestIndex and suite-name inheritance.**
+- [x] **4.3 — Deterministic TestIndex and suite-name inheritance.** Add bounded
+      file-import defaults, bind explicit JUnit imports to one selected adapter,
+      validate hierarchy and active Requirement mappings, union adapters by
+      namespace, emit `sdd tests discover`, and promote `REQ-12E19D70`,
+      `REQ-F7CEE6D0`, `REQ-6D8DDDF7`, and `REQ-72BA737C`.
 - [ ] **4.4 — Test-backed trace and verification fingerprints.** Enrich `trace`
       with mapped tests and add verification fingerprints and verification
       deltas without changing graph-only trace semantics.
@@ -654,9 +659,9 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 4.3 — Deterministic TestIndex and suite-name inheritance` is the
-only active implementation leaf. It validates imported hierarchies, constructs
-normalized full test names, extracts standalone Requirement IDs, rejects
-unknown IDs, unions configured adapter discoveries deterministically, and emits
-the version 1 TestIndex. Test-backed trace and fingerprints, affected scope,
-and execution and QA evidence validation remain in Milestones 4.4 through 4.6.
+`Milestone 4.4 — Test-backed trace and verification fingerprints` is the only
+active implementation leaf. It enriches trace from an explicitly supplied
+TestIndex and adds deterministic verification fingerprints and deltas while
+preserving graph-only trace behavior when no TestIndex is supplied. Affected
+scope and execution and QA evidence validation remain in Milestones 4.5 and
+4.6.

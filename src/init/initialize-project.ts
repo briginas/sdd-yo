@@ -47,6 +47,12 @@ ids:
   alphabet: hex-uppercase
 tests:
   adapters: []
+  import_limits:
+    max_jsonl_bytes: 16777216
+    max_report_bytes: 16777216
+    max_xml_depth: 64
+    max_suite_count: 100000
+    max_test_count: 100000
 evidence:
   allowed_issuers: []
 `;

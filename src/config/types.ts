@@ -25,6 +25,22 @@ export type CommandTestAdapter = {
 
 export type TestAdapter = JunitTestAdapter | CommandTestAdapter;
 
+export type TestImportLimits = {
+  readonly max_jsonl_bytes: number;
+  readonly max_report_bytes: number;
+  readonly max_xml_depth: number;
+  readonly max_suite_count: number;
+  readonly max_test_count: number;
+};
+
+export const DEFAULT_TEST_IMPORT_LIMITS: TestImportLimits = {
+  max_jsonl_bytes: 16 * 1024 * 1024,
+  max_report_bytes: 16 * 1024 * 1024,
+  max_xml_depth: 64,
+  max_suite_count: 100_000,
+  max_test_count: 100_000,
+};
+
 export type ProjectConfiguration = {
   readonly schema_version: ConfigSchemaVersion;
   readonly project_id: ProjectId;
@@ -44,6 +60,7 @@ export type ProjectConfiguration = {
   };
   readonly tests: {
     readonly adapters: readonly TestAdapter[];
+    readonly import_limits: TestImportLimits;
   };
   readonly evidence: {
     readonly allowed_issuers: readonly string[];

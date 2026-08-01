@@ -1,7 +1,7 @@
 import type { Diagnostic } from "../contracts/diagnostics.ts";
 import { isDiagnosticCode } from "../contracts/diagnostics.ts";
 import type { GitObjectId, ObjectId, ProjectId, ProjectPath } from "../contracts/identifiers.ts";
-import { isObjectId, isProjectPath } from "../contracts/identifiers.ts";
+import { isObjectId, isProjectPath, isRequirementId } from "../contracts/identifiers.ts";
 import type { CliResponseEnvelope } from "../contracts/result.ts";
 import { resolve } from "node:path";
 import type { FileSystem } from "../platform/filesystem.ts";
@@ -30,6 +30,14 @@ import { directReverseRelations, traceGraphObject } from "../graph/query-graph.t
 import { loadSpecificationDocuments } from "../markdown/load-documents.ts";
 import type { CapabilityDocument, ConceptDocument, Requirement, SpecificationDocument } from "../markdown/types.ts";
 import { resolveConfiguredPath, resolveProject } from "../config/resolve-project.ts";
+import {
+  AdapterImportError,
+  discoverProjectTests,
+  JunitImportError,
+  ProjectTestDiscoveryError,
+  TestIndexError,
+} from "../tests/index.ts";
+import type { TestIndex } from "../tests/index.ts";
 
 export const VALID_EXIT_CODE = 0 as const;
 export const BLOCKED_EXIT_CODE = 1 as const;
@@ -37,7 +45,7 @@ export const TECHNICAL_FAILURE_EXIT_CODE = 3 as const;
 
 type ExitCode = typeof VALID_EXIT_CODE | typeof BLOCKED_EXIT_CODE | typeof TECHNICAL_FAILURE_EXIT_CODE;
 type OutputFormat = "human" | "json";
-type Command = "init" | "id" | "validate" | "inspect" | "trace" | "diff";
+type Command = "init" | "id" | "validate" | "inspect" | "trace" | "diff" | "tests.discover";
 type ResponseCommand = Command | "unknown";
 
 export type CliRuntime = {
@@ -47,6 +55,7 @@ export type CliRuntime = {
   readonly projectWriter: ProjectWriter;
   readonly randomness: Randomness;
   readonly processRunner: ProcessRunner;
+  readonly adapterEnvironment?: Readonly<Record<string, string>>;
   readonly writeStandardOutput: (message: string) => void;
   readonly writeStandardError: (message: string) => void;
   readonly writeOutputFile: (path: string, message: string) => void;
@@ -69,6 +78,10 @@ type Invocation = {
   readonly baseRef?: string;
   readonly targetRef?: string;
   readonly changedFrom?: string;
+  readonly headRef?: string;
+  readonly adapterIds: readonly string[];
+  readonly importJsonl: readonly ProjectPath[];
+  readonly importJunit: readonly ProjectPath[];
 };
 
 export type InitResult = {
@@ -139,6 +152,7 @@ export type CliResponse =
   | CliResponseEnvelope<"inspect", "ok", InspectResult>
   | CliResponseEnvelope<"trace", "ok", TraceResult>
   | CliResponseEnvelope<"diff", "ok", DiffResult>
+  | CliResponseEnvelope<"tests.discover", "ok", TestIndex>
   | CliResponseEnvelope<Command, "blocked", { readonly valid: false } | null>
   | CliResponseEnvelope<ResponseCommand, "error", null>;
 
@@ -155,21 +169,22 @@ function cliDiagnostic(
 function parseInvocation(
   argv: readonly string[],
 ): { ok: true; value: Invocation } | { ok: false; diagnostic: Diagnostic } {
-  const command = argv[0];
+  const command: string | undefined = argv[0] === "tests" && argv[1] === "discover" ? "tests.discover" : argv[0];
   if (
     command !== "init" &&
     command !== "id" &&
     command !== "validate" &&
     command !== "inspect" &&
     command !== "trace" &&
-    command !== "diff"
+    command !== "diff" &&
+    command !== "tests.discover"
   )
     return {
       ok: false,
       diagnostic: cliDiagnostic(
         "SDD_CONFIG_CLI_COMMAND_INVALID",
         "The command is missing or unsupported.",
-        "Use sdd init, sdd id, sdd validate, sdd inspect <object-id>, sdd trace <object-id>, or sdd diff.",
+        "Use a documented sdd version 1 command such as validate, trace, diff, or tests discover.",
       ),
     };
   let format: OutputFormat = "human";
@@ -187,7 +202,11 @@ function parseInvocation(
   let baseRef: string | undefined;
   let targetRef: string | undefined;
   let changedFrom: string | undefined;
-  for (let index = 1; index < argv.length; index += 1) {
+  let headRef: string | undefined;
+  const adapterIds: string[] = [];
+  const importJsonl: ProjectPath[] = [];
+  const importJunit: ProjectPath[] = [];
+  for (let index = command === "tests.discover" ? 2 : 1; index < argv.length; index += 1) {
     const argument = argv[index];
     if (
       argument === "--format" ||
@@ -201,7 +220,11 @@ function parseInvocation(
       argument === "--history-ref" ||
       argument === "--base" ||
       argument === "--target" ||
-      argument === "--changed-from"
+      argument === "--changed-from" ||
+      argument === "--head" ||
+      argument === "--adapter" ||
+      argument === "--import-jsonl" ||
+      argument === "--import-junit"
     ) {
       const value = argv[index + 1];
       if (value === undefined)
@@ -278,7 +301,12 @@ function parseInvocation(
             ),
           };
         historyRef = value;
-      } else if (argument === "--base" || argument === "--target" || argument === "--changed-from") {
+      } else if (
+        argument === "--base" ||
+        argument === "--target" ||
+        argument === "--changed-from" ||
+        argument === "--head"
+      ) {
         if (value.length === 0 || value.includes("\0"))
           return {
             ok: false,
@@ -290,7 +318,31 @@ function parseInvocation(
           };
         if (argument === "--base") baseRef = value;
         else if (argument === "--target") targetRef = value;
-        else changedFrom = value;
+        else if (argument === "--changed-from") changedFrom = value;
+        else headRef = value;
+      } else if (argument === "--adapter") {
+        if (!/^[a-z][a-z0-9-]{0,31}$/u.test(value))
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_ADAPTER_ID_INVALID",
+              "The selected adapter ID is invalid.",
+              "Use a configured lowercase adapter ID.",
+            ),
+          };
+        adapterIds.push(value);
+      } else if (argument === "--import-jsonl" || argument === "--import-junit") {
+        if (!isProjectPath(value))
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_ADAPTER_IMPORT_PATH_INVALID",
+              "An adapter import path is not project-relative and portable.",
+              "Use a regular file path inside the selected project.",
+            ),
+          };
+        if (argument === "--import-jsonl") importJsonl.push(value);
+        else importJunit.push(value);
       } else {
         if (!isProjectPath(value))
           return {
@@ -405,6 +457,27 @@ function parseInvocation(
         "Use --changed-from only with sdd validate.",
       ),
     };
+  if (
+    command !== "tests.discover" &&
+    (headRef !== undefined || adapterIds.length > 0 || importJsonl.length > 0 || importJunit.length > 0)
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "A test-discovery option was used with another command.",
+        "Use --head, --adapter, and import options only with sdd tests discover.",
+      ),
+    };
+  if (command === "tests.discover" && headRef === undefined)
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_ADAPTER_HEAD_REQUIRED",
+        "tests discover requires a Git head ref.",
+        "Supply --head with the exact discovery subject ref.",
+      ),
+    };
   if (command === "id" && idKind === undefined)
     return {
       ok: false,
@@ -451,6 +524,10 @@ function parseInvocation(
       ...(baseRef === undefined ? {} : { baseRef }),
       ...(targetRef === undefined ? {} : { targetRef }),
       ...(changedFrom === undefined ? {} : { changedFrom }),
+      ...(headRef === undefined ? {} : { headRef }),
+      adapterIds: [...new Set(adapterIds)],
+      importJsonl,
+      importJunit,
     },
   };
 }
@@ -650,6 +727,9 @@ function humanView(value: CliResponse): string {
   } else if (value.command === "id" && value.status === "ok") {
     const result = value.result as IdResult;
     lines.push(...result.candidates, `history: ${result.history.status}`);
+  } else if (value.command === "tests.discover" && value.status === "ok") {
+    const result = value.result as TestIndex;
+    lines.push(`head: ${result.subject.head_ref}`, `tests: ${result.tests.length}`);
   }
   for (const diagnostic of value.diagnostics)
     lines.push(`${diagnostic.severity.toUpperCase()} ${diagnostic.code}: ${diagnostic.message}`);
@@ -709,6 +789,26 @@ function comparisonTechnicalDiagnostic(error: unknown): Diagnostic {
     "SDD_GIT_READ_FAILED",
     "Git comparison data could not be read safely.",
     "Correct the repository or requested refs and run the comparison again.",
+  );
+}
+
+function adapterTechnicalDiagnostic(error: unknown): Diagnostic {
+  if (
+    error instanceof AdapterImportError ||
+    error instanceof JunitImportError ||
+    error instanceof ProjectTestDiscoveryError ||
+    error instanceof TestIndexError
+  ) {
+    return cliDiagnostic(
+      error.code,
+      error.message,
+      "Correct the adapter configuration or imported discovery data and run the command again.",
+    );
+  }
+  return cliDiagnostic(
+    "SDD_ADAPTER_DISCOVERY_FAILED",
+    "Test discovery did not complete safely.",
+    "Correct the adapter process, report files, or selected project and run the command again.",
   );
 }
 
@@ -803,14 +903,16 @@ async function resolveSafeOutputTarget(
 export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
   const parsed = parseInvocation(runtime.argv);
   const inferredCommand: ResponseCommand =
-    runtime.argv[0] === "init" ||
-    runtime.argv[0] === "id" ||
-    runtime.argv[0] === "inspect" ||
-    runtime.argv[0] === "trace" ||
-    runtime.argv[0] === "diff" ||
-    runtime.argv[0] === "validate"
-      ? runtime.argv[0]
-      : "unknown";
+    runtime.argv[0] === "tests" && runtime.argv[1] === "discover"
+      ? "tests.discover"
+      : runtime.argv[0] === "init" ||
+          runtime.argv[0] === "id" ||
+          runtime.argv[0] === "inspect" ||
+          runtime.argv[0] === "trace" ||
+          runtime.argv[0] === "diff" ||
+          runtime.argv[0] === "validate"
+        ? runtime.argv[0]
+        : "unknown";
   const inferredFormat: OutputFormat = runtime.argv.some(
     (argument, index) => argument === "--format" && runtime.argv[index + 1] === "json",
   )
@@ -997,6 +1099,70 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
       return TECHNICAL_FAILURE_EXIT_CODE;
     }
     const outputTarget = selectedOutput?.target;
+    if (invocation.command === "tests.discover") {
+      try {
+        if (invocation.headRef === undefined) throw new Error("Parsed test discovery invocation has no head ref.");
+        const reader = await discoverProcessGitReader(runtime.processRunner, project.project_root);
+        const headRef = await reader.resolveRevision(invocation.headRef);
+        const graph = await loadCanonicalProjectGraphAt(reader, headRef, project.configuration.project_id);
+        if (graph === undefined) {
+          emit(
+            runtime,
+            invocation.format,
+            response("tests.discover", project.configuration.project_id, "error", null, [
+              projectSnapshotMissingDiagnostic(),
+            ]),
+            outputTarget,
+          );
+          return TECHNICAL_FAILURE_EXIT_CODE;
+        }
+        const discovered = await discoverProjectTests({
+          fileSystem: runtime.fileSystem,
+          processRunner: runtime.processRunner,
+          project,
+          head_ref: headRef,
+          known_requirement_ids: new Set([...graph.objects.keys()].filter(isRequirementId)),
+          adapter_ids: invocation.adapterIds,
+          import_jsonl: invocation.importJsonl,
+          import_junit: invocation.importJunit,
+          allowed_environment: runtime.adapterEnvironment ?? {},
+        });
+        emit(
+          runtime,
+          invocation.format,
+          response(
+            "tests.discover",
+            project.configuration.project_id,
+            "ok",
+            discovered.index,
+            discovered.warnings.map((code) =>
+              cliDiagnostic(
+                code,
+                "A test producer did not retain nested suite hierarchy.",
+                "Review the normalized full names or use a producer that retains hierarchy.",
+                "warning",
+              ),
+            ),
+          ),
+          outputTarget,
+        );
+        return VALID_EXIT_CODE;
+      } catch (error) {
+        const diagnostic =
+          error instanceof GitReadError
+            ? comparisonTechnicalDiagnostic(error)
+            : error instanceof HistoryIndexError
+              ? projectSnapshotInvalidDiagnostic()
+              : adapterTechnicalDiagnostic(error);
+        emit(
+          runtime,
+          invocation.format,
+          response("tests.discover", project.configuration.project_id, "error", null, [diagnostic]),
+          outputTarget,
+        );
+        return TECHNICAL_FAILURE_EXIT_CODE;
+      }
+    }
     if (invocation.command === "diff") {
       try {
         if (invocation.baseRef === undefined || invocation.targetRef === undefined) {
