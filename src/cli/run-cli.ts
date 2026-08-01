@@ -43,14 +43,18 @@ import {
 import type { TestIndex } from "../tests/index.ts";
 import {
   generateSpecPatch,
+  applyProposal,
+  importSpecPatch,
   importProposalPackage,
   parseCodeTarget,
   parseProposalMode,
   prepareProposal,
   ProposalInputError,
+  ProposalApplyError,
   ProposalPackageInputError,
   ProposalPreparationError,
   ProposalValidationError,
+  SpecPatchInputError,
   validateProposal,
 } from "../proposal/index.ts";
 import type { ConflictReport, ProposalMode, ProposalPackage, SpecPatch } from "../proposal/index.ts";
@@ -75,7 +79,8 @@ type Command =
   | "diff"
   | "tests.discover"
   | "proposal.validate"
-  | "proposal.prepare";
+  | "proposal.prepare"
+  | "proposal.apply";
 type ResponseCommand = Command | "unknown";
 
 export type CliRuntime = {
@@ -122,6 +127,8 @@ type Invocation = {
   readonly packagePath?: string;
   readonly branchHeadRef?: string;
   readonly integrationRef?: string;
+  readonly patchPath?: string;
+  readonly worktreePath?: string;
 };
 
 export type InitResult = {
@@ -196,6 +203,7 @@ export type CliResponse =
   | CliResponseEnvelope<"diff", "ok", DiffResult>
   | CliResponseEnvelope<"tests.discover", "ok", TestIndex>
   | CliResponseEnvelope<"proposal.validate", "ok", ProposalPackage>
+  | CliResponseEnvelope<"proposal.apply", "ok", import("../proposal/index.ts").ProposalApplyResult>
   | CliResponseEnvelope<
       "proposal.prepare",
       "ok" | "review_required",
@@ -220,7 +228,7 @@ function parseInvocation(
   const command: string | undefined =
     argv[0] === "tests" && argv[1] === "discover"
       ? "tests.discover"
-      : argv[0] === "proposal" && (argv[1] === "validate" || argv[1] === "prepare")
+      : argv[0] === "proposal" && (argv[1] === "validate" || argv[1] === "prepare" || argv[1] === "apply")
         ? `proposal.${argv[1]}`
         : argv[0];
   if (
@@ -232,7 +240,8 @@ function parseInvocation(
     command !== "diff" &&
     command !== "tests.discover" &&
     command !== "proposal.validate" &&
-    command !== "proposal.prepare"
+    command !== "proposal.prepare" &&
+    command !== "proposal.apply"
   )
     return {
       ok: false,
@@ -271,9 +280,16 @@ function parseInvocation(
   let packagePath: string | undefined;
   let branchHeadRef: string | undefined;
   let integrationRef: string | undefined;
+  let patchPath: string | undefined;
+  let worktreePath: string | undefined;
   for (
     let index =
-      command === "tests.discover" || command === "proposal.validate" || command === "proposal.prepare" ? 2 : 1;
+      command === "tests.discover" ||
+      command === "proposal.validate" ||
+      command === "proposal.prepare" ||
+      command === "proposal.apply"
+        ? 2
+        : 1;
     index < argv.length;
     index += 1
   ) {
@@ -304,7 +320,9 @@ function parseInvocation(
       argument === "--code-target" ||
       argument === "--package" ||
       argument === "--branch-head" ||
-      argument === "--integration-ref"
+      argument === "--integration-ref" ||
+      argument === "--patch" ||
+      argument === "--worktree"
     ) {
       const value = argv[index + 1];
       if (value === undefined)
@@ -317,7 +335,19 @@ function parseInvocation(
           ),
         };
       index += 1;
-      if (argument === "--package") {
+      if (argument === "--patch" || argument === "--worktree") {
+        if (value.length === 0 || value.includes("\0"))
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              argument === "--patch" ? "SDD_APPLY_PATCH_PATH_INVALID" : "SDD_APPLY_WORKTREE_PATH_INVALID",
+              "A proposal apply path is invalid.",
+              "Supply a local SpecPatch file and optional worktree directory.",
+            ),
+          };
+        if (argument === "--patch") patchPath = value;
+        else worktreePath = value;
+      } else if (argument === "--package") {
         if (value.length === 0 || value.includes("\0"))
           return {
             ok: false,
@@ -669,6 +699,28 @@ function parseInvocation(
         "Use preparation options only with sdd proposal prepare.",
       ),
     };
+  if (command === "proposal.apply" && (patchPath === undefined || outputPath !== undefined))
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        patchPath === undefined ? "SDD_APPLY_PATCH_REQUIRED" : "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        patchPath === undefined
+          ? "proposal apply requires a SpecPatch file."
+          : "--output does not apply to proposal apply.",
+        patchPath === undefined
+          ? "Supply --patch with a strict version 1 SpecPatch file."
+          : "Read the apply result from standard output.",
+      ),
+    };
+  if (command !== "proposal.apply" && (patchPath !== undefined || worktreePath !== undefined))
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "A proposal apply option was used with another command.",
+        "Use --patch and --worktree only with sdd proposal apply.",
+      ),
+    };
   if (command !== "trace" && traceRef !== undefined)
     return {
       ok: false,
@@ -795,6 +847,8 @@ function parseInvocation(
       ...(packagePath === undefined ? {} : { packagePath }),
       ...(branchHeadRef === undefined ? {} : { branchHeadRef }),
       ...(integrationRef === undefined ? {} : { integrationRef }),
+      ...(patchPath === undefined ? {} : { patchPath }),
+      ...(worktreePath === undefined ? {} : { worktreePath }),
     },
   };
 }
@@ -1053,6 +1107,12 @@ function humanView(value: CliResponse): string {
       lines.push(
         `conflict: ${conflict.path} (${conflict.kind})${conflict.object_id === undefined ? "" : ` ${conflict.object_id}`}`,
       );
+  } else if (value.command === "proposal.apply" && value.status === "ok") {
+    const result = value.result as import("../proposal/index.ts").ProposalApplyResult;
+    lines.push(
+      `result tree: ${result.result_tree_fingerprint}`,
+      ...result.applied_paths.map((path) => `applied: ${path}`),
+    );
   }
   for (const diagnostic of value.diagnostics)
     lines.push(`${diagnostic.severity.toUpperCase()} ${diagnostic.code}: ${diagnostic.message}`);
@@ -1229,7 +1289,8 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
   const inferredCommand: ResponseCommand =
     runtime.argv[0] === "tests" && runtime.argv[1] === "discover"
       ? "tests.discover"
-      : runtime.argv[0] === "proposal" && (runtime.argv[1] === "validate" || runtime.argv[1] === "prepare")
+      : runtime.argv[0] === "proposal" &&
+          (runtime.argv[1] === "validate" || runtime.argv[1] === "prepare" || runtime.argv[1] === "apply")
         ? `proposal.${runtime.argv[1]}`
         : runtime.argv[0] === "init" ||
             runtime.argv[0] === "id" ||
@@ -1425,6 +1486,49 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
       return TECHNICAL_FAILURE_EXIT_CODE;
     }
     const outputTarget = selectedOutput?.target;
+    if (invocation.command === "proposal.apply") {
+      try {
+        if (invocation.patchPath === undefined) throw new Error("Parsed proposal apply invocation has no patch path.");
+        const patch = await importSpecPatch(
+          runtime.fileSystem,
+          resolve(runtime.workingDirectory, invocation.patchPath),
+        );
+        const result = await applyProposal({
+          fileSystem: runtime.fileSystem,
+          writer: runtime.projectWriter,
+          project,
+          worktreeRoot:
+            invocation.worktreePath === undefined
+              ? project.project_root
+              : resolve(runtime.workingDirectory, invocation.worktreePath),
+          patch,
+        });
+        emit(
+          runtime,
+          invocation.format,
+          response("proposal.apply", project.configuration.project_id, "ok", result, []),
+        );
+        return VALID_EXIT_CODE;
+      } catch (error) {
+        const technical =
+          error instanceof SpecPatchInputError || !(error instanceof ProposalApplyError) || error.technical;
+        const diagnostic = cliDiagnostic(
+          error instanceof SpecPatchInputError || error instanceof ProposalApplyError ? error.code : "SDD_APPLY_FAILED",
+          error instanceof Error ? error.message : "The specification patch could not be applied.",
+          technical
+            ? "Correct the patch file, worktree availability, or filesystem failure and run the command again."
+            : "Restore the exact patch base and safe project paths, or regenerate the SpecPatch.",
+        );
+        emit(
+          runtime,
+          invocation.format,
+          response("proposal.apply", project.configuration.project_id, technical ? "error" : "blocked", null, [
+            diagnostic,
+          ]),
+        );
+        return technical ? TECHNICAL_FAILURE_EXIT_CODE : BLOCKED_EXIT_CODE;
+      }
+    }
     if (invocation.command === "proposal.prepare") {
       try {
         if (

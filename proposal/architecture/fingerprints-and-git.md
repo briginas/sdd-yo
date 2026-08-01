@@ -333,10 +333,21 @@ Application is fail-closed:
 - every path remains inside `spec.root`;
 - path traversal, symlinks, binary content, and `.git` mutation are rejected;
 - all before states and after hashes validate before mutation;
-- writes use same-directory temporary files and atomic replacement where
-  available;
+- the core constructs the complete validated result tree before invoking an
+  injected writer transaction;
+- the Node writer stages create/replace bytes in unique hidden sibling files,
+  repeats containment, entry-type, absence, and exact before-hash preflight,
+  then uses same-directory backup and rename operations;
+- a failed replacement rolls applied targets back in reverse order and removes
+  staged files and newly created empty directories;
 - failure cannot leave a partially applied final set;
 - unrelated working-tree changes are preserved.
+
+The transaction receives only exact absolute targets already proven to be
+inside the selected worktree's `spec.root`. It never invokes Git. Race and
+interruption injection across preflight, staging, replacement, cleanup, and
+rollback is the separate Milestone 5.5 proof required before promoting
+`REQ-7AFE9904`.
 
 ## Historical ID reservation
 

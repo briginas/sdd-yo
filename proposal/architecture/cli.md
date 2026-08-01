@@ -206,7 +206,12 @@ sdd proposal apply --patch <path> [--worktree <path>]
 This is the only specification write operation after initialization. It
 verifies config scope, path and symlink safety, all before-hashes, target
 uniqueness, the whole candidate result, and then applies atomically. It
-creates no commit and has no fuzzy, force, or partial mode.
+creates no commit and has no fuzzy, force, or partial mode. A successful JSON
+result contains the strictly path-sorted `applied_paths` and the validated
+`result_tree_fingerprint`. A project, base, path, before-hash, or result-tree
+mismatch is mechanically blocked; malformed input and filesystem transaction
+failure are technical errors. `--output` is intentionally unavailable so the
+command cannot introduce a second specification write outside the patch.
 
 ### `sdd tests discover`
 

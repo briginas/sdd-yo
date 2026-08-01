@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 5 / Proposal and exact patch
-- Current leaf: 5.4 Safe all-or-nothing proposal apply
+- Current leaf: 5.5 Stale-base and interruption proof
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -630,14 +630,18 @@ Mode: `spec-code`.
       `REQ-964B9F80` and `REQ-3BF12AAD`. Wire the public `proposal prepare` CLI
       only once this leaf can return the stable ConflictReport and SpecPatch
       response together.
-- [ ] **5.4 — Safe all-or-nothing proposal apply.** Implement the only
+- [x] **5.4 — Safe all-or-nothing proposal apply.** Implement the only
       post-initialization specification write operation with project/spec-root
       containment, path traversal, symlink, `.git`, binary, duplicate-target,
       before/after hash, and result-tree checks plus rollback-safe atomic
       replacement. Preserve unrelated worktree changes and create no Git
       branch, commit, push, or merge. This leaf contributes the safe apply
       implementation for `REQ-7AFE9904` without promoting it before the
-      interruption proof.
+      interruption proof. The implemented boundary strictly imports the
+      path-sorted SpecPatch, validates project/base/path/hash/result-tree state
+      before mutation, and delegates sibling staging, atomic replacement, and
+      reverse-order rollback to the injected project writer. The direct CLI
+      exposes no fuzzy, partial, force, output-file, or Git-write path.
 - [ ] **5.5 — Stale-base and interruption proof.** Add race and failure
       injection across candidate revalidation, before-hash checks, staging,
       replacement, and rollback; prove stale inputs cannot apply and failures
