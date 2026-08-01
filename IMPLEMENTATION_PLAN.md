@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 6 / Evidence, findings, and merge readiness
-- Current leaf: Milestone 6 clarification (not started)
+- Current leaf: 6.1 — Approval and governance evidence
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -667,16 +667,67 @@ approved-delta binding in `REQ-AFD65A03` are completed in Milestone 6.
 
 Mode: `spec-code`.
 
-- [ ] Validate approval, test, QA, governance, and finding artifacts.
-- [ ] Generate deterministic semantic candidates.
-- [ ] Validate optional model findings without calling a provider in core.
-- [ ] Compose mechanical proposal validation with semantic findings to
-      complete `REQ-E80F09C6`.
-- [ ] Bind approved object deltas and compose ApprovalEvidence with mechanical
-      preparation to complete `REQ-AFD65A03` and `REQ-A8739118`.
-- [ ] Implement finding resolution eligibility and freshness.
-- [ ] Implement Verification and Merge gates and deterministic MergeReport.
-- [ ] Confirm that no code path performs Git merge side effects.
+Bounded leaves:
+
+- [x] **6.0 — Milestone clarification.** Reconcile the completed Milestone 4
+      evidence-assessment and Milestone 5 proposal/apply surfaces with the
+      remaining target contracts. Split evidence, semantic review, gate
+      composition, and CLI work into independently verifiable leaves and make
+      6.1 the immediate next leaf. No runtime behavior changes in this leaf.
+- [ ] **6.1 — Approval and governance evidence.** Strictly parse bounded,
+      project-scoped ApprovalEvidence and GovernanceEvidence; validate allowed
+      issuers, exact mode/delta or adoption-transition subjects, negative and
+      contradictory decisions, and freshness. Reuse the completed Milestone 4
+      TestExecutionEvidence and QAEvidence boundary rather than duplicating it.
+      Finding-family artifacts remain 6.3. Target Requirements:
+      `REQ-7341DBB7`, `REQ-AFD65A03`, `REQ-E85A06C3`, `REQ-220945C2`.
+- [ ] **6.2 — Deterministic semantic candidates and input manifest.** Generate
+      stable candidates from overlapping object changes, shared Concepts,
+      Requirement dependencies, deletions, and incompatible graph operations;
+      expand Concept impact; select only the required normative sections; and
+      fingerprint a deterministic SemanticAnalysisInputManifest. Do not call a
+      model or declare a semantic conflict. Target Requirements:
+      `REQ-DFF6BFA6`, `REQ-04F23007`, `REQ-B5815BB5`, `REQ-18F84CE2`.
+- [ ] **6.3 — Findings and human semantic decisions.** Strictly parse and
+      validate Finding, FindingResolution, and HumanSemanticReviewEvidence;
+      derive Finding IDs from analyzer and input identity; require concrete
+      object/section citations; enforce resolution eligibility and freshness;
+      reject semantic-conflict waivers; and represent unavailable optional
+      model analysis as human review required. Target Requirements:
+      `REQ-A76942A0`, `REQ-20AAA622`, `REQ-FB66E5D6`, `REQ-ADF9965A`,
+      `REQ-2AF962EB`, `REQ-BDAFD401`.
+- [ ] **6.4 — Full Proposal Gate.** Compose mechanical proposal validation with
+      deterministic semantic candidates, populate ProposalPackage
+      `semantic_candidates`, preserve a read-only working tree, and promote the
+      completed observable contract. Approval remains external. Target
+      Requirements: `REQ-E80F09C6`, `REQ-18F84CE2`.
+- [ ] **6.5 — Approval-bound Branch Preparation Gate.** Compose current
+      ApprovalEvidence with mechanical preparation; require exact mode and
+      canonical object-delta binding; preserve approval across independent
+      integration additions; emit semantic candidates in ConflictReport; and
+      withhold SpecPatch for review-required or blocked preparation. Target
+      Requirements: `REQ-AFD65A03`, `REQ-7341DBB7`, `REQ-A8739118`.
+- [ ] **6.6 — Verification Gate and VerificationReport.** Compose affected
+      scope, TestIndex, execution evidence, manual Requirement decisions, QA,
+      and finding state into deterministic satisfied/unsatisfied partitions,
+      stable diagnostics, blocker precedence, and exactly one readiness
+      status. Target Requirements: `REQ-E451458E`, `REQ-5A832396`,
+      `REQ-CDE94D0B`, `REQ-C11ACC55`, `REQ-20AAA622`, `REQ-2AF962EB`,
+      `REQ-BCFA15D8`.
+- [ ] **6.7 — Merge Gate and deterministic MergeReport.** Accept explicit
+      versioned inputs, resolve current refs, require complete strict history,
+      recompute conflicts and affected scope, enforce mode-specific current
+      evidence, and emit a reproducible governed-scope MergeReport without Git
+      mutation. Target Requirements: `REQ-64DB876B`, `REQ-E85A06C3`,
+      `REQ-8E2D9A5F`, `REQ-3B9FC7FF`, `REQ-220945C2`, `REQ-82256D82`,
+      `REQ-44068C1A`, `REQ-93A4C44B`, `REQ-FDD51416`.
+- [ ] **6.8 — Findings and merge CLI completion.** Expose
+      `sdd findings validate` and `sdd merge check`, render deterministic JSON
+      plus replaceable human views, map `PASS`, `BLOCKED`, `REVIEW_REQUIRED`,
+      and technical failure to exit codes 0, 1, 2, and 3, and prove that no
+      command can create a branch, commit, tag, push, or merge. Target
+      Requirements: `REQ-F7D39246`, `REQ-41EDF9A3`, `REQ-44068C1A`,
+      `REQ-A3C3B779`, `REQ-F91F7D11`.
 
 Primary target Capabilities:
 `CAP-F31EF876`, `CAP-205F5DBC`.
@@ -737,7 +788,8 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 5 — Proposal and exact patch` is active. The contract-alignment leaf
-5.0 is complete. The next bounded leaf is 5.1 mechanical Proposal Gate and
-ProposalPackage generation; preparation, exact patch construction, and apply
-remain subsequent leaves.
+`6.1 — Approval and governance evidence` is active. It adds bounded parsing,
+project-scoped file import, issuer/subject validation, freshness, and
+deterministic decision assessment for ApprovalEvidence and GovernanceEvidence.
+It does not add semantic candidates, Finding-family validation, gate reports,
+CLI operations, or Git side effects.
