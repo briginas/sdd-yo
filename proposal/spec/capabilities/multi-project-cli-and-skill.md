@@ -50,6 +50,7 @@ verification: automated
 
 - refers-to: [CON-EA57C937 — SDD Project](../../../spec/concepts/sdd-project.md)
 - refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
+- depends-on: [REQ-24073D4F — Query the active specification graph](#req-24073d4f)
 
 ### Statement <!-- sdd:statement -->
 
@@ -62,6 +63,41 @@ discovery, finding validation, and merge-check operations.
 - Only initialization and proposal application are normal write operations.
 - Read operations support explicit Git refs when applicable.
 - Branch, commit, push, merge, and approve commands are absent.
+
+<a id="req-24073d4f"></a>
+
+## REQ-24073D4F — Query the active specification graph
+
+```sdd
+kind: behavior
+verification: automated
+```
+
+### Relations <!-- sdd:relations -->
+
+- refers-to: [CON-2C550D5B — Capability](../../../spec/concepts/capability.md)
+- refers-to: [CON-9F69CC0E — Requirement](../../../spec/concepts/requirement.md)
+- refers-to: [CON-88F1C731 — Domain Concept](../../../spec/concepts/domain-concept.md)
+
+### Statement <!-- sdd:statement -->
+
+The CLI shall query one validated active specification graph by stable object
+identity and report deterministic forward and reverse graph relationships
+without executing tests.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- `inspect` reports direct inbound active relations with relation type and
+  source object ID.
+- `trace` reports a selected Requirement's owning Capability, the transitive
+  closure of its outgoing and incoming `depends-on` relations, and direct
+  objects that refer to the selected object.
+- Capability and Domain Concept ancestry and dependency closures are empty.
+- The selected object is excluded from dependency closures, and every set-like
+  result is sorted by canonical object ID.
+- Graph-only `trace` succeeds without a TestIndex and reports neither mapped
+  tests nor test-coverage conclusions.
+- Unknown or inactive object IDs produce a stable non-passing diagnostic.
 
 <a id="req-26234dc8"></a>
 

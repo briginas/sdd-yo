@@ -146,13 +146,28 @@ hashing. A change confined to explanatory content therefore produces empty
 semantic, structural, and verification deltas; there is no explanatory
 fingerprint class.
 
+The Stage 0 byte and truth-table oracle is the
+[`fingerprint-deltas` fixture manifest](../../fixtures/v1/fingerprints/deltas/cases.json).
+
+### Base delta computation
+
+Comparison of two validated graphs computes semantic and structural deltas
+directly from their versioned object fingerprints. It emits the exact entries,
+canonical bytes, and fingerprint for each available class. It does not emit an
+approval, gate, semantic-review, or merge-readiness conclusion. Explanatory-only
+changes therefore produce exact empty semantic and structural arrays.
+
+The canonical delta format also supports the verification class, but a command
+must not report that class as available until both graph snapshots have a
+TestIndex-derived verification fingerprint. An unavailable class is distinct
+from the exact empty delta `[]` for an available unchanged class.
+
+### Approval binding
+
 Approval binds the explicit Change `mode` together with the semantic and
 structural delta fingerprints. Verification deltas remain independently
 reportable but are not approval-bound. Reusing the same delta fingerprints
 under another mode does not match the approval subject.
-
-The Stage 0 byte and truth-table oracle is the
-[`fingerprint-deltas` fixture manifest](../../fixtures/v1/fingerprints/deltas/cases.json).
 
 ## Git model
 
@@ -175,6 +190,10 @@ H ↔ M  final integration compatibility
 
 The integration branch name is not identity. Resolved commit IDs and object
 fingerprints are stored in artifacts.
+
+Every mutable ref is resolved once at command start. A resolved Git object ID
+is an opaque non-empty string: implementations do not infer SHA-1, SHA-256, or
+any fixed digest length from it.
 
 ## Branch preparation
 
@@ -224,15 +243,44 @@ Application is fail-closed:
 
 ## Historical ID reservation
 
-Only IDs newly introduced relative to base require a Git-history query. The
-query searches reachable canonical specification history for prior typed model
-object definitions, not arbitrary prose or fixture occurrences of the same
-text. Positive and negative results may be cached.
+The history tip is the object ID resolved from explicit `--history-ref`, or
+from the selected project's configured `git.default_target_ref` when the option
+is absent. `--ref` selects a validation snapshot only; it does not implicitly
+replace the history tip. Failure to resolve an explicitly requested ref is a
+technical failure.
+
+An object ID is newly introduced when it is active in the validation snapshot
+but absent from the active graph at the resolved history tip. Only newly
+introduced IDs require a history query. The query searches every commit
+reachable from the history tip for a typed canonical model definition belonging
+to the same stable project ID. At each commit, canonical roots are obtained from
+tracked `.sdd/config.yaml` files carrying that project ID, so moving a project
+directory or configured specification root does not reset reservation. Arbitrary
+prose, fixture, test, and noncanonical proposal occurrences do not count.
+For an `SDD` candidate, a prior definition is a tracked `.sdd/config.yaml`
+`project_id` declaration anywhere in the enclosing repository history rather
+than a model-object definition.
+
+Parallel-branch collisions are found because the configured integration history
+tip is resolved at command start. Positive and negative results may be cached
+only for that resolved object ID. Repository-wide project-ID uniqueness is a
+bounded tree query over `.sdd/config.yaml` paths inside the enclosing repository;
+it does not follow symlinks or read outside the repository.
 
 Before an SDD Project has canonical history, target-package IDs may be reserved
 and promoted according to the
 [self-bootstrap procedure](bootstrap.md). Their first appearance under the
 project's canonical `spec.root` is canonical introduction, not reuse.
 
-A shallow clone may run non-strict validation with a warning but cannot produce
-a strict merge `PASS`.
+Git-backed command responses report one history status:
+
+```text
+complete | incomplete | unchecked
+```
+
+`unchecked` applies only when no project resolves. A shallow clone or another
+provably incomplete reachable history may run ordinary validation with status
+`incomplete` plus stable diagnostic `SDD_GIT_HISTORY_INCOMPLETE`. An unresolved
+requested ref produces `SDD_GIT_REF_UNRESOLVED` and a technical failure. Ordinary
+validation never turns history status into a merge-readiness conclusion. Strict
+merge validation later blocks unless the required history status is `complete`.

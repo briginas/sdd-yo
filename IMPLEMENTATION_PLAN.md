@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 3 / Initialization, IDs, trace, and diff
-- Current leaf: 3.2 Random IDs and canonical-history reservation
+- Current leaf: 3.2a Random ID primitives and projectless issuance
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -190,8 +190,8 @@ and
       `REQ-B25091A0`.
 - [x] **0.4b — Object delta truth tables.** Define add, modify, delete, mixed
       ordering, and semantic, structural, verification, and explanatory delta
-      truth tables. Target Requirements: `REQ-AFD65A03`, `REQ-B25091A0`,
-      `REQ-7341DBB7`.
+      truth tables. Target Requirements: `REQ-24A372E7`, `REQ-AFD65A03`,
+      `REQ-B25091A0`, `REQ-7341DBB7`.
 
 Artifact:
 [`fixtures/v1/fingerprints/objects/cases.json`](fixtures/v1/fingerprints/objects/cases.json)
@@ -199,8 +199,8 @@ and
 [`fixtures/v1/fingerprints/deltas/cases.json`](fixtures/v1/fingerprints/deltas/cases.json).
 
 Primary target Requirements:
-`REQ-13CF54D6`, `REQ-1095E571`, `REQ-B25091A0`, `REQ-AFD65A03`,
-`REQ-7341DBB7`.
+`REQ-13CF54D6`, `REQ-1095E571`, `REQ-B25091A0`, `REQ-24A372E7`,
+`REQ-AFD65A03`, `REQ-7341DBB7`.
 
 ### 0.5 Gate truth tables
 
@@ -499,16 +499,38 @@ Mode: `spec-code`.
       unrelated files, reject conflicting or unsafe targets, and assign one
       stable random project ID. Promote `REQ-382BBBD6`; `REQ-BFC18F28` remains
       proposed until repository-wide duplicate project-ID validation exists.
-- [ ] **3.2 — Random IDs and canonical-history reservation.** Implement
-      `sdd id` for project and model-object prefixes, manual/new-ID validation,
-      integration-ref collision checks, and reachable canonical-history reuse
-      rejection.
-- [ ] Implement reverse relations, `trace`, object deltas, and `diff`.
-- [ ] Handle shallow history and opaque Git object IDs.
+- [ ] **3.2a — Random ID primitives and projectless issuance.** Implement
+      collision-retrying cryptographic generation for `SDD`, `CAP`, `REQ`, and
+      `CON` prefixes plus bounded `--count`. Expose projectless `sdd id` with
+      machine-readable historical status `unchecked`; do not claim reservation.
+- [ ] **3.2b — Git snapshot and history boundary.** Implement the production
+      argv-array Git adapter, resolve mutable refs once, read configured graphs
+      from opaque object IDs, enumerate reachable history, and detect shallow
+      or otherwise incomplete history without assuming a hash algorithm.
+- [ ] **3.2c — Historical reservation and project identity.** Define new IDs
+      relative to the resolved integration history tip, reject typed canonical
+      reuse and parallel collisions, validate manual IDs through the same path,
+      and block duplicate project IDs in one repository. Wire project-aware
+      `sdd id` and validation, then promote `REQ-BFC18F28`, `REQ-2C8E8085`, and
+      `REQ-8B656FC5`.
+- [ ] **3.3 — Graph queries and graph-only trace.** Extract deterministic
+      reverse-relation queries from `inspect`; implement ownership, transitive
+      dependency/dependent closure, direct referrers, and graph-only `trace`
+      without executing or claiming tests. Promote `REQ-24073D4F`.
+- [ ] **3.4 — Semantic and structural diff.** Implement canonical object-delta
+      entries, bytes, and fingerprints from two validated graphs, then expose
+      Git-ref-backed `validate --changed-from` and `diff`. Report unavailable
+      verification separately from an available empty delta and emit no
+      approval or review conclusion. Promote `REQ-24A372E7`.
 
 Primary target Requirements:
-`REQ-382BBBD6`, `REQ-BFC18F28`, `REQ-2C8E8085`, `REQ-FDD51416`,
-`REQ-AFD65A03`.
+`REQ-382BBBD6`, `REQ-BFC18F28`, `REQ-2C8E8085`, `REQ-8B656FC5`,
+`REQ-24073D4F`, `REQ-24A372E7`.
+
+This milestone contributes command coverage toward `REQ-F7D39246`, but that
+Requirement remains proposed until Milestone 6 completes every version 1
+operation. Approval binding in `REQ-AFD65A03` remains Milestone 5 work. Strict
+merge-history enforcement in `REQ-FDD51416` remains Milestone 6 work.
 
 ## Milestone 4 — Test discovery and QA scope
 
@@ -517,6 +539,8 @@ Mode: `spec-code`.
 - [ ] Implement JSONL discovery import and command adapter boundary.
 - [ ] Implement JUnit-compatible import.
 - [ ] Build deterministic TestIndex and suite-name inheritance.
+- [ ] Enrich `trace` with mapped tests and add verification fingerprints and
+      verification deltas without changing graph-only trace semantics.
 - [ ] Compute affected Requirements and Capabilities.
 - [ ] Validate execution and QA evidence freshness and coverage.
 
@@ -538,7 +562,7 @@ Mode: `spec-code`.
 
 Primary target Requirements:
 `REQ-E80F09C6`, `REQ-A8739118`, `REQ-3BF12AAD`, `REQ-7AFE9904`,
-`REQ-964B9F80`.
+`REQ-964B9F80`, `REQ-AFD65A03`.
 
 ## Milestone 6 — Evidence, findings, and merge readiness
 
@@ -555,7 +579,8 @@ Primary target Capabilities:
 `CAP-F31EF876`, `CAP-205F5DBC`.
 
 Also completes Concept impact in `REQ-B5815BB5`, the full CLI surface in
-`REQ-F7D39246`, and merge-specific exit mapping in `REQ-41EDF9A3`.
+`REQ-F7D39246`, strict history enforcement in `REQ-FDD51416`, and
+merge-specific exit mapping in `REQ-41EDF9A3`.
 
 ## Milestone 7 — Existing-project dogfood
 

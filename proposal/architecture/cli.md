@@ -57,17 +57,22 @@ sdd init [--root <path>] [--spec-path <path>] [--adoption incremental|complete]
 Creates `.sdd/config.yaml` plus the minimal `spec/README.md`,
 `spec/capabilities/`, and `spec/concepts/` structure. It refuses to overwrite
 existing files unless a future explicit migration command owns that behavior.
-The generated project and initial object IDs are cryptographically random.
+The generated project ID is cryptographically random. The empty initial
+specification contains no Capability, Requirement, or Domain Concept ID.
 
 ### `sdd id`
 
 ```text
-sdd id project|capability|requirement|concept [--count <n>]
+sdd id project|capability|requirement|concept [--count <n>] [--history-ref <git-ref>]
 ```
 
 Generates uppercase random IDs and checks the selected repository's complete
 Git history when a project resolves. Without a project it can generate
-candidates but marks historical uniqueness as unchecked.
+candidates but marks historical uniqueness as unchecked. With a project,
+`--history-ref` selects the integration history tip; otherwise the resolved
+project's configured `git.default_target_ref` is used. `--count` defaults to
+`1`, accepts integers from `1` through `256`, and returns candidates unique
+within that invocation; a random collision is retried rather than returned.
 
 ### `sdd validate`
 
@@ -77,7 +82,10 @@ sdd validate [--ref <git-ref>] [--history-ref <git-ref>] [--changed-from <git-re
 
 Parses configuration and specification, resolves the graph, validates
 identities and links, checks historical reuse, and computes fingerprints.
-`--changed-from` additionally reports an object delta.
+`--ref` selects the specification snapshot but does not change the history
+tip. `--history-ref` overrides the configured history tip. `--changed-from`
+additionally reports semantic and structural object deltas against the named
+ref.
 
 ### `sdd inspect`
 
@@ -95,17 +103,34 @@ sdd trace <CAP-ID|REQ-ID|CON-ID> [--ref <git-ref>] [--test-index <path>]
 ```
 
 Returns graph ancestry, dependencies, dependents, referring objects, and
-mapped tests when an index is supplied. It does not run tests.
+mapped tests when an index is supplied. It does not run tests. The base
+graph-only result contains:
+
+```text
+object_id, ancestry, dependencies, dependents, referrers
+```
+
+For a Requirement, `ancestry` contains its owning Capability, `dependencies`
+and `dependents` are transitive `depends-on` closures that exclude the selected
+Requirement, and `referrers` contains direct inbound active relations with
+relation type and source ID. Capability and Concept ancestry and dependency
+closures are empty. Set-like arrays are sorted by object ID. TestIndex-backed
+mapped tests are an additive test-traceability behavior and are not required
+for graph-only trace.
 
 ### `sdd diff`
 
 ```text
-sdd diff --base <git-ref-or-tree> --target <git-ref-or-tree>
+sdd diff --base <git-ref> --target <git-ref>
 ```
 
-Produces semantic, structural, and verification object deltas plus
-deterministic semantic-review candidates. A tree may be a Git ref or an
-explicit candidate directory/manifest.
+Produces semantic and structural object-delta entries and fingerprints between
+two validated Git specification snapshots. The result identifies its available
+fingerprint classes and does not represent an unavailable verification class
+as an empty delta. Verification deltas become available with TestIndex support.
+Proposal validation owns candidate directory/manifest input, and later finding
+analysis owns semantic-review candidates; the base `diff` command emits neither
+an approval nor a review conclusion.
 
 ### `sdd proposal validate`
 

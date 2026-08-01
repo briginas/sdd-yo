@@ -17,7 +17,7 @@
   },
   "metadata": {
     "owner": "SDD Yo maintainers",
-    "last_reviewed": "2026-07-31",
+    "last_reviewed": "2026-08-01",
     "source_of_truth": "Inventory of planned contracts; product Requirements remain authoritative for behavior.",
     "verification_status": "bootstrap-validated",
     "known_staleness_risks": [
@@ -382,6 +382,9 @@
       "authority": "proposal/architecture/cli.md#executable-and-global-behavior",
       "requirements": [
         "REQ-7C848ED0",
+        "REQ-24073D4F",
+        "REQ-24A372E7",
+        "REQ-8B656FC5",
         "REQ-F7D39246",
         "REQ-41EDF9A3"
       ],
@@ -1280,6 +1283,7 @@
       "definition_status": "specified",
       "authority": "proposal/architecture/fingerprints-and-git.md#change-fingerprints",
       "requirements": [
+        "REQ-24A372E7",
         "REQ-AFD65A03",
         "REQ-B25091A0",
         "REQ-7341DBB7"
@@ -1605,6 +1609,7 @@
         "artifact.proposal-package"
       ],
       "requirements": [
+        "REQ-24A372E7",
         "REQ-AFD65A03",
         "REQ-B25091A0",
         "REQ-7341DBB7"

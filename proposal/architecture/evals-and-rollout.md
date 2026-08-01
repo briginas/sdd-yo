@@ -27,7 +27,9 @@ a greenfield repository is insufficient.
 - Reject duplicates in a tree and reuse found anywhere in reachable configured
   Git history.
 - Accept removal from active spec while continuing to reserve the old ID.
-- Treat Git SHA-1 and SHA-256 object IDs as opaque.
+- Report complete, incomplete, and projectless-unchecked history distinctly.
+- Exercise shallow history and multiple opaque non-empty Git object-ID shapes,
+  including SHA-1 and SHA-256, without branching on hash length.
 
 ### Fingerprints and deltas
 

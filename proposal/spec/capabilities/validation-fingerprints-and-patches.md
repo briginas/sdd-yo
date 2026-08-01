@@ -68,6 +68,39 @@ and verification fingerprints.
   references.
 - Approval binds semantic and structural deltas, not verification deltas.
 
+<a id="req-24a372e7"></a>
+
+## REQ-24A372E7 — Compute semantic and structural object deltas
+
+```sdd
+kind: invariant
+verification: automated
+```
+
+### Relations <!-- sdd:relations -->
+
+- refers-to: [CON-FC16381E — Fingerprint](../../../spec/concepts/fingerprint.md)
+- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
+
+### Statement <!-- sdd:statement -->
+
+The CLI shall compare two valid specification graphs and compute separate
+canonical semantic and structural object deltas from their versioned object
+fingerprints.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- An add contains the object's expected after fingerprint, a delete contains
+  its expected before fingerprint, and a modify contains both.
+- An object appears in a fingerprint-class delta only when that class is
+  added, removed, or changed.
+- Entries are sorted by the NFC-normalized tuple `type`, `id`, and `operation`;
+  repeated computation over equivalent graphs is byte-identical.
+- An unchanged class canonicalizes as the exact JSON array `[]`, and an
+  explanatory-only change produces empty semantic and structural deltas.
+- Computation emits no approval, gate, or merge-readiness conclusion and does
+  not claim a verification delta.
+
 <a id="req-afd65a03"></a>
 
 ## REQ-AFD65A03 — Fingerprint approved object deltas
@@ -81,6 +114,7 @@ verification: automated
 
 - refers-to: [CON-FC16381E — Fingerprint](../../../spec/concepts/fingerprint.md)
 - refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
+- depends-on: [REQ-24A372E7 — Compute semantic and structural object deltas](#req-24a372e7)
 
 ### Statement <!-- sdd:statement -->
 
@@ -170,9 +204,9 @@ deltas remain intact.
 - Semantic conflicts are analyzed after a clean textual merge.
 - The working tree remains unchanged until explicit apply.
 
-<a id="req-fdd51416"></a>
+<a id="req-8b656fc5"></a>
 
-## REQ-FDD51416 — Require sufficient Git history for strict merge validation
+## REQ-8B656FC5 — Report canonical history completeness
 
 ```sdd
 kind: constraint
@@ -185,11 +219,44 @@ verification: automated
 
 ### Statement <!-- sdd:statement -->
 
+Ordinary validation shall report whether reachable canonical Git history was
+sufficient for the requested identifier-reuse and comparison checks and shall
+not present an incomplete historical check as complete.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- Complete reachable history reports historical validation as complete.
+- Shallow or otherwise incomplete history may produce an otherwise valid
+  ordinary-validation result only with a stable warning and machine-readable
+  incomplete status.
+- An explicitly requested comparison ref that cannot be resolved is a
+  technical failure, not a successful incomplete comparison.
+- Git object IDs are opaque non-empty strings; no hash algorithm or fixed
+  length is inferred.
+- Rewritten or unreachable history is outside the guarantee, and ordinary
+  validation emits no merge-readiness conclusion.
+
+<a id="req-fdd51416"></a>
+
+## REQ-FDD51416 — Require sufficient Git history for strict merge validation
+
+```sdd
+kind: constraint
+verification: automated
+```
+
+### Relations <!-- sdd:relations -->
+
+- refers-to: [CON-EA57C937 — SDD Project](../../../spec/concepts/sdd-project.md)
+- depends-on: [REQ-8B656FC5 — Report canonical history completeness](#req-8b656fc5)
+
+### Statement <!-- sdd:statement -->
+
 Strict merge validation shall require sufficient reachable Git history to
 verify identifier non-reuse and requested comparison refs.
 
 ### Acceptance criteria <!-- sdd:acceptance -->
 
-- Ordinary validation may run in a shallow clone with a warning.
+- Strict merge validation requires complete identifier-reuse checks and every
+  requested comparison ref.
 - Merge readiness is blocked when historical validation is incomplete.
-- Rewritten unreachable history is outside the guarantee.
