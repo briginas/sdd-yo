@@ -15,6 +15,7 @@ Remaining target behavior stays under `proposal/spec/` until promotion.
 - [CAP-E309CBCB — Validation, fingerprints, and exact patches](capabilities/validation-fingerprints-and-patches.md)
 - [CAP-15DBC157 — Test traceability and QA evidence](capabilities/test-traceability-and-qa.md)
 - [CAP-F31EF876 — Semantic review and conflict analysis](capabilities/semantic-review-and-conflicts.md)
+- [CAP-205F5DBC — Merge readiness](capabilities/merge-readiness.md)
 - [CAP-CB22A5A3 — Proposal modes and workflow gates](capabilities/proposal-modes-and-workflow-gates.md)
 - [CAP-404305F6 — Multi-project CLI and skill integration](capabilities/multi-project-cli-and-skill.md)
 

@@ -266,6 +266,31 @@ not present an incomplete historical check as complete.
 - Rewritten or unreachable history is outside the guarantee, and ordinary
   validation emits no merge-readiness conclusion.
 
+<a id="req-fdd51416"></a>
+
+## REQ-FDD51416 — Require sufficient Git history for strict merge validation
+
+```sdd
+kind: constraint
+verification: automated
+```
+
+### Relations <!-- sdd:relations -->
+
+- refers-to: [CON-EA57C937 — SDD Project](../concepts/sdd-project.md)
+- depends-on: [REQ-8B656FC5 — Report canonical history completeness](validation-fingerprints-and-patches.md#req-8b656fc5)
+
+### Statement <!-- sdd:statement -->
+
+Strict merge validation shall require sufficient reachable Git history to
+verify identifier non-reuse and requested comparison refs.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- Strict merge validation requires complete identifier-reuse checks and every
+  requested comparison ref.
+- Merge readiness is blocked when historical validation is incomplete.
+
 <a id="req-3bf12aad"></a>
 
 ## REQ-3BF12AAD — Represent executable specification changes as exact file operations

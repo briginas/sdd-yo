@@ -41,7 +41,7 @@
     "proposal/spec/capabilities/test-traceability-and-qa.md#req-20f8ca5c",
     "proposal/spec/capabilities/multi-project-cli-and-skill.md#req-1dd46ca9",
     "proposal/spec/capabilities/multi-project-cli-and-skill.md#req-f91f7d11",
-    "proposal/spec/capabilities/merge-readiness.md#req-e85a06c3",
+    "spec/capabilities/merge-readiness.md#req-e85a06c3",
     "proposal/spec/capabilities/merge-readiness.md#req-220945c2",
     "spec/concepts/evidence.md#identity",
     "proposal/architecture/security.md#path-traversal-and-symlink-escape",

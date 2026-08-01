@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 6 / Evidence, findings, and merge readiness
-- Current leaf: 6.7 — Merge Gate and deterministic MergeReport
+- Current leaf: 6.8 — Findings and merge CLI completion
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -730,20 +730,25 @@ Bounded leaves:
       `REQ-CDE94D0B`, `REQ-89AFB91E`, `REQ-C11ACC55`, `REQ-20AAA622`,
       `REQ-FB66E5D6`, and `REQ-2AF962EB`. `REQ-BCFA15D8` remains proposed
       until its Merge Gate claim is composed in 6.7.
-- [ ] **6.7 — Merge Gate and deterministic MergeReport.** Accept explicit
+- [x] **6.7 — Merge Gate and deterministic MergeReport.** Accept explicit
       versioned inputs, resolve current refs, require complete strict history,
       recompute conflicts and affected scope, enforce mode-specific current
       evidence, and emit a reproducible governed-scope MergeReport without Git
       mutation. Target Requirements: `REQ-64DB876B`, `REQ-E85A06C3`,
       `REQ-8E2D9A5F`, `REQ-3B9FC7FF`, `REQ-220945C2`, `REQ-82256D82`,
-      `REQ-44068C1A`, `REQ-93A4C44B`, `REQ-FDD51416`.
+      `REQ-44068C1A`, `REQ-93A4C44B`, `REQ-FDD51416`. Promote
+      `REQ-64DB876B`, `REQ-BCFA15D8`, `REQ-E85A06C3`, `REQ-8E2D9A5F`,
+      `REQ-3B9FC7FF`, `REQ-93A4C44B`, and `REQ-FDD51416`. Keep
+      `REQ-220945C2`, `REQ-82256D82`, and `REQ-44068C1A` proposed until the
+      issuer-validation, human-view, and CLI no-side-effect claims are
+      completed in 6.8.
 - [ ] **6.8 — Findings and merge CLI completion.** Expose
       `sdd findings validate` and `sdd merge check`, render deterministic JSON
       plus replaceable human views, map `PASS`, `BLOCKED`, `REVIEW_REQUIRED`,
       and technical failure to exit codes 0, 1, 2, and 3, and prove that no
       command can create a branch, commit, tag, push, or merge. Target
-      Requirements: `REQ-F7D39246`, `REQ-41EDF9A3`, `REQ-44068C1A`,
-      `REQ-A3C3B779`, `REQ-F91F7D11`.
+      Requirements: `REQ-F7D39246`, `REQ-41EDF9A3`, `REQ-220945C2`,
+      `REQ-82256D82`, `REQ-44068C1A`, `REQ-A3C3B779`, `REQ-F91F7D11`.
 
 Primary target Capabilities:
 `CAP-F31EF876`, `CAP-205F5DBC`.
@@ -804,8 +809,9 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`6.7 — Merge Gate and deterministic MergeReport` is active. It accepts
-explicit versioned inputs, resolves current refs, recomputes governed scope and
-evidence state, and emits one reproducible readiness report. It does not mutate
-Git, merge branches, apply patches, create approvals, or add unrelated CLI
-operations.
+`6.8 — Findings and merge CLI completion` is active. It exposes the completed
+library validators through deterministic JSON and replaceable human views,
+maps product readiness and technical failure to their public exit codes, and
+proves that the commands have no Git mutation authority. It does not add new
+gate policy, merge branches, apply patches, create approvals, or begin
+Milestone 7 dogfood.
