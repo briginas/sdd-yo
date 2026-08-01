@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 6 / Evidence, findings, and merge readiness
-- Current leaf: 6.3 — Findings and human semantic decisions
+- Current leaf: 6.4 — Full Proposal Gate
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -695,14 +695,17 @@ Bounded leaves:
       Promote `REQ-DFF6BFA6`, `REQ-04F23007`, and `REQ-B5815BB5`.
       `REQ-18F84CE2` remains proposed until model-unavailable human-review
       composition is complete in 6.3 and 6.4.
-- [ ] **6.3 — Findings and human semantic decisions.** Strictly parse and
+- [x] **6.3 — Findings and human semantic decisions.** Strictly parse and
       validate Finding, FindingResolution, and HumanSemanticReviewEvidence;
       derive Finding IDs from analyzer and input identity; require concrete
       object/section citations; enforce resolution eligibility and freshness;
       reject semantic-conflict waivers; and represent unavailable optional
       model analysis as human review required. Target Requirements:
       `REQ-A76942A0`, `REQ-20AAA622`, `REQ-FB66E5D6`, `REQ-ADF9965A`,
-      `REQ-2AF962EB`, `REQ-BDAFD401`.
+      `REQ-2AF962EB`, `REQ-BDAFD401`. Promote `REQ-A76942A0` and
+      `REQ-ADF9965A`. Resolution and human-review assessment now contribute to
+      the remaining Requirements, whose gate/report composition stays proposed
+      until 6.4 and 6.6.
 - [ ] **6.4 — Full Proposal Gate.** Compose mechanical proposal validation with
       deterministic semantic candidates, populate ProposalPackage
       `semantic_candidates`, preserve a read-only working tree, and promote the
@@ -795,8 +798,8 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`6.3 — Findings and human semantic decisions` is active. It adds strict
-Finding-family parsing, deterministic Finding identity and citations,
-resolution eligibility and freshness, and exact human semantic-review
-evidence. It does not call a model, compose gate reports, add CLI operations,
-or perform Git side effects.
+`6.4 — Full Proposal Gate` is active. It composes mechanical proposal
+validation with deterministic semantic candidates, populates ProposalPackage
+`semantic_candidates`, and preserves a read-only working tree. It does not
+approve proposals, prepare or apply branches, compose verification or merge
+reports, add CLI operations, or perform Git side effects.

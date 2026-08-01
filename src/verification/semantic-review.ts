@@ -21,7 +21,7 @@ export type SemanticCandidateReason = (typeof SEMANTIC_CANDIDATE_REASONS)[number
 
 export type SemanticCandidate = {
   readonly objects: readonly ObjectId[];
-  readonly reason: SemanticCandidateReason;
+  readonly reason: string;
 };
 
 export type SemanticNormativeSection = {
@@ -307,6 +307,22 @@ function fingerprintManifestInput(value: unknown): Fingerprint {
   return fingerprint;
 }
 
+export function fingerprintSemanticAnalysisInputManifest(
+  value: Omit<SemanticAnalysisInputManifest, "input_fingerprint">,
+): Fingerprint {
+  return fingerprintManifestInput({
+    canonicalization_version: "1",
+    schema_version: value.schema_version,
+    artifact_type: value.artifact_type,
+    project_id: value.project_id,
+    analyzer: value.analyzer,
+    changed_objects: value.changed_objects,
+    related_objects: value.related_objects,
+    normative_sections: value.normative_sections,
+    candidate_reasons: value.candidate_reasons,
+  });
+}
+
 export function buildSemanticAnalysisInputManifest(
   input: CandidateInput & {
     readonly project_id: ProjectId;
@@ -350,5 +366,5 @@ export function buildSemanticAnalysisInputManifest(
     normative_sections: normativeSections,
     candidate_reasons: candidateReasons,
   };
-  return { ...payload, input_fingerprint: fingerprintManifestInput({ canonicalization_version: "1", ...payload }) };
+  return { ...payload, input_fingerprint: fingerprintSemanticAnalysisInputManifest(payload) };
 }

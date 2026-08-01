@@ -35,31 +35,6 @@ be a trusted decision-maker or a dependency of deterministic core validation.
 - A human may review candidates when AI is unavailable.
 - The model cannot approve, dismiss, waive, or merge.
 
-<a id="req-a76942a0"></a>
-
-## REQ-A76942A0 — Emit evidence-backed structured findings
-
-```sdd
-kind: invariant
-verification: automated
-```
-
-### Relations <!-- sdd:relations -->
-
-- refers-to: [CON-E2F84A01 — Finding](../../../spec/concepts/finding.md)
-
-### Statement <!-- sdd:statement -->
-
-Every model-assisted Finding shall satisfy a local schema and cite concrete
-object IDs and normative section IDs supporting its summary.
-
-### Acceptance criteria <!-- sdd:acceptance -->
-
-- Free-form hidden reasoning is not required or stored.
-- Confidence is informational and affects sorting only.
-- Malformed model output is rejected.
-- Finding IDs are derived deterministically from analyzer and input identity.
-
 <a id="req-20aaa622"></a>
 
 ## REQ-20AAA622 — Require human resolution of review findings
@@ -109,31 +84,6 @@ A semantic conflict Finding shall not accept a `waived` resolution.
 - A false conflict may be dismissed with reason.
 - A confirmed conflict remains blocked until the specification changes.
 - Waiver remains available only to explicitly eligible quality findings.
-
-<a id="req-adf9965a"></a>
-
-## REQ-ADF9965A — Invalidate resolutions when inputs change
-
-```sdd
-kind: invariant
-verification: automated
-```
-
-### Relations <!-- sdd:relations -->
-
-- refers-to: [CON-E2F84A01 — Finding](../../../spec/concepts/finding.md)
-- refers-to: [CON-FC16381E — Fingerprint](../../../spec/concepts/fingerprint.md)
-
-### Statement <!-- sdd:statement -->
-
-A Finding resolution shall be valid only for the exact Finding and input
-fingerprint it names.
-
-### Acceptance criteria <!-- sdd:acceptance -->
-
-- Changing any cited object invalidates the resolution.
-- The Finding is recomputed rather than permanently marked resolved.
-- Cached findings are keyed by analyzer version and full input fingerprint.
 
 <a id="req-2af962eb"></a>
 

@@ -29,7 +29,7 @@
     "proposal/spec/capabilities/merge-readiness.md#req-8e2d9a5f",
     "proposal/spec/capabilities/merge-readiness.md#req-3b9fc7ff",
     "proposal/spec/capabilities/merge-readiness.md#req-220945c2",
-    "proposal/spec/capabilities/semantic-review-and-conflicts.md#req-adf9965a",
+    "spec/capabilities/semantic-review-and-conflicts.md#req-adf9965a",
     "proposal/architecture/artifact-schemas.md#approvalevidence",
     "proposal/architecture/artifact-schemas.md#conflictreport-and-mergereport",
     "proposal/architecture/security.md#git-ref-movement",

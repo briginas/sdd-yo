@@ -87,3 +87,53 @@ scope.
 - Concept definition, identity, state vocabulary, and semantic relations
   participate in impact analysis.
 - Rationale, examples, and formatting do not expand impact.
+
+<a id="req-a76942a0"></a>
+
+## REQ-A76942A0 — Emit evidence-backed structured findings
+
+```sdd
+kind: invariant
+verification: automated
+```
+
+### Relations <!-- sdd:relations -->
+
+- refers-to: [CON-E2F84A01 — Finding](../concepts/finding.md)
+
+### Statement <!-- sdd:statement -->
+
+Every model-assisted Finding shall satisfy a local schema and cite concrete
+object IDs and normative section IDs supporting its summary.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- Free-form hidden reasoning is not required or stored.
+- Confidence is informational and affects sorting only.
+- Malformed model output is rejected.
+- Finding IDs are derived deterministically from analyzer and input identity.
+
+<a id="req-adf9965a"></a>
+
+## REQ-ADF9965A — Invalidate resolutions when inputs change
+
+```sdd
+kind: invariant
+verification: automated
+```
+
+### Relations <!-- sdd:relations -->
+
+- refers-to: [CON-E2F84A01 — Finding](../concepts/finding.md)
+- refers-to: [CON-FC16381E — Fingerprint](../concepts/fingerprint.md)
+
+### Statement <!-- sdd:statement -->
+
+A Finding resolution shall be valid only for the exact Finding and input
+fingerprint it names.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- Changing any cited object invalidates the resolution.
+- The Finding is recomputed rather than permanently marked resolved.
+- Cached findings are keyed by analyzer version and full input fingerprint.
