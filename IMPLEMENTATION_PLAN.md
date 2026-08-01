@@ -35,10 +35,16 @@ bounded JSONL and JUnit discovery import, normalized suite inheritance, and
 deterministic version 1 TestIndex output, TestIndex-backed trace, and
 verification fingerprints and deltas, deterministic affected Requirement and
 Capability scope, and bounded execution/QA evidence validation are implemented.
-The runtime implements deterministic mechanical ProposalPackage generation,
-package-bound read-only preparation, ConflictReport output, and exact SpecPatch
-generation through the public `proposal prepare` command. Patch application and
-Verification and Merge gates remain unimplemented.
+The runtime also implements deterministic ProposalPackage generation with
+semantic review candidates, approval-bound preparation and ConflictReport
+output, exact SpecPatch generation, and guarded atomic patch application.
+Approval, governance, QA, execution, finding, resolution, and human-review
+evidence feed deterministic VerificationReport and MergeReport composition.
+The public CLI exposes proposal validation, preparation, and application,
+finding validation, and advisory merge checking with versioned JSON and
+replaceable human output. It does not create branches, commits, tags, pushes,
+merges, approvals, or QA decisions. Cross-platform reproducibility evidence
+and enforced merge policy remain deferred.
 Unimplemented target behavior remains under `proposal/spec/` and is promoted
 only in verified bounded subsets.
 
