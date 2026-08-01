@@ -405,6 +405,9 @@ A VerificationReport binds the same selected project to exact head,
 integration, configuration, and affected-scope fingerprints. It reports
 affected Requirement and Capability IDs, satisfied and unsatisfied test,
 manual, and QA checks, Finding states, diagnostics, and one gate status.
+The status composition gives any definite blocker precedence over pending
+human decisions; absent blockers, missing current human decisions yield
+`REVIEW_REQUIRED`, otherwise the result is `PASS`.
 
 A MergeReport contains:
 

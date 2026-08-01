@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 6 / Evidence, findings, and merge readiness
-- Current leaf: 6.6 — Verification Gate and VerificationReport
+- Current leaf: 6.7 — Merge Gate and deterministic MergeReport
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -720,13 +720,16 @@ Bounded leaves:
       withhold SpecPatch for review-required or blocked preparation. Target
       Requirements: `REQ-AFD65A03`, `REQ-7341DBB7`, `REQ-A8739118`. Promote
       `REQ-AFD65A03` and `REQ-A8739118`; `REQ-7341DBB7` was promoted in 6.1.
-- [ ] **6.6 — Verification Gate and VerificationReport.** Compose affected
+- [x] **6.6 — Verification Gate and VerificationReport.** Compose affected
       scope, TestIndex, execution evidence, manual Requirement decisions, QA,
       and finding state into deterministic satisfied/unsatisfied partitions,
       stable diagnostics, blocker precedence, and exactly one readiness
       status. Target Requirements: `REQ-E451458E`, `REQ-5A832396`,
       `REQ-CDE94D0B`, `REQ-C11ACC55`, `REQ-20AAA622`, `REQ-2AF962EB`,
-      `REQ-BCFA15D8`.
+      `REQ-BCFA15D8`. Promote `REQ-E451458E`, `REQ-5A832396`,
+      `REQ-CDE94D0B`, `REQ-89AFB91E`, `REQ-C11ACC55`, `REQ-20AAA622`,
+      `REQ-FB66E5D6`, and `REQ-2AF962EB`. `REQ-BCFA15D8` remains proposed
+      until its Merge Gate claim is composed in 6.7.
 - [ ] **6.7 — Merge Gate and deterministic MergeReport.** Accept explicit
       versioned inputs, resolve current refs, require complete strict history,
       recompute conflicts and affected scope, enforce mode-specific current
@@ -801,8 +804,8 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`6.6 — Verification Gate and VerificationReport` is active. It composes
-affected scope, TestIndex, execution evidence, manual Requirement decisions,
-QA, and finding state into deterministic partitions and one readiness status.
-It does not prepare or apply patches, compose MergeReport, add unrelated CLI
-operations, or perform Git side effects.
+`6.7 — Merge Gate and deterministic MergeReport` is active. It accepts
+explicit versioned inputs, resolves current refs, recomputes governed scope and
+evidence state, and emits one reproducible readiness report. It does not mutate
+Git, merge branches, apply patches, create approvals, or add unrelated CLI
+operations.

@@ -161,3 +161,79 @@ fingerprint it names.
 - Changing any cited object invalidates the resolution.
 - The Finding is recomputed rather than permanently marked resolved.
 - Cached findings are keyed by analyzer version and full input fingerprint.
+
+<a id="req-20aaa622"></a>
+
+## REQ-20AAA622 — Require human resolution of review findings
+
+```sdd
+kind: invariant
+verification: manual
+```
+
+### Relations <!-- sdd:relations -->
+
+- refers-to: [CON-E2F84A01 — Finding](../concepts/finding.md)
+- refers-to: [CON-4365C0F6 — Evidence](../concepts/evidence.md)
+
+### Statement <!-- sdd:statement -->
+
+Every open semantic or quality Finding required by a gate shall receive a
+current human decision before the gate can pass.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- Supported decisions are `dismissed`, eligible `waived`, and `confirmed`.
+- A reason is required for dismissal and waiver.
+- A confirmed issue blocks until the relevant input changes and analysis is
+  rerun.
+
+<a id="req-fb66e5d6"></a>
+
+## REQ-FB66E5D6 — Prohibit semantic conflict waivers
+
+```sdd
+kind: constraint
+verification: automated
+```
+
+### Relations <!-- sdd:relations -->
+
+- refers-to: [CON-E2F84A01 — Finding](../concepts/finding.md)
+- depends-on: [REQ-20AAA622 — Require human resolution of review findings](semantic-review-and-conflicts.md#req-20aaa622)
+
+### Statement <!-- sdd:statement -->
+
+A semantic conflict Finding shall not accept a `waived` resolution.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- A false conflict may be dismissed with reason.
+- A confirmed conflict remains blocked until the specification changes.
+- Waiver remains available only to explicitly eligible quality findings.
+
+<a id="req-2af962eb"></a>
+
+## REQ-2AF962EB — Require review when semantic analysis is unavailable
+
+```sdd
+kind: constraint
+verification: manual
+```
+
+### Relations <!-- sdd:relations -->
+
+- refers-to: [CON-E2F84A01 — Finding](../concepts/finding.md)
+- depends-on: [REQ-18F84CE2 — Keep AI semantic analysis optional](semantic-review-and-conflicts.md#req-18f84ce2)
+
+### Statement <!-- sdd:statement -->
+
+When semantic review is required and no model analysis is available, the gate
+shall return `REVIEW_REQUIRED` until a human provides equivalent review
+evidence.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- AI unavailability is not treated as a structural failure.
+- The core does not silently skip required semantic review.
+- Human review evidence names the candidate input fingerprint.

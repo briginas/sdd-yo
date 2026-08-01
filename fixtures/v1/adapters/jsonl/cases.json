@@ -26,8 +26,8 @@
   "authorities": [
     "spec/capabilities/test-traceability-and-qa.md#req-12e19d70",
     "spec/capabilities/test-traceability-and-qa.md#req-f7cee6d0",
-    "proposal/spec/capabilities/test-traceability-and-qa.md#req-e451458e",
-    "proposal/spec/capabilities/test-traceability-and-qa.md#req-5a832396",
+    "spec/capabilities/test-traceability-and-qa.md#req-e451458e",
+    "spec/capabilities/test-traceability-and-qa.md#req-5a832396",
     "proposal/spec/capabilities/test-traceability-and-qa.md#req-20f8ca5c",
     "spec/capabilities/test-traceability-and-qa.md#req-72ba737c",
     "proposal/architecture/test-adapters.md#normalized-discovery-protocol",
