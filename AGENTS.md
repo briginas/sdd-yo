@@ -145,6 +145,7 @@ pass.
 
 ## Design preferences
 
+- Always lay out diagrams vertically, with steps flowing from top to bottom.
 - Prefer explicit typed values over hidden workflow state.
 - Prefer pure functions for parsing, canonicalization, graph operations,
   fingerprints, and gate decisions.
