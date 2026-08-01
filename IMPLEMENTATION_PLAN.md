@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 6 / Evidence, findings, and merge readiness
-- Current leaf: 6.2 — Deterministic semantic candidates and input manifest
+- Current leaf: 6.3 — Findings and human semantic decisions
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -685,13 +685,16 @@ Bounded leaves:
       governance-subject, issuer, freshness, and decision assessment to the
       remaining Requirements; their gate-composition claims remain proposed
       until 6.3, 6.5, and 6.7.
-- [ ] **6.2 — Deterministic semantic candidates and input manifest.** Generate
+- [x] **6.2 — Deterministic semantic candidates and input manifest.** Generate
       stable candidates from overlapping object changes, shared Concepts,
       Requirement dependencies, deletions, and incompatible graph operations;
       expand Concept impact; select only the required normative sections; and
       fingerprint a deterministic SemanticAnalysisInputManifest. Do not call a
       model or declare a semantic conflict. Target Requirements:
       `REQ-DFF6BFA6`, `REQ-04F23007`, `REQ-B5815BB5`, `REQ-18F84CE2`.
+      Promote `REQ-DFF6BFA6`, `REQ-04F23007`, and `REQ-B5815BB5`.
+      `REQ-18F84CE2` remains proposed until model-unavailable human-review
+      composition is complete in 6.3 and 6.4.
 - [ ] **6.3 — Findings and human semantic decisions.** Strictly parse and
       validate Finding, FindingResolution, and HumanSemanticReviewEvidence;
       derive Finding IDs from analyzer and input identity; require concrete
@@ -792,8 +795,8 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`6.2 — Deterministic semantic candidates and input manifest` is active. It
-adds deterministic candidate generation, Concept impact, bounded normative
-context selection, and SemanticAnalysisInputManifest fingerprinting. It does
-not call a model, validate Finding-family artifacts, compose gate reports, add
-CLI operations, or perform Git side effects.
+`6.3 — Findings and human semantic decisions` is active. It adds strict
+Finding-family parsing, deterministic Finding identity and citations,
+resolution eligibility and freshness, and exact human semantic-review
+evidence. It does not call a model, compose gate reports, add CLI operations,
+or perform Git side effects.

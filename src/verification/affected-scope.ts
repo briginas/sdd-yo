@@ -98,7 +98,9 @@ export function computeAffectedScope(input: {
   }
 
   const changedConceptIds = new Set(
-    delta.semantic.entries.filter((entry) => entry.type === "concept").map((entry) => entry.id),
+    [...delta.semantic.entries, ...delta.structural.entries]
+      .filter((entry) => entry.type === "concept")
+      .map((entry) => entry.id),
   );
   for (const requirement of conceptImpact(input.before, input.after, changedConceptIds)) requirements.add(requirement);
   expandDependents(input.after, requirements);
