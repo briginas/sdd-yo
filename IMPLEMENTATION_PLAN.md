@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 3 / Initialization, IDs, trace, and diff
-- Current leaf: 3.4 Semantic and structural diff
+- Current leaf: 3.4b Git-ref diff and validate --changed-from CLI
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -521,11 +521,13 @@ Mode: `spec-code`.
       reverse-relation queries from `inspect`; implement ownership, transitive
       dependency/dependent closure, direct referrers, and graph-only `trace`
       without executing or claiming tests. Promote `REQ-24073D4F`.
-- [ ] **3.4 — Semantic and structural diff.** Implement canonical object-delta
-      entries, bytes, and fingerprints from two validated graphs, then expose
-      Git-ref-backed `validate --changed-from` and `diff`. Report unavailable
-      verification separately from an available empty delta and emit no
-      approval or review conclusion. Promote `REQ-24A372E7`.
+- [x] **3.4a — Semantic and structural delta core.** Implement canonical
+      object-delta entries, bytes, and fingerprints from two validated graphs,
+      including exact empty classes and no verification-class claim.
+- [ ] **3.4b — Git-ref diff and validate comparison CLI.** Expose the delta
+      core through Git-ref-backed `validate --changed-from` and `diff`. Report
+      unavailable verification separately from an available empty delta and
+      emit no approval or review conclusion. Promote `REQ-24A372E7`.
 
 Primary target Requirements:
 `REQ-382BBBD6`, `REQ-BFC18F28`, `REQ-2C8E8085`, `REQ-8B656FC5`,
