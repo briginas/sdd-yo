@@ -100,6 +100,7 @@ test("bootstrap foundational generic envelopes and injected boundaries are struc
     listReachableRevisions: async () => [],
     listEntriesAt: async () => [],
     listFilesAt: async () => [],
+    readBlob: async () => new Uint8Array(),
     readFileAt: async () => undefined,
   } satisfies GitReader;
   const processRunner = {

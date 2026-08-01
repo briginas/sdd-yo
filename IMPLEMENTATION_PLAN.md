@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 3 / Initialization, IDs, trace, and diff
-- Current leaf: 3.2c Historical reservation and project identity
+- Current leaf: 3.2c2 Historical reservation and project identity
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -507,7 +507,11 @@ Mode: `spec-code`.
       argv-array Git adapter, resolve mutable refs once, read configured graphs
       from opaque object IDs, enumerate reachable history, and detect shallow
       or otherwise incomplete history without assuming a hash algorithm.
-- [ ] **3.2c — Historical reservation and project identity.** Define new IDs
+- [x] **3.2c1 — Canonical history index.** Build a fail-closed typed history
+      index from versioned project configs and validated canonical graphs,
+      retaining active-tip IDs separately from all reachable reserved IDs and
+      following stable project identity across directory or spec-root moves.
+- [ ] **3.2c2 — Historical reservation and project identity.** Define new IDs
       relative to the resolved integration history tip, reject typed canonical
       reuse and parallel collisions, validate manual IDs through the same path,
       and block duplicate project IDs in one repository. Wire project-aware

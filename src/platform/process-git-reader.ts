@@ -72,6 +72,11 @@ function parseTreeEntries(bytes: Uint8Array): readonly GitTreeEntry[] {
 }
 
 export function createProcessGitReader(runner: ProcessRunner, repositoryRoot: string): GitReader {
+  const readBlob = async (objectId: GitObjectId): Promise<Uint8Array> => {
+    const result = await runGit(runner, repositoryRoot, ["cat-file", "blob", objectId]);
+    if (result.exitCode !== 0) throw failure(result);
+    return result.standardOutput;
+  };
   const listEntriesAt = async (revision: GitObjectId, root?: ProjectPath): Promise<readonly GitTreeEntry[]> => {
     const result = await runGit(runner, repositoryRoot, [
       "ls-tree",
@@ -130,6 +135,7 @@ export function createProcessGitReader(runner: ProcessRunner, repositoryRoot: st
     listEntriesAt,
     listFilesAt: async (revision, root) =>
       (await listEntriesAt(revision, root)).filter((entry) => entry.kind === "file").map((entry) => entry.path),
+    readBlob,
     readFileAt: async (revision, path) => {
       const entries = await listEntriesAt(revision, path);
       const entry = entries.find((candidate) => candidate.path === path);
@@ -137,9 +143,7 @@ export function createProcessGitReader(runner: ProcessRunner, repositoryRoot: st
       if (entry.kind !== "file" && entry.kind !== "symbolic-link") {
         throw new GitReadError("GIT_OUTPUT_INVALID", "Requested Git path is not a blob.");
       }
-      const result = await runGit(runner, repositoryRoot, ["cat-file", "blob", entry.objectId]);
-      if (result.exitCode !== 0) throw failure(result);
-      return result.standardOutput;
+      return readBlob(entry.objectId);
     },
   };
 }

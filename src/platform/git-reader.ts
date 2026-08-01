@@ -8,6 +8,7 @@ export type GitReader = {
   listReachableRevisions(revision: GitObjectId): Promise<readonly GitObjectId[]>;
   listEntriesAt(revision: GitObjectId, root?: ProjectPath): Promise<readonly GitTreeEntry[]>;
   listFilesAt(revision: GitObjectId, root: ProjectPath): Promise<readonly ProjectPath[]>;
+  readBlob(objectId: GitObjectId): Promise<Uint8Array>;
   readFileAt(revision: GitObjectId, path: ProjectPath): Promise<Uint8Array | undefined>;
 };
 
