@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 5 / Proposal and exact patch
-- Current leaf: 5.3 Exact create/replace/delete SpecPatch
+- Current leaf: 5.4 Safe all-or-nothing proposal apply
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -35,10 +35,10 @@ bounded JSONL and JUnit discovery import, normalized suite inheritance, and
 deterministic version 1 TestIndex output, TestIndex-backed trace, and
 verification fingerprints and deltas, deterministic affected Requirement and
 Capability scope, and bounded execution/QA evidence validation are implemented.
-The runtime implements deterministic mechanical ProposalPackage generation and
-the package-bound read-only preparation core with ConflictReport output. The
-public preparation CLI, exact patches, and Verification and Merge gates remain
-unimplemented.
+The runtime implements deterministic mechanical ProposalPackage generation,
+package-bound read-only preparation, ConflictReport output, and exact SpecPatch
+generation through the public `proposal prepare` command. Patch application and
+Verification and Merge gates remain unimplemented.
 Unimplemented target behavior remains under `proposal/spec/` and is promoted
 only in verified bounded subsets.
 
@@ -623,7 +623,7 @@ Mode: `spec-code`.
       semantic candidates, compose `REQ-A8739118`, or emit a SpecPatch yet.
       This leaf contributes the comparison and conflict-analysis portion of
       `REQ-964B9F80` without promoting it.
-- [ ] **5.3 — Exact create/replace/delete SpecPatch.** Convert a clean prepared
+- [x] **5.3 — Exact create/replace/delete SpecPatch.** Convert a clean prepared
       tree into deterministically path-sorted exact file operations with before
       and after hashes and whole-tree fingerprints. Do not apply the patch or
       add fuzzy, partial, force, Git-write, or approval behavior. Promote

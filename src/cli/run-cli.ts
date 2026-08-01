@@ -41,16 +41,41 @@ import {
   validateTestIndexSubject,
 } from "../tests/index.ts";
 import type { TestIndex } from "../tests/index.ts";
-import { parseCodeTarget, parseProposalMode, ProposalValidationError, validateProposal } from "../proposal/index.ts";
-import type { ProposalMode, ProposalPackage } from "../proposal/index.ts";
+import {
+  generateSpecPatch,
+  importProposalPackage,
+  parseCodeTarget,
+  parseProposalMode,
+  prepareProposal,
+  ProposalInputError,
+  ProposalPackageInputError,
+  ProposalPreparationError,
+  ProposalValidationError,
+  validateProposal,
+} from "../proposal/index.ts";
+import type { ConflictReport, ProposalMode, ProposalPackage, SpecPatch } from "../proposal/index.ts";
 
 export const VALID_EXIT_CODE = 0 as const;
 export const BLOCKED_EXIT_CODE = 1 as const;
+export const REVIEW_REQUIRED_EXIT_CODE = 2 as const;
 export const TECHNICAL_FAILURE_EXIT_CODE = 3 as const;
 
-type ExitCode = typeof VALID_EXIT_CODE | typeof BLOCKED_EXIT_CODE | typeof TECHNICAL_FAILURE_EXIT_CODE;
+type ExitCode =
+  | typeof VALID_EXIT_CODE
+  | typeof BLOCKED_EXIT_CODE
+  | typeof REVIEW_REQUIRED_EXIT_CODE
+  | typeof TECHNICAL_FAILURE_EXIT_CODE;
 type OutputFormat = "human" | "json";
-type Command = "init" | "id" | "validate" | "inspect" | "trace" | "diff" | "tests.discover" | "proposal.validate";
+type Command =
+  | "init"
+  | "id"
+  | "validate"
+  | "inspect"
+  | "trace"
+  | "diff"
+  | "tests.discover"
+  | "proposal.validate"
+  | "proposal.prepare";
 type ResponseCommand = Command | "unknown";
 
 export type CliRuntime = {
@@ -94,6 +119,9 @@ type Invocation = {
   readonly proposalMode?: ProposalMode;
   readonly candidatePath?: string;
   readonly codeTargets: readonly RequirementId[];
+  readonly packagePath?: string;
+  readonly branchHeadRef?: string;
+  readonly integrationRef?: string;
 };
 
 export type InitResult = {
@@ -168,6 +196,11 @@ export type CliResponse =
   | CliResponseEnvelope<"diff", "ok", DiffResult>
   | CliResponseEnvelope<"tests.discover", "ok", TestIndex>
   | CliResponseEnvelope<"proposal.validate", "ok", ProposalPackage>
+  | CliResponseEnvelope<
+      "proposal.prepare",
+      "ok" | "review_required",
+      { readonly conflict_report: ConflictReport; readonly spec_patch: SpecPatch | null }
+    >
   | CliResponseEnvelope<Command, "blocked", { readonly valid: false } | null>
   | CliResponseEnvelope<ResponseCommand, "error", null>;
 
@@ -187,8 +220,8 @@ function parseInvocation(
   const command: string | undefined =
     argv[0] === "tests" && argv[1] === "discover"
       ? "tests.discover"
-      : argv[0] === "proposal" && argv[1] === "validate"
-        ? "proposal.validate"
+      : argv[0] === "proposal" && (argv[1] === "validate" || argv[1] === "prepare")
+        ? `proposal.${argv[1]}`
         : argv[0];
   if (
     command !== "init" &&
@@ -198,7 +231,8 @@ function parseInvocation(
     command !== "trace" &&
     command !== "diff" &&
     command !== "tests.discover" &&
-    command !== "proposal.validate"
+    command !== "proposal.validate" &&
+    command !== "proposal.prepare"
   )
     return {
       ok: false,
@@ -234,8 +268,12 @@ function parseInvocation(
   let proposalMode: ProposalMode | undefined;
   let candidatePath: string | undefined;
   const codeTargets: RequirementId[] = [];
+  let packagePath: string | undefined;
+  let branchHeadRef: string | undefined;
+  let integrationRef: string | undefined;
   for (
-    let index = command === "tests.discover" || command === "proposal.validate" ? 2 : 1;
+    let index =
+      command === "tests.discover" || command === "proposal.validate" || command === "proposal.prepare" ? 2 : 1;
     index < argv.length;
     index += 1
   ) {
@@ -263,7 +301,10 @@ function parseInvocation(
       argument === "--target-test-index" ||
       argument === "--mode" ||
       argument === "--candidate" ||
-      argument === "--code-target"
+      argument === "--code-target" ||
+      argument === "--package" ||
+      argument === "--branch-head" ||
+      argument === "--integration-ref"
     ) {
       const value = argv[index + 1];
       if (value === undefined)
@@ -276,7 +317,30 @@ function parseInvocation(
           ),
         };
       index += 1;
-      if (argument === "--mode") {
+      if (argument === "--package") {
+        if (value.length === 0 || value.includes("\0"))
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_PREPARE_PACKAGE_PATH_INVALID",
+              "The ProposalPackage path is invalid.",
+              "Supply a regular ProposalPackage JSON file.",
+            ),
+          };
+        packagePath = value;
+      } else if (argument === "--branch-head" || argument === "--integration-ref") {
+        if (value.length === 0 || value.includes("\0"))
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_GIT_REF_INVALID",
+              "A preparation Git ref is invalid.",
+              "Supply a non-empty Git ref.",
+            ),
+          };
+        if (argument === "--branch-head") branchHeadRef = value;
+        else integrationRef = value;
+      } else if (argument === "--mode") {
         proposalMode = parseProposalMode(value);
         if (proposalMode === undefined)
           return {
@@ -555,6 +619,7 @@ function parseInvocation(
     };
   if (
     command !== "proposal.validate" &&
+    command !== "proposal.prepare" &&
     (proposalMode !== undefined || candidatePath !== undefined || codeTargets.length > 0)
   )
     return {
@@ -563,6 +628,45 @@ function parseInvocation(
         "SDD_CONFIG_CLI_ARGUMENT_INVALID",
         "A proposal option was used with another command.",
         "Use proposal options only with sdd proposal validate.",
+      ),
+    };
+  if (
+    command === "proposal.prepare" &&
+    (packagePath === undefined ||
+      candidatePath === undefined ||
+      branchHeadRef === undefined ||
+      integrationRef === undefined)
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_PREPARE_INPUTS_REQUIRED",
+        "proposal prepare requires package, candidate, branch-head, and integration-ref inputs.",
+        "Supply --package, --candidate, --branch-head, and --integration-ref.",
+      ),
+    };
+  if (
+    command === "proposal.prepare" &&
+    (proposalMode !== undefined || codeTargets.length > 0 || baseRef !== undefined || targetRef !== undefined)
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "A proposal validation or diff option was used with proposal prepare.",
+        "Use only preparation inputs with sdd proposal prepare.",
+      ),
+    };
+  if (
+    command !== "proposal.prepare" &&
+    (packagePath !== undefined || branchHeadRef !== undefined || integrationRef !== undefined)
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "A proposal preparation option was used with another command.",
+        "Use preparation options only with sdd proposal prepare.",
       ),
     };
   if (command !== "trace" && traceRef !== undefined)
@@ -688,6 +792,9 @@ function parseInvocation(
       ...(proposalMode === undefined ? {} : { proposalMode }),
       ...(candidatePath === undefined ? {} : { candidatePath }),
       codeTargets,
+      ...(packagePath === undefined ? {} : { packagePath }),
+      ...(branchHeadRef === undefined ? {} : { branchHeadRef }),
+      ...(integrationRef === undefined ? {} : { integrationRef }),
     },
   };
 }
@@ -932,6 +1039,20 @@ function humanView(value: CliResponse): string {
       `structural: ${result.object_delta.structural_fingerprint}`,
       `affected requirements: ${result.affected_scope.requirements.join(", ") || "none"}`,
     );
+  } else if (value.command === "proposal.prepare" && (value.status === "ok" || value.status === "review_required")) {
+    const result = value.result as { readonly conflict_report: ConflictReport; readonly spec_patch: SpecPatch | null };
+    lines.push(
+      `branch head: ${result.conflict_report.branch_head}`,
+      `integration: ${result.conflict_report.integration_ref}`,
+      `conflicts: ${result.conflict_report.mechanical_conflicts.length}`,
+      result.spec_patch === null
+        ? "spec patch: unavailable"
+        : `spec patch operations: ${result.spec_patch.operations.length}`,
+    );
+    for (const conflict of result.conflict_report.mechanical_conflicts)
+      lines.push(
+        `conflict: ${conflict.path} (${conflict.kind})${conflict.object_id === undefined ? "" : ` ${conflict.object_id}`}`,
+      );
   }
   for (const diagnostic of value.diagnostics)
     lines.push(`${diagnostic.severity.toUpperCase()} ${diagnostic.code}: ${diagnostic.message}`);
@@ -1108,8 +1229,8 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
   const inferredCommand: ResponseCommand =
     runtime.argv[0] === "tests" && runtime.argv[1] === "discover"
       ? "tests.discover"
-      : runtime.argv[0] === "proposal" && runtime.argv[1] === "validate"
-        ? "proposal.validate"
+      : runtime.argv[0] === "proposal" && (runtime.argv[1] === "validate" || runtime.argv[1] === "prepare")
+        ? `proposal.${runtime.argv[1]}`
         : runtime.argv[0] === "init" ||
             runtime.argv[0] === "id" ||
             runtime.argv[0] === "inspect" ||
@@ -1304,6 +1425,104 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
       return TECHNICAL_FAILURE_EXIT_CODE;
     }
     const outputTarget = selectedOutput?.target;
+    if (invocation.command === "proposal.prepare") {
+      try {
+        if (
+          invocation.packagePath === undefined ||
+          invocation.candidatePath === undefined ||
+          invocation.branchHeadRef === undefined ||
+          invocation.integrationRef === undefined
+        )
+          throw new Error("Parsed proposal preparation invocation is missing required inputs.");
+        const reader = await discoverProcessGitReader(runtime.processRunner, project.project_root);
+        const [packageValue, branchHead, integrationRef] = await Promise.all([
+          importProposalPackage(runtime.fileSystem, resolve(runtime.workingDirectory, invocation.packagePath)),
+          reader.resolveRevision(invocation.branchHeadRef),
+          reader.resolveRevision(invocation.integrationRef),
+        ]);
+        const prepared = await prepareProposal({
+          fileSystem: runtime.fileSystem,
+          gitReader: reader,
+          project,
+          package: packageValue,
+          candidatePath: resolve(runtime.workingDirectory, invocation.candidatePath),
+          branchHead,
+          integrationRef,
+        });
+        const specPatch =
+          prepared.prepared_tree === undefined
+            ? null
+            : generateSpecPatch({
+                project_id: project.configuration.project_id,
+                integration: prepared.integration_tree,
+                prepared: prepared.prepared_tree,
+              });
+        const status = specPatch === null ? "review_required" : "ok";
+        emit(
+          runtime,
+          invocation.format,
+          response(
+            "proposal.prepare",
+            project.configuration.project_id,
+            status,
+            { conflict_report: prepared.report, spec_patch: specPatch },
+            [],
+          ),
+          outputTarget,
+        );
+        return specPatch === null ? REVIEW_REQUIRED_EXIT_CODE : VALID_EXIT_CODE;
+      } catch (error) {
+        const mechanicalCode =
+          error instanceof ProposalPreparationError &&
+          [
+            "SDD_PREPARE_PACKAGE_PROJECT_MISMATCH",
+            "SDD_PREPARE_PACKAGE_BASE_UNBOUND",
+            "SDD_PREPARE_CANDIDATE_SOURCE_MISMATCH",
+            "SDD_PREPARE_PACKAGE_STALE",
+            "SDD_PREPARE_CANDIDATE_CHANGED",
+          ].includes(error.code);
+        const mechanicalValidation = error instanceof ProposalValidationError && !error.technical;
+        const mechanicalInput = error instanceof ProposalInputError && !error.technical;
+        if (mechanicalCode || mechanicalValidation || mechanicalInput) {
+          const diagnostic =
+            error instanceof ProposalValidationError
+              ? error.diagnostic
+              : cliDiagnostic(
+                  error instanceof ProposalPreparationError || error instanceof ProposalInputError
+                    ? error.code
+                    : "SDD_PREPARE_MECHANICAL_BLOCK",
+                  error instanceof Error ? error.message : "Preparation is mechanically blocked.",
+                  "Regenerate the ProposalPackage or restore its exact candidate and project bindings.",
+                );
+          emit(
+            runtime,
+            invocation.format,
+            response("proposal.prepare", project.configuration.project_id, "blocked", null, [diagnostic]),
+            outputTarget,
+          );
+          return BLOCKED_EXIT_CODE;
+        }
+        const diagnostic =
+          error instanceof ProposalPackageInputError
+            ? cliDiagnostic(
+                "SDD_PREPARE_PACKAGE_INVALID",
+                error.message,
+                "Supply a strict bounded version 1 ProposalPackage file.",
+              )
+            : error instanceof ProposalPreparationError
+              ? cliDiagnostic(error.code, error.message, "Correct the preparation inputs and run the command again.")
+              : error instanceof ProposalValidationError
+                ? error.diagnostic
+                : comparisonTechnicalDiagnostic(error);
+        emit(
+          runtime,
+          invocation.format,
+          response("proposal.prepare", project.configuration.project_id, "error", null, [diagnostic]),
+          outputTarget,
+        );
+        return TECHNICAL_FAILURE_EXIT_CODE;
+      }
+    }
     if (invocation.command === "proposal.validate") {
       try {
         if (

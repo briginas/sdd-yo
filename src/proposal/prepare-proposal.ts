@@ -40,6 +40,7 @@ export type ConflictReport = {
 
 export type PreparedProposal = {
   readonly report: ConflictReport;
+  readonly integration_tree: SpecificationTree;
   readonly prepared_tree?: SpecificationTree;
 };
 
@@ -376,9 +377,13 @@ export async function prepareProposal(input: {
     semantic_candidates: [],
     input_fingerprint: inputFingerprint,
   };
-  if (conflicts.length > 0) return { report };
+  if (conflicts.length > 0) return { report, integration_tree: integration };
   try {
-    return { report, prepared_tree: buildSpecificationTree(merged.files, input.project.configuration) };
+    return {
+      report,
+      integration_tree: integration,
+      prepared_tree: buildSpecificationTree(merged.files, input.project.configuration),
+    };
   } catch {
     throw new ProposalPreparationError(
       "SDD_PREPARE_RESULT_GRAPH_INVALID",

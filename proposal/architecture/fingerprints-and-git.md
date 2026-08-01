@@ -291,8 +291,9 @@ project configuration. `input_fingerprint` applies it to this exact value:
 Because keys are recursively sorted before encoding, their presentation order
 above is explanatory rather than byte-significant. Conflict entries are
 deduplicated and sorted by `path`, `kind`, then optional `object_id`.
-Milestone 5.2 always emits `semantic_candidates: []` and does not emit a
-SpecPatch or approval conclusion.
+Mechanical preparation always emits `semantic_candidates: []` and makes no
+approval conclusion. The public preparation command emits a SpecPatch only
+for a conflict-free validated prepared tree.
 
 ## SpecPatch
 
@@ -317,6 +318,15 @@ SpecPatch or approval conclusion.
 
 The complete machine contract is defined in
 [Workflow artifacts and schemas](artifact-schemas.md).
+
+Generation compares the current integration specification tree with the clean
+prepared tree over their complete path union. Paths are sorted by Unicode code
+point. A path only in the prepared tree emits `create`; a changed path in both
+trees emits `replace`; and a path only in integration emits `delete`.
+Unchanged files emit no operation. Create and replace carry exact UTF-8 content
+and its `after_sha256`; replace and delete carry the integration file's exact
+`before_sha256`. The two whole-tree fingerprints are copied from the validated
+integration and prepared trees.
 
 Application is fail-closed:
 

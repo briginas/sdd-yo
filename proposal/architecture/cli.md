@@ -46,6 +46,12 @@ General commands use:
 `2`. A crash, panic, uncaught exception, or incomplete result must never exit
 `0`.
 
+`proposal prepare` returns `0` with an exact SpecPatch when preparation is
+clean, `2` with `status: "review_required"` and a null patch when mechanical
+conflicts exist, `1` for stale or mismatched mechanical package bindings, and
+`3` for malformed inputs, I/O, unresolved refs, missing merge bases, or other
+technical failures.
+
 ## Commands
 
 ### `sdd init`
@@ -177,6 +183,19 @@ candidate-tree and object-delta fingerprints; `H` is `--branch-head`; and `M`
 is `--integration-ref`. It reads refs and candidate state but does not write
 them. ApprovalEvidence validation and approval-bound Branch Preparation Gate
 composition are separate Milestone 6 behavior.
+
+The stable result value is:
+
+```json
+{
+  "conflict_report": { "artifact_type": "conflict_report" },
+  "spec_patch": { "artifact_type": "spec_patch" }
+}
+```
+
+For a mechanical conflict the same shape is returned with
+`"spec_patch": null`, envelope status `review_required`, and exit code `2`.
+The clean and conflict results never modify the worktree or Git state.
 
 ### `sdd proposal apply`
 
