@@ -777,13 +777,30 @@ deferred.
 Mode: a sequence of `spec`, `spec-code`, and `code` Changes in fixture or
 external projects; SDD Yo remains advisory.
 
-- [ ] Onboard a small single-language project.
-- [ ] Onboard a polyglot or multi-framework project.
-- [ ] Onboard a monorepo with two independent SDD Projects.
-- [ ] Record setup time, adapter work, renamed tests, diagnostics, false review
-      candidates, and partial-adoption clarity.
-- [ ] Fix recurring problems through contracts, validators, documentation, or
-      evals.
+Bounded leaves:
+
+- [x] **7.0 — First-project and observation boundary.** Select
+      `/Users/dev.briginas/dev/yo` as the small single-language project, one
+      repository-wide SDD Project in `incremental` adoption, and the completed
+      approval-gated patch behavior as the first governed Capability. Its first
+      Change uses `spec` mode to baseline accepted existing behavior without a
+      runtime behavior change. Record the study under [`dogfood/yo/`](dogfood/yo/README.md).
+      This planning decision is not ApprovalEvidence, QAEvidence, or permission
+      to mutate `yo`.
+- [ ] **7.1 — Small single-language project.** Onboard `yo`, govern one real
+      Change end to end, and record setup, adapter, traceability, diagnostic,
+      review-candidate, comprehension, and partial-adoption observations.
+- [ ] **7.2 — Polyglot or multi-framework project.** Select and onboard one
+      existing project, then govern one real Change end to end and record the
+      same observation set.
+- [ ] **7.3 — Independent projects in a monorepo.** Select and onboard a
+      monorepo with two independent SDD Projects, govern one real Change, and
+      verify project and evidence isolation.
+- [ ] **7.4 — Dogfood synthesis.** Compare all three studies and identify
+      recurring rather than project-specific problems.
+- [ ] **7.5 — Recurring-problem fixes.** Correct confirmed recurring problems
+      through contracts, validators, documentation, or evals, with each fix
+      implemented and verified as its own bounded Change.
 
 ## Milestone 8 — Agent Skill
 
@@ -822,8 +839,9 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 6 is complete. Before starting Milestone 7, select the first external
-or fixture project, define which SDD Project scope and synchronization mode its
-first Change will exercise, and agree where dogfood observations will be
-recorded. No onboarding, repository mutation, or dogfood QA decision begins
-until that bounded project and evidence boundary is chosen.
+Milestone 7.0 is complete. Clarify and approve the first independently
+verifiable onboarding leaf within 7.1 before changing `yo`. The candidate leaf
+may initialize `/Users/dev.briginas/dev/yo` in `incremental` adoption and
+record setup results, but it must not yet define the first governed Capability,
+rename tests, create dogfood approval or QA evidence, or change runtime
+behavior.
