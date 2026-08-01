@@ -10,8 +10,9 @@
 - First governed Capability: the completed approval-gated exact patch behavior.
 - Onboarding status: incremental SDD Project initialized; first baseline
   contract clarified; Node JUnit root-test compatibility verified in SDD Yo;
-  first governed Capability authored and test-traceable; human evidence and
-  gates not yet run.
+  first governed Capability authored and test-traceable; deterministic
+  ProposalPackage validated and its exact approval subject recorded; human
+  evidence and gates not yet run.
 
 The repository owner selected this study boundary on 2026-08-01. That planning
 decision is not SDD ApprovalEvidence, QAEvidence, a gate result, or permission
@@ -180,6 +181,51 @@ top-level tests. Project formatting passed after temporary reports were
 removed. The temporary candidate repository, JUnit report, and TestIndex were
 deleted; no ApprovalEvidence, TestExecutionEvidence, QAEvidence, or gate result
 was created.
+
+## Proposal validation and approval subject result
+
+Milestone 7.1e built the current local SDD Yo CLI and mechanically validated
+the committed `yo` baseline candidate with:
+
+```text
+node /Users/dev.briginas/dev/sdd-yo/dist/bin/sdd.js proposal validate \
+  --mode spec \
+  --base 84133ed37f470040aa829bef393197697934fa9e \
+  --candidate /Users/dev.briginas/dev/yo \
+  --format json
+```
+
+The base is the committed initialized empty SDD Project. The candidate is the
+clean `yo` worktree at
+`7d8422824ab8cddb9df730232e476759af070aea`. Two independent stdout runs each
+exited 0 and produced byte-identical 1,139-byte JSON responses with status
+`ok`, no diagnostics, and this exact ProposalPackage subject:
+
+- project: `SDD-4A2395B6`;
+- mode: `spec`;
+- base tree:
+  `sha256:97ad08de035888c1cc13e58f668195d1cb0936b4b0df26440558c043737c189f`;
+- candidate tree:
+  `sha256:921632dd7d44d238df535c733ee09763c78b234f098708d4005365c51ae68278`;
+- semantic delta:
+  `sha256:9d7bbfed46510a6812a346e4d33e5032efa06e5dba70e96c2d3989b10b75195e`;
+- structural delta:
+  `sha256:ab6e6aa2c9a40b609471371e7816d9a337dd192561a568b6367d2806cbc01bbe`;
+- affected scope:
+  `sha256:0ba8c31e9565ae587084aaeefa776e9ba955eecd1e32ef39e6f6978d2b4ed4bc`.
+
+The object delta adds exactly `CAP-7E001BA8` and its five selected
+Requirements, with no modified or deleted SDD objects. The affected scope is
+the same Capability and five Requirements. `code_targets` and deterministic
+`semantic_candidates` are empty, as expected for this baseline package.
+
+The CLI also rejected an attempted absolute `--output` path outside `yo` with
+`SDD_CONFIG_CLI_OUTPUT_INVALID`, preserving its project-scope write boundary.
+The successful validation therefore used stdout and did not retain a package
+file or modify `yo`. Mechanical validity does not confirm that the described
+existing behavior deserves canonical status. The next leaf requires the
+actual Spec Approver to decide that question and supply any resulting
+ApprovalEvidence; no such evidence or gate result exists yet.
 
 ## Initialization result
 

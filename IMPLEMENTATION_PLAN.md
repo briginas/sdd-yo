@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 7 / Existing-project dogfood
-- Current leaf: Milestone 7.1 continuation clarification after baseline authoring
+- Current leaf: Milestone 7.1 external Spec Approver decision after proposal validation
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -823,6 +823,20 @@ Bounded leaves:
         candidate graph, unchanged runtime suite, formatting, and TestIndex.
         Do not change runtime behavior, fabricate human evidence, or run the
         Approval, Verification, or Merge gates in this authoring leaf.
+  - [x] **7.1e — Mechanical proposal and approval subject.** Validate the
+        committed baseline candidate in `spec` mode against the initialized
+        empty-project base, confirm deterministic ProposalPackage output and
+        the exact semantic and structural delta fingerprints, and record the
+        review handoff without writing to `yo`. Do not create ApprovalEvidence,
+        TestExecutionEvidence, or QAEvidence, run a later gate, or infer that
+        mechanically valid specification text describes accepted behavior.
+  - [ ] **7.1f — External specification approval.** Present the exact 7.1e
+        ProposalPackage subject to the actual Spec Approver, record the
+        external decision as project-scoped ApprovalEvidence from the
+        configured `local-product-review` issuer, and validate that evidence
+        against the unchanged candidate. Do not infer approval from repository
+        ownership, this plan, the authored specification, or passing tests;
+        defer TestExecutionEvidence, baseline QA, and all later gates.
 - [ ] **7.2 — Polyglot or multi-framework project.** Select and onboard one
       existing project, then govern one real Change end to end and record the
       same observation set.
@@ -872,8 +886,8 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 7.1d is complete. Before creating ApprovalEvidence, QAEvidence, or
-running any Approval, Verification, or Merge gate, clarify and approve the
-next bounded 7.1 leaf for governing the baseline Change through the remaining
-external human decisions. Keep SDD Yo advisory and do not infer evidence from
-the authored specification, passing suite, repository ownership, or this plan.
+Milestone 7.1e is complete. The next bounded leaf is 7.1f: obtain the actual
+Spec Approver decision for the exact recorded `spec` proposal subject and
+validate its project-scoped ApprovalEvidence. Keep SDD Yo advisory; do not
+create test or QA evidence, run later gates, or infer approval from the
+authored specification, passing suite, repository ownership, or this plan.
