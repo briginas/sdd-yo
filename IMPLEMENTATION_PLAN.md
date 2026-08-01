@@ -29,10 +29,13 @@ of:
 The repository contains an approved target specification and architecture, a
 Stage 0 bootstrap verifier, a testable TypeScript library package, generated
 contract types, configuration and Markdown parsing, graph validation, the
-first implemented canonical `spec/` subset, and safe `sdd` executable wiring.
-The executable still reports a technical-unavailable failure because no
-product command is implemented. Unimplemented target behavior remains under
-`proposal/spec/` and is promoted only in verified bounded subsets.
+first implemented canonical `spec/` subset, and implemented `sdd init`, `id`,
+`validate`, `inspect`, `trace`, and `diff` operations. Test adapter declarations
+are parsed from project configuration and their version 1 contracts and Stage 0
+fixtures exist, but the runtime does not yet import test discovery, build a
+TestIndex, compute affected QA scope, or validate test and QA evidence.
+Unimplemented target behavior remains under `proposal/spec/` and is promoted
+only in verified bounded subsets.
 
 The root commit is:
 
@@ -542,13 +545,20 @@ merge-history enforcement in `REQ-FDD51416` remains Milestone 6 work.
 
 Mode: `spec-code`.
 
-- [ ] Implement JSONL discovery import and command adapter boundary.
-- [ ] Implement JUnit-compatible import.
-- [ ] Build deterministic TestIndex and suite-name inheritance.
-- [ ] Enrich `trace` with mapped tests and add verification fingerprints and
-      verification deltas without changing graph-only trace semantics.
-- [ ] Compute affected Requirements and Capabilities.
-- [ ] Validate execution and QA evidence freshness and coverage.
+- [ ] **4.1 — JSONL discovery import and command adapter boundary.** Import
+      versioned discovery JSONL from project-scoped files and configured
+      argv-array commands, with bounded process and stream failure handling.
+      Do not import JUnit, build the project TestIndex, extract inherited
+      Requirement IDs, or handle execution and QA evidence in this leaf.
+- [ ] **4.2 — JUnit-compatible import.**
+- [ ] **4.3 — Deterministic TestIndex and suite-name inheritance.**
+- [ ] **4.4 — Test-backed trace and verification fingerprints.** Enrich `trace`
+      with mapped tests and add verification fingerprints and verification
+      deltas without changing graph-only trace semantics.
+- [ ] **4.5 — Affected verification and QA scope.** Compute affected
+      Requirements and Capabilities.
+- [ ] **4.6 — Execution and QA evidence validation.** Validate freshness and
+      coverage.
 
 Primary target Capability:
 `CAP-15DBC157`.
@@ -638,7 +648,9 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`Milestone 3.1 — Non-overwriting project initialization` is the only active
-implementation leaf. It must implement the bounded `sdd init` operation without
-overwriting existing project files; random ID generation, history checks,
-trace, and diff remain later leaves within Milestone 3.
+`Milestone 4.1 — JSONL discovery import and command adapter boundary` is the
+only active implementation leaf. It imports versioned discovery JSONL from
+project-scoped files and configured argv-array commands, including bounded
+process and stream failure handling. JUnit import, the project TestIndex,
+Requirement-ID inheritance, test-backed trace and fingerprints, affected scope,
+and execution and QA evidence validation remain in Milestones 4.2 through 4.6.
