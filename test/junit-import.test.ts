@@ -11,6 +11,10 @@ async function fixture(name: string): Promise<Uint8Array> {
   return readFile(join("fixtures", "v1", "adapters", "junit", name));
 }
 
+async function runtimeFixture(name: string): Promise<Uint8Array> {
+  return readFile(join("test", "fixtures", "junit", name));
+}
+
 function path(value: string): ProjectPath {
   assert.ok(isProjectPath(value));
   return value;
@@ -59,6 +63,34 @@ describe("REQ-6D8DDDF7 JUnit-compatible import", () => {
       report.tests.map((item) => item.name),
       ["duplicate example", "duplicate example", "different case"],
     );
+  });
+
+  test("REQ-12E19D70 imports Node-style root testcases without inventing an ancestor suite", async () => {
+    const report = importJunitXml(
+      await runtimeFixture("node-mixed-report.xml"),
+      "unit",
+      path("reports/node.xml"),
+      limits,
+    );
+    assert.deepEqual(
+      report.suites.map((suite) => suite.name),
+      ["REQ-6D8DDDF7 nested Node suite"],
+    );
+    assert.deepEqual(
+      report.tests.map((item) => ({ name: item.name, parent_id: item.parent_id })),
+      [
+        {
+          name: "imports a nested Node test",
+          parent_id: report.suites[0]?.local_id,
+        },
+        {
+          name: "REQ-12E19D70 imports a top-level Node test",
+          parent_id: null,
+        },
+      ],
+    );
+    assert.equal(report.hierarchy.retained, false);
+    assert.deepEqual(report.hierarchy.diagnostics, ["SDD_ADAPTER_JUNIT_HIERARCHY_UNAVAILABLE"]);
   });
 
   test("derives stable opaque IDs from report, suite path, classname, name, and occurrence", async () => {

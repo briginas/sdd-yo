@@ -23,7 +23,7 @@ export type ImportedJunitSuite = {
 
 export type ImportedJunitTest = {
   readonly local_id: string;
-  readonly parent_id: string;
+  readonly parent_id: string | null;
   readonly name: string;
   readonly classname: string;
   readonly status: "failed" | "passed" | "skipped";
@@ -68,7 +68,7 @@ export class JunitImportError extends Error {
 
 type MutableTest = {
   local_id: string;
-  parent_id: string;
+  parent_id: string | null;
   name: string;
   classname: string;
   failed: boolean;
@@ -141,6 +141,7 @@ export function importJunitXml(
   let currentTest: MutableTest | undefined;
   let rootSeen = false;
   let nestedSuiteSeen = false;
+  let rootTestSeen = false;
   const parser = new SaxesParser();
   parser.on("doctype", () => {
     throw new JunitImportError("SDD_ADAPTER_JUNIT_DTD_FORBIDDEN", "JUnit reports cannot contain a DTD.");
@@ -189,19 +190,22 @@ export function importJunitXml(
         );
       }
       const suite = suiteStack.at(-1);
+      const parentElement = elementStack.at(-2);
       const name = attributeValue(tag.attributes, "name");
-      if (suite === undefined || name === undefined || name.includes("\0")) {
+      if ((suite === undefined && parentElement !== "testsuites") || name === undefined || name.includes("\0")) {
         throw new JunitImportError("SDD_ADAPTER_JUNIT_MALFORMED_XML", "JUnit testcase placement or name is invalid.");
       }
+      const suitePath = suite?.suite_path ?? [];
+      if (suite === undefined) rootTestSeen = true;
       const classname = attributeValue(tag.attributes, "classname") ?? "";
-      const occurrenceKey = JSON.stringify([reportPath, suite.suite_path, classname, name]);
+      const occurrenceKey = JSON.stringify([reportPath, suitePath, classname, name]);
       const occurrence = occurrences.get(occurrenceKey) ?? 0;
       occurrences.set(occurrenceKey, occurrence + 1);
       const source = parseSource(tag.attributes);
       const time = parseTime(tag.attributes);
       currentTest = {
-        local_id: stableId("test", [reportPath, suite.suite_path, classname, name, occurrence]),
-        parent_id: suite.local_id,
+        local_id: stableId("test", [reportPath, suitePath, classname, name, occurrence]),
+        parent_id: suite?.local_id ?? null,
         name,
         classname,
         failed: false,
@@ -238,7 +242,7 @@ export function importJunitXml(
   if (!rootSeen || currentTest !== undefined || suiteStack.length !== 0 || elementStack.length !== 0) {
     throw new JunitImportError("SDD_ADAPTER_JUNIT_MALFORMED_XML", "JUnit report XML is incomplete.");
   }
-  const lostHierarchy = tests.some((test) => test.classname.length > 0) && !nestedSuiteSeen;
+  const lostHierarchy = rootTestSeen || (tests.some((test) => test.classname.length > 0) && !nestedSuiteSeen);
   return {
     adapter_id: adapterId,
     report_path: reportPath,

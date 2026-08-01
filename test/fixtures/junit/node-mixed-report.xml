@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+  <testsuite name="REQ-6D8DDDF7 nested Node suite" tests="1" failures="0">
+    <testcase name="imports a nested Node test" classname="test" />
+  </testsuite>
+  <testcase name="REQ-12E19D70 imports a top-level Node test" classname="test" />
+</testsuites>

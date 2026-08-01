@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 7 / Existing-project dogfood
-- Current leaf: Milestone 7 clarification — select the first dogfood project and evidence boundary
+- Current leaf: Milestone 7.1 continuation clarification after baseline authoring
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -807,7 +807,15 @@ Bounded leaves:
         adapter approach, approval inputs, and QA boundary for the first `spec`
         Change. Do not edit the `yo` specification, tests, or runtime in this
         clarification leaf.
-  - [ ] **7.1d — Baseline authoring and traceability.** In one `spec` Change,
+  - [x] **7.1c.1 — Node JUnit root-test compatibility.** Accept direct
+        `<testsuites><testcase>` children emitted for top-level `node:test`
+        tests as executable tests with no ancestor suite, preserve nested
+        suites in the same report, and report unavailable hierarchy without
+        inventing framework-specific suites. Add a Node-compatible regression
+        fixture and Requirement-named test for `REQ-6D8DDDF7` and
+        `REQ-12E19D70`. Do not change `yo` or broaden the adapter beyond this
+        producer-compatible placement.
+  - [x] **7.1d — Baseline authoring and traceability.** In one `spec` Change,
         define the selected Capability and five Requirements in `yo`, configure
         the JUnit adapter and selected evidence issuers, confirm the imported
         Node JUnit hierarchy, and add exact Requirement IDs only to the mapped
@@ -864,9 +872,8 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 7.1c is complete. Approve 7.1d before mutating `yo`. Define only the
-selected approval-gated patch Capability and its five Requirements, configure
-the JUnit and evidence trust boundary, and add traceability IDs to the mapped
-test surface. Keep observable runtime behavior unchanged and leave approval,
-QA, evidence decisions, and gate execution to later separately approved
-leaves.
+Milestone 7.1d is complete. Before creating ApprovalEvidence, QAEvidence, or
+running any Approval, Verification, or Merge gate, clarify and approve the
+next bounded 7.1 leaf for governing the baseline Change through the remaining
+external human decisions. Keep SDD Yo advisory and do not infer evidence from
+the authored specification, passing suite, repository ownership, or this plan.

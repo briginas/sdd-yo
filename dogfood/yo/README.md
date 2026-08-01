@@ -9,7 +9,9 @@
 - First Change mode: `spec`.
 - First governed Capability: the completed approval-gated exact patch behavior.
 - Onboarding status: incremental SDD Project initialized; first baseline
-  contract clarified; first governed Capability not yet authored.
+  contract clarified; Node JUnit root-test compatibility verified in SDD Yo;
+  first governed Capability authored and test-traceable; human evidence and
+  gates not yet run.
 
 The repository owner selected this study boundary on 2026-08-01. That planning
 decision is not SDD ApprovalEvidence, QAEvidence, a gate result, or permission
@@ -143,6 +145,42 @@ TestExecutionEvidence, QAEvidence, gate result, or permission to mutate `yo`.
 The runtime lifecycle events named above are not versioned SDD Evidence
 artifacts.
 
+## Baseline authoring and traceability result
+
+Milestone 7.1d authored `CAP-7E001BA8` with exactly five automated
+Requirements:
+
+- `REQ-32B1F442` — bounded exact replacements;
+- `REQ-60E10F76` — safe existing target authorization;
+- `REQ-17B4C424` — immutable preview and explicit terminal approval;
+- `REQ-245F8421` — immediate revalidation and atomic replacement;
+- `REQ-D8B3ADC2` — single safe lifecycle settlement.
+
+The `unit` JUnit adapter reads `artifacts/junit/yo.xml`. The selected issuer
+names are `local-product-review`, `local-test-run`, and `local-qa`; this
+allowlist creates no evidence and grants no actor authority by itself.
+
+The full unchanged runtime suite passed all 286 Node test-runner tests. Its
+JUnit report contained 272 executable `<testcase>` entries. Establishing the
+selected mapping required editing 23 source name anchors: five ancestor suites
+and 18 top-level or leaf tests. Suite inheritance and direct names produced 41
+mapped executable TestIndex entries, or 15.1% of the imported entries:
+
+- 9 for `REQ-32B1F442`;
+- 5 for `REQ-60E10F76`;
+- 11 for `REQ-17B4C424`;
+- 6 for `REQ-245F8421`;
+- 10 for `REQ-D8B3ADC2`.
+
+Candidate graph validation returned one Capability, five Requirements, no
+Concepts, complete configured Git history, and no diagnostics. Candidate
+TestIndex construction in an isolated temporary Git repository succeeded with
+the expected `SDD_ADAPTER_JUNIT_HIERARCHY_UNAVAILABLE` warning for Node's
+top-level tests. Project formatting passed after temporary reports were
+removed. The temporary candidate repository, JUnit report, and TestIndex were
+deleted; no ApprovalEvidence, TestExecutionEvidence, QAEvidence, or gate result
+was created.
+
 ## Initialization result
 
 Milestone 7.1a used the locally built SDD Yo CLI on 2026-08-01:
@@ -207,6 +245,23 @@ must happen before decision-bearing proposal, approval, or exact-patch
 artifacts are created because their tree or file hashes would otherwise become
 stale. Keep the missing onboarding guidance as a provisional documentation
 observation for comparison with later dogfood projects.
+
+### OBS-YO-003 — Node JUnit mixes suites and root testcases
+
+Before the first traceability rename, the unchanged full `yo` suite was run
+with Node's built-in JUnit reporter. The report preserved every `describe`
+suite as `<testsuite>`, but emitted each top-level `test(...)` directly under
+the root `<testsuites>` element. The initial SDD import returned
+`SDD_ADAPTER_JUNIT_MALFORMED_XML` because the importer required every
+`<testcase>` to have a suite parent.
+
+Milestone 7.1c.1 resolved the producer-compatibility gap in SDD Yo. Direct
+root testcases now import as executable tests with `parent_id: null`, nested
+suites in the same report remain intact, and the importer emits
+`SDD_ADAPTER_JUNIT_HIERARCHY_UNAVAILABLE` rather than inventing a synthetic or
+framework-derived suite. The regression is bound to `REQ-6D8DDDF7` and
+`REQ-12E19D70`. No `yo` file, human evidence, or gate result was retained from
+the failed authoring attempt.
 
 ## Observation boundary
 
