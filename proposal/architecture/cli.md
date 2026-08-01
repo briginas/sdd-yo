@@ -132,6 +132,14 @@ Proposal validation owns candidate directory/manifest input, and later finding
 analysis owns semantic-review candidates; the base `diff` command emits neither
 an approval nor a review conclusion.
 
+The version 1 base result reports resolved opaque `base_ref` and `target_ref`
+object IDs, `available_classes: ["semantic", "structural"]`,
+`unavailable_classes: ["verification"]`, and a `deltas` object. Each available
+class contains `entries`, the exact compact `canonical_json_utf8` string, and
+its `fingerprint`. `validate --changed-from` uses the same class fields under a
+`comparison` result, reports the resolved `changed_from_ref`, and compares it
+to the selected worktree graph rather than claiming a target Git object ID.
+
 ### `sdd proposal validate`
 
 ```text

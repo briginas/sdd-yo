@@ -5,6 +5,7 @@ import { isObjectId, isProjectPath } from "../contracts/identifiers.ts";
 import type { CliResponseEnvelope } from "../contracts/result.ts";
 import { resolve } from "node:path";
 import type { FileSystem } from "../platform/filesystem.ts";
+import type { GitReader } from "../platform/git-reader.ts";
 import type { ProjectWriter } from "../platform/project-writer.ts";
 import type { Randomness } from "../platform/randomness.ts";
 import type { ProcessRunner } from "../platform/process-runner.ts";
@@ -15,10 +16,13 @@ import { generateRandomIds, isIdKind, MAX_GENERATED_ID_COUNT } from "../ids/gene
 import {
   buildCanonicalHistoryIndex,
   HistoryIndexError,
+  loadCanonicalProjectGraphAt,
   loadCanonicalProjectObjectIdsAt,
 } from "../ids/history-index.ts";
 import { buildCurrentProjectIdentityIndex, ProjectIdentityError } from "../ids/project-identity.ts";
 import { fingerprintValidatedObject } from "../fingerprint/object-fingerprint.ts";
+import type { ObjectDeltaEntry } from "../fingerprint/object-delta.ts";
+import { computeGraphObjectDelta } from "../fingerprint/object-delta.ts";
 import type { ValidatedSpecificationGraph } from "../graph/validate-graph.ts";
 import { validateSpecificationGraph } from "../graph/validate-graph.ts";
 import type { GraphTrace } from "../graph/query-graph.ts";
@@ -33,7 +37,7 @@ export const TECHNICAL_FAILURE_EXIT_CODE = 3 as const;
 
 type ExitCode = typeof VALID_EXIT_CODE | typeof BLOCKED_EXIT_CODE | typeof TECHNICAL_FAILURE_EXIT_CODE;
 type OutputFormat = "human" | "json";
-type Command = "init" | "id" | "validate" | "inspect" | "trace";
+type Command = "init" | "id" | "validate" | "inspect" | "trace" | "diff";
 type ResponseCommand = Command | "unknown";
 
 export type CliRuntime = {
@@ -62,6 +66,9 @@ type Invocation = {
   readonly idKind?: IdKind;
   readonly count?: number;
   readonly historyRef?: string;
+  readonly baseRef?: string;
+  readonly targetRef?: string;
+  readonly changedFrom?: string;
 };
 
 export type InitResult = {
@@ -89,6 +96,7 @@ export type ValidateResult = {
     readonly semantic?: string;
     readonly structural: string;
   }[];
+  readonly comparison?: ValidateComparisonResult;
 };
 
 export type InspectResult = {
@@ -100,12 +108,37 @@ export type InspectResult = {
 
 export type TraceResult = GraphTrace;
 
+export type DeltaClassResult = {
+  readonly entries: readonly ObjectDeltaEntry[];
+  readonly canonical_json_utf8: string;
+  readonly fingerprint: string;
+};
+
+export type DeltaClassesResult = {
+  readonly available_classes: readonly ["semantic", "structural"];
+  readonly unavailable_classes: readonly ["verification"];
+  readonly deltas: {
+    readonly semantic: DeltaClassResult;
+    readonly structural: DeltaClassResult;
+  };
+};
+
+export type DiffResult = DeltaClassesResult & {
+  readonly base_ref: GitObjectId;
+  readonly target_ref: GitObjectId;
+};
+
+export type ValidateComparisonResult = DeltaClassesResult & {
+  readonly changed_from_ref: GitObjectId;
+};
+
 export type CliResponse =
   | CliResponseEnvelope<"init", "ok", InitResult>
   | CliResponseEnvelope<"id", "ok", IdResult>
   | CliResponseEnvelope<"validate", "ok", ValidateResult>
   | CliResponseEnvelope<"inspect", "ok", InspectResult>
   | CliResponseEnvelope<"trace", "ok", TraceResult>
+  | CliResponseEnvelope<"diff", "ok", DiffResult>
   | CliResponseEnvelope<Command, "blocked", { readonly valid: false } | null>
   | CliResponseEnvelope<ResponseCommand, "error", null>;
 
@@ -123,13 +156,20 @@ function parseInvocation(
   argv: readonly string[],
 ): { ok: true; value: Invocation } | { ok: false; diagnostic: Diagnostic } {
   const command = argv[0];
-  if (command !== "init" && command !== "id" && command !== "validate" && command !== "inspect" && command !== "trace")
+  if (
+    command !== "init" &&
+    command !== "id" &&
+    command !== "validate" &&
+    command !== "inspect" &&
+    command !== "trace" &&
+    command !== "diff"
+  )
     return {
       ok: false,
       diagnostic: cliDiagnostic(
         "SDD_CONFIG_CLI_COMMAND_INVALID",
         "The command is missing or unsupported.",
-        "Use sdd init, sdd id, sdd validate, sdd inspect <object-id>, or sdd trace <object-id>.",
+        "Use sdd init, sdd id, sdd validate, sdd inspect <object-id>, sdd trace <object-id>, or sdd diff.",
       ),
     };
   let format: OutputFormat = "human";
@@ -144,6 +184,9 @@ function parseInvocation(
   let idKind: IdKind | undefined;
   let count: number | undefined;
   let historyRef: string | undefined;
+  let baseRef: string | undefined;
+  let targetRef: string | undefined;
+  let changedFrom: string | undefined;
   for (let index = 1; index < argv.length; index += 1) {
     const argument = argv[index];
     if (
@@ -155,7 +198,10 @@ function parseInvocation(
       argument === "--spec-path" ||
       argument === "--adoption" ||
       argument === "--count" ||
-      argument === "--history-ref"
+      argument === "--history-ref" ||
+      argument === "--base" ||
+      argument === "--target" ||
+      argument === "--changed-from"
     ) {
       const value = argv[index + 1];
       if (value === undefined)
@@ -232,6 +278,19 @@ function parseInvocation(
             ),
           };
         historyRef = value;
+      } else if (argument === "--base" || argument === "--target" || argument === "--changed-from") {
+        if (value.length === 0 || value.includes("\0"))
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_GIT_REF_INVALID",
+              "A Git comparison ref is invalid.",
+              "Supply a non-empty Git ref.",
+            ),
+          };
+        if (argument === "--base") baseRef = value;
+        else if (argument === "--target") targetRef = value;
+        else changedFrom = value;
       } else {
         if (!isProjectPath(value))
           return {
@@ -319,6 +378,33 @@ function parseInvocation(
         "Use ID-generation options only with sdd id.",
       ),
     };
+  if (command !== "diff" && (baseRef !== undefined || targetRef !== undefined))
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "A diff ref option was used with another command.",
+        "Use --base and --target only with sdd diff.",
+      ),
+    };
+  if (command === "diff" && (baseRef === undefined || targetRef === undefined))
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_GIT_DIFF_REFS_REQUIRED",
+        "diff requires base and target Git refs.",
+        "Supply both --base and --target.",
+      ),
+    };
+  if (command !== "validate" && changedFrom !== undefined)
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "--changed-from was used with another command.",
+        "Use --changed-from only with sdd validate.",
+      ),
+    };
   if (command === "id" && idKind === undefined)
     return {
       ok: false,
@@ -362,6 +448,9 @@ function parseInvocation(
       ...(idKind === undefined ? {} : { idKind }),
       ...(command === "id" ? { count: count ?? 1 } : {}),
       ...(historyRef === undefined ? {} : { historyRef }),
+      ...(baseRef === undefined ? {} : { baseRef }),
+      ...(targetRef === undefined ? {} : { targetRef }),
+      ...(changedFrom === undefined ? {} : { changedFrom }),
     },
   };
 }
@@ -476,7 +565,11 @@ function inspectResult(
   };
 }
 
-function validateResult(graph: ValidatedSpecificationGraph, history: ValidateResult["history"]): ValidateResult {
+function validateResult(
+  graph: ValidatedSpecificationGraph,
+  history: ValidateResult["history"],
+  comparison?: ValidateComparisonResult,
+): ValidateResult {
   const capabilities = [...graph.objects.values()].filter(
     (object) => !("anchor" in object) && object.type === "capability",
   );
@@ -493,6 +586,24 @@ function validateResult(graph: ValidatedSpecificationGraph, history: ValidateRes
         id,
         ...fingerprints(graph, id),
       })),
+    ...(comparison === undefined ? {} : { comparison }),
+  };
+}
+
+function deltaClassesResult(
+  before: ValidatedSpecificationGraph,
+  after: ValidatedSpecificationGraph,
+): DeltaClassesResult {
+  const delta = computeGraphObjectDelta(before, after);
+  const view = (value: typeof delta.semantic): DeltaClassResult => ({
+    entries: value.entries,
+    canonical_json_utf8: new TextDecoder().decode(value.canonicalBytes),
+    fingerprint: value.fingerprint,
+  });
+  return {
+    available_classes: ["semantic", "structural"],
+    unavailable_classes: ["verification"],
+    deltas: { semantic: view(delta.semantic), structural: view(delta.structural) },
   };
 }
 
@@ -500,11 +611,18 @@ function humanView(value: CliResponse): string {
   const lines = [`${value.command}: ${value.status}`];
   if (value.project_id !== null) lines.push(`project: ${value.project_id}`);
   if (value.command === "validate" && value.status === "ok") {
-    const counts = (value.result as { object_counts: { capabilities: number; requirements: number; concepts: number } })
-      .object_counts;
+    const result = value.result as ValidateResult;
+    const counts = result.object_counts;
     lines.push(
       `objects: ${counts.capabilities} capabilities, ${counts.requirements} requirements, ${counts.concepts} concepts`,
     );
+    if (result.comparison !== undefined)
+      lines.push(
+        `changed from: ${result.comparison.changed_from_ref}`,
+        `semantic: ${result.comparison.deltas.semantic.fingerprint}`,
+        `structural: ${result.comparison.deltas.structural.fingerprint}`,
+        "verification: unavailable",
+      );
   } else if (value.command === "inspect" && value.status === "ok") {
     const result = value.result as unknown as { object: { id: string; title: string }; document_path: string };
     lines.push(`${result.object.id} — ${result.object.title}`, `document: ${result.document_path}`);
@@ -516,6 +634,15 @@ function humanView(value: CliResponse): string {
       `dependencies: ${result.dependencies.join(", ") || "none"}`,
       `dependents: ${result.dependents.join(", ") || "none"}`,
       `referrers: ${result.referrers.map((item) => `${item.source_id} (${item.type})`).join(", ") || "none"}`,
+    );
+  } else if (value.command === "diff" && value.status === "ok") {
+    const result = value.result as DiffResult;
+    lines.push(
+      `base: ${result.base_ref}`,
+      `target: ${result.target_ref}`,
+      `semantic: ${result.deltas.semantic.fingerprint}`,
+      `structural: ${result.deltas.structural.fingerprint}`,
+      "verification: unavailable",
     );
   } else if (value.command === "init" && value.status === "ok") {
     const result = value.result as InitResult;
@@ -565,6 +692,26 @@ function historyTechnicalDiagnostic(error: unknown): Diagnostic {
   );
 }
 
+function comparisonTechnicalDiagnostic(error: unknown): Diagnostic {
+  if (error instanceof GitReadError && error.code === "GIT_REF_UNRESOLVED")
+    return cliDiagnostic(
+      "SDD_GIT_REF_UNRESOLVED",
+      "A requested Git comparison ref could not be resolved.",
+      "Fetch or correct the requested ref and run the command again.",
+    );
+  if (error instanceof GitReadError && error.code === "GIT_REPOSITORY_UNAVAILABLE")
+    return cliDiagnostic(
+      "SDD_GIT_REPOSITORY_UNAVAILABLE",
+      "The selected project is not inside an available Git repository.",
+      "Run the comparison inside the Git repository that contains the selected project.",
+    );
+  return cliDiagnostic(
+    "SDD_GIT_READ_FAILED",
+    "Git comparison data could not be read safely.",
+    "Correct the repository or requested refs and run the comparison again.",
+  );
+}
+
 function historyIncompleteDiagnostic(severity: Diagnostic["severity"]): Diagnostic {
   return cliDiagnostic(
     "SDD_GIT_HISTORY_INCOMPLETE",
@@ -579,6 +726,22 @@ function duplicateProjectIdDiagnostic(): Diagnostic {
     "SDD_ID_PROJECT_DUPLICATE",
     "A project ID is duplicated by current SDD Projects in this Git repository.",
     "Assign every current SDD Project in the repository a distinct SDD ID.",
+  );
+}
+
+function projectSnapshotMissingDiagnostic(): Diagnostic {
+  return cliDiagnostic(
+    "SDD_GIT_PROJECT_NOT_FOUND",
+    "The selected SDD Project does not exist at a requested Git ref.",
+    "Select refs whose trees contain the configured project ID.",
+  );
+}
+
+function projectSnapshotInvalidDiagnostic(): Diagnostic {
+  return cliDiagnostic(
+    "SDD_GIT_SNAPSHOT_INVALID",
+    "A requested Git specification snapshot is invalid.",
+    "Correct the project configuration and canonical graph at the requested ref.",
   );
 }
 
@@ -644,6 +807,7 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
     runtime.argv[0] === "id" ||
     runtime.argv[0] === "inspect" ||
     runtime.argv[0] === "trace" ||
+    runtime.argv[0] === "diff" ||
     runtime.argv[0] === "validate"
       ? runtime.argv[0]
       : "unknown";
@@ -833,6 +997,61 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
       return TECHNICAL_FAILURE_EXIT_CODE;
     }
     const outputTarget = selectedOutput?.target;
+    if (invocation.command === "diff") {
+      try {
+        if (invocation.baseRef === undefined || invocation.targetRef === undefined) {
+          throw new Error("Parsed diff invocation is missing required refs.");
+        }
+        const reader = await discoverProcessGitReader(runtime.processRunner, project.project_root);
+        const resolved = new Map<string, GitObjectId>();
+        const resolveOnce = async (ref: string): Promise<GitObjectId> => {
+          const existing = resolved.get(ref);
+          if (existing !== undefined) return existing;
+          const objectId = await reader.resolveRevision(ref);
+          resolved.set(ref, objectId);
+          return objectId;
+        };
+        const baseRef = await resolveOnce(invocation.baseRef);
+        const targetRef = await resolveOnce(invocation.targetRef);
+        const [baseGraph, targetGraph] = await Promise.all([
+          loadCanonicalProjectGraphAt(reader, baseRef, project.configuration.project_id),
+          loadCanonicalProjectGraphAt(reader, targetRef, project.configuration.project_id),
+        ]);
+        if (baseGraph === undefined || targetGraph === undefined) {
+          emit(
+            runtime,
+            invocation.format,
+            response("diff", project.configuration.project_id, "error", null, [projectSnapshotMissingDiagnostic()]),
+            outputTarget,
+          );
+          return TECHNICAL_FAILURE_EXIT_CODE;
+        }
+        const result: DiffResult = {
+          base_ref: baseRef,
+          target_ref: targetRef,
+          ...deltaClassesResult(baseGraph, targetGraph),
+        };
+        emit(
+          runtime,
+          invocation.format,
+          response("diff", project.configuration.project_id, "ok", result, []),
+          outputTarget,
+        );
+        return VALID_EXIT_CODE;
+      } catch (error) {
+        const diagnostic =
+          error instanceof HistoryIndexError
+            ? projectSnapshotInvalidDiagnostic()
+            : comparisonTechnicalDiagnostic(error);
+        emit(
+          runtime,
+          invocation.format,
+          response("diff", project.configuration.project_id, "error", null, [diagnostic]),
+          outputTarget,
+        );
+        return TECHNICAL_FAILURE_EXIT_CODE;
+      }
+    }
     const loaded = await loadSpecificationDocuments(
       runtime.fileSystem,
       project.project_root,
@@ -918,10 +1137,57 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
       );
       return VALID_EXIT_CODE;
     }
+    let validationReader: GitReader | undefined;
+    const resolvedValidationRefs = new Map<string, Promise<GitObjectId>>();
+    const getValidationReader = async (): Promise<GitReader> => {
+      validationReader ??= await discoverProcessGitReader(runtime.processRunner, project.project_root);
+      return validationReader;
+    };
+    const resolveValidationRef = async (ref: string): Promise<GitObjectId> => {
+      const existing = resolvedValidationRefs.get(ref);
+      if (existing !== undefined) return existing;
+      const objectId = getValidationReader().then((reader) => reader.resolveRevision(ref));
+      resolvedValidationRefs.set(ref, objectId);
+      return objectId;
+    };
+    let comparison: ValidateComparisonResult | undefined;
+    if (invocation.changedFrom !== undefined) {
+      try {
+        const reader = await getValidationReader();
+        const [changedFromRef] = await Promise.all([
+          resolveValidationRef(invocation.changedFrom),
+          resolveValidationRef(project.configuration.git.default_target_ref),
+          resolveValidationRef("HEAD"),
+        ]);
+        const baseGraph = await loadCanonicalProjectGraphAt(reader, changedFromRef, project.configuration.project_id);
+        if (baseGraph === undefined) {
+          emit(
+            runtime,
+            invocation.format,
+            response("validate", project.configuration.project_id, "error", null, [projectSnapshotMissingDiagnostic()]),
+            outputTarget,
+          );
+          return TECHNICAL_FAILURE_EXIT_CODE;
+        }
+        comparison = { changed_from_ref: changedFromRef, ...deltaClassesResult(baseGraph, graph.value) };
+      } catch (error) {
+        const diagnostic =
+          error instanceof HistoryIndexError
+            ? projectSnapshotInvalidDiagnostic()
+            : comparisonTechnicalDiagnostic(error);
+        emit(
+          runtime,
+          invocation.format,
+          response("validate", project.configuration.project_id, "error", null, [diagnostic]),
+          outputTarget,
+        );
+        return TECHNICAL_FAILURE_EXIT_CODE;
+      }
+    }
     let validationHistory: ValidateResult["history"] = { status: "incomplete", resolved_ref: null };
     const historyDiagnostics: Diagnostic[] = [];
     try {
-      const reader = await discoverProcessGitReader(runtime.processRunner, project.project_root);
+      const reader = await getValidationReader();
       const identities = await buildCurrentProjectIdentityIndex(reader, runtime.fileSystem);
       if (identities.duplicateProjectIds.size > 0) {
         emit(
@@ -934,8 +1200,8 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
         );
         return BLOCKED_EXIT_CODE;
       }
-      const resolvedRef = await reader.resolveRevision(project.configuration.git.default_target_ref);
-      const currentRevision = await reader.resolveRevision("HEAD");
+      const resolvedRef = await resolveValidationRef(project.configuration.git.default_target_ref);
+      const currentRevision = await resolveValidationRef("HEAD");
       const mergeBase = await reader.findMergeBase(currentRevision, resolvedRef);
       const historyStatus = await reader.historyStatus();
       validationHistory = { status: mergeBase === undefined ? "incomplete" : historyStatus, resolved_ref: resolvedRef };
@@ -1004,7 +1270,7 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
         invocation.command,
         project.configuration.project_id,
         "ok",
-        validateResult(graph.value, validationHistory),
+        validateResult(graph.value, validationHistory, comparison),
         [...graph.diagnostics, ...historyDiagnostics],
       ),
       outputTarget,

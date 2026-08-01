@@ -4,6 +4,7 @@ import { parseProjectConfiguration } from "../config/parse-config.ts";
 import type { ObjectId, ProjectId, ProjectPath } from "../contracts/identifiers.ts";
 import { isProjectPath } from "../contracts/identifiers.ts";
 import { validateSpecificationGraph } from "../graph/validate-graph.ts";
+import type { ValidatedSpecificationGraph } from "../graph/validate-graph.ts";
 import { parseSpecificationDocument } from "../markdown/parse-markdown.ts";
 import type { SpecificationDocument } from "../markdown/types.ts";
 import type { GitObjectId } from "../contracts/identifiers.ts";
@@ -58,11 +59,11 @@ function repositoryPath(project: VersionedProject, path: ProjectPath): ProjectPa
   return value;
 }
 
-async function graphObjectIds(
+async function projectGraph(
   reader: GitReader,
   entries: readonly GitTreeEntry[],
   project: VersionedProject,
-): Promise<ReadonlySet<ObjectId>> {
+): Promise<ValidatedSpecificationGraph> {
   const repositorySpecRoot = repositoryPath(project, project.specRoot);
   const documents: SpecificationDocument[] = [];
   for (const entry of entries) {
@@ -78,7 +79,19 @@ async function graphObjectIds(
   }
   const graph = validateSpecificationGraph(documents, project.entrypoint);
   if (!graph.ok) throw new HistoryIndexError("A reachable canonical specification graph is invalid.");
-  return new Set(graph.value.objects.keys());
+  return graph.value;
+}
+
+export async function loadCanonicalProjectGraphAt(
+  reader: GitReader,
+  revision: GitObjectId,
+  selectedProjectId: ProjectId,
+): Promise<ValidatedSpecificationGraph | undefined> {
+  const entries = await reader.listEntriesAt(revision);
+  const selected = (await projectsAt(reader, entries)).filter((project) => project.projectId === selectedProjectId);
+  if (selected.length > 1) throw new HistoryIndexError("A reachable tree duplicates the selected project ID.");
+  const project = selected[0];
+  return project === undefined ? undefined : projectGraph(reader, entries, project);
 }
 
 export async function loadCanonicalProjectObjectIdsAt(
@@ -86,11 +99,8 @@ export async function loadCanonicalProjectObjectIdsAt(
   revision: GitObjectId,
   selectedProjectId: ProjectId,
 ): Promise<ReadonlySet<ObjectId>> {
-  const entries = await reader.listEntriesAt(revision);
-  const selected = (await projectsAt(reader, entries)).filter((project) => project.projectId === selectedProjectId);
-  if (selected.length > 1) throw new HistoryIndexError("A reachable tree duplicates the selected project ID.");
-  const project = selected[0];
-  return project === undefined ? new Set() : graphObjectIds(reader, entries, project);
+  const graph = await loadCanonicalProjectGraphAt(reader, revision, selectedProjectId);
+  return graph === undefined ? new Set() : new Set(graph.objects.keys());
 }
 
 export async function buildCanonicalHistoryIndex(
@@ -127,7 +137,7 @@ export async function buildCanonicalHistoryIndex(
     }
     const selectedProject = selected[0];
     if (selectedProject === undefined) throw new HistoryIndexError("Selected project lookup failed.");
-    const objectIds = await graphObjectIds(cachedReader, entries, selectedProject);
+    const objectIds = new Set((await projectGraph(cachedReader, entries, selectedProject)).objects.keys());
     for (const objectId of objectIds) reservedObjectIds.add(objectId);
     if (index === 0) activeObjectIds = objectIds;
   }

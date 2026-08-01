@@ -38,39 +38,6 @@ and verification fingerprints.
   references.
 - Approval binds semantic and structural deltas, not verification deltas.
 
-<a id="req-24a372e7"></a>
-
-## REQ-24A372E7 — Compute semantic and structural object deltas
-
-```sdd
-kind: invariant
-verification: automated
-```
-
-### Relations <!-- sdd:relations -->
-
-- refers-to: [CON-FC16381E — Fingerprint](../../../spec/concepts/fingerprint.md)
-- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
-
-### Statement <!-- sdd:statement -->
-
-The CLI shall compare two valid specification graphs and compute separate
-canonical semantic and structural object deltas from their versioned object
-fingerprints.
-
-### Acceptance criteria <!-- sdd:acceptance -->
-
-- An add contains the object's expected after fingerprint, a delete contains
-  its expected before fingerprint, and a modify contains both.
-- An object appears in a fingerprint-class delta only when that class is
-  added, removed, or changed.
-- Entries are sorted by the NFC-normalized tuple `type`, `id`, and `operation`;
-  repeated computation over equivalent graphs is byte-identical.
-- An unchanged class canonicalizes as the exact JSON array `[]`, and an
-  explanatory-only change produces empty semantic and structural deltas.
-- Computation emits no approval, gate, or merge-readiness conclusion and does
-  not claim a verification delta.
-
 <a id="req-afd65a03"></a>
 
 ## REQ-AFD65A03 — Fingerprint approved object deltas
@@ -84,7 +51,7 @@ verification: automated
 
 - refers-to: [CON-FC16381E — Fingerprint](../../../spec/concepts/fingerprint.md)
 - refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
-- depends-on: [REQ-24A372E7 — Compute semantic and structural object deltas](#req-24a372e7)
+- depends-on: [REQ-24A372E7 — Compute semantic and structural object deltas](../../../spec/capabilities/validation-fingerprints-and-patches.md#req-24a372e7)
 
 ### Statement <!-- sdd:statement -->
 
