@@ -3,8 +3,8 @@
 ## Status
 
 - State: active
-- Current phase: Milestone 5 / Proposal and exact patch
-- Current leaf: 5.5 Stale-base and interruption proof
+- Current phase: Milestone 6 / Evidence, findings, and merge readiness
+- Current leaf: Milestone 6 clarification (not started)
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -642,11 +642,16 @@ Mode: `spec-code`.
       before mutation, and delegates sibling staging, atomic replacement, and
       reverse-order rollback to the injected project writer. The direct CLI
       exposes no fuzzy, partial, force, output-file, or Git-write path.
-- [ ] **5.5 — Stale-base and interruption proof.** Add race and failure
+- [x] **5.5 — Stale-base and interruption proof.** Add race and failure
       injection across candidate revalidation, before-hash checks, staging,
       replacement, and rollback; prove stale inputs cannot apply and failures
       leave no partial final specification. Promote `REQ-7AFE9904` and complete
-      Milestone 5 validation without broadening runtime behavior.
+      Milestone 5 validation without broadening runtime behavior. The proof
+      covers candidate drift between validation reads, apply-target drift
+      before writer mutation, staging and multi-replacement failures, and a
+      transient rollback failure. Sibling staging is fsynced where supported;
+      rollback retries transient filesystem operations and leaves neither a
+      partial final tree nor transaction debris.
 
 Primary target Requirements:
 `REQ-E26A859E`, `REQ-8DE9E078`, `REQ-964B9F80`, `REQ-3BF12AAD`,

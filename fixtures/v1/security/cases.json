@@ -7,9 +7,10 @@
     "0.7-malicious-adapter-output",
     "0.7-argv-shell-metacharacters",
     "0.7-evidence-replay-subject-confusion",
-    "0.7-repository-prompt-injection"
+    "0.7-repository-prompt-injection",
+    "5.5-runtime-exact-patch-interruption-proof"
   ],
-  "scope": "Declarative project-path, filesystem-race, exact-patch interruption, malicious adapter-output, command argv, evidence-confusion, and future Agent Skill repository prompt-injection scenarios. The manifest defines portable setup and fail-closed decisions without creating host-specific links, allowing XML DTD or external-entity processing, evaluating shell syntax, treating repository claims as authority, exposing secrets, or performing requested side effects. Runtime code, the Agent Skill, eval harness, and verifier behavior are deferred.",
+  "scope": "Declarative project-path, filesystem-race, exact-patch interruption, malicious adapter-output, command argv, evidence-confusion, and future Agent Skill repository prompt-injection scenarios. The manifest defines portable setup and fail-closed decisions without creating host-specific links, allowing XML DTD or external-entity processing, evaluating shell syntax, treating repository claims as authority, exposing secrets, or performing requested side effects. Exact-patch runtime cases are implemented; remaining runtime surfaces, the Agent Skill, and the eval harness are deferred.",
   "contracts": [
     "artifact.spec-patch",
     "artifact.candidate-tree-manifest",
@@ -34,7 +35,7 @@
     "REQ-220945C2"
   ],
   "authorities": [
-    "proposal/spec/capabilities/validation-fingerprints-and-patches.md#req-7afe9904",
+    "spec/capabilities/validation-fingerprints-and-patches.md#req-7afe9904",
     "spec/capabilities/test-traceability-and-qa.md#req-12e19d70",
     "spec/capabilities/test-traceability-and-qa.md#req-6d8dddf7",
     "proposal/spec/capabilities/test-traceability-and-qa.md#req-20f8ca5c",
@@ -56,13 +57,13 @@
     "proposal/architecture/artifact-schemas.md#approvalevidence"
   ],
   "oracle_semantics": {
-    "fixture_form": "Scenario definitions describe path-bearing artifact input, filesystem topology, and deterministic mutation hooks. A future platform test materializes the topology inside an isolated temporary project root.",
+    "fixture_form": "Scenario definitions describe path-bearing artifact input, filesystem topology, and deterministic mutation hooks. Runtime tests materialize the exact-patch topology inside isolated temporary project roots; other families remain bootstrap scenarios until their bounded leaves.",
     "path_domain": "Paths are non-empty normalized project-relative UTF-8 paths using slash separators and must remain beneath the configured specification root.",
     "lexical_rejection": "Reject absolute, drive-relative, dot-segment, NUL-bearing, ambiguous-separator, and platform-reserved paths before filesystem mutation.",
     "component_topology_rejection": "Inspect every existing component from the project root to the target without following a symlink or junction outside project scope.",
     "case_collision_rejection": "On a case-insensitive filesystem, reject a target whose normalized spelling aliases a differently cased existing path.",
     "toctou_revalidation": "Revalidate path identity and patch preconditions after validation and before mutation; any change aborts the complete patch.",
-    "atomic_interruption": "A future platform test injects a controlled interruption at each declared patch-application boundary. The visible specification tree must remain exactly the original tree; no create, replace, or delete operation may remain partially applied.",
+    "atomic_interruption": "Runtime tests inject controlled failures during staging, between visible replacements, and transiently during rollback. The visible specification tree must remain exactly the original tree; no create, replace, or delete operation may remain partially applied.",
     "atomic_interruption_result": {
       "accepted": false,
       "failure": "injected-interruption",

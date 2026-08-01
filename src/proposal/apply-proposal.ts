@@ -3,8 +3,10 @@ import { relative, resolve, sep } from "node:path";
 import type { ResolvedProject } from "../config/types.ts";
 import type { Fingerprint, ProjectPath } from "../contracts/identifiers.ts";
 import type { FileSystem } from "../platform/filesystem.ts";
+import { SpecificationWritePreconditionError } from "../platform/project-writer.ts";
 import type { ProjectWriter, SpecificationWriteOperation } from "../platform/project-writer.ts";
 import { buildSpecificationTree, loadCandidateSpecificationTree } from "./specification-tree.ts";
+import { portablePatchPathKey } from "./spec-patch.ts";
 import type { SpecPatch } from "./spec-patch.ts";
 
 const encoder = new TextEncoder();
@@ -93,12 +95,6 @@ export async function applyProposal(input: {
 
   const specRoot = input.project.configuration.spec.root;
   await validatePathComponents(input.fileSystem, realRoot, ".sdd/config.yaml" as ProjectPath, "replace");
-  for (const operation of input.patch.operations) {
-    if (operation.path === specRoot || !operation.path.startsWith(`${specRoot}/`))
-      throw new ProposalApplyError("SDD_APPLY_PATH_OUTSIDE_SPEC", "A patch target is outside spec.root.");
-    await validatePathComponents(input.fileSystem, realRoot, operation.path, operation.operation);
-  }
-
   let current;
   try {
     current = (
@@ -125,8 +121,28 @@ export async function applyProposal(input: {
     );
 
   const resultFiles = new Map(current.files.map((file) => [file.path, file]));
+  const portablePaths = new Map<string, ProjectPath>();
+  for (const file of current.files) {
+    const key = portablePatchPathKey(file.path);
+    const collision = portablePaths.get(key);
+    if (collision !== undefined && collision !== file.path)
+      throw new ProposalApplyError(
+        "SDD_APPLY_PATH_COLLISION",
+        "The current specification tree contains a portable path collision.",
+      );
+    portablePaths.set(key, file.path);
+  }
   const writes: SpecificationWriteOperation[] = [];
   for (const operation of input.patch.operations) {
+    if (operation.path === specRoot || !operation.path.startsWith(`${specRoot}/`))
+      throw new ProposalApplyError("SDD_APPLY_PATH_OUTSIDE_SPEC", "A patch target is outside spec.root.");
+    const portableCollision = portablePaths.get(portablePatchPathKey(operation.path));
+    if (portableCollision !== undefined && portableCollision !== operation.path)
+      throw new ProposalApplyError(
+        "SDD_APPLY_PATH_COLLISION",
+        "A patch target aliases a differently spelled existing specification path.",
+      );
+    await validatePathComponents(input.fileSystem, realRoot, operation.path, operation.operation);
     const before = resultFiles.get(operation.path);
     if (operation.operation === "create") {
       if (before !== undefined)
@@ -182,7 +198,8 @@ export async function applyProposal(input: {
 
   try {
     await input.writer.replaceSpecificationFilesAtomically(realRoot, writes);
-  } catch {
+  } catch (error) {
+    if (error instanceof SpecificationWritePreconditionError) throw new ProposalApplyError(error.code, error.message);
     throw new ProposalApplyError(
       "SDD_APPLY_TRANSACTION_FAILED",
       "The specification transaction failed and was rolled back.",

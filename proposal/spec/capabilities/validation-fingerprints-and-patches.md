@@ -37,32 +37,6 @@ operations rather than the fingerprint of the entire specification tree.
 - Modify and delete operations include expected before fingerprints.
 - Add operations include expected after fingerprints.
 
-<a id="req-7afe9904"></a>
-
-## REQ-7AFE9904 — Apply specification patches atomically and safely
-
-```sdd
-kind: invariant
-verification: automated
-```
-
-### Relations <!-- sdd:relations -->
-
-- depends-on: [REQ-3BF12AAD — Represent executable specification changes as exact file operations](../../../spec/capabilities/validation-fingerprints-and-patches.md#req-3bf12aad)
-
-### Statement <!-- sdd:statement -->
-
-`proposal apply` shall validate every operation before mutation and shall not
-leave a partially applied specification after failure.
-
-### Acceptance criteria <!-- sdd:acceptance -->
-
-- Path traversal, symlink targets, binary content, and `.git` mutation are
-  rejected.
-- Before and after content hashes are revalidated.
-- Unrelated working-tree changes are preserved.
-- Failure injection demonstrates no partial final state.
-
 <a id="req-fdd51416"></a>
 
 ## REQ-FDD51416 — Require sufficient Git history for strict merge validation

@@ -281,6 +281,42 @@ test("package-bound preparation is deterministic, read-only, detects stale packa
   assert.deepEqual(drift.report.mechanical_conflicts, [{ path: "spec/README.md", kind: "modify_modify" }]);
 });
 
+test("REQ-7AFE9904 REQ-964B9F80 candidate mutation between preparation revalidation reads emits no patch", async () => {
+  const fixture = await repository();
+  const candidate = await candidateFrom(fixture.root);
+  const candidateFile = join(candidate, "spec/capabilities/delivery.md");
+  const proposed = capabilitySource.replace("deliver one item", "deliver each item exactly once");
+  await writeFile(candidateFile, proposed);
+  const packageValue = await validateProposal({
+    fileSystem: nodeFileSystem,
+    gitReader: fixture.reader,
+    project: fixture.project,
+    baseRef: fixture.base,
+    candidatePath: candidate,
+    mode: "spec-code",
+    codeTargets: [],
+  });
+  let mutated = false;
+  await assert.rejects(
+    () =>
+      prepareProposal({
+        fileSystem: nodeFileSystem,
+        gitReader: fixture.reader,
+        project: fixture.project,
+        package: packageValue,
+        candidatePath: candidate,
+        branchHead: fixture.base,
+        integrationRef: fixture.base,
+        afterCandidateRevalidation: async () => {
+          mutated = true;
+          await writeFile(candidateFile, proposed.replace("exactly once", "after revalidation"));
+        },
+      }),
+    (error) => error instanceof ProposalPreparationError && error.code === "SDD_PREPARE_CANDIDATE_CHANGED",
+  );
+  assert.equal(mutated, true);
+});
+
 test("package-added active identity in integration emits sorted id_reuse and no prepared tree", async () => {
   const fixture = await repository(true);
   const candidate = await candidateFrom(fixture.root);

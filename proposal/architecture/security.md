@@ -60,7 +60,9 @@ Every component from project root to target is checked without following a
 symlink outside scope. Patch writes create a same-directory temporary file,
 set expected permissions, fsync where supported, and atomically rename only
 after revalidation. A changed path between check and write aborts the complete
-patch.
+patch. Distinct patch or existing-tree paths whose NFKC-normalized,
+case-folded portable keys collide are rejected conservatively on every
+platform.
 
 ### Patch confusion and stale base
 
@@ -68,6 +70,8 @@ SpecPatch operations contain exact before/after hashes and a whole-tree result
 fingerprint. There is no fuzzy matching, partial apply, implicit rebase, or
 force mode. All preconditions are checked before writes, and failure restores
 the original visible tree or reports a technical failure without `PASS`.
+Rollback retries transient filesystem operations a bounded number of times;
+failure injection covers staging, multiple replacements, and rollback itself.
 
 ### Git ref movement
 

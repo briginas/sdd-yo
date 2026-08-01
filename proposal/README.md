@@ -1,14 +1,13 @@
-# SDD Yo — Pre-implementation Specification Package
+# SDD Yo — Target Specification Package
 
-This package captures the approved target behavior and architecture for **SDD
+This package captures the remaining target behavior and architecture for **SDD
 Yo**, a repository-native specification governance system for humans and coding
 agents.
 
-The package is intentionally stored under `proposal/` rather than the
-repository's canonical `spec/` path. SDD Yo defines canonical `spec/` content
-as implemented, verified behavior on the integration branch. No implementation
-exists yet, so these documents describe a target state to be applied in a
-future `spec-code` branch.
+Requirements remain under `proposal/spec/` until their behavior is implemented
+and verified. Implemented subsets are promoted incrementally into the
+repository's canonical `spec/`; the proposal documents continue to describe
+the unimplemented target state and its architecture.
 
 ## Document map
 

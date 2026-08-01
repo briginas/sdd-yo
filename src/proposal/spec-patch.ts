@@ -65,6 +65,10 @@ function contentHash(content: string): Fingerprint {
   return `sha256:${createHash("sha256").update(encoder.encode(content)).digest("hex")}` as Fingerprint;
 }
 
+export function portablePatchPathKey(path: string): string {
+  return path.normalize("NFKC").toUpperCase().toLowerCase();
+}
+
 export function parseSpecPatch(bytes: Uint8Array): SpecPatch {
   if (bytes.byteLength > MAX_PATCH_BYTES)
     throw new SpecPatchInputError("SDD_APPLY_PATCH_LIMIT_EXCEEDED", "The SpecPatch file is too large.");
@@ -120,6 +124,7 @@ export function parseSpecPatch(bytes: Uint8Array): SpecPatch {
       throw new SpecPatchInputError("SDD_APPLY_PATCH_INVALID", "The SpecPatch producer is invalid.");
   }
   let previous: string | undefined;
+  const portableTargets = new Map<string, string>();
   for (const operationValue of record.operations) {
     if (typeof operationValue !== "object" || operationValue === null || Array.isArray(operationValue))
       throw new SpecPatchInputError("SDD_APPLY_PATCH_INVALID", "A SpecPatch operation is invalid.");
@@ -150,6 +155,14 @@ export function parseSpecPatch(bytes: Uint8Array): SpecPatch {
         "SDD_APPLY_PATCH_ORDER_INVALID",
         "SpecPatch operations must have unique strictly path-sorted targets.",
       );
+    const portableKey = portablePatchPathKey(operation.path);
+    const portableCollision = portableTargets.get(portableKey);
+    if (portableCollision !== undefined && portableCollision !== operation.path)
+      throw new SpecPatchInputError(
+        "SDD_APPLY_PATCH_PATH_COLLISION",
+        "Distinct SpecPatch targets collide after portable normalization and case folding.",
+      );
+    portableTargets.set(portableKey, operation.path);
     previous = operation.path;
   }
   return value as SpecPatch;

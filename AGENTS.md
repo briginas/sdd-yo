@@ -5,10 +5,11 @@
 This repository develops SDD Yo: a repository-native specification governance
 system with a deterministic CLI and an optional Agent Skill.
 
-The repository is currently in pre-implementation bootstrap. A testable
-TypeScript scaffold and package/executable wiring exist, but there is no
-implemented product command, canonical `spec/`, or gate-producing `sdd`
-runtime yet.
+The repository is in incremental self-bootstrap. The TypeScript runtime,
+canonical `spec/`, deterministic read/inspect/diff/test-discovery commands,
+and Milestone 5 proposal validation, preparation, exact patch, and safe apply
+surfaces exist. Evidence composition, Verification and Merge gates, and the
+optional Agent Skill remain deferred.
 
 ## Source-of-truth map
 
@@ -28,7 +29,7 @@ the full specification when a small Capability or Requirement set is enough.
 
 - `proposal/spec/` is a noncanonical target model. It may describe behavior
   that does not exist.
-- Future root `spec/` content is canonical and may describe only behavior
+- Root `spec/` content is canonical and may describe only behavior
   implemented and verified on the integration branch.
 - Promote Requirements incrementally according to
   `proposal/architecture/bootstrap.md`.

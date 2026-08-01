@@ -336,18 +336,22 @@ Application is fail-closed:
 - the core constructs the complete validated result tree before invoking an
   injected writer transaction;
 - the Node writer stages create/replace bytes in unique hidden sibling files,
-  repeats containment, entry-type, absence, and exact before-hash preflight,
-  then uses same-directory backup and rename operations;
+  fsyncs them where the platform supports it, repeats containment, entry-type,
+  absence, and exact before-hash preflight, then uses same-directory backup
+  and rename operations;
 - a failed replacement rolls applied targets back in reverse order and removes
   staged files and newly created empty directories;
 - failure cannot leave a partially applied final set;
 - unrelated working-tree changes are preserved.
 
 The transaction receives only exact absolute targets already proven to be
-inside the selected worktree's `spec.root`. It never invokes Git. Race and
-interruption injection across preflight, staging, replacement, cleanup, and
-rollback is the separate Milestone 5.5 proof required before promoting
-`REQ-7AFE9904`.
+inside the selected worktree's `spec.root`. Distinct paths that collide after
+portable Unicode normalization and case folding are rejected before mutation.
+It never invokes Git. Injected candidate drift, writer-preflight drift,
+staging failure, multi-replacement interruption, and a transient rollback
+filesystem failure prove that the original visible tree is restored without
+stage or backup debris. The production writer is the default instance of the
+same injected factory used by these tests.
 
 ## Historical ID reservation
 

@@ -289,6 +289,7 @@ export async function prepareProposal(input: {
   readonly candidatePath: string;
   readonly branchHead: GitObjectId;
   readonly integrationRef: GitObjectId;
+  readonly afterCandidateRevalidation?: () => Promise<void>;
 }): Promise<PreparedProposal> {
   const packageValue = parseProposalPackage(input.package);
   if (packageValue.project_id !== input.project.configuration.project_id)
@@ -322,6 +323,7 @@ export async function prepareProposal(input: {
       "SDD_PREPARE_PACKAGE_STALE",
       "The candidate or its derived bindings no longer match the ProposalPackage.",
     );
+  await input.afterCandidateRevalidation?.();
   const candidate = await loadCandidateSpecificationTree({
     fileSystem: input.fileSystem,
     candidatePath: input.candidatePath,

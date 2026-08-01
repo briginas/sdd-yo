@@ -266,6 +266,32 @@ applicable.
 - Only UTF-8 text inside the configured specification root is permitted.
 - Local overlapping changes block application.
 
+<a id="req-7afe9904"></a>
+
+## REQ-7AFE9904 — Apply specification patches atomically and safely
+
+```sdd
+kind: invariant
+verification: automated
+```
+
+### Relations <!-- sdd:relations -->
+
+- depends-on: [REQ-3BF12AAD — Represent executable specification changes as exact file operations](validation-fingerprints-and-patches.md#req-3bf12aad)
+
+### Statement <!-- sdd:statement -->
+
+`proposal apply` shall validate every operation before mutation and shall not
+leave a partially applied specification after failure.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- Path traversal, symlink targets, binary content, and `.git` mutation are
+  rejected.
+- Before and after content hashes are revalidated.
+- Unrelated working-tree changes are preserved.
+- Failure injection demonstrates no partial final state.
+
 <a id="req-964b9f80"></a>
 
 ## REQ-964B9F80 — Prepare proposals through three-way Git analysis

@@ -21,7 +21,8 @@ implementation choices into hidden product requirements.
 
 ## Architectural status
 
-These documents are part of a pre-implementation package. They record the
-current chosen design, not implemented behavior. The product specification
-remains authoritative when an architecture detail and a product Requirement
+These documents record the chosen target design. Some bounded subsets are
+implemented and promoted into canonical `spec/`, while the remaining target
+behavior stays under `proposal/spec/`. The applicable product Requirement
+remains authoritative when an architecture detail and product behavior
 conflict.
