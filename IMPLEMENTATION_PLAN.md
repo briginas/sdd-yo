@@ -790,6 +790,23 @@ Bounded leaves:
 - [ ] **7.1 — Small single-language project.** Onboard `yo`, govern one real
       Change end to end, and record setup, adapter, traceability, diagnostic,
       review-candidate, comprehension, and partial-adoption observations.
+  - [x] **7.1a — Incremental initialization.** Build the current local CLI,
+        initialize `/Users/dev.briginas/dev/yo` as one `incremental` SDD
+        Project, confirm that only the empty SDD structure is created, validate
+        the empty graph against complete configured Git history, and record
+        measured setup results. Do not define a Capability, rename tests,
+        create dogfood evidence, or change runtime behavior.
+  - [x] **7.1b — Host formatter integration.** Format only the initialized
+        `.sdd/config.yaml` and `spec/README.md` with the existing `yo` Prettier
+        configuration, then confirm that project formatting, the unchanged
+        runtime suite, and SDD graph validation pass without changing project
+        identity or formatter configuration. Record the post-init formatting
+        boundary and resolution of `OBS-YO-002`.
+  - [ ] **7.1c — First baseline contract clarification.** Select the exact
+        accepted Milestone 3 behavior, Requirement set, existing test mapping,
+        adapter approach, approval inputs, and QA boundary for the first `spec`
+        Change. Do not edit the `yo` specification, tests, or runtime in this
+        clarification leaf.
 - [ ] **7.2 — Polyglot or multi-framework project.** Select and onboard one
       existing project, then govern one real Change end to end and record the
       same observation set.
@@ -839,9 +856,8 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 7.0 is complete. Clarify and approve the first independently
-verifiable onboarding leaf within 7.1 before changing `yo`. The candidate leaf
-may initialize `/Users/dev.briginas/dev/yo` in `incremental` adoption and
-record setup results, but it must not yet define the first governed Capability,
-rename tests, create dogfood approval or QA evidence, or change runtime
-behavior.
+Milestone 7.1b is complete. Clarify and approve 7.1c before defining the first
+governed Capability or changing tests in `yo`. Select only the accepted
+Milestone 3 behavior, bounded Requirement set, existing test mapping, adapter
+approach, approval inputs, and QA boundary; do not edit the `yo` specification,
+tests, or runtime in that clarification leaf.
