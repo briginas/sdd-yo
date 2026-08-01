@@ -245,13 +245,19 @@ a model or make a human decision.
 ### `sdd merge check`
 
 ```text
-sdd merge check --change <path> --approval <path> \
+sdd merge check --change <ChangeDescriptor-path> \
+  --package <ProposalPackage-path> --candidate <directory|manifest> \
+  --approval <path> \
   --test-index <path> --test-evidence <path> ... --qa <path> ... \
-  [--findings <path>] [--resolutions <path> ...] \
+  [--input-manifest <path> --findings <path> ...] \
+  [--resolutions <path> ...] \
   [--human-semantic-review <path>]
 ```
 
-Resolves the current configured integration ref and declared branch head,
+The ChangeDescriptor supplies the integration and proposal refs while the
+ProposalPackage and candidate bytes remain explicit so the command can repeat
+package validation rather than trusting hidden workflow state. The command
+resolves the current configured integration ref and declared proposal ref,
 recomputes conflict and affected scope, validates all evidence, and returns a
 `MergeReport`. It never modifies Git or hosting state.
 

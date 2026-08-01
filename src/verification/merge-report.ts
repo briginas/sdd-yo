@@ -20,6 +20,7 @@ import type { PreparationGateIssue } from "../proposal/prepare-proposal.ts";
 import type { ProposalPackage } from "../proposal/validate-proposal.ts";
 import type { TestIndex } from "../tests/test-index.ts";
 import { assessGovernanceEvidence } from "./evidence.ts";
+import type { ChangeDescriptor } from "./change-descriptor.ts";
 import type {
   ApprovalEvidence,
   GovernanceEvidence,
@@ -166,6 +167,7 @@ export async function runMergeGate(input: {
   readonly fileSystem: FileSystem;
   readonly gitReader: GitReader;
   readonly project: ResolvedProject;
+  readonly change?: VersionedMergeInput<ChangeDescriptor>;
   readonly package: VersionedMergeInput<unknown>;
   readonly candidatePath: string;
   readonly branch_head_ref: string;
@@ -186,12 +188,25 @@ export async function runMergeGate(input: {
   readonly current_adapter_fingerprints: Readonly<Record<string, Fingerprint>>;
 }): Promise<MergeReport> {
   const packageValue = parseProposalPackage(input.package.artifact);
+  const changeMismatch =
+    input.change !== undefined &&
+    (() => {
+      const change = input.change.artifact;
+      return (
+        change.project_id !== packageValue.project_id ||
+        change.mode !== packageValue.mode ||
+        change.approved_delta.semantic !== packageValue.object_delta.semantic_fingerprint ||
+        change.approved_delta.structural !== packageValue.object_delta.structural_fingerprint ||
+        JSON.stringify(change.code_targets) !== JSON.stringify(packageValue.code_targets)
+      );
+    })();
   const [branchHead, integrationRef, configuredIntegrationRef] = await Promise.all([
     input.gitReader.resolveRevision(input.branch_head_ref),
     input.gitReader.resolveRevision(input.integration_ref),
     input.gitReader.resolveRevision(input.project.configuration.git.default_target_ref),
   ]);
   const issues: MergeIssue[] = [];
+  if (changeMismatch) issues.push({ code: "SDD_MERGE_CHANGE_PACKAGE_MISMATCH", disposition: "BLOCKED" });
   if (integrationRef !== configuredIntegrationRef) {
     issues.push({ code: "SDD_MERGE_INTEGRATION_REF_NOT_CURRENT", disposition: "BLOCKED" });
   }
@@ -359,6 +374,7 @@ export async function runMergeGate(input: {
     ...verification.qa_coverage.unsatisfied,
   ]).size;
   const allInputs: VersionedMergeInput<{ readonly artifact_type: string }>[] = [
+    ...(input.change === undefined ? [] : [input.change]),
     input.package as VersionedMergeInput<{ readonly artifact_type: string }>,
     ...input.approvals,
     ...input.governance,

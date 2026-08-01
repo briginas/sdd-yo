@@ -3,8 +3,8 @@
 ## Status
 
 - State: active
-- Current phase: Milestone 6 / Evidence, findings, and merge readiness
-- Current leaf: 6.8 — Findings and merge CLI completion
+- Current phase: Milestone 7 / Existing-project dogfood
+- Current leaf: Milestone 7 clarification — select the first dogfood project and evidence boundary
 - Last updated: 2026-08-01
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -742,13 +742,18 @@ Bounded leaves:
       `REQ-220945C2`, `REQ-82256D82`, and `REQ-44068C1A` proposed until the
       issuer-validation, human-view, and CLI no-side-effect claims are
       completed in 6.8.
-- [ ] **6.8 — Findings and merge CLI completion.** Expose
+- [x] **6.8 — Findings and merge CLI completion.** Expose
       `sdd findings validate` and `sdd merge check`, render deterministic JSON
       plus replaceable human views, map `PASS`, `BLOCKED`, `REVIEW_REQUIRED`,
       and technical failure to exit codes 0, 1, 2, and 3, and prove that no
       command can create a branch, commit, tag, push, or merge. Target
       Requirements: `REQ-F7D39246`, `REQ-41EDF9A3`, `REQ-220945C2`,
       `REQ-82256D82`, `REQ-44068C1A`, `REQ-A3C3B779`, `REQ-F91F7D11`.
+      Promote `REQ-F7D39246`, `REQ-41EDF9A3`, `REQ-220945C2`,
+      `REQ-82256D82`, `REQ-44068C1A`, and `REQ-A3C3B779`. Keep
+      `REQ-F91F7D11` proposed until equivalent deterministic output is verified
+      on every declared supported platform; local offline execution alone does
+      not satisfy that cross-platform claim.
 
 Primary target Capabilities:
 `CAP-F31EF876`, `CAP-205F5DBC`.
@@ -757,7 +762,9 @@ Also completes the qualitative synchronization-mode claims in
 `REQ-983914F3`, `REQ-FB76FC6F`, and `REQ-13CE0529`, Concept impact in
 `REQ-B5815BB5`, the full CLI surface in
 `REQ-F7D39246`, strict history enforcement in `REQ-FDD51416`, and
-merge-specific exit mapping in `REQ-41EDF9A3`.
+merge-specific exit mapping in `REQ-41EDF9A3`. The offline implementation
+portion of `REQ-F91F7D11` exists, while its cross-platform evidence remains
+deferred.
 
 ## Milestone 7 — Existing-project dogfood
 
@@ -809,9 +816,8 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-`6.8 — Findings and merge CLI completion` is active. It exposes the completed
-library validators through deterministic JSON and replaceable human views,
-maps product readiness and technical failure to their public exit codes, and
-proves that the commands have no Git mutation authority. It does not add new
-gate policy, merge branches, apply patches, create approvals, or begin
-Milestone 7 dogfood.
+Milestone 6 is complete. Before starting Milestone 7, select the first external
+or fixture project, define which SDD Project scope and synchronization mode its
+first Change will exercise, and agree where dogfood observations will be
+recorded. No onboarding, repository mutation, or dogfood QA decision begins
+until that bounded project and evidence boundary is chosen.

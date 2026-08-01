@@ -46,6 +46,7 @@ import {
   applyProposal,
   importSpecPatch,
   importProposalPackage,
+  parseProposalPackage,
   parseCodeTarget,
   parseProposalMode,
   prepareApprovedProposal,
@@ -58,8 +59,29 @@ import {
   validateProposal,
 } from "../proposal/index.ts";
 import type { ConflictReport, ProposalMode, ProposalPackage, SpecPatch } from "../proposal/index.ts";
-import { importApprovalEvidenceFile } from "../verification/evidence.ts";
+import {
+  EvidenceInputError,
+  importApprovalEvidenceFile,
+  importQaEvidenceFile,
+  importTestExecutionEvidenceFile,
+} from "../verification/evidence.ts";
 import type { EvidenceInputLimits } from "../verification/evidence.ts";
+import {
+  assessFindings,
+  importFindingFile,
+  importFindingResolutionFile,
+  importHumanSemanticReviewEvidenceFile,
+  importSemanticAnalysisInputManifestFile,
+} from "../verification/findings.ts";
+import type { FindingAssessment } from "../verification/findings.ts";
+import {
+  importChangeDescriptorFile,
+  importProjectJsonArtifact,
+  MergeInputError,
+  resolveProjectCandidatePath,
+} from "../verification/change-descriptor.ts";
+import { runMergeGate } from "../verification/merge-report.ts";
+import type { MergeReport } from "../verification/merge-report.ts";
 
 export const VALID_EXIT_CODE = 0 as const;
 export const BLOCKED_EXIT_CODE = 1 as const;
@@ -86,6 +108,8 @@ type Command =
   | "trace"
   | "diff"
   | "tests.discover"
+  | "findings.validate"
+  | "merge.check"
   | "proposal.validate"
   | "proposal.prepare"
   | "proposal.apply";
@@ -138,6 +162,13 @@ type Invocation = {
   readonly approvalPaths: readonly ProjectPath[];
   readonly patchPath?: string;
   readonly worktreePath?: string;
+  readonly changePath?: ProjectPath;
+  readonly inputManifestPath?: ProjectPath;
+  readonly findingPaths: readonly ProjectPath[];
+  readonly resolutionPaths: readonly ProjectPath[];
+  readonly testEvidencePaths: readonly ProjectPath[];
+  readonly qaPaths: readonly ProjectPath[];
+  readonly humanReviewPaths: readonly ProjectPath[];
 };
 
 export type InitResult = {
@@ -211,6 +242,8 @@ export type CliResponse =
   | CliResponseEnvelope<"trace", "ok", TraceResult>
   | CliResponseEnvelope<"diff", "ok", DiffResult>
   | CliResponseEnvelope<"tests.discover", "ok", TestIndex>
+  | CliResponseEnvelope<"findings.validate", "ok" | "blocked", FindingAssessment>
+  | CliResponseEnvelope<"merge.check", "ok" | "blocked" | "review_required", MergeReport>
   | CliResponseEnvelope<"proposal.validate", "ok", ProposalPackage>
   | CliResponseEnvelope<"proposal.apply", "ok", import("../proposal/index.ts").ProposalApplyResult>
   | CliResponseEnvelope<
@@ -237,9 +270,13 @@ function parseInvocation(
   const command: string | undefined =
     argv[0] === "tests" && argv[1] === "discover"
       ? "tests.discover"
-      : argv[0] === "proposal" && (argv[1] === "validate" || argv[1] === "prepare" || argv[1] === "apply")
-        ? `proposal.${argv[1]}`
-        : argv[0];
+      : argv[0] === "findings" && argv[1] === "validate"
+        ? "findings.validate"
+        : argv[0] === "merge" && argv[1] === "check"
+          ? "merge.check"
+          : argv[0] === "proposal" && (argv[1] === "validate" || argv[1] === "prepare" || argv[1] === "apply")
+            ? `proposal.${argv[1]}`
+            : argv[0];
   if (
     command !== "init" &&
     command !== "id" &&
@@ -248,6 +285,8 @@ function parseInvocation(
     command !== "trace" &&
     command !== "diff" &&
     command !== "tests.discover" &&
+    command !== "findings.validate" &&
+    command !== "merge.check" &&
     command !== "proposal.validate" &&
     command !== "proposal.prepare" &&
     command !== "proposal.apply"
@@ -292,9 +331,18 @@ function parseInvocation(
   const approvalPaths: ProjectPath[] = [];
   let patchPath: string | undefined;
   let worktreePath: string | undefined;
+  let changePath: ProjectPath | undefined;
+  let inputManifestPath: ProjectPath | undefined;
+  const findingPaths: ProjectPath[] = [];
+  const resolutionPaths: ProjectPath[] = [];
+  const testEvidencePaths: ProjectPath[] = [];
+  const qaPaths: ProjectPath[] = [];
+  const humanReviewPaths: ProjectPath[] = [];
   for (
     let index =
       command === "tests.discover" ||
+      command === "findings.validate" ||
+      command === "merge.check" ||
       command === "proposal.validate" ||
       command === "proposal.prepare" ||
       command === "proposal.apply"
@@ -332,6 +380,13 @@ function parseInvocation(
       argument === "--branch-head" ||
       argument === "--integration-ref" ||
       argument === "--approval" ||
+      argument === "--change" ||
+      argument === "--input-manifest" ||
+      argument === "--findings" ||
+      argument === "--resolutions" ||
+      argument === "--test-evidence" ||
+      argument === "--qa" ||
+      argument === "--human-semantic-review" ||
       argument === "--patch" ||
       argument === "--worktree"
     ) {
@@ -346,7 +401,32 @@ function parseInvocation(
           ),
         };
       index += 1;
-      if (argument === "--approval") {
+      if (
+        argument === "--change" ||
+        argument === "--input-manifest" ||
+        argument === "--findings" ||
+        argument === "--resolutions" ||
+        argument === "--test-evidence" ||
+        argument === "--qa" ||
+        argument === "--human-semantic-review"
+      ) {
+        if (!isProjectPath(value))
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_GATE_INPUT_PATH_INVALID",
+              "A gate artifact path is not project-relative and portable.",
+              "Supply a regular artifact file inside the selected project.",
+            ),
+          };
+        if (argument === "--change") changePath = value;
+        else if (argument === "--input-manifest") inputManifestPath = value;
+        else if (argument === "--findings") findingPaths.push(value);
+        else if (argument === "--resolutions") resolutionPaths.push(value);
+        else if (argument === "--test-evidence") testEvidencePaths.push(value);
+        else if (argument === "--qa") qaPaths.push(value);
+        else humanReviewPaths.push(value);
+      } else if (argument === "--approval") {
         if (!isProjectPath(value))
           return {
             ok: false,
@@ -672,6 +752,7 @@ function parseInvocation(
   if (
     command !== "proposal.validate" &&
     command !== "proposal.prepare" &&
+    command !== "merge.check" &&
     (proposalMode !== undefined || candidatePath !== undefined || codeTargets.length > 0)
   )
     return {
@@ -711,10 +792,8 @@ function parseInvocation(
     };
   if (
     command !== "proposal.prepare" &&
-    (packagePath !== undefined ||
-      branchHeadRef !== undefined ||
-      integrationRef !== undefined ||
-      approvalPaths.length > 0)
+    command !== "merge.check" &&
+    (packagePath !== undefined || approvalPaths.length > 0)
   )
     return {
       ok: false,
@@ -722,6 +801,15 @@ function parseInvocation(
         "SDD_CONFIG_CLI_ARGUMENT_INVALID",
         "A proposal preparation option was used with another command.",
         "Use preparation options only with sdd proposal prepare.",
+      ),
+    };
+  if (command !== "proposal.prepare" && (branchHeadRef !== undefined || integrationRef !== undefined))
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "An explicit preparation ref was used with another command.",
+        "Use --branch-head and --integration-ref only with sdd proposal prepare.",
       ),
     };
   if (command === "proposal.apply" && (patchPath === undefined || outputPath !== undefined))
@@ -755,7 +843,7 @@ function parseInvocation(
         "Use --ref only with sdd trace.",
       ),
     };
-  if (command !== "trace" && testIndex !== undefined)
+  if (command !== "trace" && command !== "merge.check" && testIndex !== undefined)
     return {
       ok: false,
       diagnostic: cliDiagnostic(
@@ -810,6 +898,83 @@ function parseInvocation(
         "SDD_ADAPTER_HEAD_REQUIRED",
         "tests discover requires a Git head ref.",
         "Supply --head with the exact discovery subject ref.",
+      ),
+    };
+  if (command === "findings.validate" && (inputManifestPath === undefined || findingPaths.length === 0))
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_FINDING_INPUTS_REQUIRED",
+        "findings validate requires an input manifest and at least one Finding.",
+        "Supply --input-manifest and --findings.",
+      ),
+    };
+  if (
+    command === "merge.check" &&
+    (changePath === undefined ||
+      packagePath === undefined ||
+      !isProjectPath(packagePath) ||
+      candidatePath === undefined ||
+      !isProjectPath(candidatePath) ||
+      testIndex === undefined ||
+      approvalPaths.length === 0 ||
+      testEvidencePaths.length === 0 ||
+      qaPaths.length === 0)
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_GATE_INPUTS_REQUIRED",
+        "merge check requires change, package, candidate, approval, TestIndex, test evidence, and QA inputs.",
+        "Supply every required explicit versioned merge input as a project-relative path.",
+      ),
+    };
+  const hasSemanticGateInput = findingPaths.length > 0 || resolutionPaths.length > 0 || humanReviewPaths.length > 0;
+  if (command === "merge.check" && hasSemanticGateInput && inputManifestPath === undefined)
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_FINDING_INPUT_SET_INVALID",
+        "Semantic finding inputs require exactly one input manifest.",
+        "Supply --input-manifest with findings, resolutions, or human semantic review inputs.",
+      ),
+    };
+  if (
+    command !== "findings.validate" &&
+    command !== "merge.check" &&
+    (changePath !== undefined ||
+      inputManifestPath !== undefined ||
+      findingPaths.length > 0 ||
+      resolutionPaths.length > 0 ||
+      testEvidencePaths.length > 0 ||
+      qaPaths.length > 0 ||
+      humanReviewPaths.length > 0)
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "A finding or merge gate option was used with another command.",
+        "Use gate artifact options only with sdd findings validate or sdd merge check.",
+      ),
+    };
+  if (
+    command === "findings.validate" &&
+    (changePath !== undefined ||
+      packagePath !== undefined ||
+      candidatePath !== undefined ||
+      approvalPaths.length > 0 ||
+      testIndex !== undefined ||
+      testEvidencePaths.length > 0 ||
+      qaPaths.length > 0 ||
+      humanReviewPaths.length > 0)
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "A merge-only option was used with findings validate.",
+        "Use only --input-manifest, --findings, and --resolutions with findings validate.",
       ),
     };
   if (command === "id" && idKind === undefined)
@@ -875,6 +1040,13 @@ function parseInvocation(
       approvalPaths,
       ...(patchPath === undefined ? {} : { patchPath }),
       ...(worktreePath === undefined ? {} : { worktreePath }),
+      ...(changePath === undefined ? {} : { changePath }),
+      ...(inputManifestPath === undefined ? {} : { inputManifestPath }),
+      findingPaths,
+      resolutionPaths,
+      testEvidencePaths,
+      qaPaths,
+      humanReviewPaths,
     },
   };
 }
@@ -1139,6 +1311,41 @@ function humanView(value: CliResponse): string {
       `result tree: ${result.result_tree_fingerprint}`,
       ...result.applied_paths.map((path) => `applied: ${path}`),
     );
+  } else if (value.command === "findings.validate" && (value.status === "ok" || value.status === "blocked")) {
+    const result = value.result as FindingAssessment;
+    lines.push(
+      `findings: ${result.findings.length}`,
+      `human review: ${result.human_review_state}`,
+      `semantic completeness claimed: ${String(result.semantic_completeness_claimed)}`,
+      ...result.findings.map((finding) => `finding: ${finding.finding_id} (${finding.state})`),
+    );
+  } else if (
+    value.command === "merge.check" &&
+    (value.status === "ok" || value.status === "blocked" || value.status === "review_required")
+  ) {
+    const result = value.result as MergeReport;
+    lines.push(
+      `readiness: ${result.status}`,
+      `branch head: ${result.branch_head}`,
+      `integration: ${result.integration_ref}`,
+      `merge base: ${result.merge_base}`,
+      `mode: ${result.mode}`,
+      "approved_delta" in result.deltas_or_code_targets
+        ? `approved semantic: ${result.deltas_or_code_targets.approved_delta.semantic}`
+        : `code targets: ${result.deltas_or_code_targets.code_targets.map((target) => target.requirement_id).join(", ")}`,
+      "approved_delta" in result.deltas_or_code_targets
+        ? `approved structural: ${result.deltas_or_code_targets.approved_delta.structural}`
+        : "approved structural: unchanged",
+      `affected requirements: ${result.affected_scope.requirements.join(", ") || "none"}`,
+      `affected capabilities: ${result.affected_scope.capabilities.join(", ") || "none"}`,
+      `tests: ${result.test_summary.status} (${result.test_summary.satisfied} satisfied, ${result.test_summary.unsatisfied} unsatisfied)`,
+      `QA: ${result.qa_summary.status} (${result.qa_summary.satisfied} satisfied, ${result.qa_summary.unsatisfied} unsatisfied)`,
+      `evidence: ${result.findings_and_evidence.evidence_status}`,
+      `findings: ${result.findings_and_evidence.findings.length}`,
+      `conflicts: ${result.diagnostics.filter((diagnostic) => diagnostic.code.includes("CONFLICT")).length}`,
+      `adoption: ${result.adoption.mode}`,
+      `inputs: ${result.input_manifest.length}`,
+    );
   }
   for (const diagnostic of value.diagnostics)
     lines.push(`${diagnostic.severity.toUpperCase()} ${diagnostic.code}: ${diagnostic.message}`);
@@ -1315,17 +1522,21 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
   const inferredCommand: ResponseCommand =
     runtime.argv[0] === "tests" && runtime.argv[1] === "discover"
       ? "tests.discover"
-      : runtime.argv[0] === "proposal" &&
-          (runtime.argv[1] === "validate" || runtime.argv[1] === "prepare" || runtime.argv[1] === "apply")
-        ? `proposal.${runtime.argv[1]}`
-        : runtime.argv[0] === "init" ||
-            runtime.argv[0] === "id" ||
-            runtime.argv[0] === "inspect" ||
-            runtime.argv[0] === "trace" ||
-            runtime.argv[0] === "diff" ||
-            runtime.argv[0] === "validate"
-          ? runtime.argv[0]
-          : "unknown";
+      : runtime.argv[0] === "findings" && runtime.argv[1] === "validate"
+        ? "findings.validate"
+        : runtime.argv[0] === "merge" && runtime.argv[1] === "check"
+          ? "merge.check"
+          : runtime.argv[0] === "proposal" &&
+              (runtime.argv[1] === "validate" || runtime.argv[1] === "prepare" || runtime.argv[1] === "apply")
+            ? `proposal.${runtime.argv[1]}`
+            : runtime.argv[0] === "init" ||
+                runtime.argv[0] === "id" ||
+                runtime.argv[0] === "inspect" ||
+                runtime.argv[0] === "trace" ||
+                runtime.argv[0] === "diff" ||
+                runtime.argv[0] === "validate"
+              ? runtime.argv[0]
+              : "unknown";
   const inferredFormat: OutputFormat = runtime.argv.some(
     (argument, index) => argument === "--format" && runtime.argv[index + 1] === "json",
   )
@@ -1512,6 +1723,247 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
       return TECHNICAL_FAILURE_EXIT_CODE;
     }
     const outputTarget = selectedOutput?.target;
+    if (invocation.command === "findings.validate") {
+      try {
+        if (invocation.inputManifestPath === undefined || invocation.findingPaths.length === 0)
+          throw new Error("Parsed finding validation invocation is missing required inputs.");
+        const [manifest, findings, resolutions] = await Promise.all([
+          importSemanticAnalysisInputManifestFile(
+            runtime.fileSystem,
+            project.project_root,
+            invocation.inputManifestPath,
+            CLI_EVIDENCE_LIMITS,
+          ),
+          Promise.all(
+            invocation.findingPaths.map((path) =>
+              importFindingFile(runtime.fileSystem, project.project_root, path, CLI_EVIDENCE_LIMITS),
+            ),
+          ),
+          Promise.all(
+            invocation.resolutionPaths.map((path) =>
+              importFindingResolutionFile(runtime.fileSystem, project.project_root, path, CLI_EVIDENCE_LIMITS),
+            ),
+          ),
+        ]);
+        const result = assessFindings({
+          manifest,
+          findings,
+          resolutions,
+          human_reviews: [],
+          allowed_issuers: new Set(project.configuration.evidence.allowed_issuers),
+          model_analysis_performed: true,
+        });
+        const projectMismatch = manifest.project_id !== project.configuration.project_id;
+        const diagnostics = [
+          ...(projectMismatch
+            ? [
+                cliDiagnostic(
+                  "SDD_FINDING_PROJECT_MISMATCH",
+                  "Finding inputs do not belong to the selected SDD Project.",
+                  "Supply artifacts whose project_id matches the selected project.",
+                ),
+              ]
+            : []),
+          ...result.issues.map((issue) =>
+            cliDiagnostic(
+              issue.code,
+              "A finding or resolution condition is not current and valid.",
+              "Correct the cited manifest, Finding, configured issuer, or resolution evidence.",
+            ),
+          ),
+        ];
+        const blocked = projectMismatch || result.issues.some((issue) => issue.disposition === "BLOCKED");
+        emit(
+          runtime,
+          invocation.format,
+          response(
+            "findings.validate",
+            project.configuration.project_id,
+            blocked ? "blocked" : "ok",
+            result,
+            diagnostics,
+          ),
+          outputTarget,
+        );
+        return blocked ? BLOCKED_EXIT_CODE : VALID_EXIT_CODE;
+      } catch (error) {
+        const diagnostic = cliDiagnostic(
+          error instanceof EvidenceInputError ? error.code : "SDD_FINDING_INPUT_INVALID",
+          error instanceof Error ? error.message : "Finding inputs could not be validated.",
+          "Supply strict version 1 project-scoped finding artifacts.",
+        );
+        emit(
+          runtime,
+          invocation.format,
+          response("findings.validate", project.configuration.project_id, "error", null, [diagnostic]),
+          outputTarget,
+        );
+        return TECHNICAL_FAILURE_EXIT_CODE;
+      }
+    }
+    if (invocation.command === "merge.check") {
+      try {
+        if (
+          invocation.changePath === undefined ||
+          invocation.packagePath === undefined ||
+          !isProjectPath(invocation.packagePath) ||
+          invocation.candidatePath === undefined ||
+          !isProjectPath(invocation.candidatePath) ||
+          invocation.testIndex === undefined
+        ) {
+          throw new Error("Parsed merge check invocation is missing required inputs.");
+        }
+        const candidatePath = await resolveProjectCandidatePath(
+          runtime.fileSystem,
+          project.project_root,
+          invocation.candidatePath,
+        );
+        const [reader, change, packageValue, approvals, testIndexValue, testExecution, qa] = await Promise.all([
+          discoverProcessGitReader(runtime.processRunner, project.project_root),
+          importChangeDescriptorFile(runtime.fileSystem, project.project_root, invocation.changePath),
+          importProjectJsonArtifact(
+            runtime.fileSystem,
+            project.project_root,
+            invocation.packagePath,
+            parseProposalPackage,
+            16 * 1024 * 1024,
+          ),
+          Promise.all(
+            invocation.approvalPaths.map((path) =>
+              importApprovalEvidenceFile(runtime.fileSystem, project.project_root, path, CLI_EVIDENCE_LIMITS),
+            ),
+          ),
+          importTestIndexFile(
+            runtime.fileSystem,
+            project.project_root,
+            invocation.testIndex,
+            project.configuration.tests.import_limits.max_jsonl_bytes,
+          ),
+          Promise.all(
+            invocation.testEvidencePaths.map((path) =>
+              importTestExecutionEvidenceFile(runtime.fileSystem, project.project_root, path, CLI_EVIDENCE_LIMITS),
+            ),
+          ),
+          Promise.all(
+            invocation.qaPaths.map((path) =>
+              importQaEvidenceFile(runtime.fileSystem, project.project_root, path, CLI_EVIDENCE_LIMITS),
+            ),
+          ),
+        ]);
+        const semanticReview =
+          invocation.inputManifestPath === undefined
+            ? undefined
+            : await Promise.all([
+                importSemanticAnalysisInputManifestFile(
+                  runtime.fileSystem,
+                  project.project_root,
+                  invocation.inputManifestPath,
+                  CLI_EVIDENCE_LIMITS,
+                ),
+                Promise.all(
+                  invocation.findingPaths.map((path) =>
+                    importFindingFile(runtime.fileSystem, project.project_root, path, CLI_EVIDENCE_LIMITS),
+                  ),
+                ),
+                Promise.all(
+                  invocation.resolutionPaths.map((path) =>
+                    importFindingResolutionFile(runtime.fileSystem, project.project_root, path, CLI_EVIDENCE_LIMITS),
+                  ),
+                ),
+                Promise.all(
+                  invocation.humanReviewPaths.map((path) =>
+                    importHumanSemanticReviewEvidenceFile(
+                      runtime.fileSystem,
+                      project.project_root,
+                      path,
+                      CLI_EVIDENCE_LIMITS,
+                    ),
+                  ),
+                ),
+              ]);
+        const report = await runMergeGate({
+          fileSystem: runtime.fileSystem,
+          gitReader: reader,
+          project,
+          change: { artifact: change, source: invocation.changePath },
+          package: { artifact: packageValue, source: invocation.packagePath },
+          candidatePath,
+          branch_head_ref: change.proposal_ref,
+          integration_ref: change.integration_ref,
+          approvals: approvals.map((artifact, index) => ({ artifact, source: invocation.approvalPaths[index]! })),
+          governance: [],
+          test_index: { artifact: testIndexValue, source: invocation.testIndex },
+          test_execution: testExecution.map((artifact, index) => ({
+            artifact,
+            source: invocation.testEvidencePaths[index]!,
+          })),
+          qa: qa.map((artifact, index) => ({ artifact, source: invocation.qaPaths[index]! })),
+          ...(semanticReview === undefined
+            ? {}
+            : {
+                semantic_review: {
+                  manifest: { artifact: semanticReview[0], source: invocation.inputManifestPath! },
+                  findings: semanticReview[1].map((artifact, index) => ({
+                    artifact,
+                    source: invocation.findingPaths[index]!,
+                  })),
+                  resolutions: semanticReview[2].map((artifact, index) => ({
+                    artifact,
+                    source: invocation.resolutionPaths[index]!,
+                  })),
+                  human_reviews: semanticReview[3].map((artifact, index) => ({
+                    artifact,
+                    source: invocation.humanReviewPaths[index]!,
+                  })),
+                  model_analysis_performed: semanticReview[1].length > 0 || semanticReview[3].length === 0,
+                },
+              }),
+          current_adapter_fingerprints: testIndexValue.subject.adapter_fingerprints,
+        });
+        const envelopeStatus =
+          report.status === "PASS" ? "ok" : report.status === "BLOCKED" ? "blocked" : "review_required";
+        emit(
+          runtime,
+          invocation.format,
+          response("merge.check", project.configuration.project_id, envelopeStatus, report, report.diagnostics),
+          outputTarget,
+        );
+        return report.status === "PASS"
+          ? VALID_EXIT_CODE
+          : report.status === "BLOCKED"
+            ? BLOCKED_EXIT_CODE
+            : REVIEW_REQUIRED_EXIT_CODE;
+      } catch (error) {
+        const code =
+          error instanceof MergeInputError ||
+          error instanceof EvidenceInputError ||
+          error instanceof TestIndexInputError
+            ? error.code
+            : error instanceof GitReadError
+              ? error.code === "GIT_REF_UNRESOLVED"
+                ? "SDD_GIT_REF_UNRESOLVED"
+                : "SDD_GIT_READ_FAILED"
+              : error instanceof ProposalPackageInputError ||
+                  error instanceof ProposalInputError ||
+                  error instanceof ProposalPreparationError
+                ? "code" in error
+                  ? String(error.code)
+                  : "SDD_GATE_INPUT_INVALID"
+                : "SDD_GATE_INPUT_INVALID";
+        const diagnostic = cliDiagnostic(
+          code,
+          error instanceof Error ? error.message : "Merge readiness could not be evaluated.",
+          "Supply complete current project-scoped artifacts and resolvable Git refs.",
+        );
+        emit(
+          runtime,
+          invocation.format,
+          response("merge.check", project.configuration.project_id, "error", null, [diagnostic]),
+          outputTarget,
+        );
+        return TECHNICAL_FAILURE_EXIT_CODE;
+      }
+    }
     if (invocation.command === "proposal.apply") {
       try {
         if (invocation.patchPath === undefined) throw new Error("Parsed proposal apply invocation has no patch path.");

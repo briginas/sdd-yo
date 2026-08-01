@@ -153,3 +153,29 @@ a new exact patch without modifying the working tree.
 - A changed affected object returns `REVIEW_REQUIRED`.
 - A newly occupied ID blocks preparation.
 - The prepared semantic and structural deltas match the approved deltas.
+
+<a id="req-a3c3b779"></a>
+
+## REQ-A3C3B779 — Keep CLI workflow state external
+
+```sdd
+kind: constraint
+verification: automated
+```
+
+### Relations <!-- sdd:relations -->
+
+- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+- refers-to: [CON-4365C0F6 — Evidence](../concepts/evidence.md)
+
+### Statement <!-- sdd:statement -->
+
+The CLI shall remain reproducible from Git refs and explicit versioned
+artifacts rather than requiring a hidden durable workflow database.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- Proposal, approval, test, QA, finding, and merge artifacts are explicit
+  inputs and outputs.
+- A removable cache may accelerate processing.
+- Deleting cache does not lose source-of-truth or approval state.

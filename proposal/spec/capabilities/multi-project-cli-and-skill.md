@@ -37,33 +37,6 @@ configuration, adapters, and merge result as independent.
   Project.
 - Cross-project orchestration is not hidden inside one project result.
 
-<a id="req-f7d39246"></a>
-
-## REQ-F7D39246 — Provide a minimal deterministic CLI surface
-
-```sdd
-kind: behavior
-verification: automated
-```
-
-### Relations <!-- sdd:relations -->
-
-- refers-to: [CON-EA57C937 — SDD Project](../../../spec/concepts/sdd-project.md)
-- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
-- depends-on: [REQ-24073D4F — Query the active specification graph](../../../spec/capabilities/multi-project-cli-and-skill.md#req-24073d4f)
-
-### Statement <!-- sdd:statement -->
-
-The CLI shall expose initialization, ID generation, validation, inspection,
-traceability, object diff, proposal validation/preparation/application, test
-discovery, finding validation, and merge-check operations.
-
-### Acceptance criteria <!-- sdd:acceptance -->
-
-- Only initialization and proposal application are normal write operations.
-- Read operations support explicit Git refs when applicable.
-- Branch, commit, push, merge, and approve commands are absent.
-
 <a id="req-26234dc8"></a>
 
 ## REQ-26234DC8 — Orchestrate through one progressive-disclosure skill

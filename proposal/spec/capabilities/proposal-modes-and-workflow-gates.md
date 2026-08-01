@@ -92,32 +92,6 @@ semantic and structural specification deltas empty.
 - A changed or removed target Requirement returns `REVIEW_REQUIRED`.
 - Discovering that the contract is wrong requires a new `spec-code` Change.
 
-<a id="req-a3c3b779"></a>
-
-## REQ-A3C3B779 — Keep CLI workflow state external
-
-```sdd
-kind: constraint
-verification: automated
-```
-
-### Relations <!-- sdd:relations -->
-
-- refers-to: [CON-3E620A28 — Change](../../../spec/concepts/change.md)
-- refers-to: [CON-4365C0F6 — Evidence](../../../spec/concepts/evidence.md)
-
-### Statement <!-- sdd:statement -->
-
-The CLI shall remain reproducible from Git refs and explicit versioned
-artifacts rather than requiring a hidden durable workflow database.
-
-### Acceptance criteria <!-- sdd:acceptance -->
-
-- Proposal, approval, test, QA, finding, and merge artifacts are explicit
-  inputs and outputs.
-- A removable cache may accelerate processing.
-- Deleting cache does not lose source-of-truth or approval state.
-
 <a id="req-9d265509"></a>
 
 ## REQ-9D265509 — Use four explicit workflow gates

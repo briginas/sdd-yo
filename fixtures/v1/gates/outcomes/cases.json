@@ -38,7 +38,7 @@
     "spec/capabilities/semantic-review-and-conflicts.md#req-20aaa622",
     "spec/capabilities/semantic-review-and-conflicts.md#req-2af962eb",
     "spec/capabilities/merge-readiness.md#req-bcfa15d8",
-    "proposal/spec/capabilities/merge-readiness.md#req-41edf9a3",
+    "spec/capabilities/merge-readiness.md#req-41edf9a3",
     "proposal/architecture/artifact-schemas.md#conflictreport-and-mergereport",
     "proposal/architecture/cli.md#exit-codes"
   ],
