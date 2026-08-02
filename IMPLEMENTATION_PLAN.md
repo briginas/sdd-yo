@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 7 / Existing-project dogfood
-- Current leaf: Milestone 7.2g `pi` current test execution evidence
+- Current leaf: Milestone 7.2h `pi` baseline QA evidence
 - Last updated: 2026-08-02
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -908,12 +908,18 @@ Bounded leaves:
         unchanged candidate. Do not infer approval from repository ownership,
         this plan, authored specifications, or passing tests; defer
         TestExecutionEvidence, baseline QA, and all later gates.
-  - [ ] **7.2g — Current test execution evidence.** Generate fresh safe
+  - [x] **7.2g — Current test execution evidence.** Generate fresh safe
         Vitest and `node:test` JUnit reports at the unchanged candidate head,
         import the bound two-adapter TestIndex, record project-scoped
         TestExecutionEvidence from the configured `local-test-run` issuer, and
         validate the exact project, head, configuration, TestIndex, and result
         subjects. Do not make a QA decision or run the Verification or Merge
+        gates.
+  - [ ] **7.2h — Baseline QA evidence.** At the unchanged candidate head and
+        resolved integration commit, exercise the three deterministic baseline
+        QA scenarios from 7.2c, obtain the actual QA tester's Capability
+        decision, and record project-scoped QAEvidence from `local-qa`. Do not
+        infer QA from current test execution or run the Verification or Merge
         gates.
 - [ ] **7.3 — Independent projects in a monorepo.** Select and onboard a
       monorepo with two independent SDD Projects, govern one real Change, and
@@ -961,10 +967,9 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 7.2f is complete. The actual Spec Approver approved the exact 7.2e
-`spec` ProposalPackage subject through `local-product-review`; the
-project-scoped ApprovalEvidence is current against the unchanged candidate.
-The next bounded leaf is 7.2g: generate fresh safe Vitest and `node:test` JUnit
-reports, import their two-adapter TestIndex, and record current
-TestExecutionEvidence. Do not make a QA decision or run the Verification or
-Merge gates.
+Milestone 7.2g is complete. The fresh safe Vitest and `node:test` JUnit reports
+produced one current two-adapter TestIndex and project-scoped
+TestExecutionEvidence from `local-test-run` for all selected executable tests.
+The next bounded leaf is 7.2h: obtain an actual baseline QA decision over the
+three deterministic scenarios and record QAEvidence from `local-qa`. Do not
+infer QA from this execution evidence or run the Verification or Merge gates.

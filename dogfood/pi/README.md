@@ -462,9 +462,33 @@ This decision approves only the baseline specification of existing behavior. It
 is not TestExecutionEvidence, QAEvidence, a Verification or Merge Gate result,
 permission to merge, or approval of a later `pi` milestone.
 
+## Current test execution evidence result
+
+Milestone 7.2g generated fresh safe JUnit reports at the unchanged candidate
+head `7125d8b6293bdec2bd8d1c2b232cc2730e93d8ec`. Vitest passed 10 selected
+coding-agent tests and `node:test` passed six selected Editor tests. The latter
+retained hierarchy; Vitest retained the known
+`SDD_ADAPTER_JUNIT_HIERARCHY_UNAVAILABLE` warning without guessed suites.
+
+The configured `vitest` and `node-test` adapters imported one 16-entry
+TestIndex at `evidence/test-indexes/7.2g-current.json`. It maps 11 executable
+tests: three to `REQ-654553C6`, one to `REQ-EAFBC76A`, and seven to
+`REQ-3E851E79`. Project-scoped TestExecutionEvidence from `local-test-run` at
+`evidence/test-executions/7.2g-current.json` supplies exactly one `passed`
+result for each TestIndex reference. Its validated subject is project
+`SDD-B6FCE07B`, that head, configuration fingerprint
+`sha256:c469e8113d2a59258baedc3981aa68a707da49385938b594077d512c1da58673`, and
+TestIndex fingerprint
+`sha256:186a6447be97f6dd9c77c28f31403c08c3958c0c145aa2b35ea4552036f28d28`.
+
+The test run temporarily materialized ignored generated model-data files solely
+to satisfy static imports in the selected non-provider Vitest test. They were
+removed before recording evidence and are not part of the candidate, evidence,
+or Git state. No QA decision or Verification or Merge gate was run.
+
 ## Next bounded leaf
 
-Milestone 7.2g may generate fresh safe Vitest and `node:test` JUnit reports at
-the unchanged candidate head, import the bound two-adapter TestIndex, and record
-only current project-scoped TestExecutionEvidence from `local-test-run`. It must
-not make a QA decision or execute the Verification or Merge gates.
+Milestone 7.2h may exercise the three deterministic baseline QA scenarios,
+obtain the actual QA tester's Capability decision, and record project-scoped
+QAEvidence from `local-qa`. It must not infer QA from current test execution or
+execute the Verification or Merge gates.
