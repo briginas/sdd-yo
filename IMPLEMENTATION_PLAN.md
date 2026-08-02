@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 7 / Existing-project dogfood
-- Current leaf: Milestone 7.3 two-study dogfood synthesis
+- Current leaf: Milestone 7.4a baseline evidence-retention contract clarification
 - Last updated: 2026-08-02
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -920,14 +920,40 @@ Bounded leaves:
         decision, and record project-scoped QAEvidence from `local-qa`. Do not
         infer QA from current test execution or run the Verification or Merge
         gates.
-- [ ] **7.3 — Two-study dogfood synthesis.** Compare the completed `yo` and
+- [x] **7.3 — Two-study dogfood synthesis.** Compare the completed `yo` and
       `pi` studies, distinguish observations reproduced in both from
       project-specific observations, and identify bounded follow-up work. Do
       not claim that two studies establish monorepo isolation, broader MVP
-      usability, or cross-project behavior.
+      usability, or cross-project behavior. The result is recorded in
+      [`dogfood/README.md`](dogfood/README.md).
 - [ ] **7.4 — Confirmed-problem fixes.** Correct only problems confirmed by
       the two-study synthesis through contracts, validators, documentation, or
       evals, with each fix implemented and verified as its own bounded Change.
+  - [ ] **7.4a — Baseline evidence-retention contract clarification.** Define a
+        supported project-scoped retention topology that lets ApprovalEvidence,
+        TestExecutionEvidence, QAEvidence, candidate bytes, and gate reports
+        remain reproducible without advancing or duplicating the Git subjects
+        they bind. Resolve the ambiguity exposed by `OBS-YO-004` before any
+        runtime or schema change. Do not weaken freshness, current-ref,
+        historical-ID, project-boundary, or exact-subject validation.
+  - [ ] **7.4b — Empty-scope decision clarity.** Prevent zero-object test and
+        QA summaries from implying that a previously approved affected scope
+        passed when gate recomputation collapses that scope to empty. Preserve
+        deterministic top-level precedence and exact evidence binding.
+  - [ ] **7.4c — Portable candidate retention.** Define and implement a
+        reproducible candidate-snapshot workflow that neither creates a nested
+        discoverable SDD Project nor depends on an undocumented manual
+        extraction step. Preserve project-relative input and path-containment
+        guarantees.
+  - [ ] **7.4d — Onboarding recovery guidance.** Improve bounded recovery for
+        project selectors, host formatter ownership, and producer-specific
+        JUnit hierarchy without adding language-, framework-, formatter-, or
+        package-manager-specific behavior to the core.
+  - [ ] **7.4e — Existing-project eval measurement completeness.** Require
+        future studies to record total time to first governed Capability, a
+        repository-wide traceability denominator, semantic-candidate review
+        quality, and author/developer/QA comprehension time without fabricating
+        missing measurements for `yo` or `pi`.
 
 ## Milestone 8 — Agent Skill
 
@@ -969,9 +995,9 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 7.2h is complete. The actual QA tester decided `passed` for the
-three deterministic baseline scenarios and recorded project-scoped QAEvidence
-from `local-qa` against the exact candidate, resolved integration, and affected
-scope subjects. No Verification or Merge gate was run. The next bounded work is
-Milestone 7.3: synthesize the completed `yo` and `pi` studies without claiming
-the deferred monorepo isolation or three-repository MVP evidence.
+Milestone 7.3 is complete. The two-study synthesis distinguishes reproduced
+constraints, project-specific results, single-study confirmed problems, and
+eval measurements that were not exercised. The existing-monorepo study and
+three-repository MVP criterion remain deferred. The next bounded work is
+Milestone 7.4a: clarify the supported baseline evidence-retention topology
+before changing runtime, schemas, or gate semantics.

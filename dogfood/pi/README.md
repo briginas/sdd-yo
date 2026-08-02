@@ -20,9 +20,10 @@
 The repository is an npm workspace containing several packages, but this study
 treats the complete repository as one SDD Project because its packages share
 one Git history, root configuration, dependency lock, and root test workflow.
-That choice does not satisfy Milestone 7.3: the later monorepo study still
-requires two independently configured SDD Projects and explicit project and
-evidence isolation.
+That choice does not satisfy the deferred existing-monorepo study or the
+architecture's three-repository MVP criterion, which still require two
+independently configured SDD Projects and explicit project and evidence
+isolation.
 
 The user selected this study boundary on 2026-08-02. This planning decision is
 not permission to mutate `pi`, ApprovalEvidence, QAEvidence, a gate result, or
@@ -336,7 +337,7 @@ where that distinction matters:
 
 Explicitly compare whether `OBS-YO-001`, `OBS-YO-004`, `OBS-YO-005`, and
 `OBS-YO-006` recur. Do not fix a repeated issue during this study; Milestones
-7.4 and 7.5 own cross-study synthesis and separately bounded fixes.
+7.3 and 7.4 own cross-study synthesis and separately bounded fixes.
 
 For each observation, retain the command or workflow step, expected and actual
 result, stable diagnostic or artifact identity, measured effort, framework if
@@ -509,8 +510,10 @@ This QA decision is independent of automated test execution. It is not a
 Verification or Merge Gate result, permission to merge, or approval of later
 `pi` work.
 
-## Next bounded leaf
+## Cross-study handoff
 
-Milestone 7.2 is complete. The next bounded work is Milestone 7.3: select a
-monorepo containing two independent SDD Projects before onboarding or governing
-a real Change.
+Milestone 7.2 is complete, and its results are classified in the completed
+cross-study synthesis at [`../README.md`](../README.md). The next bounded work
+is Milestone 7.4a, the baseline evidence-retention contract clarification. The
+existing-monorepo and project-isolation study remains deferred and is not
+implied by this single-project workspace.

@@ -380,8 +380,8 @@ past the integration commit bound by QAEvidence. Strict current-ref and
 historical-ID checks correctly blocked that topology, but the workflow offers
 no demonstrated retention path that preserves project-scoped artifact files
 without changing the very Git subjects they bind. Treat this as a provisional
-recurring workflow problem for comparison in 7.2 and 7.3; do not fix it before
-the 7.4 synthesis and separately bounded 7.5 work.
+workflow problem for comparison in the Milestone 7.3 synthesis; do not fix it
+outside separately bounded Milestone 7.4 work.
 
 ### OBS-YO-005 — Empty recomputed scope can look like successful verification
 
