@@ -397,11 +397,53 @@ adopt unrelated generated output. Treat this as provisional project-specific
 validation friction, not a passing full root check or a product defect in SDD
 Yo.
 
+## Proposal validation and approval subject result
+
+Milestone 7.2e built the current local SDD Yo CLI and mechanically validated
+the committed `pi` baseline candidate with:
+
+```text
+node /Users/dev.briginas/dev/sdd-yo/dist/bin/sdd.js proposal validate \
+  --cwd /Users/dev.briginas/dev/pi \
+  --mode spec \
+  --base 8ce561aacd3ea0c7a098b923dad07faec3a0db09 \
+  --candidate /Users/dev.briginas/dev/pi \
+  --format json
+```
+
+The base is the committed initialized empty SDD Project. The candidate is the
+clean `pi` worktree at `f0a93d155edf214cb020acdbe63319a08f597fa7`. Two
+independent stdout runs each exited 0 and produced byte-identical 1,079-byte
+JSON responses with status `ok`, no diagnostics, and this exact
+ProposalPackage subject:
+
+- project: `SDD-B6FCE07B`;
+- mode: `spec`;
+- base tree:
+  `sha256:22ff30b4513d4da0b097391190f2cb5ba38f71377d7f08fe067fff9cd951f9a4`;
+- candidate tree:
+  `sha256:44be0ea579242e3e3398d0232f222afe0d30922b819f1756004cc40b3d3eec99`;
+- semantic delta:
+  `sha256:b3a4a7a47b4bae0fd14aad446add628b11d9e0bd7a4d01a74c76c3ddb6203791`;
+- structural delta:
+  `sha256:cbec60eefc33a8e5080b843fa815d2d0fc97823e527633b152cde61a017248a8`;
+- affected scope:
+  `sha256:fe13afd5d31e3f1759fa1d3c4f4c3cf675bfe690c3d410bbaf422a6d4b673317`.
+
+The object delta adds exactly `CAP-DE55E840` and `REQ-3E851E79`,
+`REQ-654553C6`, and `REQ-EAFBC76A`; there are no modified or deleted SDD
+objects. The affected scope contains that Capability and the same three
+Requirements. `code_targets` and deterministic `semantic_candidates` are
+empty, as expected for this baseline package.
+
+The successful validation used stdout only and modified neither `pi` nor its
+Git state. Mechanical validity does not establish that the described existing
+behavior is accepted; that separate human decision is the next bounded leaf.
+
 ## Next bounded leaf
 
-Milestone 7.2e may mechanically validate the committed 7.2d candidate in
-`spec` mode against the initialized empty-project base, confirm deterministic
-ProposalPackage output and exact semantic and structural delta fingerprints,
-and record only the external review subject. It must not write to `pi`, create
-ApprovalEvidence, TestExecutionEvidence, or QAEvidence, infer human acceptance,
-or execute a later gate.
+Milestone 7.2f may present the exact 7.2e ProposalPackage subject to the actual
+Spec Approver, record only a project-scoped ApprovalEvidence decision from the
+configured `local-product-review` issuer, and validate it against the unchanged
+candidate. It must not infer approval from authorship or passing checks, create
+test or QA evidence, or execute a later gate.

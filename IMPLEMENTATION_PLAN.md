@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 7 / Existing-project dogfood
-- Current leaf: Milestone 7.2e `pi` mechanical proposal and approval subject
+- Current leaf: Milestone 7.2f `pi` external specification approval
 - Last updated: 2026-08-02
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -893,7 +893,7 @@ Bounded leaves:
         or execute Proposal, Verification, or Merge gates.
         Implemented identities: `CAP-DE55E840`, `REQ-654553C6`,
         `REQ-EAFBC76A`, and `REQ-3E851E79`.
-  - [ ] **7.2e — Mechanical proposal and approval subject.** Validate the
+  - [x] **7.2e — Mechanical proposal and approval subject.** Validate the
         committed 7.2d baseline candidate in `spec` mode against the initialized
         empty-project base, confirm deterministic ProposalPackage output and
         exact semantic and structural delta fingerprints for the three
@@ -901,6 +901,13 @@ Bounded leaves:
         Do not create ApprovalEvidence, TestExecutionEvidence, or QAEvidence,
         run a later gate, or infer acceptance from specification authorship,
         focused tests, or mechanical validity.
+  - [ ] **7.2f — External specification approval.** Present the exact 7.2e
+        ProposalPackage subject to the actual Spec Approver, record the
+        external decision as project-scoped ApprovalEvidence from the configured
+        `local-product-review` issuer, and validate that evidence against the
+        unchanged candidate. Do not infer approval from repository ownership,
+        this plan, authored specifications, or passing tests; defer
+        TestExecutionEvidence, baseline QA, and all later gates.
 - [ ] **7.3 — Independent projects in a monorepo.** Select and onboard a
       monorepo with two independent SDD Projects, govern one real Change, and
       verify project and evidence isolation.
