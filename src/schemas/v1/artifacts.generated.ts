@@ -447,7 +447,7 @@ export interface FindingSummary {
   state: "open" | "resolved" | "stale" | "contradictory";
 }
 export interface CheckSummary {
-  status: "PASS" | "REVIEW_REQUIRED" | "BLOCKED";
+  status: "PASS" | "REVIEW_REQUIRED" | "BLOCKED" | "NOT_APPLICABLE";
   satisfied: number;
   unsatisfied: number;
 }

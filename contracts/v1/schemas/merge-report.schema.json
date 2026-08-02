@@ -195,7 +195,12 @@
       ],
       "properties": {
         "status": {
-          "$ref": "common.schema.json#/$defs/readinessStatus"
+          "enum": [
+            "PASS",
+            "REVIEW_REQUIRED",
+            "BLOCKED",
+            "NOT_APPLICABLE"
+          ]
         },
         "satisfied": {
           "type": "integer",
@@ -206,6 +211,26 @@
           "minimum": 0
         }
       }
+    },
+    "notApplicableCheckSummary": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/checkSummary"
+        },
+        {
+          "properties": {
+            "status": {
+              "const": "NOT_APPLICABLE"
+            },
+            "satisfied": {
+              "const": 0
+            },
+            "unsatisfied": {
+              "const": 0
+            }
+          }
+        }
+      ]
     }
   },
   "allOf": [
@@ -247,6 +272,61 @@
               "required": [
                 "code_targets"
               ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "affected_scope": {
+            "properties": {
+              "requirements": {
+                "maxItems": 0
+              },
+              "capabilities": {
+                "maxItems": 0
+              }
+            },
+            "required": [
+              "requirements",
+              "capabilities"
+            ]
+          }
+        },
+        "required": [
+          "affected_scope"
+        ]
+      },
+      "then": {
+        "properties": {
+          "test_summary": {
+            "$ref": "#/$defs/notApplicableCheckSummary"
+          },
+          "qa_summary": {
+            "$ref": "#/$defs/notApplicableCheckSummary"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "test_summary": {
+            "properties": {
+              "status": {
+                "not": {
+                  "const": "NOT_APPLICABLE"
+                }
+              }
+            }
+          },
+          "qa_summary": {
+            "properties": {
+              "status": {
+                "not": {
+                  "const": "NOT_APPLICABLE"
+                }
+              }
             }
           }
         }

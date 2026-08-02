@@ -15,8 +15,12 @@
   },
   "affected_scope": {
     "fingerprint": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
-    "requirements": [],
-    "capabilities": []
+    "requirements": [
+      "REQ-1234ABCD"
+    ],
+    "capabilities": [
+      "CAP-1234ABCD"
+    ]
   },
   "test_summary": {
     "status": "NOT_APPLICABLE",

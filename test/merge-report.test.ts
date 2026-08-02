@@ -313,6 +313,74 @@ test("REQ-E85A06C3 REQ-3B9FC7FF REQ-8E2D9A5F REQ-BCFA15D8 blocks stale refs and 
   assert.ok(staleSemantic.diagnostics.some((item) => item.code === "SDD_MERGE_SEMANTIC_INPUT_STALE"));
 });
 
+test("REQ-3B9FC7FF REQ-82256D82 marks empty-scope test and QA summaries non-applicable", async () => {
+  const value = await fixture();
+  await executeFile("git", ["branch", "--force", "main", "change"], { cwd: value.root });
+
+  const report = await runMergeGate(value.input);
+
+  assert.equal(report.status, "BLOCKED");
+  assert.deepEqual(report.affected_scope.requirements, []);
+  assert.deepEqual(report.affected_scope.capabilities, []);
+  assert.deepEqual(report.test_summary, { status: "NOT_APPLICABLE", satisfied: 0, unsatisfied: 0 });
+  assert.deepEqual(report.qa_summary, { status: "NOT_APPLICABLE", satisfied: 0, unsatisfied: 0 });
+
+  const evidence = join(value.root, "evidence");
+  const candidate = join(value.root, "candidate");
+  await mkdir(evidence);
+  await cp(value.input.candidatePath, candidate, { recursive: true });
+  await Promise.all([
+    writeFile(
+      join(evidence, "change.json"),
+      JSON.stringify({
+        schema_version: "1.0",
+        artifact_type: "change_descriptor",
+        project_id: value.packageValue.project_id,
+        mode: value.packageValue.mode,
+        integration_ref: "main",
+        proposal_ref: "change",
+        approved_delta: {
+          semantic: value.packageValue.object_delta.semantic_fingerprint,
+          structural: value.packageValue.object_delta.structural_fingerprint,
+        },
+        code_targets: value.packageValue.code_targets,
+      }),
+    ),
+    writeFile(join(evidence, "package.json"), JSON.stringify(value.packageValue)),
+    writeFile(join(evidence, "approval.json"), JSON.stringify(value.approval)),
+    writeFile(join(evidence, "test-index.json"), JSON.stringify(value.input.test_index.artifact)),
+    writeFile(join(evidence, "execution.json"), JSON.stringify(value.input.test_execution[0]!.artifact)),
+    writeFile(join(evidence, "qa.json"), JSON.stringify(value.input.qa[0]!.artifact)),
+    writeFile(join(evidence, "manifest.json"), JSON.stringify(value.input.semantic_review.manifest.artifact)),
+  ]);
+  const human = await executeCli(
+    [
+      "merge",
+      "check",
+      "--change",
+      "evidence/change.json",
+      "--package",
+      "evidence/package.json",
+      "--candidate",
+      "candidate",
+      "--approval",
+      "evidence/approval.json",
+      "--test-index",
+      "evidence/test-index.json",
+      "--test-evidence",
+      "evidence/execution.json",
+      "--qa",
+      "evidence/qa.json",
+      "--input-manifest",
+      "evidence/manifest.json",
+    ],
+    value.root,
+  );
+  assert.equal(human.exitCode, 1, human.output);
+  assert.match(human.output, /^tests: NOT_APPLICABLE \(empty affected scope\)$/mu);
+  assert.match(human.output, /^QA: NOT_APPLICABLE \(empty affected scope\)$/mu);
+});
+
 test("REQ-FDD51416 REQ-BCFA15D8 applies blocker precedence to history and human evidence", async () => {
   const value = await fixture();
   const incompleteReader = { ...value.reader, historyStatus: async () => "incomplete" as const };

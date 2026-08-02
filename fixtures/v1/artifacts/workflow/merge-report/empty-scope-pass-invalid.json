@@ -19,12 +19,12 @@
     "capabilities": []
   },
   "test_summary": {
-    "status": "NOT_APPLICABLE",
+    "status": "PASS",
     "satisfied": 0,
     "unsatisfied": 0
   },
   "qa_summary": {
-    "status": "NOT_APPLICABLE",
+    "status": "PASS",
     "satisfied": 0,
     "unsatisfied": 0
   },

@@ -78,7 +78,11 @@ export type MergeReport = {
   }[];
 };
 
-type CheckSummary = { readonly status: ReadinessStatus; readonly satisfied: number; readonly unsatisfied: number };
+type CheckSummary = {
+  readonly status: ReadinessStatus | "NOT_APPLICABLE";
+  readonly satisfied: number;
+  readonly unsatisfied: number;
+};
 type MergeIssue = {
   readonly code: string;
   readonly disposition: "BLOCKED" | "REVIEW_REQUIRED";
@@ -134,7 +138,8 @@ function diagnosticKey(value: Diagnostic): string {
   return [value.code, value.object_id ?? "", JSON.stringify(value.details ?? {})].join("\0");
 }
 
-function summary(satisfied: number, unsatisfied: number, blocked: boolean): CheckSummary {
+function summary(satisfied: number, unsatisfied: number, blocked: boolean, applicable: boolean): CheckSummary {
+  if (!applicable) return { status: "NOT_APPLICABLE", satisfied: 0, unsatisfied: 0 };
   return {
     status: unsatisfied === 0 ? "PASS" : blocked ? "BLOCKED" : "REVIEW_REQUIRED",
     satisfied,
@@ -373,6 +378,8 @@ export async function runMergeGate(input: {
     ...verification.manual_verification.unsatisfied,
     ...verification.qa_coverage.unsatisfied,
   ]).size;
+  const affectedScopeIsNonEmpty =
+    verification.affected_requirements.length > 0 || verification.affected_capabilities.length > 0;
   const allInputs: VersionedMergeInput<{ readonly artifact_type: string }>[] = [
     ...(input.change === undefined ? [] : [input.change]),
     input.package as VersionedMergeInput<{ readonly artifact_type: string }>,
@@ -425,11 +432,13 @@ export async function runMergeGate(input: {
       verification.test_execution.satisfied.length,
       testUnsatisfied,
       verification.diagnostics.some((item) => item.details?.disposition === "BLOCKED" && /TEST/u.test(item.code)),
+      affectedScopeIsNonEmpty,
     ),
     qa_summary: summary(
       verification.manual_verification.satisfied.length + verification.qa_coverage.satisfied.length,
       qaUnsatisfied,
       verification.diagnostics.some((item) => item.details?.disposition === "BLOCKED" && /QA|MANUAL/u.test(item.code)),
+      affectedScopeIsNonEmpty,
     ),
     findings_and_evidence: {
       findings: verification.findings,

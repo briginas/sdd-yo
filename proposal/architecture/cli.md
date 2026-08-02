@@ -261,6 +261,11 @@ resolves the current configured integration ref and declared proposal ref,
 recomputes conflict and affected scope, validates all evidence, and returns a
 `MergeReport`. It never modifies Git or hosting state.
 
+When recomputation produces an empty affected scope, the human view prints
+`NOT_APPLICABLE (empty affected scope)` for both test and QA summaries rather
+than presenting zero-object `PASS` summaries. The report's top-level readiness
+and exit-code mapping remain unchanged.
+
 ## Input rules
 
 - `-` means standard input only where the command has one unambiguous artifact

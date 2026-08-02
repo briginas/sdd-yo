@@ -131,10 +131,25 @@ ref, and no retention-only branch or tag is created.
 This topology preserves existing path containment and strict subject
 validation while preventing evidence retention from advancing the subjects it
 binds. A moved ref still makes dependent evidence stale and requires new
-evidence. This clarification changes no runtime, schema, or gate semantics.
-It also does not resolve `OBS-YO-005` or define the portable candidate-snapshot
-production and materialization workflow in `OBS-YO-006`; those remain bounded
-Milestones 7.4b and 7.4c.
+evidence. This clarification changes no runtime, schema, or gate semantics. It
+does not define the portable candidate-snapshot production and materialization
+workflow in `OBS-YO-006`; that remains bounded Milestone 7.4c.
+
+### 7.4b resolution — Empty scope is non-verifying
+
+Milestone 7.4b resolves the report-comprehension problem in `OBS-YO-005`.
+When gate recomputation produces no affected Requirements or Capabilities, the
+MergeReport now emits `NOT_APPLICABLE` for both nested test and QA summaries,
+with zero satisfied and zero unsatisfied objects. The schema rejects an empty
+scope paired with `PASS` summaries and rejects `NOT_APPLICABLE` when the scope
+is non-empty. The human view states that the summaries are non-applicable
+because the affected scope is empty.
+
+This nested summary state does not change the Merge Gate's top-level `PASS`,
+`REVIEW_REQUIRED`, or `BLOCKED` result, blocker-first precedence, or any
+evidence subject. A Requirement-named regression reproduces the original
+integration-advance condition and confirms the overall report remains
+`BLOCKED` while its zero-object summaries no longer imply verification.
 
 ## Deferred claims
 

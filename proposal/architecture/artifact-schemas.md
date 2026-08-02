@@ -478,6 +478,13 @@ A MergeReport contains:
 - stable diagnostics;
 - one status: `PASS`, `REVIEW_REQUIRED`, or `BLOCKED`.
 
+The test and QA summary status is `PASS`, `REVIEW_REQUIRED`, or `BLOCKED` when
+the recomputed affected scope is non-empty. When both the affected Requirement
+and Capability sets are empty, both summaries instead use `NOT_APPLICABLE`
+with zero satisfied and zero unsatisfied objects. `NOT_APPLICABLE` is a nested
+summary state only: it does not extend the Merge Gate's three top-level
+readiness statuses or override blocker-first status composition.
+
 The report records its complete input manifest so the result can be reproduced.
 It never embeds secrets, hidden model reasoning, or an assertion of semantic
 completeness.

@@ -1338,8 +1338,12 @@ function humanView(value: CliResponse): string {
         : "approved structural: unchanged",
       `affected requirements: ${result.affected_scope.requirements.join(", ") || "none"}`,
       `affected capabilities: ${result.affected_scope.capabilities.join(", ") || "none"}`,
-      `tests: ${result.test_summary.status} (${result.test_summary.satisfied} satisfied, ${result.test_summary.unsatisfied} unsatisfied)`,
-      `QA: ${result.qa_summary.status} (${result.qa_summary.satisfied} satisfied, ${result.qa_summary.unsatisfied} unsatisfied)`,
+      result.test_summary.status === "NOT_APPLICABLE"
+        ? "tests: NOT_APPLICABLE (empty affected scope)"
+        : `tests: ${result.test_summary.status} (${result.test_summary.satisfied} satisfied, ${result.test_summary.unsatisfied} unsatisfied)`,
+      result.qa_summary.status === "NOT_APPLICABLE"
+        ? "QA: NOT_APPLICABLE (empty affected scope)"
+        : `QA: ${result.qa_summary.status} (${result.qa_summary.satisfied} satisfied, ${result.qa_summary.unsatisfied} unsatisfied)`,
       `evidence: ${result.findings_and_evidence.evidence_status}`,
       `findings: ${result.findings_and_evidence.findings.length}`,
       `conflicts: ${result.diagnostics.filter((diagnostic) => diagnostic.code.includes("CONFLICT")).length}`,

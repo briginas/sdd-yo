@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 7 / Existing-project dogfood
-- Current leaf: Milestone 7.4b empty-scope decision clarity
+- Current leaf: Milestone 7.4c portable candidate retention
 - Last updated: 2026-08-02
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -942,10 +942,17 @@ Bounded leaves:
         before cleanup without committing retention artifacts or creating
         retention-only refs. Requirement traceability: `REQ-A3C3B779`,
         `REQ-E85A06C3`, `REQ-3B9FC7FF`, `REQ-93A4C44B`, and `REQ-FDD51416`.
-  - [ ] **7.4b — Empty-scope decision clarity.** Prevent zero-object test and
+  - [x] **7.4b — Empty-scope decision clarity.** Prevent zero-object test and
         QA summaries from implying that a previously approved affected scope
         passed when gate recomputation collapses that scope to empty. Preserve
-        deterministic top-level precedence and exact evidence binding.
+        deterministic top-level precedence and exact evidence binding. Empty
+        recomputed Requirement and Capability sets now produce nested
+        `NOT_APPLICABLE` test and QA summaries with zero counts; non-empty
+        summaries retain the three readiness states, and the top-level gate
+        remains exactly `PASS`, `REVIEW_REQUIRED`, or `BLOCKED`. The schema
+        rejects both zero-object `PASS` and non-empty `NOT_APPLICABLE`
+        summaries, while the human view names the empty-scope reason.
+        Requirement traceability: `REQ-3B9FC7FF` and `REQ-82256D82`.
   - [ ] **7.4c — Portable candidate retention.** Define and implement a
         reproducible candidate-snapshot workflow that neither creates a nested
         discoverable SDD Project nor depends on an undocumented manual
@@ -1001,10 +1008,9 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 7.4a is complete. The supported topology keeps durable immutable
-artifacts outside assessed Git refs, materializes exact bytes under an ignored
-project-local staging root for CLI use, and exports reports without changing
-their bound subjects. It changes no runtime, schema, or gate semantics. The
-next bounded work is Milestone 7.4b: prevent an empty recomputed affected scope
-from presenting test and QA summaries that imply an earlier non-empty scope
-was verified.
+Milestone 7.4b is complete. An empty recomputed affected scope now produces
+schema-enforced `NOT_APPLICABLE` test and QA summaries in JSON and an explicit
+empty-scope explanation in the human view, without changing the top-level
+readiness decision or evidence subjects. The next bounded work is Milestone
+7.4c: define and implement a portable candidate-snapshot workflow without a
+nested discoverable SDD Project or undocumented manual extraction step.

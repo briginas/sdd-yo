@@ -141,6 +141,9 @@ freshness before returning `PASS`.
 - A prior clean Branch Preparation result is not assumed current.
 - New integration changes invalidate the prior ConflictReport.
 - A textual clean merge does not skip semantic analysis.
+- When recomputation produces no affected Requirements or Capabilities, test
+  and QA summaries are explicitly `NOT_APPLICABLE`; zero satisfied and zero
+  unsatisfied objects do not report a nested `PASS`.
 
 <a id="req-93a4c44b"></a>
 
@@ -240,6 +243,9 @@ conflicts, diagnostics, and final status.
 
 - JSON ordering is deterministic.
 - Human output is not treated as the stable API.
+- Top-level readiness remains `PASS`, `REVIEW_REQUIRED`, or `BLOCKED`; nested
+  test and QA summaries use `NOT_APPLICABLE` only for an empty recomputed
+  affected scope.
 - Reports identify governed-scope-only status during incremental adoption.
 - Reports do not claim proof of semantic completeness.
 

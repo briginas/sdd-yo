@@ -124,6 +124,20 @@
       "parse_valid": true,
       "schema_valid": false,
       "context_valid": false
+    },
+    {
+      "path": "empty-scope-pass-invalid.json",
+      "parse_valid": true,
+      "schema_valid": false,
+      "context_valid": false,
+      "expectation": "Reject zero-object PASS summaries for an empty recomputed affected scope."
+    },
+    {
+      "path": "nonempty-scope-not-applicable-invalid.json",
+      "parse_valid": true,
+      "schema_valid": false,
+      "context_valid": false,
+      "expectation": "Reject NOT_APPLICABLE summaries for a non-empty recomputed affected scope."
     }
   ]
 }
