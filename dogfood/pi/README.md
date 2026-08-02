@@ -13,8 +13,8 @@
 - First governed Capability: existing user-prompt acquisition across the
   coding-agent CLI and terminal input components.
 - Onboarding status: empty incremental SDD Project initialized; first baseline
-  contract, test mapping, JUnit feasibility, approval inputs, and QA boundary
-  clarified but not authored.
+  contract clarified, authored, test-traceable, and mechanically ready for a
+  later ProposalPackage validation; no evidence or gate has been created.
 
 The repository is an npm workspace containing several packages, but this study
 treats the complete repository as one SDD Project because its packages share
@@ -343,11 +343,65 @@ applicable, and provisional project-specific or recurring classification. Do
 not store secrets, provider credentials, unrestricted environment output, or
 fabricated human evidence.
 
+## Baseline authoring and traceability result
+
+Milestone 7.2d authored Capability `CAP-DE55E840` and three automated
+Requirements:
+
+- `REQ-654553C6` — compose the initial prompt from CLI sources;
+- `REQ-EAFBC76A` — preserve later positional messages as later prompts;
+- `REQ-3E851E79` — submit an ordinary interactive Editor prompt.
+
+The resulting `pi` candidate commit is
+`f0a93d155edf214cb020acdbe63319a08f597fa7`.
+
+The `vitest` JUnit adapter reads `.artifacts/sdd/vitest.xml`; the `node-test`
+adapter reads `.artifacts/sdd/node-test.xml`. The selected issuer names are
+`local-product-review`, `local-test-run`, and `local-qa`. These configuration
+entries create no evidence and grant no actor authority.
+
+Traceability changed only the nine selected existing source-name anchors: all
+three `buildInitialMessage` leaves received `REQ-654553C6`; the retained
+`Backslash+Enter newline workaround` ancestor and the directly mapped submit
+leaf received `REQ-3E851E79`. The two new deterministic Vitest leaves verify
+ordered print-mode delivery for `REQ-EAFBC76A` and same-value ordinary idle
+Editor delivery for `REQ-3E851E79`. No production source changed.
+
+The focused Vitest run passed 10 tests across the three affected coding-agent
+files, and the focused Node run passed the six selected Editor tests. The two
+JUnit reports imported in an isolated candidate repository as 16 executable
+TestIndex entries, 11 of them Requirement-mapped: three for `REQ-654553C6`, one
+for `REQ-EAFBC76A`, and seven for `REQ-3E851E79`. Node retained the selected
+suite hierarchy; Vitest produced stable full names but retained the expected
+`SDD_ADAPTER_JUNIT_HIERARCHY_UNAVAILABLE` warning, so every applicable Vitest
+leaf carries its Requirement ID directly.
+
+Candidate graph validation returned one Capability, three Requirements, no
+Concepts, complete configured history at
+`8ce561aacd3ea0c7a098b923dad07faec3a0db09`, and no diagnostics. Biome checked
+808 files without changing any file, root TypeScript no-emit and browser smoke
+checks passed, and the candidate diff contains no runtime, dependency,
+lockfile, evidence, or gate change. Temporary model-data import stubs, JUnit
+reports, the isolated candidate repository, and its TestIndex are not retained
+as dogfood evidence.
+
+### OBS-PI-002 — Generated coding-agent lock checks are stale at the clean baseline
+
+The required root `npm run check` passed Biome, pinned-dependency, and relative
+TypeScript-import checks, then stopped because the checked-in coding-agent
+shrinkwrap is out of date. Running the later install-lock check independently
+reported the same pre-existing drift for `packages/coding-agent/install-lock`;
+TypeScript no-emit and browser smoke then passed independently. Milestone 7.2d
+did not change dependencies or either lock surface, so it did not regenerate or
+adopt unrelated generated output. Treat this as provisional project-specific
+validation friction, not a passing full root check or a product defect in SDD
+Yo.
+
 ## Next bounded leaf
 
-Milestone 7.2d may author only the clarified Capability and three Requirements,
-configure the separate `vitest` and `node-test` JUnit adapters plus selected
-issuers, add exact IDs to only the nine mapped existing tests, add the two
-missing deterministic routing tests, and validate the candidate. It must not
-change runtime behavior, run provider-dependent or e2e tests, fabricate human
-evidence, or execute Proposal, Verification, or Merge gates.
+Milestone 7.2e may mechanically validate the committed 7.2d candidate in
+`spec` mode against the initialized empty-project base, confirm deterministic
+ProposalPackage output and exact semantic and structural delta fingerprints,
+and record only the external review subject. It must not write to `pi`, create
+ApprovalEvidence, TestExecutionEvidence, or QAEvidence, infer human acceptance,
+or execute a later gate.

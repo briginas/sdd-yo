@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 7 / Existing-project dogfood
-- Current leaf: Milestone 7.2d `pi` baseline authoring and traceability
+- Current leaf: Milestone 7.2e `pi` mechanical proposal and approval subject
 - Last updated: 2026-08-02
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -882,7 +882,7 @@ Bounded leaves:
         inputs, and QA boundary for the first `spec` Change. Do not edit the
         `pi` specification, tests, adapters, evidence configuration, or runtime
         in this clarification leaf.
-  - [ ] **7.2d — Baseline authoring and traceability.** In one `spec` Change,
+  - [x] **7.2d — Baseline authoring and traceability.** In one `spec` Change,
         define the clarified user-prompt acquisition Capability and three
         Requirements in `pi`, configure separate Vitest and `node:test` JUnit
         adapters plus the selected evidence issuers, add exact Requirement IDs
@@ -891,6 +891,16 @@ Bounded leaves:
         formatting boundary, and imported TestIndex. Do not change runtime
         behavior, run provider-dependent or e2e tests, fabricate human evidence,
         or execute Proposal, Verification, or Merge gates.
+        Implemented identities: `CAP-DE55E840`, `REQ-654553C6`,
+        `REQ-EAFBC76A`, and `REQ-3E851E79`.
+  - [ ] **7.2e — Mechanical proposal and approval subject.** Validate the
+        committed 7.2d baseline candidate in `spec` mode against the initialized
+        empty-project base, confirm deterministic ProposalPackage output and
+        exact semantic and structural delta fingerprints for the three
+        Requirements, and record the review handoff without writing to `pi`.
+        Do not create ApprovalEvidence, TestExecutionEvidence, or QAEvidence,
+        run a later gate, or infer acceptance from specification authorship,
+        focused tests, or mechanical validity.
 - [ ] **7.3 — Independent projects in a monorepo.** Select and onboard a
       monorepo with two independent SDD Projects, govern one real Change, and
       verify project and evidence isolation.
@@ -937,12 +947,12 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 7.2c clarified exactly three automated user-prompt acquisition
-Requirements, corrected the TUI mapping to the main Editor rather than generic
-Input dialogs, proved stable importable Vitest and `node:test` JUnit identities,
-and bounded the missing deterministic routing coverage, approval inputs, and QA
-scenarios. The next bounded leaf is 7.2d: author only that baseline Capability,
-configure the two JUnit adapters and selected issuers, add exact IDs to the
-mapped names, add the two missing tests, and validate the candidate without a
-runtime behavior change, provider-dependent or e2e execution, human evidence,
-or a gate.
+Milestone 7.2d authored `CAP-DE55E840` with automated Requirements
+`REQ-654553C6`, `REQ-EAFBC76A`, and `REQ-3E851E79`; configured separate Vitest
+and `node:test` JUnit adapters and selected issuers; mapped the nine selected
+existing tests; added the two missing deterministic tests; and validated the
+candidate graph, focused suites, formatting boundary, and isolated two-adapter
+TestIndex without a runtime behavior change or evidence. The next bounded leaf
+is 7.2e: mechanically validate the committed candidate against the initialized
+empty-project base and record its exact ProposalPackage approval subject without
+creating evidence, running a later gate, or writing to `pi`.
