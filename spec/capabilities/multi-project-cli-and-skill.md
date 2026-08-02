@@ -114,11 +114,14 @@ verification: automated
 ### Statement <!-- sdd:statement -->
 
 The CLI shall expose initialization, ID generation, validation, inspection,
-traceability, object diff, proposal validation/preparation/application, test
-discovery, finding validation, and merge-check operations.
+traceability, object diff, candidate snapshot, proposal
+validation/preparation/application, test discovery, finding validation, and
+merge-check operations.
 
 ### Acceptance criteria <!-- sdd:acceptance -->
 
-- Only initialization and proposal application are normal write operations.
+- Only initialization and proposal application modify governed project state;
+  candidate snapshot creates only one explicit immutable output artifact at a
+  caller-selected Git-ignored project-relative path.
 - Read operations support explicit Git refs when applicable.
 - Branch, commit, push, merge, and approve commands are absent.

@@ -33,6 +33,11 @@ Every JSON response has:
 Arrays representing sets are deterministically sorted. Human output is a view
 over this object and is not parsed by automation.
 
+`candidate snapshot` additionally requires `--manifest`; that path receives
+the reusable CandidateTreeManifest while the ordinary command response remains
+on stdout. `--output` is unavailable for this command so a response write
+cannot partially follow successful immutable artifact creation.
+
 ## Exit codes
 
 General commands use:
@@ -153,6 +158,29 @@ to the selected worktree graph rather than claiming a target Git object ID.
 Supplying both subject-matched TestIndexes adds `verification` to
 `available_classes`, removes it from `unavailable_classes`, and adds its
 independently canonicalized delta. Supplying only one index is invalid.
+
+### `sdd candidate snapshot`
+
+```text
+sdd candidate snapshot --base <git-ref> --candidate-ref <git-ref> \
+  --manifest <project-relative-path>
+```
+
+Resolves each supplied ref once, loads the selected SDD Project from both Git
+trees, and creates one deterministic CandidateTreeManifest at a new regular
+file under an existing Git-ignored project-local staging directory. The
+manifest binds the base specification-tree fingerprint and contains the
+path-sorted exact UTF-8 candidate specification files and hashes. It can be
+supplied directly to each existing `--candidate` input after byte-for-byte
+materialization from durable storage.
+
+The command rejects a missing or mismatched project at either ref, invalid
+specification trees, traversal, symbolic-link output components, missing
+parents, a path inside the configured specification root, a path not ignored
+by Git, and an existing manifest target. It does not read the working-tree
+candidate, create `.sdd/config.yaml`, replace retained bytes, ingest an
+archive, mutate Git, or establish a durable store. The invoker exports the
+manifest before optionally removing the staging copy.
 
 ### `sdd proposal validate`
 

@@ -1,16 +1,21 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
-import { cp, mkdtemp, readFile, symlink, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import test from "node:test";
 
 import { runCli } from "../src/cli/run-cli.ts";
-import type { Fingerprint, ProjectPath } from "../src/contracts/identifiers.ts";
+import type { Fingerprint, ProjectId, ProjectPath } from "../src/contracts/identifiers.ts";
 import { parseProposalPackage } from "../src/proposal/package-input.ts";
-import { fingerprintSpecificationTree } from "../src/proposal/specification-tree.ts";
+import {
+  fingerprintSpecificationTree,
+  ProposalInputError,
+  serializeCandidateTreeManifest,
+} from "../src/proposal/specification-tree.ts";
+import type { CandidateTreeManifest } from "../src/proposal/specification-tree.ts";
 import { nodeFileSystem } from "../src/platform/node-filesystem.ts";
 import { nodeProcessRunner } from "../src/platform/node-process-runner.ts";
 import { nodeProjectWriter } from "../src/platform/node-project-writer.ts";
@@ -85,6 +90,26 @@ test("REQ-8DE9E078 specification-tree fingerprint hashes sorted project paths an
   assert.equal(fingerprintSpecificationTree(files), `sha256:${createHash("sha256").update(canonical).digest("hex")}`);
 });
 
+test("REQ-A3C3B779 candidate snapshot cannot exceed the manifest consumer byte limit", () => {
+  const manifest: CandidateTreeManifest = {
+    schema_version: "1.0",
+    artifact_type: "candidate_tree_manifest",
+    project_id: "SDD-A1000001" as ProjectId,
+    base_tree_fingerprint: `sha256:${"0".repeat(64)}` as Fingerprint,
+    files: [
+      {
+        path: "spec/README.md" as ProjectPath,
+        sha256: `sha256:${"1".repeat(64)}` as Fingerprint,
+        content_utf8: "x".repeat(16 * 1024 * 1024),
+      },
+    ],
+  };
+  assert.throws(
+    () => serializeCandidateTreeManifest(manifest),
+    (error: unknown) => error instanceof ProposalInputError && error.code === "SDD_PROPOSAL_CANDIDATE_LIMIT_EXCEEDED",
+  );
+});
+
 test("REQ-E26A859E REQ-8DE9E078 REQ-E80F09C6 REQ-18F84CE2 proposal validate deterministically emits directory and manifest packages without writes", async () => {
   const { root, base, projectId } = await repository();
   const candidate = await mkdtemp(join(tmpdir(), "sdd-proposal-candidate-"));
@@ -151,6 +176,194 @@ test("REQ-E26A859E REQ-8DE9E078 REQ-E80F09C6 REQ-18F84CE2 proposal validate dete
     ...envelope.result,
     candidate: { ...envelope.result.candidate, source: "manifest" },
   });
+});
+
+test("REQ-A3C3B779 REQ-7C848ED0 REQ-F7D39246 candidate snapshot retains deterministic manifest bytes without a nested project", async () => {
+  const { root, base, projectId } = await repository();
+  const capabilityPath = join(root, "spec/capabilities/delivery.md");
+  await writeFile(
+    capabilityPath,
+    (await readFile(capabilityPath, "utf8")).replace("deliver one item.", "deliver each item exactly once."),
+  );
+  await executeFile("git", ["add", "spec/capabilities/delivery.md"], { cwd: root });
+  await executeFile("git", ["commit", "--quiet", "-m", "candidate"], { cwd: root });
+  const candidateRef = (await executeFile("git", ["rev-parse", "HEAD"], { cwd: root })).stdout.trim();
+  await writeFile(join(root, ".git/info/exclude"), ".sdd-stage/\n");
+  await mkdir(join(root, ".sdd-stage"));
+
+  const first = await execute(
+    [
+      "candidate",
+      "snapshot",
+      "--base",
+      base,
+      "--candidate-ref",
+      candidateRef,
+      "--manifest",
+      ".sdd-stage/candidate-1.json",
+      "--format",
+      "json",
+    ],
+    root,
+  );
+  const second = await execute(
+    [
+      "candidate",
+      "snapshot",
+      "--base",
+      base,
+      "--candidate-ref",
+      candidateRef,
+      "--manifest",
+      ".sdd-stage/candidate-2.json",
+      "--format",
+      "json",
+    ],
+    root,
+  );
+  assert.equal(first.exitCode, 0, first.standardOutput);
+  assert.equal(second.exitCode, 0, second.standardOutput);
+  const firstBytes = await readFile(join(root, ".sdd-stage/candidate-1.json"), "utf8");
+  const secondBytes = await readFile(join(root, ".sdd-stage/candidate-2.json"), "utf8");
+  assert.equal(firstBytes, secondBytes);
+  const manifest = JSON.parse(firstBytes) as {
+    artifact_type: string;
+    project_id: string;
+    base_tree_fingerprint: string;
+    files: readonly { path: string; sha256: string; content_utf8: string }[];
+  };
+  assert.equal(manifest.artifact_type, "candidate_tree_manifest");
+  assert.equal(manifest.project_id, projectId);
+  assert.deepEqual(
+    manifest.files.map((file) => file.path),
+    ["spec/README.md", "spec/capabilities/delivery.md"],
+  );
+  assert.equal(
+    manifest.files.some((file) => file.path === ".sdd/config.yaml"),
+    false,
+  );
+  const snapshotResponse = JSON.parse(first.standardOutput) as {
+    command: string;
+    result: { base_ref: string; candidate_ref: string; file_count: number };
+  };
+  assert.equal(snapshotResponse.command, "candidate.snapshot");
+  assert.equal(snapshotResponse.result.base_ref, base);
+  assert.equal(snapshotResponse.result.candidate_ref, candidateRef);
+  assert.equal(snapshotResponse.result.file_count, 2);
+
+  const proposal = await execute(
+    [
+      "proposal",
+      "validate",
+      "--mode",
+      "spec-code",
+      "--base",
+      base,
+      "--candidate",
+      ".sdd-stage/candidate-1.json",
+      "--format",
+      "json",
+    ],
+    root,
+  );
+  assert.equal(proposal.exitCode, 0, proposal.standardOutput);
+  assert.equal((JSON.parse(proposal.standardOutput) as any).result.candidate.source, "manifest");
+  assert.deepEqual((JSON.parse(proposal.standardOutput) as any).result.object_delta.modified, ["REQ-A1000001"]);
+  assert.equal((await executeFile("git", ["status", "--porcelain=v1"], { cwd: root })).stdout, "");
+});
+
+test("REQ-A3C3B779 candidate snapshot rejects unsafe or existing staging targets without replacement", async () => {
+  const { root, base } = await repository();
+  const external = await mkdtemp(join(tmpdir(), "sdd-candidate-snapshot-external-"));
+  await symlink(external, join(root, ".sdd-stage"));
+  const unsafe = await execute(
+    [
+      "candidate",
+      "snapshot",
+      "--base",
+      base,
+      "--candidate-ref",
+      base,
+      "--manifest",
+      ".sdd-stage/candidate.json",
+      "--format",
+      "json",
+    ],
+    root,
+  );
+  assert.equal(unsafe.exitCode, 3);
+  assert.equal((JSON.parse(unsafe.standardOutput) as any).diagnostics[0].code, "SDD_CONFIG_CLI_OUTPUT_UNSAFE");
+
+  const { root: nonIgnoredRoot, base: nonIgnoredBase } = await repository();
+  await writeFile(join(nonIgnoredRoot, ".git/info/exclude"), "spec/candidate.json\n");
+  const inSpecification = await execute(
+    [
+      "candidate",
+      "snapshot",
+      "--base",
+      nonIgnoredBase,
+      "--candidate-ref",
+      nonIgnoredBase,
+      "--manifest",
+      "spec/candidate.json",
+      "--format",
+      "json",
+    ],
+    nonIgnoredRoot,
+  );
+  assert.equal(inSpecification.exitCode, 3);
+  assert.equal(
+    (JSON.parse(inSpecification.standardOutput) as any).diagnostics[0].code,
+    "SDD_CANDIDATE_SNAPSHOT_TARGET_IN_SPEC",
+  );
+  await mkdir(join(nonIgnoredRoot, ".sdd-stage"));
+  const nonIgnored = await execute(
+    [
+      "candidate",
+      "snapshot",
+      "--base",
+      nonIgnoredBase,
+      "--candidate-ref",
+      nonIgnoredBase,
+      "--manifest",
+      ".sdd-stage/candidate.json",
+      "--format",
+      "json",
+    ],
+    nonIgnoredRoot,
+  );
+  assert.equal(nonIgnored.exitCode, 3);
+  assert.equal(
+    (JSON.parse(nonIgnored.standardOutput) as any).diagnostics[0].code,
+    "SDD_CANDIDATE_SNAPSHOT_TARGET_NOT_IGNORED",
+  );
+
+  const { root: secondRoot, base: secondBase } = await repository();
+  await writeFile(join(secondRoot, ".git/info/exclude"), ".sdd-stage/\n");
+  await mkdir(join(secondRoot, ".sdd-stage"));
+  const existingPath = join(secondRoot, ".sdd-stage/candidate.json");
+  await writeFile(existingPath, "preserve\n");
+  const existing = await execute(
+    [
+      "candidate",
+      "snapshot",
+      "--base",
+      secondBase,
+      "--candidate-ref",
+      secondBase,
+      "--manifest",
+      ".sdd-stage/candidate.json",
+      "--format",
+      "json",
+    ],
+    secondRoot,
+  );
+  assert.equal(existing.exitCode, 3);
+  assert.equal(
+    (JSON.parse(existing.standardOutput) as any).diagnostics[0].code,
+    "SDD_CANDIDATE_SNAPSHOT_TARGET_EXISTS",
+  );
+  assert.equal(await readFile(existingPath, "utf8"), "preserve\n");
 });
 
 test("REQ-E80F09C6 REQ-18F84CE2 emits deterministic review candidates without blocking or approval", async () => {

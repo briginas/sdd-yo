@@ -4,8 +4,8 @@
 
 - State: active
 - Current phase: Milestone 7 / Existing-project dogfood
-- Current leaf: Milestone 7.4c portable candidate retention
-- Last updated: 2026-08-02
+- Current leaf: Milestone 7.4d onboarding recovery guidance
+- Last updated: 2026-08-03
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
   [`proposal/architecture/README.md`](proposal/architecture/README.md)
@@ -953,11 +953,18 @@ Bounded leaves:
         rejects both zero-object `PASS` and non-empty `NOT_APPLICABLE`
         summaries, while the human view names the empty-scope reason.
         Requirement traceability: `REQ-3B9FC7FF` and `REQ-82256D82`.
-  - [ ] **7.4c — Portable candidate retention.** Define and implement a
+  - [x] **7.4c — Portable candidate retention.** Define and implement a
         reproducible candidate-snapshot workflow that neither creates a nested
         discoverable SDD Project nor depends on an undocumented manual
         extraction step. Preserve project-relative input and path-containment
-        guarantees.
+        guarantees. `sdd candidate snapshot` now resolves explicit base and
+        candidate Git refs once, creates a deterministic CandidateTreeManifest
+        at a new Git-ignored project-relative path, and leaves the ordinary
+        response on stdout. Existing candidate consumers accept the manifest
+        directly. Unsafe, non-ignored, existing, oversized, mismatched, or
+        invalid targets and snapshots fail without archive ingestion or Git
+        mutation. Requirement traceability: `REQ-A3C3B779`, `REQ-7C848ED0`,
+        and `REQ-F7D39246`.
   - [ ] **7.4d — Onboarding recovery guidance.** Improve bounded recovery for
         project selectors, host formatter ownership, and producer-specific
         JUnit hierarchy without adding language-, framework-, formatter-, or
@@ -1008,9 +1015,11 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 7.4b is complete. An empty recomputed affected scope now produces
-schema-enforced `NOT_APPLICABLE` test and QA summaries in JSON and an explicit
-empty-scope explanation in the human view, without changing the top-level
-readiness decision or evidence subjects. The next bounded work is Milestone
-7.4c: define and implement a portable candidate-snapshot workflow without a
-nested discoverable SDD Project or undocumented manual extraction step.
+Milestone 7.4c is complete. An exact candidate specification tree can now be
+retained as a deterministic CandidateTreeManifest produced from explicit Git
+refs under an ignored project-local staging boundary, then supplied directly
+to existing candidate inputs without a nested SDD Project or archive
+extraction. The next bounded work is Milestone 7.4d: improve onboarding
+recovery guidance for project selectors, host formatter ownership, and
+producer-specific JUnit hierarchy without adding host-specific behavior to the
+core.

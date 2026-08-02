@@ -251,6 +251,12 @@ not by committing them onto the proposal or integration ref or by creating a
 retention-only branch or tag. A later ref movement is observed as freshness
 change; it is not hidden by restoring an older ref for assessment.
 
+`candidate snapshot` resolves an explicit base ref and candidate ref once and
+serializes the latter specification tree into a CandidateTreeManifest bound to
+the former tree fingerprint. The retained bytes therefore survive later ref
+movement without moving either ref backward; consumers still re-resolve their
+declared current refs and apply normal freshness checks.
+
 ## Branch preparation
 
 1. read `B` from `package.base.git_ref`, `P` from the explicitly supplied

@@ -3,7 +3,7 @@ import { dirname, join, relative, resolve, sep } from "node:path";
 
 import { parseProjectConfiguration } from "../config/parse-config.ts";
 import type { ProjectConfiguration, ResolvedProject } from "../config/types.ts";
-import type { Fingerprint, GitObjectId, ProjectPath } from "../contracts/identifiers.ts";
+import type { Fingerprint, GitObjectId, ProjectId, ProjectPath } from "../contracts/identifiers.ts";
 import { isFingerprint, isProjectId, isProjectPath } from "../contracts/identifiers.ts";
 import type { ValidatedSpecificationGraph } from "../graph/validate-graph.ts";
 import { validateSpecificationGraph } from "../graph/validate-graph.ts";
@@ -284,13 +284,34 @@ async function loadCandidateDirectory(
   return buildSpecificationTree(await walkDirectory(fileSystem, realRoot, parsed.value.spec.root), parsed.value);
 }
 
-type CandidateManifest = {
+export type CandidateTreeManifest = {
   readonly schema_version: "1.0";
   readonly artifact_type: "candidate_tree_manifest";
-  readonly project_id: string;
-  readonly base_tree_fingerprint: string;
-  readonly files: readonly { readonly path: string; readonly sha256: string; readonly content_utf8: string }[];
+  readonly project_id: ProjectId;
+  readonly base_tree_fingerprint: Fingerprint;
+  readonly files: readonly SpecificationTreeFile[];
 };
+
+export function createCandidateTreeManifest(input: {
+  readonly projectId: ProjectId;
+  readonly base: SpecificationTree;
+  readonly candidate: SpecificationTree;
+}): CandidateTreeManifest {
+  return {
+    schema_version: "1.0",
+    artifact_type: "candidate_tree_manifest",
+    project_id: input.projectId,
+    base_tree_fingerprint: input.base.fingerprint,
+    files: input.candidate.files,
+  };
+}
+
+export function serializeCandidateTreeManifest(manifest: CandidateTreeManifest): Uint8Array {
+  const bytes = encoder.encode(`${JSON.stringify(manifest)}\n`);
+  if (bytes.byteLength > MAX_MANIFEST_BYTES)
+    throw new ProposalInputError("SDD_PROPOSAL_CANDIDATE_LIMIT_EXCEEDED", "The candidate manifest is too large.");
+  return bytes;
+}
 
 function hasExactKeys(
   value: Record<string, unknown>,
@@ -301,7 +322,7 @@ function hasExactKeys(
   return required.every((key) => key in value) && Object.keys(value).every((key) => allowed.has(key));
 }
 
-function parseManifest(bytes: Uint8Array): CandidateManifest {
+function parseManifest(bytes: Uint8Array): CandidateTreeManifest {
   if (bytes.byteLength > MAX_MANIFEST_BYTES)
     throw new ProposalInputError("SDD_PROPOSAL_CANDIDATE_LIMIT_EXCEEDED", "The candidate manifest is too large.");
   let value: unknown;
@@ -363,7 +384,7 @@ function parseManifest(bytes: Uint8Array): CandidateManifest {
       throw new ProposalInputError("SDD_PROPOSAL_MANIFEST_INVALID", "A candidate manifest file entry is invalid.");
     }
   }
-  return value as CandidateManifest;
+  return value as CandidateTreeManifest;
 }
 
 export async function loadCandidateSpecificationTree(input: {

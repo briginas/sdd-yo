@@ -118,9 +118,10 @@ Candidate bytes follow the same lifecycle: the retained source is immutable,
 and the exact directory or CandidateTreeManifest accepted by the current
 command is materialized inside the project only for the run. A retained
 directory containing another `.sdd/config.yaml` must not remain discoverable
-as a nested project. Defining a portable candidate-snapshot production and
-materialization command is separate follow-up work; this retention contract
-does not add archive ingestion or weaken project discovery.
+as a nested project. The candidate-snapshot command writes a
+CandidateTreeManifest directly under the staging boundary from explicit Git
+refs, so later commands consume that file without directory extraction. This
+workflow does not add archive ingestion or weaken project discovery.
 
 Reproduction resolves the declared mutable refs again and accepts each
 retained value only when its exact subject still applies. Ref movement
@@ -163,6 +164,15 @@ deterministically path-sorted set of UTF-8 files. Every file entry binds a
 project-relative path, its exact SHA-256 content hash, and its UTF-8 content.
 Duplicate paths, unsafe paths, unknown fields, and a content/hash mismatch are
 invalid; hash revalidation is a runtime check over schema-valid input.
+
+`sdd candidate snapshot` produces this artifact from one explicitly resolved
+base ref and one explicitly resolved candidate ref. It loads the selected SDD
+Project configuration and specification tree from both refs, rejects a
+missing, mismatched, or invalid project snapshot, omits provenance fields so
+identical inputs produce identical bytes, and creates a new manifest without
+replacing an existing retained value. The output path must be ignored by Git.
+The manifest contains only configured specification-tree files; it does not
+embed another `.sdd/config.yaml`.
 
 ## ProposalPackage
 

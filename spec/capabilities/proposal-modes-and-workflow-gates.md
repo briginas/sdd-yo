@@ -177,5 +177,9 @@ artifacts rather than requiring a hidden durable workflow database.
 
 - Proposal, approval, test, QA, finding, and merge artifacts are explicit
   inputs and outputs.
+- An exact candidate specification snapshot can be retained as a
+  CandidateTreeManifest produced from explicit base and candidate Git refs;
+  the retained manifest is accepted directly wherever a candidate input is
+  required.
 - A removable cache may accelerate processing.
 - Deleting cache does not lose source-of-truth or approval state.

@@ -1,6 +1,13 @@
 import type { Diagnostic } from "../contracts/diagnostics.ts";
 import { isDiagnosticCode } from "../contracts/diagnostics.ts";
-import type { GitObjectId, ObjectId, ProjectId, ProjectPath, RequirementId } from "../contracts/identifiers.ts";
+import type {
+  Fingerprint,
+  GitObjectId,
+  ObjectId,
+  ProjectId,
+  ProjectPath,
+  RequirementId,
+} from "../contracts/identifiers.ts";
 import { isObjectId, isProjectPath, isRequirementId } from "../contracts/identifiers.ts";
 import type { CliResponseEnvelope } from "../contracts/result.ts";
 import { resolve } from "node:path";
@@ -44,8 +51,10 @@ import type { TestIndex } from "../tests/index.ts";
 import {
   generateSpecPatch,
   applyProposal,
+  createCandidateTreeManifest,
   importSpecPatch,
   importProposalPackage,
+  loadBaseSpecificationTree,
   parseProposalPackage,
   parseCodeTarget,
   parseProposalMode,
@@ -55,10 +64,17 @@ import {
   ProposalPackageInputError,
   ProposalPreparationError,
   ProposalValidationError,
+  serializeCandidateTreeManifest,
   SpecPatchInputError,
   validateProposal,
 } from "../proposal/index.ts";
-import type { ConflictReport, ProposalMode, ProposalPackage, SpecPatch } from "../proposal/index.ts";
+import type {
+  CandidateTreeManifest,
+  ConflictReport,
+  ProposalMode,
+  ProposalPackage,
+  SpecPatch,
+} from "../proposal/index.ts";
 import {
   EvidenceInputError,
   importApprovalEvidenceFile,
@@ -107,6 +123,7 @@ type Command =
   | "inspect"
   | "trace"
   | "diff"
+  | "candidate.snapshot"
   | "tests.discover"
   | "findings.validate"
   | "merge.check"
@@ -143,6 +160,7 @@ type Invocation = {
   readonly count?: number;
   readonly historyRef?: string;
   readonly baseRef?: string;
+  readonly candidateRef?: string;
   readonly targetRef?: string;
   readonly traceRef?: string;
   readonly changedFrom?: string;
@@ -155,6 +173,7 @@ type Invocation = {
   readonly targetTestIndex?: ProjectPath;
   readonly proposalMode?: ProposalMode;
   readonly candidatePath?: string;
+  readonly manifestPath?: ProjectPath;
   readonly codeTargets: readonly RequirementId[];
   readonly packagePath?: string;
   readonly branchHeadRef?: string;
@@ -234,6 +253,15 @@ export type ValidateComparisonResult = DeltaClassesResult & {
   readonly changed_from_ref: GitObjectId;
 };
 
+export type CandidateSnapshotResult = {
+  readonly manifest_path: ProjectPath;
+  readonly base_ref: GitObjectId;
+  readonly candidate_ref: GitObjectId;
+  readonly base_tree_fingerprint: Fingerprint;
+  readonly candidate_tree_fingerprint: Fingerprint;
+  readonly file_count: number;
+};
+
 export type CliResponse =
   | CliResponseEnvelope<"init", "ok", InitResult>
   | CliResponseEnvelope<"id", "ok", IdResult>
@@ -241,6 +269,7 @@ export type CliResponse =
   | CliResponseEnvelope<"inspect", "ok", InspectResult>
   | CliResponseEnvelope<"trace", "ok", TraceResult>
   | CliResponseEnvelope<"diff", "ok", DiffResult>
+  | CliResponseEnvelope<"candidate.snapshot", "ok", CandidateSnapshotResult>
   | CliResponseEnvelope<"tests.discover", "ok", TestIndex>
   | CliResponseEnvelope<"findings.validate", "ok" | "blocked", FindingAssessment>
   | CliResponseEnvelope<"merge.check", "ok" | "blocked" | "review_required", MergeReport>
@@ -270,13 +299,15 @@ function parseInvocation(
   const command: string | undefined =
     argv[0] === "tests" && argv[1] === "discover"
       ? "tests.discover"
-      : argv[0] === "findings" && argv[1] === "validate"
-        ? "findings.validate"
-        : argv[0] === "merge" && argv[1] === "check"
-          ? "merge.check"
-          : argv[0] === "proposal" && (argv[1] === "validate" || argv[1] === "prepare" || argv[1] === "apply")
-            ? `proposal.${argv[1]}`
-            : argv[0];
+      : argv[0] === "candidate" && argv[1] === "snapshot"
+        ? "candidate.snapshot"
+        : argv[0] === "findings" && argv[1] === "validate"
+          ? "findings.validate"
+          : argv[0] === "merge" && argv[1] === "check"
+            ? "merge.check"
+            : argv[0] === "proposal" && (argv[1] === "validate" || argv[1] === "prepare" || argv[1] === "apply")
+              ? `proposal.${argv[1]}`
+              : argv[0];
   if (
     command !== "init" &&
     command !== "id" &&
@@ -284,6 +315,7 @@ function parseInvocation(
     command !== "inspect" &&
     command !== "trace" &&
     command !== "diff" &&
+    command !== "candidate.snapshot" &&
     command !== "tests.discover" &&
     command !== "findings.validate" &&
     command !== "merge.check" &&
@@ -312,6 +344,7 @@ function parseInvocation(
   let count: number | undefined;
   let historyRef: string | undefined;
   let baseRef: string | undefined;
+  let candidateRef: string | undefined;
   let targetRef: string | undefined;
   let traceRef: string | undefined;
   let changedFrom: string | undefined;
@@ -324,6 +357,7 @@ function parseInvocation(
   let targetTestIndex: ProjectPath | undefined;
   let proposalMode: ProposalMode | undefined;
   let candidatePath: string | undefined;
+  let manifestPath: ProjectPath | undefined;
   const codeTargets: RequirementId[] = [];
   let packagePath: string | undefined;
   let branchHeadRef: string | undefined;
@@ -341,6 +375,7 @@ function parseInvocation(
   for (
     let index =
       command === "tests.discover" ||
+      command === "candidate.snapshot" ||
       command === "findings.validate" ||
       command === "merge.check" ||
       command === "proposal.validate" ||
@@ -363,6 +398,7 @@ function parseInvocation(
       argument === "--count" ||
       argument === "--history-ref" ||
       argument === "--base" ||
+      argument === "--candidate-ref" ||
       argument === "--target" ||
       argument === "--ref" ||
       argument === "--changed-from" ||
@@ -375,6 +411,7 @@ function parseInvocation(
       argument === "--target-test-index" ||
       argument === "--mode" ||
       argument === "--candidate" ||
+      argument === "--manifest" ||
       argument === "--code-target" ||
       argument === "--package" ||
       argument === "--branch-head" ||
@@ -401,7 +438,18 @@ function parseInvocation(
           ),
         };
       index += 1;
-      if (
+      if (argument === "--manifest") {
+        if (!isProjectPath(value))
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_CANDIDATE_SNAPSHOT_PATH_INVALID",
+              "The candidate snapshot path is not project-relative and portable.",
+              "Select a new manifest path under an ignored directory inside the selected project.",
+            ),
+          };
+        manifestPath = value;
+      } else if (
         argument === "--change" ||
         argument === "--input-manifest" ||
         argument === "--findings" ||
@@ -472,6 +520,17 @@ function parseInvocation(
           };
         if (argument === "--branch-head") branchHeadRef = value;
         else integrationRef = value;
+      } else if (argument === "--candidate-ref") {
+        if (value.length === 0 || value.includes("\0"))
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_GIT_REF_INVALID",
+              "The candidate snapshot ref is invalid.",
+              "Supply a non-empty candidate Git ref.",
+            ),
+          };
+        candidateRef = value;
       } else if (argument === "--mode") {
         proposalMode = parseProposalMode(value);
         if (proposalMode === undefined)
@@ -710,7 +769,12 @@ function parseInvocation(
         "Use ID-generation options only with sdd id.",
       ),
     };
-  if (command !== "diff" && command !== "proposal.validate" && (baseRef !== undefined || targetRef !== undefined))
+  if (
+    command !== "diff" &&
+    command !== "proposal.validate" &&
+    command !== "candidate.snapshot" &&
+    (baseRef !== undefined || targetRef !== undefined)
+  )
     return {
       ok: false,
       diagnostic: cliDiagnostic(
@@ -728,6 +792,15 @@ function parseInvocation(
         "Use --base with sdd proposal validate.",
       ),
     };
+  if (command === "candidate.snapshot" && targetRef !== undefined)
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "--target does not apply to candidate snapshot.",
+        "Use --base and --candidate-ref with sdd candidate snapshot.",
+      ),
+    };
   if (command === "diff" && (baseRef === undefined || targetRef === undefined))
     return {
       ok: false,
@@ -735,6 +808,36 @@ function parseInvocation(
         "SDD_GIT_DIFF_REFS_REQUIRED",
         "diff requires base and target Git refs.",
         "Supply both --base and --target.",
+      ),
+    };
+  if (
+    command === "candidate.snapshot" &&
+    (baseRef === undefined || candidateRef === undefined || manifestPath === undefined)
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CANDIDATE_SNAPSHOT_INPUTS_REQUIRED",
+        "candidate snapshot requires base, candidate-ref, and manifest inputs.",
+        "Supply --base, --candidate-ref, and --manifest.",
+      ),
+    };
+  if (command !== "candidate.snapshot" && (candidateRef !== undefined || manifestPath !== undefined))
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "A candidate snapshot option was used with another command.",
+        "Use --candidate-ref and --manifest only with sdd candidate snapshot.",
+      ),
+    };
+  if (command === "candidate.snapshot" && outputPath !== undefined)
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "--output does not apply to candidate snapshot.",
+        "Use --manifest for the exact candidate artifact and read the command response from standard output.",
       ),
     };
   if (
@@ -1021,6 +1124,7 @@ function parseInvocation(
       ...(command === "id" ? { count: count ?? 1 } : {}),
       ...(historyRef === undefined ? {} : { historyRef }),
       ...(baseRef === undefined ? {} : { baseRef }),
+      ...(candidateRef === undefined ? {} : { candidateRef }),
       ...(targetRef === undefined ? {} : { targetRef }),
       ...(traceRef === undefined ? {} : { traceRef }),
       ...(changedFrom === undefined ? {} : { changedFrom }),
@@ -1033,6 +1137,7 @@ function parseInvocation(
       ...(targetTestIndex === undefined ? {} : { targetTestIndex }),
       ...(proposalMode === undefined ? {} : { proposalMode }),
       ...(candidatePath === undefined ? {} : { candidatePath }),
+      ...(manifestPath === undefined ? {} : { manifestPath }),
       codeTargets,
       ...(packagePath === undefined ? {} : { packagePath }),
       ...(branchHeadRef === undefined ? {} : { branchHeadRef }),
@@ -1270,6 +1375,16 @@ function humanView(value: CliResponse): string {
       result.deltas.verification === undefined
         ? "verification: unavailable"
         : `verification: ${result.deltas.verification.fingerprint}`,
+    );
+  } else if (value.command === "candidate.snapshot" && value.status === "ok") {
+    const result = value.result as CandidateSnapshotResult;
+    lines.push(
+      `manifest: ${result.manifest_path}`,
+      `base ref: ${result.base_ref}`,
+      `candidate ref: ${result.candidate_ref}`,
+      `base tree: ${result.base_tree_fingerprint}`,
+      `candidate tree: ${result.candidate_tree_fingerprint}`,
+      `files: ${result.file_count}`,
     );
   } else if (value.command === "init" && value.status === "ok") {
     const result = value.result as InitResult;
@@ -1526,21 +1641,23 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
   const inferredCommand: ResponseCommand =
     runtime.argv[0] === "tests" && runtime.argv[1] === "discover"
       ? "tests.discover"
-      : runtime.argv[0] === "findings" && runtime.argv[1] === "validate"
-        ? "findings.validate"
-        : runtime.argv[0] === "merge" && runtime.argv[1] === "check"
-          ? "merge.check"
-          : runtime.argv[0] === "proposal" &&
-              (runtime.argv[1] === "validate" || runtime.argv[1] === "prepare" || runtime.argv[1] === "apply")
-            ? `proposal.${runtime.argv[1]}`
-            : runtime.argv[0] === "init" ||
-                runtime.argv[0] === "id" ||
-                runtime.argv[0] === "inspect" ||
-                runtime.argv[0] === "trace" ||
-                runtime.argv[0] === "diff" ||
-                runtime.argv[0] === "validate"
-              ? runtime.argv[0]
-              : "unknown";
+      : runtime.argv[0] === "candidate" && runtime.argv[1] === "snapshot"
+        ? "candidate.snapshot"
+        : runtime.argv[0] === "findings" && runtime.argv[1] === "validate"
+          ? "findings.validate"
+          : runtime.argv[0] === "merge" && runtime.argv[1] === "check"
+            ? "merge.check"
+            : runtime.argv[0] === "proposal" &&
+                (runtime.argv[1] === "validate" || runtime.argv[1] === "prepare" || runtime.argv[1] === "apply")
+              ? `proposal.${runtime.argv[1]}`
+              : runtime.argv[0] === "init" ||
+                  runtime.argv[0] === "id" ||
+                  runtime.argv[0] === "inspect" ||
+                  runtime.argv[0] === "trace" ||
+                  runtime.argv[0] === "diff" ||
+                  runtime.argv[0] === "validate"
+                ? runtime.argv[0]
+                : "unknown";
   const inferredFormat: OutputFormat = runtime.argv.some(
     (argument, index) => argument === "--format" && runtime.argv[index + 1] === "json",
   )
@@ -1727,6 +1844,132 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
       return TECHNICAL_FAILURE_EXIT_CODE;
     }
     const outputTarget = selectedOutput?.target;
+    if (invocation.command === "candidate.snapshot") {
+      try {
+        if (
+          invocation.baseRef === undefined ||
+          invocation.candidateRef === undefined ||
+          invocation.manifestPath === undefined
+        ) {
+          throw new Error("Parsed candidate snapshot invocation is missing required inputs.");
+        }
+        if (
+          invocation.manifestPath === project.configuration.spec.root ||
+          invocation.manifestPath.startsWith(`${project.configuration.spec.root}/`)
+        ) {
+          emit(
+            runtime,
+            invocation.format,
+            response("candidate.snapshot", project.configuration.project_id, "error", null, [
+              cliDiagnostic(
+                "SDD_CANDIDATE_SNAPSHOT_TARGET_IN_SPEC",
+                "The candidate snapshot target is inside the governed specification tree.",
+                "Select an ignored staging path outside the configured specification root.",
+              ),
+            ]),
+          );
+          return TECHNICAL_FAILURE_EXIT_CODE;
+        }
+        const selectedManifest = await resolveSafeOutputTarget(
+          runtime.fileSystem,
+          project.project_root,
+          invocation.manifestPath,
+        );
+        if (!selectedManifest.ok) {
+          emit(
+            runtime,
+            invocation.format,
+            response("candidate.snapshot", project.configuration.project_id, "error", null, [
+              selectedManifest.diagnostic,
+            ]),
+          );
+          return TECHNICAL_FAILURE_EXIT_CODE;
+        }
+        const ignored = await runtime.processRunner.run({
+          executable: "git",
+          arguments: ["check-ignore", "--quiet", "--", invocation.manifestPath],
+          workingDirectory: project.project_root,
+          environment: { GIT_OPTIONAL_LOCKS: "0", LC_ALL: "C" },
+          timeoutMilliseconds: 30_000,
+          maxOutputBytes: 1024 * 1024,
+        });
+        if (ignored.exitCode === 1) {
+          emit(
+            runtime,
+            invocation.format,
+            response("candidate.snapshot", project.configuration.project_id, "error", null, [
+              cliDiagnostic(
+                "SDD_CANDIDATE_SNAPSHOT_TARGET_NOT_IGNORED",
+                "The candidate snapshot target is not ignored by Git.",
+                "Establish an ignored project-local staging path before retaining candidate bytes.",
+              ),
+            ]),
+          );
+          return TECHNICAL_FAILURE_EXIT_CODE;
+        }
+        if (ignored.exitCode !== 0)
+          throw new GitReadError("GIT_COMMAND_FAILED", "Git could not validate the candidate staging path.");
+        const reader = await discoverProcessGitReader(runtime.processRunner, project.project_root);
+        const [baseRef, candidateRef] = await Promise.all([
+          reader.resolveRevision(invocation.baseRef),
+          reader.resolveRevision(invocation.candidateRef),
+        ]);
+        const [base, candidate] = await Promise.all([
+          loadBaseSpecificationTree(reader, baseRef, project),
+          loadBaseSpecificationTree(reader, candidateRef, project),
+        ]);
+        const manifest: CandidateTreeManifest = createCandidateTreeManifest({
+          projectId: project.configuration.project_id,
+          base,
+          candidate,
+        });
+        await runtime.projectWriter.writeFileExclusive(
+          selectedManifest.target,
+          serializeCandidateTreeManifest(manifest),
+        );
+        const result: CandidateSnapshotResult = {
+          manifest_path: invocation.manifestPath,
+          base_ref: baseRef,
+          candidate_ref: candidateRef,
+          base_tree_fingerprint: base.fingerprint,
+          candidate_tree_fingerprint: candidate.fingerprint,
+          file_count: candidate.files.length,
+        };
+        emit(
+          runtime,
+          invocation.format,
+          response("candidate.snapshot", project.configuration.project_id, "ok", result, []),
+        );
+        return VALID_EXIT_CODE;
+      } catch (error) {
+        const diagnostic =
+          error instanceof ProposalInputError
+            ? cliDiagnostic(
+                error.code,
+                error.message,
+                "Select refs containing the same valid SDD Project and specification contract.",
+              )
+            : error instanceof GitReadError
+              ? comparisonTechnicalDiagnostic(error)
+              : typeof error === "object" && error !== null && "code" in error && error.code === "EEXIST"
+                ? cliDiagnostic(
+                    "SDD_CANDIDATE_SNAPSHOT_TARGET_EXISTS",
+                    "The candidate snapshot target already exists.",
+                    "Select a new manifest path so retained immutable bytes are not replaced.",
+                  )
+                : cliDiagnostic(
+                    "SDD_CANDIDATE_SNAPSHOT_WRITE_FAILED",
+                    "The candidate snapshot could not be written safely.",
+                    "Correct the staging path or filesystem failure and run the command again.",
+                  );
+        emit(
+          runtime,
+          invocation.format,
+          response("candidate.snapshot", project.configuration.project_id, "error", null, [diagnostic]),
+        );
+        return TECHNICAL_FAILURE_EXIT_CODE;
+      }
+    }
     if (invocation.command === "findings.validate") {
       try {
         if (invocation.inputManifestPath === undefined || invocation.findingPaths.length === 0)

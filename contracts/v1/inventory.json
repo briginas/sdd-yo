@@ -450,7 +450,8 @@
       "authority": "proposal/architecture/artifact-schemas.md#candidatetreemanifest",
       "requirements": [
         "REQ-8DE9E078",
-        "REQ-3BF12AAD"
+        "REQ-3BF12AAD",
+        "REQ-A3C3B779"
       ],
       "required_fields": [
         "schema_version",

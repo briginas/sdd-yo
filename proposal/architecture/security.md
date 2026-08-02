@@ -152,6 +152,12 @@ selected project, configured issuer, exact subject, bounded regular-file, and
 path-containment checks. Ref movement invalidates dependent evidence rather
 than authorizing ref rollback or artifact rewriting.
 
+Candidate snapshot reads only the selected project configuration and
+specification tree from two explicit Git objects. Its manifest target is a new
+Git-ignored project-relative regular file below an existing non-symlink
+parent and outside the configured specification root; it never extracts an
+archive or writes a nested project configuration.
+
 ## Security validation
 
 Release validation includes:
