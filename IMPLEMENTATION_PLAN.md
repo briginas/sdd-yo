@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 7 / Existing-project dogfood
-- Current leaf: Milestone 7.2h `pi` baseline QA evidence
+- Current leaf: Milestone 7.3 independent-project monorepo study selection
 - Last updated: 2026-08-02
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -915,7 +915,7 @@ Bounded leaves:
         validate the exact project, head, configuration, TestIndex, and result
         subjects. Do not make a QA decision or run the Verification or Merge
         gates.
-  - [ ] **7.2h — Baseline QA evidence.** At the unchanged candidate head and
+  - [x] **7.2h — Baseline QA evidence.** At the unchanged candidate head and
         resolved integration commit, exercise the three deterministic baseline
         QA scenarios from 7.2c, obtain the actual QA tester's Capability
         decision, and record project-scoped QAEvidence from `local-qa`. Do not
@@ -967,9 +967,9 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 7.2g is complete. The fresh safe Vitest and `node:test` JUnit reports
-produced one current two-adapter TestIndex and project-scoped
-TestExecutionEvidence from `local-test-run` for all selected executable tests.
-The next bounded leaf is 7.2h: obtain an actual baseline QA decision over the
-three deterministic scenarios and record QAEvidence from `local-qa`. Do not
-infer QA from this execution evidence or run the Verification or Merge gates.
+Milestone 7.2h is complete. The actual QA tester decided `passed` for the
+three deterministic baseline scenarios and recorded project-scoped QAEvidence
+from `local-qa` against the exact candidate, resolved integration, and affected
+scope subjects. No Verification or Merge gate was run. The next bounded work is
+Milestone 7.3: select an independent-project monorepo study before any
+onboarding or governed change.

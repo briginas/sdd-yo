@@ -14,8 +14,8 @@
   coding-agent CLI and terminal input components.
 - Onboarding status: empty incremental SDD Project initialized; first baseline
   contract clarified, authored, test-traceable, mechanically validated, and
-  externally approved as a current `spec` subject; test execution evidence, QA
-  evidence, and gates have not been created.
+  externally approved as a current `spec` subject; current test execution and
+  baseline QA evidence are recorded. No Verification or Merge gate has run.
 
 The repository is an npm workspace containing several packages, but this study
 treats the complete repository as one SDD Project because its packages share
@@ -486,9 +486,31 @@ to satisfy static imports in the selected non-provider Vitest test. They were
 removed before recording evidence and are not part of the candidate, evidence,
 or Git state. No QA decision or Verification or Merge gate was run.
 
+## Baseline QA evidence result
+
+The actual local QA tester `ivan-briginas` reviewed the three deterministic
+baseline scenarios and decided `passed` for `CAP-DE55E840`. Project-scoped
+QAEvidence from the configured `local-qa` issuer is recorded as
+`evidence/qa/7.2h-baseline.json`, binding candidate head
+`7125d8b6293bdec2bd8d1c2b232cc2730e93d8ec`, resolved integration commit
+`4381d809b2d61ea2cfdbf8f5c7f9327b2bf9101a`, and affected-scope fingerprint
+`sha256:fe13afd5d31e3f1759fa1d3c4f4c3cf675bfe690c3d410bbaf422a6d4b673317`.
+
+The reviewer exercised the defined ordered CLI-source composition, ordinary
+Editor prompt with internal whitespace and a non-terminal backslash, and empty
+input/backslash-newline scenarios without a live provider, credential, network
+request, paid request, release action, or e2e test. The focused reproduction
+passed the initial-message and print-mode files; the interactive-mode file could
+not load because ignored generated provider model data is absent at the clean
+baseline. The earlier current 7.2g TestExecutionEvidence remains the recorded
+passing execution evidence for that selected test surface.
+
+This QA decision is independent of automated test execution. It is not a
+Verification or Merge Gate result, permission to merge, or approval of later
+`pi` work.
+
 ## Next bounded leaf
 
-Milestone 7.2h may exercise the three deterministic baseline QA scenarios,
-obtain the actual QA tester's Capability decision, and record project-scoped
-QAEvidence from `local-qa`. It must not infer QA from current test execution or
-execute the Verification or Merge gates.
+Milestone 7.2 is complete. The next bounded work is Milestone 7.3: select a
+monorepo containing two independent SDD Projects before onboarding or governing
+a real Change.
