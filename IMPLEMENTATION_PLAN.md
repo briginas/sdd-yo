@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 7 / Existing-project dogfood
-- Current leaf: Milestone 7.3 independent-project monorepo study selection
+- Current leaf: Milestone 7.3 two-study dogfood synthesis
 - Last updated: 2026-08-02
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -856,7 +856,7 @@ Bounded leaves:
         candidate and integration commits, and record the deterministic report
         plus no-write observations. Do not commit, merge, push, enforce a
         branch policy, or correct any newly discovered issue in this leaf.
-- [ ] **7.2 — Polyglot or multi-framework project.** Select and onboard one
+- [x] **7.2 — Polyglot or multi-framework project.** Select and onboard one
       existing project, then govern one real Change end to end and record the
       same observation set.
   - [x] **7.2a — Project and observation boundary.** Select the clean existing
@@ -866,9 +866,8 @@ Bounded leaves:
         existing user-prompt acquisition across the coding-agent CLI and TUI,
         identify the initial test, adapter, evidence, and observation surfaces,
         and record the study under [`dogfood/pi/`](dogfood/pi/README.md).
-        This selection is not permission to mutate `pi`, does not satisfy the
-        two-independent-project boundary of 7.3, and creates no SDD object or
-        evidence.
+        This selection is not permission to mutate `pi` and creates no SDD
+        object or evidence.
   - [x] **7.2b — Incremental initialization.** Build the current local CLI,
         initialize `/Users/dev.briginas/dev/pi` as one `incremental` SDD
         Project, confirm that only the empty SDD structure is created, validate
@@ -921,14 +920,14 @@ Bounded leaves:
         decision, and record project-scoped QAEvidence from `local-qa`. Do not
         infer QA from current test execution or run the Verification or Merge
         gates.
-- [ ] **7.3 — Independent projects in a monorepo.** Select and onboard a
-      monorepo with two independent SDD Projects, govern one real Change, and
-      verify project and evidence isolation.
-- [ ] **7.4 — Dogfood synthesis.** Compare all three studies and identify
-      recurring rather than project-specific problems.
-- [ ] **7.5 — Recurring-problem fixes.** Correct confirmed recurring problems
-      through contracts, validators, documentation, or evals, with each fix
-      implemented and verified as its own bounded Change.
+- [ ] **7.3 — Two-study dogfood synthesis.** Compare the completed `yo` and
+      `pi` studies, distinguish observations reproduced in both from
+      project-specific observations, and identify bounded follow-up work. Do
+      not claim that two studies establish monorepo isolation, broader MVP
+      usability, or cross-project behavior.
+- [ ] **7.4 — Confirmed-problem fixes.** Correct only problems confirmed by
+      the two-study synthesis through contracts, validators, documentation, or
+      evals, with each fix implemented and verified as its own bounded Change.
 
 ## Milestone 8 — Agent Skill
 
@@ -956,6 +955,9 @@ Primary target Requirements:
 
 ## Deferred scope
 
+- Existing-monorepo onboarding and project/evidence-isolation rollout study;
+  the architecture's three-repository MVP criterion remains unmet and must not
+  be inferred from the two completed studies.
 - Stage 0 verifier execution on Linux and Windows CI.
 - Hosted workflow service or durable workflow database.
 - Automatic branch, commit, push, merge, approval, or QA actions.
@@ -971,5 +973,5 @@ Milestone 7.2h is complete. The actual QA tester decided `passed` for the
 three deterministic baseline scenarios and recorded project-scoped QAEvidence
 from `local-qa` against the exact candidate, resolved integration, and affected
 scope subjects. No Verification or Merge gate was run. The next bounded work is
-Milestone 7.3: select an independent-project monorepo study before any
-onboarding or governed change.
+Milestone 7.3: synthesize the completed `yo` and `pi` studies without claiming
+the deferred monorepo isolation or three-repository MVP evidence.
