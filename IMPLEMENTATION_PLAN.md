@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 7 / Existing-project dogfood
-- Current leaf: Milestone 7.1 baseline QA after current test execution evidence
+- Current leaf: Milestone 7.2 polyglot or multi-framework project selection
 - Last updated: 2026-08-02
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -787,7 +787,7 @@ Bounded leaves:
       runtime behavior change. Record the study under [`dogfood/yo/`](dogfood/yo/README.md).
       This planning decision is not ApprovalEvidence, QAEvidence, or permission
       to mutate `yo`.
-- [ ] **7.1 — Small single-language project.** Onboard `yo`, govern one real
+- [x] **7.1 — Small single-language project.** Onboard `yo`, govern one real
       Change end to end, and record setup, adapter, traceability, diagnostic,
       review-candidate, comprehension, and partial-adoption observations.
   - [x] **7.1a — Incremental initialization.** Build the current local CLI,
@@ -850,7 +850,7 @@ Bounded leaves:
         decision, and record project-scoped QAEvidence from the configured
         `local-qa` issuer. Do not infer QA from passing automated tests or run
         the Verification or Merge gates.
-  - [ ] **7.1i — Advisory baseline gate assessment.** Revalidate and retain the
+  - [x] **7.1i — Advisory baseline gate assessment.** Revalidate and retain the
         exact baseline Change inputs, compose the current approval, test, and
         QA evidence through the Verification and Merge gates at their bound
         candidate and integration commits, and record the deterministic report
@@ -905,8 +905,8 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 7.1h is complete. The next bounded leaf is 7.1i: compose the exact
-baseline Change inputs and current subject-bound evidence through the advisory
-Verification and Merge gates, then record the deterministic report and
-no-write observations. Do not mutate Git or hosting state, enforce a branch
-policy, or absorb fixes for any newly discovered issue.
+Milestone 7.1 is complete with a deterministic advisory `BLOCKED` result and
+recorded no-write observations. The next bounded leaf is 7.2: select the
+polyglot or multi-framework project and define its project, adoption, first
+Change, adapter, evidence, and observation boundaries before mutating that
+project. Do not absorb the recurring-problem fixes deferred to 7.5.

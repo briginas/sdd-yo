@@ -13,8 +13,9 @@
   first governed Capability authored and test-traceable; deterministic
   ProposalPackage validated and its exact approval subject recorded; external
   specification approval and current full-suite test execution evidence
-  recorded and validated; baseline QA evidence recorded and validated; gates
-  not yet run.
+  recorded and validated; baseline QA evidence recorded and validated;
+  advisory Verification and Merge gates assessed with a deterministic
+  `BLOCKED` result and no Git or hosting writes.
 
 The repository owner selected this study boundary on 2026-08-01. That planning
 decision is not SDD ApprovalEvidence, QAEvidence, a gate result, or permission
@@ -318,6 +319,95 @@ assessment satisfied test coverage and execution for all five automated
 Requirements plus QA coverage for the affected Capability with no issues. No
 Verification or Merge Gate was run, and the QA decision grants no Git or
 hosting authorization.
+
+## Advisory baseline gate assessment result
+
+Milestone 7.1i revalidated and retained the exact baseline inputs inside the
+`yo` project:
+
+- `evidence/changes/7.1i-baseline-change.json` binds `spec` mode, proposal
+  commit `b446b0d6a98cc2b87b63aa3d0d6c63cc78a179fa`, integration commit
+  `4e851106eb446c82a85684d38912b84e77cb8f89`, and the approved semantic and
+  structural delta fingerprints;
+- `evidence/proposals/7.1i-baseline-proposal.json` retains the exact 7.1e
+  ProposalPackage;
+- `evidence/candidates/7.1i-baseline-candidate.tar` retains the exact
+  `.sdd/config.yaml` and specification bytes archived from the bound proposal
+  commit; the gate used those bytes in a temporary extracted directory;
+- `evidence/reports/7.1i-baseline-merge.json` retains the deterministic JSON
+  CLI response and MergeReport.
+
+The exact `merge check` invocation composed those inputs with the retained
+7.1f ApprovalEvidence, 7.1g TestIndex and TestExecutionEvidence, and 7.1h
+QAEvidence. Two stdout runs each exited 1 and produced byte-identical
+6,600-character JSON responses with final status `BLOCKED`. The report bound
+integration commit `4e851106eb446c82a85684d38912b84e77cb8f89`, branch head and merge base
+`b446b0d6a98cc2b87b63aa3d0d6c63cc78a179fa`, and all six explicit artifact
+inputs in its deterministic input manifest.
+
+The blocking diagnostics were:
+
+- `SDD_MERGE_INTEGRATION_REF_NOT_CURRENT`, because configured target `main`
+  had advanced to `d2cb35ec0e75cf1555ad87b06e77d1556e9f0d72` when the QA artifact was
+  retained;
+- `SDD_MERGE_HISTORICAL_ID_REUSE` for the Capability and each of its five
+  Requirements, plus aggregate `SDD_PREPARE_ID_REUSE_BLOCKED`, because the
+  linear integration history already contained the baseline objects;
+- `SDD_EVIDENCE_SUBJECT_STALE` for QAEvidence and
+  `SDD_PREPARE_AFFECTED_OBJECT_CHANGED`, because recomparison against that
+  already-updated integration state collapsed the affected scope from the
+  approved Capability and Requirements to an empty set.
+
+`SDD_SEMANTIC_REVIEW_REQUIRED` was independently `REVIEW_REQUIRED`; no model
+analysis or human semantic-review evidence was fabricated. Definite blockers
+correctly took precedence in the final status. The resulting empty affected
+scope caused both test and QA summaries to say `PASS` with zero satisfied and
+zero unsatisfied objects; this is not evidence that the originally approved
+scope passed the current gate.
+
+Before and after two assessment runs, `git show-ref` and full porcelain status
+were byte-identical. The command created no branch, commit, tag, push, merge,
+or branch-policy change and modified no existing tracked file. Only the
+explicitly requested input snapshots and output report were retained. Per the
+leaf boundary, no discovered workflow or reporting issue was corrected.
+
+### OBS-YO-004 — In-branch evidence retention invalidates the baseline gate
+
+The linear dogfood sequence retained ApprovalEvidence, test evidence, and QA
+evidence as commits on configured integration branch `main`. By gate time,
+`main` therefore both contained the proposed baseline object IDs and had moved
+past the integration commit bound by QAEvidence. Strict current-ref and
+historical-ID checks correctly blocked that topology, but the workflow offers
+no demonstrated retention path that preserves project-scoped artifact files
+without changing the very Git subjects they bind. Treat this as a provisional
+recurring workflow problem for comparison in 7.2 and 7.3; do not fix it before
+the 7.4 synthesis and separately bounded 7.5 work.
+
+### OBS-YO-005 — Empty recomputed scope can look like successful verification
+
+After integration already contained the baseline specification, recomputation
+produced an empty affected scope. The final report was correctly `BLOCKED`, but
+its test and QA summaries each reported `PASS` with zero satisfied and zero
+unsatisfied objects. An operator reading the summaries without the top-level
+status and diagnostics could mistake vacuous success for verification of the
+original five Requirements and Capability. Treat this as a provisional report
+comprehension problem and compare it across the remaining dogfood studies.
+
+### OBS-YO-006 — A retained directory candidate becomes a nested SDD Project
+
+`merge check` accepts only a portable project-relative candidate path, and a
+directory candidate must contain its `.sdd/config.yaml` as well as its
+specification tree. Retaining that complete directory under `yo/evidence/`
+made normal project discovery see a second current SDD Project with the same
+`SDD-4A2395B6` identity; `sdd validate` correctly returned
+`SDD_ID_PROJECT_DUPLICATE`. The exact Git-derived bytes were therefore retained
+as `7.1i-baseline-candidate.tar`, while the gate used a temporary extracted
+directory that was removed from the project after assessment. This preserves
+reproducibility and a valid project worktree, but requires a manual extraction
+step that the version 1 candidate input and report manifest do not describe.
+Treat this as a provisional recurring artifact-retention and reproducibility
+problem for the later dogfood studies; no discovery or candidate contract was
+changed in 7.1i.
 
 ## Initialization result
 
