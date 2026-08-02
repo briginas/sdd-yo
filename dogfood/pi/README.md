@@ -12,7 +12,8 @@
 - First Change mode: `spec`.
 - First governed Capability: existing user-prompt acquisition across the
   coding-agent CLI and terminal input components.
-- Onboarding status: selected and bounded; not initialized.
+- Onboarding status: empty incremental SDD Project initialized; first baseline
+  contract not yet clarified.
 
 The repository is an npm workspace containing several packages, but this study
 treats the complete repository as one SDD Project because its packages share
@@ -94,6 +95,62 @@ project, commits, configuration, TestIndex, and proposal subjects. No live model
 provider, credential, network request, paid request, release action, or e2e test
 requiring external services belongs to this baseline.
 
+## Initialization result
+
+Milestone 7.2b used the locally built SDD Yo CLI on 2026-08-02:
+
+```text
+node dist/bin/sdd.js init \
+  --root /Users/dev.briginas/dev/pi \
+  --adoption incremental \
+  --format json
+```
+
+- Result: `ok` with no diagnostics.
+- Assigned project identity: `SDD-B6FCE07B`.
+- Initialization commit: `8ce561aacd3ea0c7a098b923dad07faec3a0db09`.
+- Created paths: `.sdd/config.yaml`, `spec/README.md`, `spec/capabilities`, and
+  `spec/concepts`.
+- Measured command time: 0.17 seconds real, 0.12 seconds user, and 0.02 seconds
+  system on the local macOS host. This excludes the preceding local CLI build
+  and dependency hydration needed for the host formatter check.
+- Existing tracked `pi` files were not modified, and the CLI created no branch
+  or commit.
+- `sdd validate --cwd /Users/dev.briginas/dev/pi --format json` returned `ok`,
+  an empty valid graph with zero Capabilities, Requirements, Concepts, or
+  fingerprints, and complete history resolved at
+  `85f89db9bcf4104b1e207ddb6f787bc5a4b631ce`.
+- After committing only the two initialized files, the same validation result
+  held with complete configured history resolved at the initialization commit.
+- The result exercises the initialized-project behavior in `REQ-382BBBD6`,
+  stable identity in `REQ-BFC18F28`, the permitted empty incremental index in
+  `REQ-DD91AD0F`, and complete-history reporting in `REQ-8B656FC5` without
+  claiming new automated Requirement coverage.
+- The generated configuration has no test adapters or allowed evidence
+  issuers; those remain later explicit decisions.
+
+### OBS-PI-001 — The host formatter does not own initialized SDD file types
+
+The selected baseline had no installed dependencies. `npm ci --ignore-scripts`
+installed the exact lockfile dependencies without lifecycle scripts; npm
+reported 352 packages added in 4 seconds, one unsupported-engine warning for a
+workspace dependency under the current Node.js 22.22.3 runtime, and four audit
+findings. Dependency hydration did not change tracked files and is recorded
+only as a setup prerequisite, not as a product vulnerability assessment or
+remediation leaf.
+
+A read-only targeted check with Biome 2.3.5 then exited 1, reported that it
+checked zero files in 1395 microseconds, and identified `.sdd/config.yaml` and
+`spec/README.md` as ignored by `biome.json`. Their SHA-256 hashes remained
+unchanged, and subsequent SDD validation returned the same project identity,
+empty graph, complete history, and no diagnostics.
+
+Unlike `OBS-YO-002`, onboarding did not create files that the host formatter
+owns but rejects. The `pi` formatter scope currently excludes both initialized
+SDD file types, so 7.2b records no host-formatting pass for them and does not
+change the formatter configuration or SDD output. Treat this as a provisional
+project-specific coverage boundary for later cross-study synthesis.
+
 ## Observation boundary
 
 Record the same measurements as the `yo` study, separated by test framework
@@ -125,7 +182,7 @@ fabricated human evidence.
 
 ## Next bounded leaf
 
-Milestone 7.2b may initialize the repository as the selected empty incremental
-SDD Project, then measure host formatting and empty-graph validation. It must
-not define the first Capability, rename tests, run provider-dependent or e2e
-tests, create evidence, or execute Proposal, Verification, or Merge gates.
+Milestone 7.2c may clarify the exact accepted first baseline contract, smallest
+Requirement set, Vitest and `node:test` mapping, JUnit producer feasibility,
+approval inputs, and QA boundary. It must not edit the `pi` specification,
+tests, adapters, evidence configuration, or runtime.

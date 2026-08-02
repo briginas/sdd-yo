@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 7 / Existing-project dogfood
-- Current leaf: Milestone 7.2b `pi` incremental initialization
+- Current leaf: Milestone 7.2c `pi` first baseline contract clarification
 - Last updated: 2026-08-02
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -869,13 +869,19 @@ Bounded leaves:
         This selection is not permission to mutate `pi`, does not satisfy the
         two-independent-project boundary of 7.3, and creates no SDD object or
         evidence.
-  - [ ] **7.2b — Incremental initialization.** Build the current local CLI,
+  - [x] **7.2b — Incremental initialization.** Build the current local CLI,
         initialize `/Users/dev.briginas/dev/pi` as one `incremental` SDD
         Project, confirm that only the empty SDD structure is created, validate
         the empty graph against configured Git history, and record measured
         setup and host-formatting results. Do not define the first Capability,
         rename tests, run provider-dependent or e2e tests, create dogfood
         evidence, or change runtime behavior.
+  - [ ] **7.2c — First baseline contract clarification.** Confirm the exact
+        accepted user-prompt acquisition behavior, smallest Requirement set,
+        Vitest and `node:test` mapping, JUnit producer feasibility, approval
+        inputs, and QA boundary for the first `spec` Change. Do not edit the
+        `pi` specification, tests, adapters, evidence configuration, or runtime
+        in this clarification leaf.
 - [ ] **7.3 — Independent projects in a monorepo.** Select and onboard a
       monorepo with two independent SDD Projects, govern one real Change, and
       verify project and evidence isolation.
@@ -922,10 +928,9 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 7.2a selected the clean existing `pi` npm workspace as one
-incremental SDD Project and bounded a multi-framework first Change without
-mutating it. The next bounded leaf is 7.2b: initialize only the empty project
-structure, validate the empty graph and configured history, and record measured
-setup and host-formatting results. Do not define the first Capability, rename
-tests, create evidence, run a gate, or absorb recurring-problem fixes deferred
-to 7.5.
+Milestone 7.2b initialized the clean existing `pi` npm workspace as one empty
+incremental SDD Project, validated its empty graph against complete configured
+history, and recorded the setup and host-formatting boundary. The next bounded
+leaf is 7.2c: clarify the exact accepted first baseline contract, test mapping,
+JUnit producer feasibility, approval inputs, and QA boundary without editing
+the `pi` specification, tests, adapters, evidence configuration, or runtime.
