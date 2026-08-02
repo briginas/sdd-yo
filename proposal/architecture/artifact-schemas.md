@@ -75,6 +75,62 @@ Rules:
 
 Artifacts are immutable values. A correction creates a new artifact.
 
+## Retention topology
+
+The CLI keeps workflow state external as required by
+[`REQ-A3C3B779`](../../spec/capabilities/proposal-modes-and-workflow-gates.md#req-a3c3b779).
+Durable retention and project-scoped CLI access are separate layers:
+
+```text
+project-namespaced durable store
+  |
+  | materialize exact immutable bytes
+  v
+ignored project-local staging root
+  |
+  | explicit project-relative CLI paths
+  v
+deterministic report
+  |
+  | export exact bytes before cleanup
+  v
+project-namespaced durable store
+```
+
+The durable store may be a local archive, CI artifact service, or issuer-owned
+system. It is outside the Git refs being assessed and namespaces retained
+values by SDD Project. It preserves the exact artifact bytes and any candidate
+bytes needed to reproduce a command; an external manifest or content-addressed
+key may describe that retained set, but it is not hidden CLI workflow state and
+does not replace the versioned artifact subjects.
+
+Before a command, the invoker materializes the required immutable values under
+an ignored staging root inside the selected project. The staging root is
+excluded from every assessed ref and is established before subject-bound
+evidence is produced; retaining an artifact must not create a commit, branch,
+tag, or other Git subject. The CLI receives only explicit project-relative
+paths and applies its existing real-path, regular-file, size, and symlink
+checks. Primary output is written to the same staging boundary or captured from
+stdout, then exported byte-for-byte to durable storage before optional staging
+cleanup.
+
+Candidate bytes follow the same lifecycle: the retained source is immutable,
+and the exact directory or CandidateTreeManifest accepted by the current
+command is materialized inside the project only for the run. A retained
+directory containing another `.sdd/config.yaml` must not remain discoverable
+as a nested project. Defining a portable candidate-snapshot production and
+materialization command is separate follow-up work; this retention contract
+does not add archive ingestion or weaken project discovery.
+
+Reproduction resolves the declared mutable refs again and accepts each
+retained value only when its exact subject still applies. Ref movement
+invalidates only artifacts that bind the moved subject: for example,
+branch-head movement invalidates test and QA evidence, while an approval bound
+to an unchanged base and object delta remains applicable across independent
+integration additions. The invoker produces new evidence for a changed subject
+instead of moving a ref backward, rewriting an artifact, or committing the old
+artifact onto the ref it describes.
+
 ## Change descriptor
 
 A Change is transient input, not a canonical specification object:

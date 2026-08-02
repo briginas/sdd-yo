@@ -117,6 +117,25 @@ supported retention topology before implementation changes; no current
 Requirement or architecture document defines an unambiguous recovery that can
 be safely inferred from the blocked dogfood run.
 
+### 7.4a resolution — External retention with project-local staging
+
+Milestone 7.4a resolves `OBS-YO-004` at the workflow-contract boundary. Durable
+ApprovalEvidence, TestExecutionEvidence, QAEvidence, candidate bytes, and gate
+reports belong to a project-namespaced store outside the Git refs being
+assessed. For a CLI run, the invoker materializes their exact immutable bytes
+under an ignored staging root inside the selected project, passes explicit
+project-relative paths, and exports deterministic output before optional
+cleanup. The staging root is never committed to the proposal or integration
+ref, and no retention-only branch or tag is created.
+
+This topology preserves existing path containment and strict subject
+validation while preventing evidence retention from advancing the subjects it
+binds. A moved ref still makes dependent evidence stale and requires new
+evidence. This clarification changes no runtime, schema, or gate semantics.
+It also does not resolve `OBS-YO-005` or define the portable candidate-snapshot
+production and materialization workflow in `OBS-YO-006`; those remain bounded
+Milestones 7.4b and 7.4c.
+
 ## Deferred claims
 
 - The existing-monorepo study and two-project isolation evidence remain

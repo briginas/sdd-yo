@@ -140,7 +140,17 @@ The fingerprints include these fields so older evidence becomes stale.
 The core sends no telemetry and requires no network. Default caches contain
 only derived parse/graph/fingerprint data and may be deleted safely. Logs avoid
 artifact bodies, environment values, credentials, and model prompts by
-default. External CI, issuer, or model systems define their own retention.
+default.
+
+External CI, issuer, or other operator-owned systems define durable retention.
+The supported [retention topology](artifact-schemas.md#retention-topology)
+keeps those immutable values outside assessed Git refs, materializes exact
+bytes only into an ignored project-local staging root for CLI validation, and
+exports deterministic reports before cleanup. The external store is not
+trusted merely because it retained a file: every import still requires the
+selected project, configured issuer, exact subject, bounded regular-file, and
+path-containment checks. Ref movement invalidates dependent evidence rather
+than authorizing ref rollback or artifact rewriting.
 
 ## Security validation
 

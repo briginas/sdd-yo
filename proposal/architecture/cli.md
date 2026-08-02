@@ -266,11 +266,21 @@ recomputes conflict and affected scope, validates all evidence, and returns a
 - `-` means standard input only where the command has one unambiguous artifact
   input.
 - Relative paths resolve from project root after config discovery.
+- Retained inputs from an external project-namespaced store are materialized
+  byte-for-byte under an ignored project-local staging root before invocation;
+  the CLI does not read the external store or treat Git commits as workflow
+  storage. Primary output may be captured from stdout or written to that
+  staging root and exported after the command.
 - Refs are resolved once at command start and reported as object IDs.
 - Candidate directories are read as immutable snapshots; a change during the
   command causes a technical failure.
 - Size, count, depth, and command time limits come from configuration.
 - Secrets and unrestricted environment dumps are never emitted.
+
+The staging lifecycle is defined in
+[Workflow artifacts and schemas](artifact-schemas.md#retention-topology). It
+does not authorize absolute or escaping paths, symlink indirection, persistent
+nested SDD Projects, or archive ingestion.
 
 ## Diagnostic stability
 

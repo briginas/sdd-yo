@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 7 / Existing-project dogfood
-- Current leaf: Milestone 7.4a baseline evidence-retention contract clarification
+- Current leaf: Milestone 7.4b empty-scope decision clarity
 - Last updated: 2026-08-02
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -929,13 +929,19 @@ Bounded leaves:
 - [ ] **7.4 — Confirmed-problem fixes.** Correct only problems confirmed by
       the two-study synthesis through contracts, validators, documentation, or
       evals, with each fix implemented and verified as its own bounded Change.
-  - [ ] **7.4a — Baseline evidence-retention contract clarification.** Define a
+  - [x] **7.4a — Baseline evidence-retention contract clarification.** Define a
         supported project-scoped retention topology that lets ApprovalEvidence,
         TestExecutionEvidence, QAEvidence, candidate bytes, and gate reports
         remain reproducible without advancing or duplicating the Git subjects
         they bind. Resolve the ambiguity exposed by `OBS-YO-004` before any
         runtime or schema change. Do not weaken freshness, current-ref,
-        historical-ID, project-boundary, or exact-subject validation.
+        historical-ID, project-boundary, or exact-subject validation. The
+        clarified two-layer topology retains immutable values in an externally
+        owned project namespace, materializes exact bytes under an ignored
+        project-local staging root for explicit CLI input, and exports reports
+        before cleanup without committing retention artifacts or creating
+        retention-only refs. Requirement traceability: `REQ-A3C3B779`,
+        `REQ-E85A06C3`, `REQ-3B9FC7FF`, `REQ-93A4C44B`, and `REQ-FDD51416`.
   - [ ] **7.4b — Empty-scope decision clarity.** Prevent zero-object test and
         QA summaries from implying that a previously approved affected scope
         passed when gate recomputation collapses that scope to empty. Preserve
@@ -995,9 +1001,10 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 7.3 is complete. The two-study synthesis distinguishes reproduced
-constraints, project-specific results, single-study confirmed problems, and
-eval measurements that were not exercised. The existing-monorepo study and
-three-repository MVP criterion remain deferred. The next bounded work is
-Milestone 7.4a: clarify the supported baseline evidence-retention topology
-before changing runtime, schemas, or gate semantics.
+Milestone 7.4a is complete. The supported topology keeps durable immutable
+artifacts outside assessed Git refs, materializes exact bytes under an ignored
+project-local staging root for CLI use, and exports reports without changing
+their bound subjects. It changes no runtime, schema, or gate semantics. The
+next bounded work is Milestone 7.4b: prevent an empty recomputed affected scope
+from presenting test and QA summaries that imply an earlier non-empty scope
+was verified.

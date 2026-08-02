@@ -244,6 +244,13 @@ Every mutable ref is resolved once at command start. A resolved Git object ID
 is an opaque non-empty string: implementations do not infer SHA-1, SHA-256, or
 any fixed digest length from it.
 
+Workflow artifact retention never advances, rewinds, or duplicates these Git
+subjects. Evidence, candidate bytes, and reports are retained through the
+[external/project-local staging topology](artifact-schemas.md#retention-topology),
+not by committing them onto the proposal or integration ref or by creating a
+retention-only branch or tag. A later ref movement is observed as freshness
+change; it is not hidden by restoring an older ref for assessment.
+
 ## Branch preparation
 
 1. read `B` from `package.base.git_ref`, `P` from the explicitly supplied
