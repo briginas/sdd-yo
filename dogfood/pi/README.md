@@ -13,8 +13,9 @@
 - First governed Capability: existing user-prompt acquisition across the
   coding-agent CLI and terminal input components.
 - Onboarding status: empty incremental SDD Project initialized; first baseline
-  contract clarified, authored, test-traceable, and mechanically ready for a
-  later ProposalPackage validation; no evidence or gate has been created.
+  contract clarified, authored, test-traceable, mechanically validated, and
+  externally approved as a current `spec` subject; test execution evidence, QA
+  evidence, and gates have not been created.
 
 The repository is an npm workspace containing several packages, but this study
 treats the complete repository as one SDD Project because its packages share
@@ -440,10 +441,30 @@ The successful validation used stdout only and modified neither `pi` nor its
 Git state. Mechanical validity does not establish that the described existing
 behavior is accepted; that separate human decision is the next bounded leaf.
 
+## External specification approval result
+
+Milestone 7.2f presented the exact 7.2e ProposalPackage subject to the actual
+Spec Approver. `ivan-briginas` decided `approved` through the configured
+`local-product-review` issuer because the three Requirements accurately describe
+the accepted existing behavior in their agreed boundary. The decision is
+recorded inside the `pi` project as
+`evidence/approvals/7.2e-baseline-spec.json`.
+
+After recording the evidence, two proposal validations from the SDD Yo root
+again exited 0 and produced byte-identical 1,079-byte JSON responses. They
+retained the exact `SDD-B6FCE07B` project, `spec` mode, base commit
+`8ce561aacd3ea0c7a098b923dad07faec3a0db09`, and semantic and structural delta
+fingerprints recorded in 7.2e. Strict project-scoped import and approval
+assessment returned `current` with no issues for the configured issuer and the
+exact project, mode, base commit, and delta subjects.
+
+This decision approves only the baseline specification of existing behavior. It
+is not TestExecutionEvidence, QAEvidence, a Verification or Merge Gate result,
+permission to merge, or approval of a later `pi` milestone.
+
 ## Next bounded leaf
 
-Milestone 7.2f may present the exact 7.2e ProposalPackage subject to the actual
-Spec Approver, record only a project-scoped ApprovalEvidence decision from the
-configured `local-product-review` issuer, and validate it against the unchanged
-candidate. It must not infer approval from authorship or passing checks, create
-test or QA evidence, or execute a later gate.
+Milestone 7.2g may generate fresh safe Vitest and `node:test` JUnit reports at
+the unchanged candidate head, import the bound two-adapter TestIndex, and record
+only current project-scoped TestExecutionEvidence from `local-test-run`. It must
+not make a QA decision or execute the Verification or Merge gates.
