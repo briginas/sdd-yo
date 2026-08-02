@@ -13,7 +13,8 @@
 - First governed Capability: existing user-prompt acquisition across the
   coding-agent CLI and terminal input components.
 - Onboarding status: empty incremental SDD Project initialized; first baseline
-  contract not yet clarified.
+  contract, test mapping, JUnit feasibility, approval inputs, and QA boundary
+  clarified but not authored.
 
 The repository is an npm workspace containing several packages, but this study
 treats the complete repository as one SDD Project because its packages share
@@ -151,6 +152,168 @@ SDD file types, so 7.2b records no host-formatting pass for them and does not
 change the formatter configuration or SDD output. Treat this as a provisional
 project-specific coverage boundary for later cross-study synthesis.
 
+## First baseline contract clarification
+
+Milestone 7.2c used the committed empty-project base
+`8ce561aacd3ea0c7a098b923dad07faec3a0db09`. The first `spec` Change has the
+working Capability title **User prompt acquisition** and exactly three
+automated candidate Requirements. Stable Capability and Requirement IDs remain
+deferred until the authoring leaf. This clarification selects the proposal
+subject; the later actual Spec Approver still decides whether the behavior
+deserves canonical status.
+
+### Compose the initial prompt from CLI sources
+
+The coding-agent CLI composes one initial prompt from the available piped
+standard input, processed file text, and first positional CLI message, in that
+order.
+
+- Non-empty standard input can form the initial prompt by itself; processed
+  file text and the first positional message are included when present.
+- Source strings are concatenated directly without an inserted delimiter.
+  Producer-provided newlines therefore remain significant.
+- When the combined result is empty, the selected mode does not send an initial
+  prompt.
+- File-image acquisition, argument parsing, file decoding, provider transport,
+  and prompt-template expansion are outside this Requirement.
+
+### Preserve later positional messages as later prompts
+
+Only the first positional CLI message contributes to the composed initial
+prompt. Every remaining positional message retains its original order and is
+made available to the selected interactive or print mode as a later prompt.
+
+- Building the initial message removes at most the first positional message.
+- Print and interactive startup processing preserve the remaining array order.
+- Streaming, compaction, retry, RPC, and post-startup steering or follow-up
+  queues are outside this Requirement.
+
+### Submit an ordinary interactive Editor prompt
+
+The main multi-line TUI Editor submits a non-command ordinary prompt through
+its configured submit action and makes the resulting text available to the
+coding-agent interactive input path.
+
+- Paste markers are expanded, leading and trailing whitespace is trimmed, and
+  an empty result is not submitted.
+- Ordinary internal characters are retained. A backslash immediately before
+  Enter is the documented newline workaround and is not submitted literally;
+  a backslash elsewhere remains ordinary input.
+- The Editor clears its submitted state and the idle interactive path receives
+  the same normalized prompt value.
+- Slash commands, bash commands, extension commands, alternate editors,
+  streaming, compaction, queued steer/follow-up behavior, rendering, history,
+  and provider execution are outside this Requirement.
+
+The generic single-line `Input` component is not the main coding-agent prompt
+editor. Its tests remain useful TUI coverage but receive no Requirement ID from
+this Capability. This corrects the provisional `packages/tui/test/input.test.ts`
+anchor from 7.2a rather than expanding the product contract to unrelated
+dialogs.
+
+### Exact test mapping and missing coverage
+
+The initial-message Vitest report supplies these three normalized names:
+
+- `test/initial-message.test.ts buildInitialMessage > merges piped stdin with
+the first CLI message into one prompt`;
+- `test/initial-message.test.ts buildInitialMessage > uses stdin as the initial
+prompt when no CLI message is present`;
+- `test/initial-message.test.ts buildInitialMessage > combines stdin, file
+text, and first CLI message in one prompt`.
+
+All three map to initial-prompt composition. The third also verifies that a
+second positional message remains after composition, but no current test proves
+that multiple remaining messages are delivered later in order. The authoring
+leaf must add one deterministic Vitest case around print-mode sequencing; it
+must not call a live provider.
+
+The focused `node:test` Editor report supplies six normalized names: the five
+descendants of `Editor component Backslash+Enter newline workaround` and
+`Editor component Undo clears undo stack on submit`. They map to interactive
+Editor submission and its explicit backslash exception. Existing tests stop at
+the Editor callback, so the authoring leaf must also add one deterministic
+coding-agent test proving that an ordinary idle submission reaches the
+interactive input path with the same normalized value. It may use a stub or
+the repository faux-provider harness, but must not change runtime behavior.
+
+Only these nine existing executable tests need the new Requirement IDs in this
+bounded mapping. The two new deterministic tests must include their exact IDs
+in their own normalized names. The later full TestIndex will measure these
+eleven mapped tests against the complete executable-test population; this
+clarification does not claim the final percentage.
+
+### JUnit producer feasibility
+
+Vitest 4.1.9 produced a three-test JUnit report with:
+
+```text
+npm exec --workspace packages/coding-agent -- vitest --run \
+  test/initial-message.test.ts --reporter=junit --outputFile=<project-path>
+```
+
+Two generations imported from the same fixed report path produced identical
+normalized names and `test_ref` values. SDD Yo emitted
+`SDD_ADAPTER_JUNIT_HIERARCHY_UNAVAILABLE` because this producer encoded the
+`buildInitialMessage` suite in each testcase name rather than as retained
+nested JUnit suites. The full names remain unambiguous, so the authoring leaf
+must place every applicable Requirement ID directly in each normalized leaf
+name and must retain the warning rather than infer hierarchy.
+
+Node.js 22.22.3 produced the six-test focused Editor JUnit report with its
+built-in reporter and a test-name pattern selecting the two mapped surfaces.
+Two generations at the same path imported with identical normalized names and
+`test_ref` values, retained the nested Editor suite hierarchy, and emitted no
+diagnostic. Future configuration uses separate required JUnit adapters named
+`vitest` and `node-test`, with distinct project-relative report paths.
+
+An initial direct Vitest invocation assumed a root-hoisted
+`node_modules/vitest/dist/cli.js` and failed because this lockfile layout keeps
+Vitest package-local. The workspace-native `npm exec` command above recovered
+without a dependency or product change. Record this as provisional
+project-specific adapter-invocation friction, not as permission to add
+package-manager logic to SDD Yo.
+
+All reports and import configurations used for clarification were temporary.
+They are not TestExecutionEvidence and are not retained as dogfood artifacts.
+
+### Approval and evidence inputs
+
+The authoring leaf may configure these issuer names without creating evidence:
+
+- `local-product-review` for an actual Spec Approver decision;
+- `local-test-run` for later current full-suite TestExecutionEvidence;
+- `local-qa` for an actual QA decision over the Capability.
+
+The first approval subject must use `spec` mode and bind project
+`SDD-B6FCE07B`, the committed base above, the later unchanged candidate commit,
+and the exact semantic and structural delta fingerprints for only these three
+Requirements. It must also present the trimming, backslash-newline, generic
+Input, streaming, compaction, command, and provider exclusions. This
+clarification, repository ownership, passing focused tests, or authorship is
+not ApprovalEvidence.
+
+### Baseline QA boundary
+
+All three candidate Requirements are automated and require current mapped
+passing tests at the later candidate head. Baseline QA independently reviews
+the same Capability at that head and its resolved integration commit through
+three deterministic scenarios:
+
+1. piped standard input, processed file text, a first positional message, and
+   at least one later message preserve the defined composition and order;
+2. an ordinary interactive Editor prompt containing internal whitespace and a
+   non-terminal backslash reaches a stubbed or faux-provider input path with
+   the documented outer trimming;
+3. empty input is ignored and a terminal backslash plus Enter follows the
+   newline exception without being misreported as lost ordinary input.
+
+The full safe non-e2e project suite, formatting boundary, SDD graph validation,
+and imported two-adapter TestIndex must also be current before later evidence.
+No live provider, credential, network request, paid request, release action, or
+e2e test is required. This clarification creates no ApprovalEvidence,
+TestExecutionEvidence, QAEvidence, ProposalPackage, or gate result.
+
 ## Observation boundary
 
 Record the same measurements as the `yo` study, separated by test framework
@@ -182,7 +345,9 @@ fabricated human evidence.
 
 ## Next bounded leaf
 
-Milestone 7.2c may clarify the exact accepted first baseline contract, smallest
-Requirement set, Vitest and `node:test` mapping, JUnit producer feasibility,
-approval inputs, and QA boundary. It must not edit the `pi` specification,
-tests, adapters, evidence configuration, or runtime.
+Milestone 7.2d may author only the clarified Capability and three Requirements,
+configure the separate `vitest` and `node-test` JUnit adapters plus selected
+issuers, add exact IDs to only the nine mapped existing tests, add the two
+missing deterministic routing tests, and validate the candidate. It must not
+change runtime behavior, run provider-dependent or e2e tests, fabricate human
+evidence, or execute Proposal, Verification, or Merge gates.

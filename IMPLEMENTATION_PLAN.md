@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 7 / Existing-project dogfood
-- Current leaf: Milestone 7.2c `pi` first baseline contract clarification
+- Current leaf: Milestone 7.2d `pi` baseline authoring and traceability
 - Last updated: 2026-08-02
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -876,12 +876,21 @@ Bounded leaves:
         setup and host-formatting results. Do not define the first Capability,
         rename tests, run provider-dependent or e2e tests, create dogfood
         evidence, or change runtime behavior.
-  - [ ] **7.2c — First baseline contract clarification.** Confirm the exact
+  - [x] **7.2c — First baseline contract clarification.** Confirm the exact
         accepted user-prompt acquisition behavior, smallest Requirement set,
         Vitest and `node:test` mapping, JUnit producer feasibility, approval
         inputs, and QA boundary for the first `spec` Change. Do not edit the
         `pi` specification, tests, adapters, evidence configuration, or runtime
         in this clarification leaf.
+  - [ ] **7.2d — Baseline authoring and traceability.** In one `spec` Change,
+        define the clarified user-prompt acquisition Capability and three
+        Requirements in `pi`, configure separate Vitest and `node:test` JUnit
+        adapters plus the selected evidence issuers, add exact Requirement IDs
+        to only the mapped existing names, and add the two missing deterministic
+        routing tests. Validate the candidate graph, safe focused suites,
+        formatting boundary, and imported TestIndex. Do not change runtime
+        behavior, run provider-dependent or e2e tests, fabricate human evidence,
+        or execute Proposal, Verification, or Merge gates.
 - [ ] **7.3 — Independent projects in a monorepo.** Select and onboard a
       monorepo with two independent SDD Projects, govern one real Change, and
       verify project and evidence isolation.
@@ -928,9 +937,12 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 7.2b initialized the clean existing `pi` npm workspace as one empty
-incremental SDD Project, validated its empty graph against complete configured
-history, and recorded the setup and host-formatting boundary. The next bounded
-leaf is 7.2c: clarify the exact accepted first baseline contract, test mapping,
-JUnit producer feasibility, approval inputs, and QA boundary without editing
-the `pi` specification, tests, adapters, evidence configuration, or runtime.
+Milestone 7.2c clarified exactly three automated user-prompt acquisition
+Requirements, corrected the TUI mapping to the main Editor rather than generic
+Input dialogs, proved stable importable Vitest and `node:test` JUnit identities,
+and bounded the missing deterministic routing coverage, approval inputs, and QA
+scenarios. The next bounded leaf is 7.2d: author only that baseline Capability,
+configure the two JUnit adapters and selected issuers, add exact IDs to the
+mapped names, add the two missing tests, and validate the candidate without a
+runtime behavior change, provider-dependent or e2e execution, human evidence,
+or a gate.
