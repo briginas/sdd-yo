@@ -13,7 +13,8 @@
   first governed Capability authored and test-traceable; deterministic
   ProposalPackage validated and its exact approval subject recorded; external
   specification approval and current full-suite test execution evidence
-  recorded and validated; QA and gates not yet run.
+  recorded and validated; baseline QA evidence recorded and validated; gates
+  not yet run.
 
 The repository owner selected this study boundary on 2026-08-01. That planning
 decision is not SDD ApprovalEvidence, QAEvidence, a gate result, or permission
@@ -286,6 +287,37 @@ import of the same path was correctly rejected with
 resolved the duplicate without changing configuration or product behavior.
 The temporary JUnit and CLI response files were removed after the retained
 TestIndex and TestExecutionEvidence were validated.
+
+## Baseline QA evidence result
+
+Milestone 7.1h exercised the three scenarios selected in 7.1c through the
+actual `yo` patch dispatcher on temporary workspace fixtures. The focused Node
+test run covered an explicitly approved application, absent, denied, and
+aborted approval with no write, and a stale-source conflict that retained the
+newer source. All three selected tests passed; none failed, skipped, or
+remained todo. The runtime, tests, specification, and configuration at the
+bound candidate remained unchanged; the later `yo` head differed from that
+candidate only by the retained 7.1g TestIndex and TestExecutionEvidence.
+
+After reviewing the Capability contract, the selected scenarios, and the
+prior approval and test evidence, the actual local QA engineer
+`ivan-briginas` decided `passed` for `CAP-7E001BA8`. Project-scoped QAEvidence
+from the configured `local-qa` issuer is recorded as
+`evidence/7.1h-baseline-qa.json` with these exact subjects:
+
+- candidate head: `b446b0d6a98cc2b87b63aa3d0d6c63cc78a179fa`;
+- resolved integration commit:
+  `4e851106eb446c82a85684d38912b84e77cb8f89`;
+- affected scope:
+  `sha256:0ba8c31e9565ae587084aaeefa776e9ba955eecd1e32ef39e6f6978d2b4ed4bc`.
+
+Strict artifact import and evidence assessment accepted the configured issuer,
+actor, decision, exact project and subjects, the Capability decision, and the
+empty manual-Requirement list. Combined with the retained 7.1g evidence, the
+assessment satisfied test coverage and execution for all five automated
+Requirements plus QA coverage for the affected Capability with no issues. No
+Verification or Merge Gate was run, and the QA decision grants no Git or
+hosting authorization.
 
 ## Initialization result
 

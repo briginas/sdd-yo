@@ -843,13 +843,19 @@ Bounded leaves:
         configured `local-test-run` issuer, and validate the exact project,
         head, configuration, TestIndex, and result subjects. Do not make a QA
         decision or run the Verification or Merge gates.
-  - [ ] **7.1h — Baseline QA evidence.** At the unchanged candidate head and
+  - [x] **7.1h — Baseline QA evidence.** At the unchanged candidate head and
         resolved integration commit, exercise the approved application,
         non-interactive or declined no-write, and stale-source conflict
         scenarios selected in 7.1c, obtain the actual QA tester's Capability
         decision, and record project-scoped QAEvidence from the configured
         `local-qa` issuer. Do not infer QA from passing automated tests or run
         the Verification or Merge gates.
+  - [ ] **7.1i — Advisory baseline gate assessment.** Revalidate and retain the
+        exact baseline Change inputs, compose the current approval, test, and
+        QA evidence through the Verification and Merge gates at their bound
+        candidate and integration commits, and record the deterministic report
+        plus no-write observations. Do not commit, merge, push, enforce a
+        branch policy, or correct any newly discovered issue in this leaf.
 - [ ] **7.2 — Polyglot or multi-framework project.** Select and onboard one
       existing project, then govern one real Change end to end and record the
       same observation set.
@@ -899,8 +905,8 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 7.1g is complete. The next bounded leaf is 7.1h: obtain the actual
-baseline QA decision for the selected Capability scenarios at the unchanged
-candidate head and record subject-bound QAEvidence. Keep SDD Yo advisory; do
-not infer QA from passing automated tests or run the Verification or Merge
-gates.
+Milestone 7.1h is complete. The next bounded leaf is 7.1i: compose the exact
+baseline Change inputs and current subject-bound evidence through the advisory
+Verification and Merge gates, then record the deterministic report and
+no-write observations. Do not mutate Git or hosting state, enforce a branch
+policy, or absorb fixes for any newly discovered issue.
