@@ -11,8 +11,9 @@
 - Onboarding status: incremental SDD Project initialized; first baseline
   contract clarified; Node JUnit root-test compatibility verified in SDD Yo;
   first governed Capability authored and test-traceable; deterministic
-  ProposalPackage validated and its exact approval subject recorded; human
-  evidence and gates not yet run.
+  ProposalPackage validated and its exact approval subject recorded; external
+  specification approval recorded and validated as current; test execution,
+  QA, and gates not yet run.
 
 The repository owner selected this study boundary on 2026-08-01. That planning
 decision is not SDD ApprovalEvidence, QAEvidence, a gate result, or permission
@@ -189,6 +190,7 @@ the committed `yo` baseline candidate with:
 
 ```text
 node /Users/dev.briginas/dev/sdd-yo/dist/bin/sdd.js proposal validate \
+  --cwd /Users/dev.briginas/dev/yo \
   --mode spec \
   --base 84133ed37f470040aa829bef393197697934fa9e \
   --candidate /Users/dev.briginas/dev/yo \
@@ -222,10 +224,29 @@ the same Capability and five Requirements. `code_targets` and deterministic
 The CLI also rejected an attempted absolute `--output` path outside `yo` with
 `SDD_CONFIG_CLI_OUTPUT_INVALID`, preserving its project-scope write boundary.
 The successful validation therefore used stdout and did not retain a package
-file or modify `yo`. Mechanical validity does not confirm that the described
-existing behavior deserves canonical status. The next leaf requires the
-actual Spec Approver to decide that question and supply any resulting
-ApprovalEvidence; no such evidence or gate result exists yet.
+file or modify `yo`. Mechanical validity did not confirm that the described
+existing behavior deserved canonical status; that separate human decision is
+recorded below.
+
+## External specification approval result
+
+Milestone 7.1f presented the exact 7.1e ProposalPackage subject to the actual
+Spec Approver. `ivan-briginas` decided `approved` through the configured
+`local-product-review` issuer because the Requirements correctly describe the
+accepted existing behavior. The decision is recorded inside the `yo` project
+as `evidence/approvals/7.1e-baseline-spec.json`.
+
+Before recording the evidence, two proposal validations from the `yo` root
+again exited 0 and produced byte-identical 1,139-byte JSON responses. An
+additional self-contained run from the SDD Yo root with explicit
+`--cwd /Users/dev.briginas/dev/yo` produced the same ProposalPackage subject.
+Strict project-scoped import and approval assessment returned `current` with no
+issues for the exact project, configured issuer, `spec` mode, base commit, and
+semantic and structural delta fingerprints.
+
+This decision approves only the baseline specification of existing behavior.
+It is not TestExecutionEvidence, QAEvidence, a Verification or Merge Gate
+result, permission to merge, or approval of a later `yo` milestone.
 
 ## Initialization result
 

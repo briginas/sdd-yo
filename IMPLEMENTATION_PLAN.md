@@ -4,8 +4,8 @@
 
 - State: active
 - Current phase: Milestone 7 / Existing-project dogfood
-- Current leaf: Milestone 7.1 external Spec Approver decision after proposal validation
-- Last updated: 2026-08-01
+- Current leaf: Milestone 7.1 current test execution evidence after specification approval
+- Last updated: 2026-08-02
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
   [`proposal/architecture/README.md`](proposal/architecture/README.md)
@@ -830,13 +830,19 @@ Bounded leaves:
         review handoff without writing to `yo`. Do not create ApprovalEvidence,
         TestExecutionEvidence, or QAEvidence, run a later gate, or infer that
         mechanically valid specification text describes accepted behavior.
-  - [ ] **7.1f — External specification approval.** Present the exact 7.1e
+  - [x] **7.1f — External specification approval.** Present the exact 7.1e
         ProposalPackage subject to the actual Spec Approver, record the
         external decision as project-scoped ApprovalEvidence from the
         configured `local-product-review` issuer, and validate that evidence
         against the unchanged candidate. Do not infer approval from repository
         ownership, this plan, the authored specification, or passing tests;
         defer TestExecutionEvidence, baseline QA, and all later gates.
+  - [ ] **7.1g — Current test execution evidence.** Generate a fresh full
+        Node JUnit report at the unchanged candidate head, import the bound
+        TestIndex, record project-scoped TestExecutionEvidence from the
+        configured `local-test-run` issuer, and validate the exact project,
+        head, configuration, TestIndex, and result subjects. Do not make a QA
+        decision or run the Verification or Merge gates.
 - [ ] **7.2 — Polyglot or multi-framework project.** Select and onboard one
       existing project, then govern one real Change end to end and record the
       same observation set.
@@ -886,8 +892,7 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 7.1e is complete. The next bounded leaf is 7.1f: obtain the actual
-Spec Approver decision for the exact recorded `spec` proposal subject and
-validate its project-scoped ApprovalEvidence. Keep SDD Yo advisory; do not
-create test or QA evidence, run later gates, or infer approval from the
-authored specification, passing suite, repository ownership, or this plan.
+Milestone 7.1f is complete. The next bounded leaf is 7.1g: produce current
+full-suite TestExecutionEvidence bound to the unchanged candidate head and its
+fresh imported TestIndex. Keep SDD Yo advisory; do not make the baseline QA
+decision or run the Verification or Merge gates.
