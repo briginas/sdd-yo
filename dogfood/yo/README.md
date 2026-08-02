@@ -12,8 +12,8 @@
   contract clarified; Node JUnit root-test compatibility verified in SDD Yo;
   first governed Capability authored and test-traceable; deterministic
   ProposalPackage validated and its exact approval subject recorded; external
-  specification approval recorded and validated as current; test execution,
-  QA, and gates not yet run.
+  specification approval and current full-suite test execution evidence
+  recorded and validated; QA and gates not yet run.
 
 The repository owner selected this study boundary on 2026-08-01. That planning
 decision is not SDD ApprovalEvidence, QAEvidence, a gate result, or permission
@@ -247,6 +247,45 @@ semantic and structural delta fingerprints.
 This decision approves only the baseline specification of existing behavior.
 It is not TestExecutionEvidence, QAEvidence, a Verification or Merge Gate
 result, permission to merge, or approval of a later `yo` milestone.
+
+## Current test execution evidence result
+
+Milestone 7.1g retained the unchanged `yo` candidate head at
+`b446b0d6a98cc2b87b63aa3d0d6c63cc78a179fa` and ran the complete unchanged
+Node test suite with simultaneous `spec` and JUnit reporters. All 286
+test-runner tests in 27 suites passed; none failed, skipped, or remained todo.
+The generated JUnit report contained 272 executable test cases.
+
+The current local SDD Yo CLI imported that configured `unit` report into
+`evidence/test-indexes/7.1g-full-suite.json`. The normalized TestIndex retained
+the expected producer hierarchy warning, contained 272 executable entries and
+41 Requirement-mapped entries, and bound these exact subjects:
+
+- project: `SDD-4A2395B6`;
+- head: `b446b0d6a98cc2b87b63aa3d0d6c63cc78a179fa`;
+- configuration:
+  `sha256:35be403c6507a2ccc44d579ca38bf115007752927fa1bc5e5a62e491f90594cb`;
+- `unit` adapter:
+  `sha256:495f4f05fdb1ac3387894db0c64ad8070f08096c78d533693171141d9d2c531a`;
+- TestIndex:
+  `sha256:e070b76f3d25fd30073b6a1a618f3d666598fdd5c28a43ecfa1ec93efb945021`.
+
+Project-scoped TestExecutionEvidence from the configured `local-test-run`
+issuer is recorded as
+`evidence/test-executions/7.1g-full-suite.json`. It contains one current
+`passed` result for every one of the 272 TestIndex entries. Strict parsing and
+evidence assessment satisfied test coverage and execution for all five
+affected automated Requirements with no unsatisfied Requirement. The only
+remaining assessment issue was the expected `SDD_EVIDENCE_QA_MISSING` with
+`REVIEW_REQUIRED` for `CAP-7E001BA8`; no QA evidence was fabricated and no
+Verification or Merge Gate was run.
+
+An initial import that combined the configured `unit` report with an explicit
+import of the same path was correctly rejected with
+`SDD_ADAPTER_DISCOVERY_DUPLICATE_ID`. Selecting the configured adapter once
+resolved the duplicate without changing configuration or product behavior.
+The temporary JUnit and CLI response files were removed after the retained
+TestIndex and TestExecutionEvidence were validated.
 
 ## Initialization result
 

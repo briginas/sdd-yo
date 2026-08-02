@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 7 / Existing-project dogfood
-- Current leaf: Milestone 7.1 current test execution evidence after specification approval
+- Current leaf: Milestone 7.1 baseline QA after current test execution evidence
 - Last updated: 2026-08-02
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -837,12 +837,19 @@ Bounded leaves:
         against the unchanged candidate. Do not infer approval from repository
         ownership, this plan, the authored specification, or passing tests;
         defer TestExecutionEvidence, baseline QA, and all later gates.
-  - [ ] **7.1g — Current test execution evidence.** Generate a fresh full
+  - [x] **7.1g — Current test execution evidence.** Generate a fresh full
         Node JUnit report at the unchanged candidate head, import the bound
         TestIndex, record project-scoped TestExecutionEvidence from the
         configured `local-test-run` issuer, and validate the exact project,
         head, configuration, TestIndex, and result subjects. Do not make a QA
         decision or run the Verification or Merge gates.
+  - [ ] **7.1h — Baseline QA evidence.** At the unchanged candidate head and
+        resolved integration commit, exercise the approved application,
+        non-interactive or declined no-write, and stale-source conflict
+        scenarios selected in 7.1c, obtain the actual QA tester's Capability
+        decision, and record project-scoped QAEvidence from the configured
+        `local-qa` issuer. Do not infer QA from passing automated tests or run
+        the Verification or Merge gates.
 - [ ] **7.2 — Polyglot or multi-framework project.** Select and onboard one
       existing project, then govern one real Change end to end and record the
       same observation set.
@@ -892,7 +899,8 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 7.1f is complete. The next bounded leaf is 7.1g: produce current
-full-suite TestExecutionEvidence bound to the unchanged candidate head and its
-fresh imported TestIndex. Keep SDD Yo advisory; do not make the baseline QA
-decision or run the Verification or Merge gates.
+Milestone 7.1g is complete. The next bounded leaf is 7.1h: obtain the actual
+baseline QA decision for the selected Capability scenarios at the unchanged
+candidate head and record subject-bound QAEvidence. Keep SDD Yo advisory; do
+not infer QA from passing automated tests or run the Verification or Merge
+gates.
