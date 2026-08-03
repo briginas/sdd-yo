@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
+import { createHash } from "node:crypto";
 import { chmod, mkdir, mkdtemp, readFile, readdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -367,4 +368,40 @@ test("REQ-26234DC8 human review template is schema-valid, complete, and explicit
   assert.ok(first !== undefined);
   first.verdict = "pass";
   assert.equal(validate(invalidPass), false);
+});
+
+test("REQ-26234DC8 REQ-1DD46CA9 retains the explicit identified human pass verdict", async () => {
+  const suite = await loadSuite();
+  const schema = JSON.parse(
+    await readFile(join(repositoryRoot, "evals/skill/review-result.schema.json"), "utf8"),
+  ) as object;
+  const result = JSON.parse(await readFile(join(repositoryRoot, "evals/skill/review-result.json"), "utf8")) as {
+    readonly skill_revision: string;
+    readonly reviewer: { readonly identity: string; readonly role: string };
+    readonly scenario_results: readonly {
+      readonly scenario_id: string;
+      readonly verdict: string;
+      readonly transcript: { readonly path: string; readonly sha256: string };
+      readonly findings: readonly string[];
+    }[];
+    readonly overall_verdict: string;
+  };
+  const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
+  assert.equal(validate(result), true, JSON.stringify(validate.errors));
+  assert.equal(result.skill_revision, "72361ce");
+  assert.deepEqual(result.reviewer, { identity: "Ivan Briginas", role: "human Skill reviewer" });
+  assert.deepEqual(
+    result.scenario_results.map(({ scenario_id }) => scenario_id),
+    suite.scenarios.map(({ id }) => id).toSorted(),
+  );
+  assert.ok(result.scenario_results.every(({ verdict, findings }) => verdict === "pass" && findings.length === 0));
+  assert.equal(result.overall_verdict, "pass");
+
+  const transcriptPaths = new Set(result.scenario_results.map(({ transcript }) => transcript.path));
+  assert.deepEqual([...transcriptPaths], ["transcripts/ivan-briginas-verdict.md"]);
+  const transcript = await readFile(join(repositoryRoot, "evals/skill", [...transcriptPaths][0] ?? ""));
+  const fingerprint = `sha256:${createHash("sha256").update(transcript).digest("hex")}`;
+  assert.ok(result.scenario_results.every(({ transcript: binding }) => binding.sha256 === fingerprint));
+  assert.match(transcript.toString("utf8"), /Ivan Briginas/u);
+  assert.match(transcript.toString("utf8"), /всё работает/u);
 });

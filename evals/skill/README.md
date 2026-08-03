@@ -69,5 +69,8 @@ and record `pass` only when every expected behavior and forbidden behavior is
 observable. A missing, incomplete, interrupted, or unevaluated transcript is
 `not reviewed`, never a pass.
 
-Canonical promotion remains blocked until one identified human reviewer has
-accepted every scenario against retained transcripts.
+The retained `review-result.json` records the completed identified human review
+for Skill revision `72361ce`. Its scenario bindings point to the consolidated
+chat verdict transcript and its SHA-256. The `review-result.template.json`
+remains an inert `not_reviewed` starting point for future suite revisions and
+must not be mistaken for the completed result.

@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 8 / Agent Skill
-- Current leaf: Human Skill review and canonical promotion
+- Current leaf: Changed-adapter trust coverage and canonical promotion
 - Last updated: 2026-08-03
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -1094,12 +1094,19 @@ Mode: `spec-code`.
         Skill revision, transcript path and SHA-256, per-scenario verdicts, and
         findings. This kit makes later human execution reproducible; it does
         not execute the review or create passing evidence.
-  - [ ] **8.5b — Human Skill review and canonical promotion.** Run every
-        version 1 scenario against the installed complete skill, retain the
-        transcripts, and obtain one identified human verdict for progressive
-        retrieval, authority boundaries, and observed behavior. Promote
-        `REQ-26234DC8` and `REQ-1DD46CA9` only after every scenario passes;
-        otherwise record findings and keep both Requirements proposed.
+  - [x] **8.5b — Human review of the version 1 Skill corpus.** Run every
+        version 1 scenario against the installed complete skill, retain one
+        identified verdict for progressive retrieval, authority boundaries,
+        and observed behavior, and record findings. Human Skill reviewer Ivan
+        Briginas explicitly reported that all eleven scenarios passed with no
+        findings against Skill revision `72361ce`. The consolidated chat
+        verdict is retained with a SHA-256-bound, schema-valid review result.
+  - [ ] **8.5c — Changed-adapter trust coverage and canonical promotion.** Add
+        the missing Skill behavior and scenario for the `REQ-1DD46CA9`
+        acceptance criterion that changed adapter configuration creates a
+        structural and human trust-review finding. Obtain an identified human
+        verdict for that added scenario, then promote `REQ-26234DC8` and
+        `REQ-1DD46CA9` together only if the complete Requirement set passes.
 
 Primary target Requirements:
 `REQ-26234DC8`, `REQ-1DD46CA9`, `REQ-18F84CE2`, `REQ-04F23007`,
@@ -1130,10 +1137,9 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestones 8.5a and 8.5a2 are complete. The next bounded work is 8.5b: run
-every version 1 Skill scenario against the installed complete skill, retain
-schema-valid transcript-bound results, and obtain one identified human
-verdict. Promote `REQ-26234DC8` and `REQ-1DD46CA9` only after every scripted
-and human scenario passes. Do not infer human acceptance from package checks,
-and do not absorb Milestone 9 authorization, cross-platform, performance,
-enforcement, hosting, or merge-policy work.
+Milestone 8.5b records Ivan Briginas's explicit pass verdict for all eleven
+version 1 scenarios. The next bounded work is 8.5c: implement and evaluate the
+missing changed-adapter structural/trust-review behavior required by
+`REQ-1DD46CA9`, then promote the two Agent Skill Requirements only after that
+additional scenario passes. Do not absorb Milestone 9 authorization,
+cross-platform, performance, enforcement, hosting, or merge-policy work.
