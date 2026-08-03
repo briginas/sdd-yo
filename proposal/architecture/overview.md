@@ -11,7 +11,7 @@ deterministic core.
 ```mermaid
 flowchart LR
     H["Human intent and decisions"]
-    S["sdd Agent Skill"]
+    S["sdd-yo Agent Skill"]
     C["Deterministic sdd CLI/library"]
     G["Git repository and refs"]
     M["Markdown specification graph"]

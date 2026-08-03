@@ -47,7 +47,7 @@ the full specification when a small Capability or Requirement set is enough.
 - Package manager: npm.
 - Public executable: `sdd`.
 - Core behavior: provider-neutral library with a thin CLI adapter.
-- AI and the `sdd` Agent Skill are deferred until the deterministic JSON CLI
+- AI and the `sdd-yo` Agent Skill are deferred until the deterministic JSON CLI
   contracts are stable.
 
 Exact dependency versions are selected and locked during the scaffold

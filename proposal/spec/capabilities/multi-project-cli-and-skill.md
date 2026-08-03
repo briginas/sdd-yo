@@ -53,7 +53,7 @@ verification: manual
 
 ### Statement <!-- sdd:statement -->
 
-The first version shall provide one optional `sdd` Agent Skill that selects the
+The first version shall provide one optional `sdd-yo` Agent Skill that selects the
 required workflow and loads only the relevant object-model, mode, semantic
 review, or diagnostics references.
 
@@ -61,6 +61,8 @@ review, or diagnostics references.
 
 - The skill validates through CLI JSON rather than simulating deterministic
   checks.
+- The skill remains unambiguously discoverable and explicitly invocable when
+  another installed skill has a similar generic SDD name.
 - It asks humans to resolve normative ambiguity.
 - It does not fabricate approval, QA, test, or finding-resolution evidence.
 - Missing or incompatible CLI stops the workflow.

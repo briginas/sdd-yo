@@ -157,6 +157,8 @@ understandable diagnostics and without language-specific core modifications.
 
 Use scripted scenarios and human review to measure:
 
+- unambiguous discovery and explicit invocation alongside another installed
+  SDD-oriented skill with a generic name;
 - correct mode selection;
 - clarification on normative ambiguity;
 - progressive disclosure and context size;

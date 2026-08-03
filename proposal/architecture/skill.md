@@ -2,7 +2,7 @@
 
 ## Role
 
-SDD Yo ships one optional progressive-disclosure skill named `sdd`. It helps a
+SDD Yo ships one optional progressive-disclosure skill named `sdd-yo`. It helps a
 coding agent understand intent, retrieve the smallest relevant specification
 slice, draft candidate changes, invoke deterministic checks, explain results,
 and hand decisions back to humans.
@@ -14,7 +14,7 @@ guide, not a second implementation.
 ## Skill package
 
 ```text
-sdd/
+sdd-yo/
   SKILL.md
   references/
     object-model.md
@@ -119,6 +119,8 @@ retry begins by re-resolving refs and recomputing dependent artifacts.
 
 The skill must be evaluated for:
 
+- unambiguous discovery and explicit invocation alongside another installed
+  SDD-oriented skill with a generic name;
 - correct mode selection and ambiguity escalation;
 - progressive retrieval without whole-repository loading;
 - exact use of CLI JSON rather than simulated checks;

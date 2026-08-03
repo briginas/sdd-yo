@@ -19,7 +19,7 @@ the unimplemented target state and its architecture.
 - Product: **SDD Yo**
 - Repository: `sdd-yo`
 - Provisional CLI binary: `sdd`
-- Agent Skill: `sdd`
+- Agent Skill: `sdd-yo`
 - Project configuration: `.sdd/config.yaml`
 
 ## Promotion rule

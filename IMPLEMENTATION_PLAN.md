@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 8 / Agent Skill
-- Current leaf: Progressive-disclosure `sdd` Agent Skill
+- Current leaf: Progressive-disclosure `sdd-yo` Agent Skill
 - Last updated: 2026-08-03
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -994,7 +994,7 @@ Bounded leaves:
 Mode: `spec-code`.
 
 - [ ] **8.1 — Preflight, initialization, and understanding vertical slice.**
-      Create the minimal progressive-disclosure `sdd` skill package and route
+      Create the minimal progressive-disclosure `sdd-yo` skill package and route
       initialize/onboard, understand, and diagnose intents. Fail closed when
       the CLI is missing, interrupted, returns malformed JSON, or exposes an
       incompatible schema version. When no project exists and initialization
@@ -1027,7 +1027,9 @@ Mode: `spec-code`.
 - [ ] **8.5 — Skill safety evals and canonical promotion.** Evaluate every
       route for progressive retrieval, exact CLI JSON use, normative ambiguity,
       prompt injection, stale evidence, fabricated evidence, optional-model
-      unavailability, and adjacent-project isolation. Promote
+      unavailability, adjacent-project isolation, and unambiguous discovery and
+      invocation alongside another installed SDD-oriented skill with a generic
+      name. Promote
       `REQ-26234DC8` and `REQ-1DD46CA9` only after the complete skill passes the
       applicable scripted scenarios and human review; keep model-assisted
       semantic analysis optional under the already canonical
@@ -1063,7 +1065,7 @@ Primary target Requirements:
 ## Immediate next leaf
 
 Milestone 7.4 is complete. The next bounded work is 8.1: implement the minimal
-progressive-disclosure skill package with fail-closed CLI compatibility,
+progressive-disclosure `sdd-yo` skill package with fail-closed CLI compatibility,
 explicit initialize/onboard handling, and read-only understand/diagnose routes.
 It may initialize only an explicitly selected project through the existing
 `sdd init` JSON contract and must validate the resulting empty project before
