@@ -1,0 +1,155 @@
+#!/usr/bin/env node
+
+import { spawnSync } from "node:child_process";
+import { lstatSync } from "node:fs";
+import { isAbsolute, relative, resolve } from "node:path";
+
+const TECHNICAL_FAILURE = 3;
+const SUPPORTED_COMMANDS = new Set(["init", "validate", "inspect", "trace"]);
+
+function fail(message) {
+  process.stderr.write(`sdd-yo: ${message}\n`);
+  process.exit(TECHNICAL_FAILURE);
+}
+
+function optionValue(arguments_, option) {
+  const index = arguments_.indexOf(option);
+  if (index === -1) return undefined;
+  const value = arguments_[index + 1];
+  if (value === undefined || value.startsWith("--")) fail(`${option} requires a value.`);
+  return value;
+}
+
+function isRecord(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function verifyCreatedPaths(root, createdPaths) {
+  const rootPath = resolve(root);
+  const seen = new Set();
+  for (const projectPath of createdPaths) {
+    if (
+      typeof projectPath !== "string" ||
+      projectPath.length === 0 ||
+      projectPath.includes("\\") ||
+      isAbsolute(projectPath)
+    )
+      fail("init returned a non-portable created path.");
+    const segments = projectPath.split("/");
+    if (segments.some((segment) => segment === "" || segment === "." || segment === ".."))
+      fail("init returned an unsafe created path.");
+    if (seen.has(projectPath)) fail("init returned a duplicate created path.");
+    seen.add(projectPath);
+
+    let current = rootPath;
+    for (const segment of segments) {
+      current = resolve(current, segment);
+      const fromRoot = relative(rootPath, current);
+      if (fromRoot === ".." || fromRoot.startsWith(`..${process.platform === "win32" ? "\\" : "/"}`))
+        fail("init returned a path outside the selected root.");
+      let metadata;
+      try {
+        metadata = lstatSync(current);
+      } catch {
+        fail(`init reported a path that does not exist: ${projectPath}.`);
+      }
+      if (metadata.isSymbolicLink()) fail(`init reported a path traversing a symbolic link: ${projectPath}.`);
+    }
+    const metadata = lstatSync(current);
+    if (!metadata.isFile() && !metadata.isDirectory()) fail(`init reported a special filesystem entry: ${projectPath}.`);
+  }
+}
+
+const separator = process.argv.indexOf("--", 2);
+if (separator === -1) fail("usage: check-cli-compatibility [--cli <path>] -- <command> <arguments>");
+
+const wrapperArguments = process.argv.slice(2, separator);
+let executable = "sdd";
+if (wrapperArguments.length > 0) {
+  if (wrapperArguments.length !== 2 || wrapperArguments[0] !== "--cli" || wrapperArguments[1] === undefined)
+    fail("only --cli <path> may precede --.");
+  executable = wrapperArguments[1];
+}
+
+const commandArguments = process.argv.slice(separator + 1);
+const command = commandArguments[0];
+if (command === undefined || !SUPPORTED_COMMANDS.has(command))
+  fail("this skill slice permits only init, validate, inspect, and trace.");
+if (commandArguments.includes("--output")) fail("--output is unavailable because JSON must remain on stdout.");
+if (commandArguments.includes("--format")) fail("omit --format; the compatibility wrapper always selects JSON.");
+
+const cwd = optionValue(commandArguments, "--cwd");
+const config = optionValue(commandArguments, "--config");
+if (cwd !== undefined && config !== undefined) fail("--cwd and --config are mutually exclusive.");
+
+if (command === "init") {
+  const root = optionValue(commandArguments, "--root");
+  const adoption = optionValue(commandArguments, "--adoption");
+  if (root === undefined) fail("init requires an explicit --root.");
+  if (adoption !== "incremental" && adoption !== "complete")
+    fail("init requires --adoption incremental or --adoption complete.");
+} else if (cwd === undefined && config === undefined) {
+  fail(`${command} requires an explicit --cwd or --config selector.`);
+}
+
+const execution = spawnSync(executable, [...commandArguments, "--format", "json"], {
+  encoding: "utf8",
+  maxBuffer: 8 * 1024 * 1024,
+  timeout: 120_000,
+  windowsHide: true,
+});
+
+if (execution.error !== undefined) {
+  if (execution.error.code === "ENOENT") fail("the sdd CLI is missing; install nothing and stop.");
+  if (execution.error.code === "ETIMEDOUT") fail("the sdd CLI was interrupted after the compatibility timeout.");
+  fail(`the sdd CLI could not complete: ${execution.error.message}`);
+}
+if (execution.signal !== null) fail(`the sdd CLI was interrupted by signal ${execution.signal}.`);
+if (execution.status === null || ![0, 1, 2, 3].includes(execution.status))
+  fail(`the sdd CLI returned unsupported exit status ${String(execution.status)}.`);
+
+let response;
+try {
+  response = JSON.parse(execution.stdout);
+} catch {
+  fail("the sdd CLI returned malformed JSON.");
+}
+
+if (!isRecord(response)) fail("the sdd CLI returned a non-object JSON response.");
+if (typeof response.schema_version !== "string" || !/^1(?:\.[0-9]+)$/u.test(response.schema_version))
+  fail(`the sdd CLI returned incompatible schema version ${JSON.stringify(response.schema_version)}.`);
+if (response.command !== command) fail(`the sdd CLI response command does not match ${command}.`);
+if (response.project_id !== null && typeof response.project_id !== "string")
+  fail("the sdd CLI returned an invalid project_id.");
+if (!["ok", "blocked", "review_required", "error"].includes(response.status))
+  fail("the sdd CLI returned an invalid status.");
+if (!("result" in response) || !Array.isArray(response.diagnostics))
+  fail("the sdd CLI response is missing result or diagnostics.");
+
+const expectedStatus = new Map([
+  [0, "ok"],
+  [1, "blocked"],
+  [2, "review_required"],
+  [3, "error"],
+]);
+if (response.status !== expectedStatus.get(execution.status))
+  fail("the sdd CLI status does not match its exit status.");
+
+if (command === "init" && response.status === "ok") {
+  if (
+    typeof response.project_id !== "string" ||
+    !/^SDD-[0-9A-F]{8}$/u.test(response.project_id) ||
+    !isRecord(response.result) ||
+    !Array.isArray(response.result.created_paths)
+  )
+    fail("the sdd CLI returned an invalid initialization result.");
+  verifyCreatedPaths(optionValue(commandArguments, "--root"), response.result.created_paths);
+}
+if (command === "validate" && response.status === "ok") {
+  if (!isRecord(response.result) || response.result.valid !== true || !Array.isArray(response.result.fingerprints))
+    fail("the sdd CLI returned an invalid validation result.");
+}
+
+process.stdout.write(execution.stdout);
+process.stderr.write(execution.stderr);
+process.exit(execution.status);

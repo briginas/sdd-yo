@@ -1,0 +1,4 @@
+interface:
+  display_name: "SDD Yo"
+  short_description: "Govern specifications through the SDD Yo CLI"
+  default_prompt: "Use $sdd-yo to understand or initialize this SDD Project."

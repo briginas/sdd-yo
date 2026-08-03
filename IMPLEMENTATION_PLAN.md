@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 8 / Agent Skill
-- Current leaf: Progressive-disclosure `sdd-yo` Agent Skill
+- Current leaf: Mode selection and authoring routes
 - Last updated: 2026-08-03
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -993,7 +993,7 @@ Bounded leaves:
 
 Mode: `spec-code`.
 
-- [ ] **8.1 — Preflight, initialization, and understanding vertical slice.**
+- [x] **8.1 — Preflight, initialization, and understanding vertical slice.**
       Create the minimal progressive-disclosure `sdd-yo` skill package and route
       initialize/onboard, understand, and diagnose intents. Fail closed when
       the CLI is missing, interrupted, returns malformed JSON, or exposes an
@@ -1064,11 +1064,9 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 7.4 is complete. The next bounded work is 8.1: implement the minimal
-progressive-disclosure `sdd-yo` skill package with fail-closed CLI compatibility,
-explicit initialize/onboard handling, and read-only understand/diagnose routes.
-It may initialize only an explicitly selected project through the existing
-`sdd init` JSON contract and must validate the resulting empty project before
-authoring any object. Change, baseline, fix, review, prepare, verification,
-merge-readiness, semantic-model integration, and adversarial evals remain in
-their later leaves.
+Milestone 8.1 is complete. The next bounded work is 8.2: add change, baseline,
+and fix intent selection plus complete virtual candidate drafting. It must keep
+`spec-code`, `spec`, and `code` distinct, ask a human before resolving ambiguous
+normative meaning, and generate identities only through compatible CLI JSON.
+Review, preparation, verification, merge readiness, semantic-model integration,
+and adversarial evals remain in their later leaves.
