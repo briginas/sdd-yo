@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 8 / Agent Skill
-- Current leaf: Verification and merge-readiness routes
+- Current leaf: Skill safety evals and canonical promotion
 - Last updated: 2026-08-03
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -1045,11 +1045,28 @@ Mode: `spec-code`.
       `REQ-AFD65A03`, `REQ-A8739118`, `REQ-7341DBB7`, `REQ-964B9F80`,
       `REQ-3BF12AAD`, and `REQ-7AFE9904`. Promotion of `REQ-26234DC8` and
       `REQ-1DD46CA9` remains deferred to 8.5.
-- [ ] **8.4 — Verification and merge-readiness routes.** Route explicit test,
+- [x] **8.4 — Verification and merge-readiness routes.** Route explicit test,
       QA, finding, resolution, VerificationReport, and MergeReport artifacts
       through the existing CLI; explain affected governed scope and current
       gate status without claiming whole-project completeness. Do not execute
       configured adapters without normal permission or create human evidence.
+      The skill now loads one verification reference only for test discovery,
+      finding and resolution validation, implementation verification, and
+      merge-readiness intents. Its compatibility wrapper admits the
+      test-discovery, finding-validation, and merge-check commands, verifies
+      their version 1 TestIndex, finding-assessment, and MergeReport boundaries,
+      and preserves product-status exit mapping. It distinguishes imported
+      discovery from permission-governed adapter execution. It treats TestIndex
+      as discovery rather than execution evidence, refuses to create or infer
+      human evidence, and explains exact affected scope, evidence state, diagnostics,
+      and `PASS`, `REVIEW_REQUIRED`, `BLOCKED`, or empty-scope
+      `NOT_APPLICABLE` results without generalizing to whole-project
+      completeness. Merge check recomputes verification internally from exact
+      current artifacts; a retained VerificationReport cannot substitute for
+      that recomputation. Requirement traceability: `REQ-12E19D70`,
+      `REQ-F7CEE6D0`, `REQ-A76942A0`, `REQ-ADF9965A`, `REQ-64DB876B`,
+      `REQ-82256D82`, and `REQ-44068C1A`. Promotion of `REQ-26234DC8` and
+      `REQ-1DD46CA9` remains deferred to 8.5.
 - [ ] **8.5 — Skill safety evals and canonical promotion.** Evaluate every
       route for progressive retrieval, exact CLI JSON use, normative ambiguity,
       prompt injection, stale evidence, fabricated evidence, optional-model
@@ -1090,10 +1107,11 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 8.3 is complete. The next bounded work is 8.4: route explicit test,
-QA, finding, resolution, VerificationReport, and MergeReport artifacts through
-current compatible CLI JSON, explain affected governed scope and gate status,
-and preserve normal permission and human-evidence boundaries. It must not run
-configured adapters without normal permission, create human evidence, claim
-whole-project completeness, or absorb semantic-model integration and
-adversarial evals from 8.5.
+Milestone 8.4 is complete. The next bounded work is 8.5: exercise every skill
+route with scripted safety and workflow scenarios plus human review, including
+progressive retrieval, exact CLI JSON, ambiguity, prompt injection, stale and
+fabricated evidence, optional-model unavailability, adjacent-project
+isolation, and discovery alongside another SDD-oriented skill. Promote
+`REQ-26234DC8` and `REQ-1DD46CA9` only after that complete skill evidence
+passes. Do not absorb Milestone 9 authorization, cross-platform, performance,
+enforcement, hosting, or merge-policy work.

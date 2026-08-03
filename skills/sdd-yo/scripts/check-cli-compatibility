@@ -15,6 +15,9 @@ const SUPPORTED_OPERATIONS = new Set([
   "proposal.validate",
   "proposal.prepare",
   "proposal.apply",
+  "tests.discover",
+  "findings.validate",
+  "merge.check",
 ]);
 const AUTHORING_ID_KINDS = new Map([
   ["capability", "CAP"],
@@ -45,6 +48,18 @@ function isFingerprint(value) {
 
 function isObjectId(value) {
   return typeof value === "string" && /^(?:CAP|REQ|CON)-[0-9A-F]{8}$/u.test(value);
+}
+
+function isRequirementId(value) {
+  return typeof value === "string" && /^REQ-[0-9A-F]{8}$/u.test(value);
+}
+
+function isCapabilityId(value) {
+  return typeof value === "string" && /^CAP-[0-9A-F]{8}$/u.test(value);
+}
+
+function isFindingId(value) {
+  return typeof value === "string" && /^FND-[0-9A-F]{12}$/u.test(value);
 }
 
 function isSortedUniqueStrings(values, predicate = () => true) {
@@ -192,6 +207,181 @@ function verifySpecPatch(result, projectId) {
   );
 }
 
+function verifyTestIndex(result, projectId) {
+  const adapterEntries = isRecord(result?.subject?.adapter_fingerprints)
+    ? Object.entries(result.subject.adapter_fingerprints)
+    : [];
+  return (
+    hasExactKeys(
+      result,
+      ["schema_version", "artifact_type", "project_id", "subject", "tests"],
+      ["created_at", "producer"],
+    ) &&
+    result.schema_version === "1.0" &&
+    result.artifact_type === "test_index" &&
+    result.project_id === projectId &&
+    hasExactKeys(result.subject, ["head_ref", "config_fingerprint", "adapter_fingerprints"]) &&
+    typeof result.subject.head_ref === "string" &&
+    result.subject.head_ref.length > 0 &&
+    isFingerprint(result.subject.config_fingerprint) &&
+    adapterEntries.length > 0 &&
+    adapterEntries.every(
+      ([id, fingerprint], index) =>
+        /^[a-z][a-z0-9-]{0,31}$/u.test(id) &&
+        isFingerprint(fingerprint) &&
+        (index === 0 || adapterEntries[index - 1][0] < id),
+    ) &&
+    Array.isArray(result.tests) &&
+    result.tests.every(
+      (test, index) =>
+        hasExactKeys(test, ["test_ref", "adapter_id", "local_id", "full_name", "requirement_ids"], ["source"]) &&
+        typeof test.test_ref === "string" &&
+        test.test_ref.length > 0 &&
+        typeof test.adapter_id === "string" &&
+        Object.hasOwn(result.subject.adapter_fingerprints, test.adapter_id) &&
+        typeof test.local_id === "string" &&
+        test.local_id.length > 0 &&
+        typeof test.full_name === "string" &&
+        test.full_name.length > 0 &&
+        isSortedUniqueStrings(test.requirement_ids, isRequirementId) &&
+        (index === 0 || result.tests[index - 1].test_ref < test.test_ref) &&
+        (test.source === undefined ||
+          (hasExactKeys(test.source, ["path"], ["line", "column"]) &&
+            isProjectPath(test.source.path) &&
+            (test.source.line === undefined || (Number.isInteger(test.source.line) && test.source.line >= 1)) &&
+            (test.source.column === undefined || (Number.isInteger(test.source.column) && test.source.column >= 1)))),
+    )
+  );
+}
+
+function isFindingSummary(value) {
+  return (
+    hasExactKeys(value, ["finding_id", "state"]) &&
+    isFindingId(value.finding_id) &&
+    ["open", "resolved", "stale", "contradictory"].includes(value.state)
+  );
+}
+
+function verifyFindingAssessment(result) {
+  return (
+    hasExactKeys(result, ["findings", "human_review_state", "issues", "semantic_completeness_claimed"]) &&
+    Array.isArray(result.findings) &&
+    result.findings.every(
+      (finding, index) =>
+        isFindingSummary(finding) && (index === 0 || result.findings[index - 1].finding_id < finding.finding_id),
+    ) &&
+    ["not_required", "current", "missing", "stale", "contradictory"].includes(result.human_review_state) &&
+    Array.isArray(result.issues) &&
+    result.issues.every(
+      (issue) =>
+        hasExactKeys(issue, ["code", "disposition"], ["finding_id", "issuer"]) &&
+        typeof issue.code === "string" &&
+        /^SDD_[A-Z0-9_]+$/u.test(issue.code) &&
+        ["BLOCKED", "REVIEW_REQUIRED"].includes(issue.disposition) &&
+        (issue.finding_id === undefined || isFindingId(issue.finding_id)) &&
+        (issue.issuer === undefined || (typeof issue.issuer === "string" && issue.issuer.length > 0)),
+    ) &&
+    result.semantic_completeness_claimed === false
+  );
+}
+
+function isCheckSummary(value, applicable) {
+  return (
+    hasExactKeys(value, ["status", "satisfied", "unsatisfied"]) &&
+    ["PASS", "REVIEW_REQUIRED", "BLOCKED", "NOT_APPLICABLE"].includes(value.status) &&
+    Number.isInteger(value.satisfied) &&
+    value.satisfied >= 0 &&
+    Number.isInteger(value.unsatisfied) &&
+    value.unsatisfied >= 0 &&
+    (applicable
+      ? value.status !== "NOT_APPLICABLE"
+      : value.status === "NOT_APPLICABLE" && value.satisfied === 0 && value.unsatisfied === 0)
+  );
+}
+
+function verifyMergeReport(result, projectId, responseStatus) {
+  const applicable =
+    Array.isArray(result?.affected_scope?.requirements) &&
+    Array.isArray(result?.affected_scope?.capabilities) &&
+    (result.affected_scope.requirements.length > 0 || result.affected_scope.capabilities.length > 0);
+  const expectedEnvelopeStatus =
+    result?.status === "PASS" ? "ok" : result?.status === "BLOCKED" ? "blocked" : "review_required";
+  const deltaValid =
+    result?.mode === "code"
+      ? hasExactKeys(result.deltas_or_code_targets, ["code_targets"]) &&
+        Array.isArray(result.deltas_or_code_targets.code_targets) &&
+        result.deltas_or_code_targets.code_targets.length > 0 &&
+        result.deltas_or_code_targets.code_targets.every(
+          (target) =>
+            hasExactKeys(target, ["requirement_id", "semantic_fingerprint", "structural_fingerprint"]) &&
+            isRequirementId(target.requirement_id) &&
+            isFingerprint(target.semantic_fingerprint) &&
+            isFingerprint(target.structural_fingerprint),
+        )
+      : hasExactKeys(result?.deltas_or_code_targets, ["approved_delta"]) &&
+        hasExactKeys(result.deltas_or_code_targets.approved_delta, ["semantic", "structural"]) &&
+        isFingerprint(result.deltas_or_code_targets.approved_delta.semantic) &&
+        isFingerprint(result.deltas_or_code_targets.approved_delta.structural);
+  return (
+    hasExactKeys(result, [
+      "schema_version",
+      "artifact_type",
+      "project_id",
+      "integration_ref",
+      "branch_head",
+      "merge_base",
+      "config_fingerprint",
+      "mode",
+      "deltas_or_code_targets",
+      "affected_scope",
+      "test_summary",
+      "qa_summary",
+      "findings_and_evidence",
+      "adoption",
+      "diagnostics",
+      "status",
+      "input_manifest",
+    ]) &&
+    result.schema_version === "1.0" &&
+    result.artifact_type === "merge_report" &&
+    result.project_id === projectId &&
+    [result.integration_ref, result.branch_head, result.merge_base].every(
+      (ref) => typeof ref === "string" && ref.length > 0,
+    ) &&
+    isFingerprint(result.config_fingerprint) &&
+    ["spec-code", "spec", "code"].includes(result.mode) &&
+    deltaValid &&
+    hasExactKeys(result.affected_scope, ["fingerprint", "requirements", "capabilities"]) &&
+    isFingerprint(result.affected_scope.fingerprint) &&
+    isSortedUniqueStrings(result.affected_scope.requirements, isRequirementId) &&
+    isSortedUniqueStrings(result.affected_scope.capabilities, isCapabilityId) &&
+    isCheckSummary(result.test_summary, applicable) &&
+    isCheckSummary(result.qa_summary, applicable) &&
+    hasExactKeys(result.findings_and_evidence, ["findings", "evidence_status"]) &&
+    Array.isArray(result.findings_and_evidence.findings) &&
+    result.findings_and_evidence.findings.every(isFindingSummary) &&
+    ["current", "missing", "stale", "negative", "contradictory"].includes(
+      result.findings_and_evidence.evidence_status,
+    ) &&
+    hasExactKeys(result.adoption, ["mode", "project_scope_fingerprint"]) &&
+    ["incremental", "complete"].includes(result.adoption.mode) &&
+    isFingerprint(result.adoption.project_scope_fingerprint) &&
+    Array.isArray(result.diagnostics) &&
+    ["PASS", "REVIEW_REQUIRED", "BLOCKED"].includes(result.status) &&
+    expectedEnvelopeStatus === responseStatus &&
+    Array.isArray(result.input_manifest) &&
+    result.input_manifest.length > 0 &&
+    result.input_manifest.every(
+      (entry) =>
+        hasExactKeys(entry, ["artifact_type", "fingerprint", "source"]) &&
+        typeof entry.artifact_type === "string" &&
+        entry.artifact_type.length > 0 &&
+        isFingerprint(entry.fingerprint) &&
+        (entry.source === "stdin" || isProjectPath(entry.source)),
+    )
+  );
+}
+
 function verifyCreatedPaths(root, createdPaths) {
   const rootPath = resolve(root);
   const seen = new Set();
@@ -224,7 +414,8 @@ function verifyCreatedPaths(root, createdPaths) {
       if (metadata.isSymbolicLink()) fail(`init reported a path traversing a symbolic link: ${projectPath}.`);
     }
     const metadata = lstatSync(current);
-    if (!metadata.isFile() && !metadata.isDirectory()) fail(`init reported a special filesystem entry: ${projectPath}.`);
+    if (!metadata.isFile() && !metadata.isDirectory())
+      fail(`init reported a special filesystem entry: ${projectPath}.`);
   }
 }
 
@@ -241,9 +432,13 @@ if (wrapperArguments.length > 0) {
 
 const commandArguments = process.argv.slice(separator + 1);
 const command = commandArguments[0];
-const operation = command === "proposal" ? `proposal.${commandArguments[1] ?? ""}` : command;
+const operation = ["proposal", "tests", "findings", "merge"].includes(command)
+  ? `${command}.${commandArguments[1] ?? ""}`
+  : command;
 if (command === undefined || !SUPPORTED_OPERATIONS.has(operation))
-  fail("this skill slice permits only init, id, validate, inspect, trace, and proposal validate, prepare, or apply.");
+  fail(
+    "this skill slice permits only init, id, validate, inspect, trace, proposal validate/prepare/apply, tests discover, findings validate, or merge check.",
+  );
 if (commandArguments.includes("--output")) fail("--output is unavailable because JSON must remain on stdout.");
 if (commandArguments.includes("--format")) fail("omit --format; the compatibility wrapper always selects JSON.");
 
@@ -274,14 +469,30 @@ if (operation === "proposal.prepare") {
   requireOption(commandArguments, "--integration-ref", operation);
 }
 if (operation === "proposal.apply") requireOption(commandArguments, "--patch", operation);
+if (operation === "tests.discover") requireOption(commandArguments, "--head", operation);
+if (operation === "findings.validate") {
+  requireOption(commandArguments, "--input-manifest", operation);
+  requireOption(commandArguments, "--findings", operation);
+}
+if (operation === "merge.check") {
+  for (const option of [
+    "--change",
+    "--package",
+    "--candidate",
+    "--approval",
+    "--test-index",
+    "--test-evidence",
+    "--qa",
+  ])
+    requireOption(commandArguments, option, operation);
+}
 
 let expectedIdCount;
 let expectedIdPrefix;
 if (command === "id") {
   const kind = commandArguments[1];
   expectedIdPrefix = AUTHORING_ID_KINDS.get(kind);
-  if (expectedIdPrefix === undefined)
-    fail("this skill slice generates only capability, requirement, or concept IDs.");
+  if (expectedIdPrefix === undefined) fail("this skill slice generates only capability, requirement, or concept IDs.");
   const countValue = optionValue(commandArguments, "--count");
   expectedIdCount = countValue === undefined ? 1 : Number(countValue);
   if (!Number.isInteger(expectedIdCount) || expectedIdCount < 1 || expectedIdCount > 256)
@@ -353,7 +564,8 @@ if (command === "id" && response.status === "ok") {
     !Array.isArray(response.result.candidates) ||
     response.result.candidates.length !== expectedIdCount ||
     response.result.candidates.some(
-      (candidate) => typeof candidate !== "string" || !new RegExp(`^${expectedIdPrefix}-[0-9A-F]{8}$`, "u").test(candidate),
+      (candidate) =>
+        typeof candidate !== "string" || !new RegExp(`^${expectedIdPrefix}-[0-9A-F]{8}$`, "u").test(candidate),
     ) ||
     new Set(response.result.candidates).size !== response.result.candidates.length ||
     !isRecord(response.result.history) ||
@@ -393,6 +605,19 @@ if (operation === "proposal.apply" && response.status === "ok") {
     new Set(response.result.applied_paths).size !== response.result.applied_paths.length
   )
     fail("the sdd CLI returned an invalid proposal apply result.");
+}
+if (operation === "tests.discover" && response.status === "ok") {
+  if (!verifyTestIndex(response.result, response.project_id)) fail("the sdd CLI returned an invalid TestIndex result.");
+}
+if (operation === "findings.validate" && (response.status === "ok" || response.status === "blocked")) {
+  if (!verifyFindingAssessment(response.result)) fail("the sdd CLI returned an invalid finding assessment result.");
+}
+if (
+  operation === "merge.check" &&
+  (response.status === "ok" || response.status === "blocked" || response.status === "review_required")
+) {
+  if (!verifyMergeReport(response.result, response.project_id, response.status))
+    fail("the sdd CLI returned an invalid MergeReport result.");
 }
 
 process.stdout.write(execution.stdout);

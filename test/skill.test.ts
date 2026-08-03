@@ -21,7 +21,9 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 const args = process.argv.slice(2);
 const command = args[0];
-const operation = command === "proposal" ? \`proposal.\${args[1] ?? ""}\` : command;
+const operation = ["proposal", "tests", "findings", "merge"].includes(command)
+  ? \`\${command}.\${args[1] ?? ""}\`
+  : command;
 const mode = process.env.SDD_SKILL_FAKE_MODE ?? "valid";
 if (mode === "malformed") process.stdout.write("not json");
 else if (mode === "interrupted") process.kill(process.pid, "SIGTERM");
@@ -61,6 +63,27 @@ else {
     schema_version: "1.0", artifact_type: "spec_patch", project_id: "SDD-A1000001",
     base_tree_fingerprint: fingerprint, result_tree_fingerprint: fingerprint, operations: [],
   };
+  const testIndex = {
+    schema_version: "1.0", artifact_type: "test_index", project_id: "SDD-A1000001",
+    subject: { head_ref: "branch123", config_fingerprint: fingerprint, adapter_fingerprints: { node: fingerprint } },
+    tests: [{ test_ref: "node:test-1", adapter_id: "node", local_id: "test-1", full_name: "REQ-A1000001 works", requirement_ids: ["REQ-A1000001"] }],
+  };
+  const findingAssessment = {
+    findings: [{ finding_id: "FND-A10000000001", state: "resolved" }],
+    human_review_state: "not_required", issues: [], semantic_completeness_claimed: false,
+  };
+  const mergeReport = {
+    schema_version: "1.0", artifact_type: "merge_report", project_id: "SDD-A1000001",
+    integration_ref: "integration123", branch_head: "branch123", merge_base: "base123",
+    config_fingerprint: fingerprint, mode: "spec-code",
+    deltas_or_code_targets: { approved_delta: { semantic: fingerprint, structural: fingerprint } },
+    affected_scope: { fingerprint, requirements: ["REQ-A1000001"], capabilities: ["CAP-A1000001"] },
+    test_summary: { status: "PASS", satisfied: 1, unsatisfied: 0 },
+    qa_summary: { status: "PASS", satisfied: 1, unsatisfied: 0 },
+    findings_and_evidence: { findings: findingAssessment.findings, evidence_status: "current" },
+    adoption: { mode: "incremental", project_scope_fingerprint: fingerprint }, diagnostics: [], status: "PASS",
+    input_manifest: [{ artifact_type: "approval_evidence", fingerprint, source: ".sdd/staging/approval.json" }],
+  };
   const result = command === "init"
     ? { created_paths: [".sdd/config.yaml", "spec/README.md", "spec/capabilities", "spec/concepts"] }
     : command === "id"
@@ -74,10 +97,25 @@ else {
           ? { conflict_report: conflictReport, spec_patch: mode === "review-required" ? null : mode === "invalid-patch" ? { ...specPatch, project_id: "SDD-B1000001" } : specPatch }
           : operation === "proposal.apply"
             ? { result_tree_fingerprint: fingerprint, applied_paths: mode === "invalid-apply" ? ["../outside"] : ["spec/capabilities/example.md"] }
-            : { valid: true, fingerprints: [] };
-  const status = mode === "review-required" ? "review_required" : "ok";
+            : operation === "tests.discover"
+              ? mode === "invalid-test-index" ? { ...testIndex, tests: [{ ...testIndex.tests[0], requirement_ids: ["REQ-B1000001", "REQ-A1000001"] }] } : testIndex
+              : operation === "findings.validate"
+                ? mode === "invalid-finding-assessment" ? { ...findingAssessment, semantic_completeness_claimed: true } : findingAssessment
+                : operation === "merge.check"
+                  ? mode === "invalid-merge-report"
+                    ? { ...mergeReport, affected_scope: { ...mergeReport.affected_scope, requirements: ["REQ-B1000001", "REQ-A1000001"] } }
+                    : mode === "empty-merge"
+                      ? { ...mergeReport, affected_scope: { ...mergeReport.affected_scope, requirements: [], capabilities: [] }, test_summary: { status: "NOT_APPLICABLE", satisfied: 0, unsatisfied: 0 }, qa_summary: { status: "NOT_APPLICABLE", satisfied: 0, unsatisfied: 0 } }
+                      : mode === "blocked-merge"
+                        ? { ...mergeReport, test_summary: { status: "BLOCKED", satisfied: 0, unsatisfied: 1 }, status: "BLOCKED" }
+                        : mergeReport
+                  : { valid: true, fingerprints: [] };
+  const status = operation === "merge.check"
+    ? result.status === "BLOCKED" ? "blocked" : result.status === "REVIEW_REQUIRED" ? "review_required" : "ok"
+    : mode === "review-required" ? "review_required" : "ok";
   process.stdout.write(JSON.stringify({ schema_version, command: operation, project_id: "SDD-A1000001", status, result, diagnostics: [] }));
-  if (mode === "review-required") process.exitCode = 2;
+  if (status === "blocked") process.exitCode = 1;
+  else if (status === "review_required") process.exitCode = 2;
 }
 `,
   );
@@ -101,7 +139,7 @@ async function runChecker(
   }
 }
 
-test("REQ-E26A859E skill package discloses only the bounded 8.3 routes", async () => {
+test("REQ-E26A859E REQ-64DB876B skill package discloses only the bounded 8.4 routes", async () => {
   const skill = await readFile(join(skillRoot, "SKILL.md"), "utf8");
   const agentMetadata = await readFile(join(skillRoot, "agents/openai.yaml"), "utf8");
   const references = await readdir(join(skillRoot, "references"));
@@ -117,15 +155,17 @@ test("REQ-E26A859E skill package discloses only the bounded 8.3 routes", async (
     "object-model.md",
     "onboarding.md",
     "proposal-gate.md",
+    "verification.md",
   ]);
   assert.deepEqual(scripts, ["check-cli-compatibility"]);
   assert.deepEqual(templates.toSorted(), ["capability.md", "concept.md"]);
   assert.match(skill, /references\/modes\.md/u);
   assert.match(skill, /references\/authoring\.md/u);
-  assert.match(agentMetadata, /review, or prepare an exact approved change/u);
+  assert.match(agentMetadata, /prepare, verify, or explain merge readiness/u);
   assert.match(skill, /references\/proposal-gate\.md/u);
   assert.match(skill, /references\/branch-preparation\.md/u);
-  assert.doesNotMatch(skill, /references\/(?:verification|semantic-review)\.md/u);
+  assert.match(skill, /references\/verification\.md/u);
+  assert.doesNotMatch(skill, /references\/semantic-review\.md/u);
 });
 
 test("REQ-E26A859E authoring route keeps modes distinct and candidates unapplied", async () => {
@@ -182,9 +222,9 @@ test("REQ-0361538D compatibility wrapper fails closed on unavailable or invalid 
   assert.equal(missing.code, 3);
   assert.match(missing.stderr, /CLI is missing/u);
 
-  const unsupported = await runChecker(cli, ["findings", "validate", "--cwd", repositoryRoot]);
+  const unsupported = await runChecker(cli, ["semantic", "analyze", "--cwd", repositoryRoot]);
   assert.equal(unsupported.code, 3);
-  assert.match(unsupported.stderr, /proposal validate, prepare, or apply/u);
+  assert.match(unsupported.stderr, /tests discover, findings validate, or merge check/u);
 });
 
 test("REQ-2C8E8085 compatibility wrapper accepts only project-aware authoring IDs", async () => {
@@ -310,4 +350,112 @@ test("REQ-3BF12AAD REQ-7AFE9904 exact application route validates selected patch
   const invalid = await runChecker(cli, args, "invalid-apply");
   assert.equal(invalid.code, 3);
   assert.match(invalid.stderr, /invalid proposal apply result/u);
+});
+
+test("REQ-12E19D70 REQ-F7CEE6D0 verification route accepts only compatible TestIndex JSON", async () => {
+  const cli = await fakeCli();
+  const verification = await readFile(join(skillRoot, "references/verification.md"), "utf8");
+  assert.match(verification, /ordinary tool permission path/u);
+  assert.match(verification, /proves neither that tests\s+ran nor that all project tests are represented/u);
+
+  const args = ["tests", "discover", "--head", "HEAD", "--adapter", "node", "--cwd", repositoryRoot] as const;
+  const discovered = await runChecker(cli, args);
+  assert.equal(discovered.code, 0, discovered.stderr);
+  assert.equal(
+    (JSON.parse(discovered.stdout) as { result: { artifact_type: string } }).result.artifact_type,
+    "test_index",
+  );
+
+  const invalid = await runChecker(cli, args, "invalid-test-index");
+  assert.equal(invalid.code, 3);
+  assert.match(invalid.stderr, /invalid TestIndex result/u);
+
+  const missingHead = await runChecker(cli, ["tests", "discover", "--cwd", repositoryRoot]);
+  assert.equal(missingHead.code, 3);
+  assert.match(missingHead.stderr, /requires --head/u);
+});
+
+test("REQ-A76942A0 REQ-ADF9965A finding route preserves human resolution authority", async () => {
+  const cli = await fakeCli();
+  const verification = await readFile(join(skillRoot, "references/verification.md"), "utf8");
+  assert.match(verification, /Never author FindingResolution or HumanSemanticReviewEvidence/u);
+  assert.match(verification, /semantic_completeness_claimed: false/u);
+
+  const args = [
+    "findings",
+    "validate",
+    "--input-manifest",
+    ".sdd/staging/manifest.json",
+    "--findings",
+    ".sdd/staging/finding.json",
+    "--resolutions",
+    ".sdd/staging/resolution.json",
+    "--cwd",
+    repositoryRoot,
+  ] as const;
+  const assessed = await runChecker(cli, args);
+  assert.equal(assessed.code, 0, assessed.stderr);
+  assert.equal(
+    (JSON.parse(assessed.stdout) as { result: { semantic_completeness_claimed: boolean } }).result
+      .semantic_completeness_claimed,
+    false,
+  );
+
+  const invalid = await runChecker(cli, args, "invalid-finding-assessment");
+  assert.equal(invalid.code, 3);
+  assert.match(invalid.stderr, /invalid finding assessment result/u);
+});
+
+test("REQ-64DB876B REQ-82256D82 REQ-44068C1A merge route validates scoped readiness JSON", async () => {
+  const cli = await fakeCli();
+  const verification = await readFile(join(skillRoot, "references/verification.md"), "utf8");
+  assert.match(verification, /previously retained VerificationReport is review\s+material only/u);
+  assert.match(verification, /Never generalize the result beyond the reported governed scope/u);
+  assert.match(verification, /no status\s+authorizes branch, commit, push, merge/u);
+
+  const args = [
+    "merge",
+    "check",
+    "--change",
+    ".sdd/staging/change.json",
+    "--package",
+    ".sdd/staging/package.json",
+    "--candidate",
+    ".sdd/staging/candidate.json",
+    "--approval",
+    ".sdd/staging/approval.json",
+    "--test-index",
+    ".sdd/staging/index.json",
+    "--test-evidence",
+    ".sdd/staging/tests.json",
+    "--qa",
+    ".sdd/staging/qa.json",
+    "--cwd",
+    repositoryRoot,
+  ] as const;
+  const checked = await runChecker(cli, args);
+  assert.equal(checked.code, 0, checked.stderr);
+  assert.equal((JSON.parse(checked.stdout) as { result: { status: string } }).result.status, "PASS");
+
+  const invalid = await runChecker(cli, args, "invalid-merge-report");
+  assert.equal(invalid.code, 3);
+  assert.match(invalid.stderr, /invalid MergeReport result/u);
+
+  const empty = await runChecker(cli, args, "empty-merge");
+  assert.equal(empty.code, 0, empty.stderr);
+  assert.equal(
+    (JSON.parse(empty.stdout) as { result: { test_summary: { status: string } } }).result.test_summary.status,
+    "NOT_APPLICABLE",
+  );
+
+  const blocked = await runChecker(cli, args, "blocked-merge");
+  assert.equal(blocked.code, 1, blocked.stderr);
+  assert.equal((JSON.parse(blocked.stdout) as { result: { status: string } }).result.status, "BLOCKED");
+
+  const missingQa = await runChecker(
+    cli,
+    args.filter((argument) => argument !== "--qa" && !argument.endsWith("qa.json")),
+  );
+  assert.equal(missingQa.code, 3);
+  assert.match(missingQa.stderr, /requires --qa/u);
 });

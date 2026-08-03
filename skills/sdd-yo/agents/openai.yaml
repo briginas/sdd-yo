@@ -1,4 +1,4 @@
 interface:
   display_name: "SDD Yo"
   short_description: "Govern specifications through the SDD Yo CLI"
-  default_prompt: "Use $sdd-yo to understand, author, review, or prepare an exact approved change for this SDD Project."
+  default_prompt: "Use $sdd-yo to understand, author, review, prepare, verify, or explain merge readiness for this SDD Project."

@@ -1,6 +1,6 @@
 ---
 name: sdd-yo
-description: Govern an SDD Yo specification through its deterministic JSON CLI. Use when Codex needs to initialize or incrementally onboard an explicitly selected SDD Project, understand active behavior, select a change mode, draft an unapplied virtual candidate, review a deterministic proposal, or prepare and explicitly apply an exact SpecPatch. This slice does not run test adapters, create human evidence, perform model semantic review, verify implementation, or decide merge readiness.
+description: Govern an SDD Yo specification through its deterministic JSON CLI. Use when Codex needs to initialize or incrementally onboard an explicitly selected SDD Project, understand active behavior, author or review a change, prepare and explicitly apply an exact SpecPatch, verify governed affected scope, validate findings and resolutions, or explain merge readiness. It never creates human evidence or performs Git merge side effects.
 ---
 
 # SDD Yo
@@ -31,8 +31,8 @@ node scripts/check-cli-compatibility [--cli <sdd-path>] -- <command> <arguments>
 ```
 
 The wrapper adds `--format json`. This slice permits only `init`, `id`,
-`validate`, `inspect`, `trace`, and `proposal validate`, `proposal prepare`, or
-`proposal apply`.
+`validate`, `inspect`, `trace`, `proposal validate`, `proposal prepare`,
+`proposal apply`, `tests discover`, `findings validate`, and `merge check`.
 
 ## Route intent
 
@@ -55,10 +55,13 @@ The wrapper adds `--format json`. This slice permits only `init`, `id`,
 - For branch preparation or exact patch application intent, read
   [references/branch-preparation.md](references/branch-preparation.md) and
   preserve its approval and explicit-selection stops.
+- For implementation verification, finding or resolution validation, or merge
+  readiness intent, read [references/verification.md](references/verification.md)
+  and preserve its permission, evidence-authority, and governed-scope limits.
 
-If the request is to verify with test or human evidence, perform model semantic
-review, or check merge readiness, explain that the route is not available in
-this skill slice and stop without simulating it.
+If the request is to perform model semantic review, explain that the route is
+not available in this skill slice and stop without simulating it. Existing
+Finding and FindingResolution artifacts may still be validated mechanically.
 
 ## Select and author a change
 
@@ -105,6 +108,33 @@ Stop on `blocked`, `review_required`, a null patch, malformed or incompatible
 JSON, changed inputs, or stale evidence. Preserve user work and begin any retry
 by recomputing dependent artifacts. Stop after application without creating a
 branch, commit, approval, verification result, or merge-readiness decision.
+
+## Verify governed scope and explain readiness
+
+1. Require an explicit project, exact Git subject, and retained project-scoped
+   artifacts. Do not reconstruct evidence from chat, logs, ownership, passing
+   tests, or earlier summaries.
+2. Before `tests discover`, distinguish imports from configured adapter
+   execution. Invoke configured adapters only through the normal tool path and
+   only after the host permission policy allows that execution.
+3. Treat a compatible TestIndex as discovery and traceability data, not test
+   execution evidence. Present mapped and unmapped tests without claiming
+   repository-wide traceability completeness.
+4. Run `findings validate` only for explicit input-manifest, Finding, and
+   optional FindingResolution artifacts. Present exact states and issues;
+   never create, dismiss, waive, confirm, or resolve a Finding.
+5. Run `merge check` only with every required explicit current artifact. The
+   CLI recomputes verification against current refs and emits the authoritative
+   MergeReport; do not accept a retained VerificationReport as a substitute.
+6. Explain the exact affected Requirements and Capabilities, test and QA
+   summaries, finding/evidence state, diagnostics, and top-level status. An
+   empty affected scope is `NOT_APPLICABLE`, never zero-object proof.
+
+`PASS`, `REVIEW_REQUIRED`, and `BLOCKED` describe only the report's governed
+affected scope and exact inputs. They do not prove whole-project completeness,
+authorize a merge, or create approval, QA, execution, resolution, or human
+semantic-review evidence. Stop before branch, commit, push, merge, or hosting
+changes.
 
 ## Understand active behavior
 
