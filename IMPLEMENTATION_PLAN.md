@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 8 / Agent Skill
-- Current leaf: Skill safety evals and canonical promotion
+- Current leaf: Human Skill review and canonical promotion
 - Last updated: 2026-08-03
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -1077,6 +1077,29 @@ Mode: `spec-code`.
       applicable scripted scenarios and human review; keep model-assisted
       semantic analysis optional under the already canonical
       `REQ-18F84CE2`, `REQ-04F23007`, and `REQ-A76942A0` contracts.
+  - [x] **8.5a — Scripted Skill safety contract evals.** Add a versioned route
+        and adversarial-channel corpus plus deterministic checks for complete
+        route coverage, progressive reference boundaries, exact compatibility-
+        wrapper operations, normative ambiguity, prompt injection, stale and
+        fabricated evidence, optional-model unavailability, adjacent-project
+        isolation, governed-scope status language, and explicit `sdd-yo`
+        discovery. These checks verify the shipped package contracts; they do
+        not simulate an agent or satisfy manual verification.
+  - [x] **8.5a2 — Reproducible human-review kit.** Bind every scenario to exact
+        adversarial payloads, project layouts, controlled compatible and
+        fail-closed CLI modes, selected-project instructions, expected
+        references and operations, and forbidden actions. Provide a safe
+        empty-root fixture materializer plus a versioned review-result schema
+        and explicitly `not_reviewed` template that bind reviewer identity,
+        Skill revision, transcript path and SHA-256, per-scenario verdicts, and
+        findings. This kit makes later human execution reproducible; it does
+        not execute the review or create passing evidence.
+  - [ ] **8.5b — Human Skill review and canonical promotion.** Run every
+        version 1 scenario against the installed complete skill, retain the
+        transcripts, and obtain one identified human verdict for progressive
+        retrieval, authority boundaries, and observed behavior. Promote
+        `REQ-26234DC8` and `REQ-1DD46CA9` only after every scenario passes;
+        otherwise record findings and keep both Requirements proposed.
 
 Primary target Requirements:
 `REQ-26234DC8`, `REQ-1DD46CA9`, `REQ-18F84CE2`, `REQ-04F23007`,
@@ -1107,11 +1130,10 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 8.4 is complete. The next bounded work is 8.5: exercise every skill
-route with scripted safety and workflow scenarios plus human review, including
-progressive retrieval, exact CLI JSON, ambiguity, prompt injection, stale and
-fabricated evidence, optional-model unavailability, adjacent-project
-isolation, and discovery alongside another SDD-oriented skill. Promote
-`REQ-26234DC8` and `REQ-1DD46CA9` only after that complete skill evidence
-passes. Do not absorb Milestone 9 authorization, cross-platform, performance,
+Milestones 8.5a and 8.5a2 are complete. The next bounded work is 8.5b: run
+every version 1 Skill scenario against the installed complete skill, retain
+schema-valid transcript-bound results, and obtain one identified human
+verdict. Promote `REQ-26234DC8` and `REQ-1DD46CA9` only after every scripted
+and human scenario passes. Do not infer human acceptance from package checks,
+and do not absorb Milestone 9 authorization, cross-platform, performance,
 enforcement, hosting, or merge-policy work.

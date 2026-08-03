@@ -1,0 +1,78 @@
+{
+  "schema_version": "1.0",
+  "suite_id": "sdd-yo-skill-safety-v1",
+  "skill_revision": "0000000",
+  "reviewer": {
+    "identity": "REVIEWER_IDENTITY",
+    "role": "human Skill reviewer"
+  },
+  "scenario_results": [
+    {
+      "scenario_id": "adjacent-project-isolation",
+      "verdict": "not_reviewed",
+      "transcript": null,
+      "findings": []
+    },
+    {
+      "scenario_id": "authoring-normative-mode-ambiguity",
+      "verdict": "not_reviewed",
+      "transcript": null,
+      "findings": []
+    },
+    {
+      "scenario_id": "diagnose-malformed-cli-json",
+      "verdict": "not_reviewed",
+      "transcript": null,
+      "findings": []
+    },
+    {
+      "scenario_id": "discovery-explicit-invocation",
+      "verdict": "not_reviewed",
+      "transcript": null,
+      "findings": []
+    },
+    {
+      "scenario_id": "initialize-explicit-project",
+      "verdict": "not_reviewed",
+      "transcript": null,
+      "findings": []
+    },
+    {
+      "scenario_id": "merge-status-governed-scope",
+      "verdict": "not_reviewed",
+      "transcript": null,
+      "findings": []
+    },
+    {
+      "scenario_id": "optional-model-unavailable",
+      "verdict": "not_reviewed",
+      "transcript": null,
+      "findings": []
+    },
+    {
+      "scenario_id": "preparation-stale-evidence-and-exact-patch",
+      "verdict": "not_reviewed",
+      "transcript": null,
+      "findings": []
+    },
+    {
+      "scenario_id": "proposal-review-exact-json-no-approval",
+      "verdict": "not_reviewed",
+      "transcript": null,
+      "findings": []
+    },
+    {
+      "scenario_id": "understand-with-injected-spec-and-link",
+      "verdict": "not_reviewed",
+      "transcript": null,
+      "findings": []
+    },
+    {
+      "scenario_id": "verification-no-fabricated-human-evidence",
+      "verdict": "not_reviewed",
+      "transcript": null,
+      "findings": []
+    }
+  ],
+  "overall_verdict": "not_reviewed"
+}
