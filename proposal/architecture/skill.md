@@ -18,6 +18,7 @@ sdd/
   SKILL.md
   references/
     object-model.md
+    onboarding.md
     modes.md
     authoring.md
     proposal-gate.md
@@ -39,33 +40,39 @@ contain no project-specific IDs.
 
 ## Intent routing
 
-| User intent | Skill behavior |
-| --- | --- |
-| Understand behavior | Resolve project, call `inspect`/`trace`, summarize normative sections |
-| Add or change behavior | Clarify observable outcome, select `spec-code`, draft objects, run Proposal Gate |
-| Baseline accepted behavior | Select `spec`, confirm existing behavior and QA plan, draft specification |
-| Fix implementation to active spec | Select `code`, name exact Requirement targets, leave spec unchanged |
-| Review a proposal | Show object delta and unresolved semantic candidates; never self-approve |
-| Prepare a branch | Validate approval subject, call prepare, offer exact patch application |
-| Verify implementation | Discover tests, compute affected scope, request missing QA/evidence |
-| Check merge readiness | Gather explicit artifacts, call `merge check`, explain status |
-| Diagnose | Use stable diagnostic codes and load only matching diagnostics reference |
+| User intent                       | Skill behavior                                                                                                              |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Initialize or adopt SDD           | Check CLI compatibility, confirm an explicit project root and adoption mode, call `init`, then validate the created project |
+| Understand behavior               | Resolve project, call `inspect`/`trace`, summarize normative sections                                                       |
+| Add or change behavior            | Clarify observable outcome, select `spec-code`, draft objects, run Proposal Gate                                            |
+| Baseline accepted behavior        | Select `spec`, confirm existing behavior and QA plan, draft specification                                                   |
+| Fix implementation to active spec | Select `code`, name exact Requirement targets, leave spec unchanged                                                         |
+| Review a proposal                 | Show object delta and unresolved semantic candidates; never self-approve                                                    |
+| Prepare a branch                  | Validate approval subject, call prepare, offer exact patch application                                                      |
+| Verify implementation             | Discover tests, compute affected scope, request missing QA/evidence                                                         |
+| Check merge readiness             | Gather explicit artifacts, call `merge check`, explain status                                                               |
+| Diagnose                          | Use stable diagnostic codes and load only matching diagnostics reference                                                    |
 
 If intent could select more than one mode, the skill asks before producing a
 decision-bearing proposal. It does not silently switch modes after approval.
 
 ## Required operating sequence
 
-1. Resolve the SDD Project and check compatible CLI/schema versions.
-2. Read `spec/README.md`, then inspect only objects relevant to the request.
-3. Separate normative product behavior from implementation guidance.
-4. Ask a human about unresolved product meaning or governance choices.
-5. Generate IDs through `sdd id`; never invent or recycle them.
-6. Draft a complete virtual candidate tree.
-7. Call the relevant CLI gate with JSON output.
-8. Present exact diagnostics, object delta, affected scope, and open decisions.
-9. Apply only an explicitly selected exact SpecPatch.
-10. Stop before branch, commit, push, approval, QA decision, or merge.
+1. Check compatible CLI/schema versions, then resolve an existing SDD Project
+   or confirm an explicit initialization root and adoption mode.
+2. For initialization, call `sdd init`, verify its JSON response and created
+   paths, surface the host-formatter handoff, and validate the resulting empty
+   project before authoring any object.
+3. For an existing project, read `spec/README.md`, then inspect only objects
+   relevant to the request.
+4. Separate normative product behavior from implementation guidance.
+5. Ask a human about unresolved product meaning or governance choices.
+6. Generate IDs through `sdd id`; never invent or recycle them.
+7. Draft a complete virtual candidate tree.
+8. Call the relevant CLI gate with JSON output.
+9. Present exact diagnostics, object delta, affected scope, and open decisions.
+10. Apply only an explicitly selected exact SpecPatch.
+11. Stop before branch, commit, push, approval, QA decision, or merge.
 
 ## Trust rules
 

@@ -993,12 +993,45 @@ Bounded leaves:
 
 Mode: `spec-code`.
 
-- [ ] Implement one progressive-disclosure `sdd` skill.
-- [ ] Route understand/change/baseline/fix/review/prepare/verify/merge intents.
-- [ ] Require compatible CLI JSON for every deterministic claim.
-- [ ] Add prompt-injection, stale-evidence, fabricated-evidence, and
-      cross-project isolation evals.
-- [ ] Keep model-assisted semantic review optional.
+- [ ] **8.1 — Preflight, initialization, and understanding vertical slice.**
+      Create the minimal progressive-disclosure `sdd` skill package and route
+      initialize/onboard, understand, and diagnose intents. Fail closed when
+      the CLI is missing, interrupted, returns malformed JSON, or exposes an
+      incompatible schema version. When no project exists and initialization
+      is requested, confirm an explicit root and adoption mode, invoke the
+      existing `sdd init` JSON contract, verify only its reported created
+      paths, surface the host-formatter handoff, and validate the empty project
+      before authoring any object. Load only the object-model, onboarding, or
+      matching diagnostics reference. Do not install the CLI, create a
+      Capability or Requirement, infer a baseline, run configured adapters,
+      or implement later proposal, evidence, semantic-review, or merge routes.
+      This leaf uses the existing canonical behavior of `REQ-382BBBD6`,
+      `REQ-BFC18F28`, and `REQ-0361538D`; promotion of the Agent Skill
+      Requirements remains deferred until the complete skill and its evals are
+      verified.
+- [ ] **8.2 — Mode selection and authoring routes.** Route change, baseline,
+      and fix intents; ask before resolving ambiguous normative meaning, keep
+      `spec-code`, `spec`, and `code` distinct, generate IDs only through the
+      CLI, and draft complete virtual candidates without applying them. Do not
+      review, prepare, verify, or merge in this leaf.
+- [ ] **8.3 — Review and preparation routes.** Present deterministic object
+      deltas and semantic candidates, preserve human approval authority, and
+      offer only the exact SpecPatch produced by current compatible CLI JSON.
+      Do not create ApprovalEvidence, apply an unselected patch, verify
+      implementation, or check merge readiness.
+- [ ] **8.4 — Verification and merge-readiness routes.** Route explicit test,
+      QA, finding, resolution, VerificationReport, and MergeReport artifacts
+      through the existing CLI; explain affected governed scope and current
+      gate status without claiming whole-project completeness. Do not execute
+      configured adapters without normal permission or create human evidence.
+- [ ] **8.5 — Skill safety evals and canonical promotion.** Evaluate every
+      route for progressive retrieval, exact CLI JSON use, normative ambiguity,
+      prompt injection, stale evidence, fabricated evidence, optional-model
+      unavailability, and adjacent-project isolation. Promote
+      `REQ-26234DC8` and `REQ-1DD46CA9` only after the complete skill passes the
+      applicable scripted scenarios and human review; keep model-assisted
+      semantic analysis optional under the already canonical
+      `REQ-18F84CE2`, `REQ-04F23007`, and `REQ-A76942A0` contracts.
 
 Primary target Requirements:
 `REQ-26234DC8`, `REQ-1DD46CA9`, `REQ-18F84CE2`, `REQ-04F23007`,
@@ -1029,9 +1062,11 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 7.4 is complete. Future existing-project studies now require complete
-and reproducible timing, traceability-denominator, semantic-review-quality, and
-role-comprehension measurements, while the missing historical `yo` and `pi`
-values remain explicit. The next bounded work is Milestone 8: implement one
-progressive-disclosure `sdd` Agent Skill over the stable deterministic CLI
-without reimplementing its rules in prompts.
+Milestone 7.4 is complete. The next bounded work is 8.1: implement the minimal
+progressive-disclosure skill package with fail-closed CLI compatibility,
+explicit initialize/onboard handling, and read-only understand/diagnose routes.
+It may initialize only an explicitly selected project through the existing
+`sdd init` JSON contract and must validate the resulting empty project before
+authoring any object. Change, baseline, fix, review, prepare, verification,
+merge-readiness, semantic-model integration, and adversarial evals remain in
+their later leaves.
