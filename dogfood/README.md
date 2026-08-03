@@ -167,6 +167,23 @@ replaced. The command neither adds archive support nor manages the external
 durable store; the invoker still exports and later materializes the exact
 manifest bytes under the retention topology established in 7.4a.
 
+### 7.4d resolution — Producer-neutral onboarding recovery
+
+Milestone 7.4d resolves the guidance gap in `OBS-YO-001` and makes the two
+reproduced onboarding decision points actionable without adding host-specific
+behavior. Unsupported `--project` use, conflicting selectors, and project
+resolution failures now direct the invoker to either `--cwd <project-root>` or
+the exact `--config <project-root>/.sdd/config.yaml` selector.
+
+After initialization, the invoker checks whether the existing host formatter
+owns the created file types and formats only those files when applicable,
+before creating fingerprint-bound artifacts. The CLI neither detects nor runs
+that formatter. When a JUnit producer reports unavailable hierarchy, the
+invoker reviews normalized full names and either places Requirement IDs
+directly in applicable executable test names or selects a producer mode that
+retains suites. SDD Yo continues to report the loss and never reconstructs
+framework-specific hierarchy.
+
 ## Deferred claims
 
 - The existing-monorepo study and two-project isolation evidence remain

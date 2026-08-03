@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 7 / Existing-project dogfood
-- Current leaf: Milestone 7.4d onboarding recovery guidance
+- Current leaf: Milestone 7.4e existing-project eval measurement completeness
 - Last updated: 2026-08-03
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -965,10 +965,19 @@ Bounded leaves:
         invalid targets and snapshots fail without archive ingestion or Git
         mutation. Requirement traceability: `REQ-A3C3B779`, `REQ-7C848ED0`,
         and `REQ-F7D39246`.
-  - [ ] **7.4d — Onboarding recovery guidance.** Improve bounded recovery for
+  - [x] **7.4d — Onboarding recovery guidance.** Improve bounded recovery for
         project selectors, host formatter ownership, and producer-specific
         JUnit hierarchy without adding language-, framework-, formatter-, or
-        package-manager-specific behavior to the core.
+        package-manager-specific behavior to the core. Unsupported `--project`,
+        conflicting selectors, and resolution failures now name the supported
+        `--cwd` and exact `--config` recovery. Onboarding guidance requires a
+        host-owned formatter check before fingerprint-bound artifacts and
+        directs lost-hierarchy recovery through normalized names, direct IDs
+        on applicable executable tests, or a producer mode that retains suites;
+        the core neither detects nor runs host formatters and never
+        reconstructs producer-specific hierarchy.
+        Requirement traceability: `REQ-0361538D`, `REQ-7C848ED0`,
+        `REQ-382BBBD6`, `REQ-12E19D70`, `REQ-F7CEE6D0`, and `REQ-6D8DDDF7`.
   - [ ] **7.4e — Existing-project eval measurement completeness.** Require
         future studies to record total time to first governed Capability, a
         repository-wide traceability denominator, semantic-candidate review
@@ -1015,11 +1024,9 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 7.4c is complete. An exact candidate specification tree can now be
-retained as a deterministic CandidateTreeManifest produced from explicit Git
-refs under an ignored project-local staging boundary, then supplied directly
-to existing candidate inputs without a nested SDD Project or archive
-extraction. The next bounded work is Milestone 7.4d: improve onboarding
-recovery guidance for project selectors, host formatter ownership, and
-producer-specific JUnit hierarchy without adding host-specific behavior to the
-core.
+Milestone 7.4d is complete. Project-selection failures now name supported
+selectors, while formatter ownership and lost JUnit hierarchy have explicit
+producer-neutral onboarding recovery without host behavior in the core. The
+next bounded work is Milestone 7.4e: require complete measurements in future
+existing-project studies without fabricating the missing historical values for
+`yo` or `pi`.

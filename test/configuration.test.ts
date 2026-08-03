@@ -132,7 +132,13 @@ describe("REQ-0361538D project configuration", () => {
     const empty = await mkdtemp(join(tmpdir(), "sdd-config-empty-"));
     const missing = await resolveProject(nodeFileSystem, { kind: "nearest", start_directory: empty });
     assert.equal(missing.ok, false);
-    if (!missing.ok) assert.equal(missing.diagnostics[0]?.code, "SDD_CONFIG_NOT_FOUND");
+    if (!missing.ok) {
+      assert.equal(missing.diagnostics[0]?.code, "SDD_CONFIG_NOT_FOUND");
+      assert.equal(
+        missing.diagnostics[0]?.details.remediation,
+        "Use --cwd <project-root> or --config <project-root>/.sdd/config.yaml to select one SDD Project.",
+      );
+    }
 
     const wrongPath = await resolveProject(nodeFileSystem, {
       kind: "explicit",
@@ -140,7 +146,13 @@ describe("REQ-0361538D project configuration", () => {
       working_directory: empty,
     });
     assert.equal(wrongPath.ok, false);
-    if (!wrongPath.ok) assert.equal(wrongPath.diagnostics[0]?.code, "SDD_CONFIG_PATH_INVALID");
+    if (!wrongPath.ok) {
+      assert.equal(wrongPath.diagnostics[0]?.code, "SDD_CONFIG_PATH_INVALID");
+      assert.equal(
+        wrongPath.diagnostics[0]?.details.remediation,
+        "Use --cwd <project-root> or --config <project-root>/.sdd/config.yaml to select one SDD Project.",
+      );
+    }
   });
 
   test("resolves configured paths only against the selected project root", () => {

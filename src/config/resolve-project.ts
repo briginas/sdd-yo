@@ -30,7 +30,7 @@ function resolutionDiagnostic(codeValue: string, message: string, details: Recor
     message,
     details: {
       ...details,
-      remediation: "Correct the project selection or configuration path and run the command again.",
+      remediation: "Use --cwd <project-root> or --config <project-root>/.sdd/config.yaml to select one SDD Project.",
     },
   };
 }

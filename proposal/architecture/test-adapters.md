@@ -150,6 +150,13 @@ derives a deterministic ID from report path, suite path, testcase classname,
 name, and occurrence index. It reports lost or ambiguous hierarchy and never
 reconstructs it from framework-specific guesses.
 
+When `SDD_ADAPTER_JUNIT_HIERARCHY_UNAVAILABLE` is reported, onboarding reviews
+the normalized full names before accepting traceability. If a producer has
+flattened or omitted the suite that carries a Requirement ID, place the exact
+ID directly in each applicable executable test name or select a producer mode
+that retains the suite hierarchy. The core does not infer missing suites or
+apply runner-specific reconstruction rules.
+
 For discovery-only reports that also contain execution status, the importer
 may produce both a `TestIndex` and `TestExecutionEvidence`, bound to the same
 report fingerprint and declared Git head.

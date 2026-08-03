@@ -17,6 +17,18 @@ starts at the process working directory. JSON goes to stdout unless `--output`
 is given; logs and progress go to stderr. Colors are disabled for JSON and
 when stdout is not a terminal.
 
+`--project` is not a version 1 selector. When invocation or resolution cannot
+select one SDD Project, recovery names the supported alternatives explicitly:
+use `--cwd <project-root>` to search upward from a directory, or use
+`--config <project-root>/.sdd/config.yaml` to select the exact configuration.
+
+After `sdd init`, the invoker checks whether the host repository's existing
+formatter owns the created file types and, when it does, formats only the
+created files before producing fingerprint-bound proposals or evidence. SDD Yo
+does not detect, install, configure, or execute a formatter; if the host
+formatter ignores those file types, onboarding records that boundary and
+leaves the deterministic initialized bytes unchanged.
+
 Every JSON response has:
 
 ```json

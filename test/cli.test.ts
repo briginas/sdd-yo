@@ -534,14 +534,36 @@ test("REQ-7D93D64A maps blocking validation and technical failures to nonzero ex
   assert.equal(unsafeValue.diagnostics[0]?.code, "SDD_CONFIG_CLI_OUTPUT_UNSAFE");
 });
 
-test("REQ-7C848ED0 rejects unknown inspect identities and conflicting project selectors", async () => {
+test("REQ-0361538D REQ-7C848ED0 rejects unknown identities and guides project-selector recovery", async () => {
   const missing = await execute(["inspect", "REQ-FFFFFFFF", "--format", "json"]);
   assert.equal(missing.exitCode, 3);
   assert.equal((JSON.parse(missing.standardOutput) as { status: string }).status, "error");
 
   const invalid = await execute(["validate", "--config", ".sdd/config.yaml", "--cwd", ".", "--format", "json"]);
   assert.equal(invalid.exitCode, 3);
-  assert.equal((JSON.parse(invalid.standardOutput) as { status: string }).status, "error");
+  const invalidValue = JSON.parse(invalid.standardOutput) as {
+    status: string;
+    diagnostics: readonly { details: { remediation: string } }[];
+  };
+  assert.equal(invalidValue.status, "error");
+  assert.equal(
+    invalidValue.diagnostics[0]?.details.remediation,
+    "Use --cwd <project-root> or --config <project-root>/.sdd/config.yaml to select one SDD Project.",
+  );
+
+  const unsupported = await execute(["validate", "--project", ".", "--format", "json"]);
+  assert.equal(unsupported.exitCode, 3);
+  const unsupportedValue = JSON.parse(unsupported.standardOutput) as {
+    diagnostics: readonly { code: string; message: string; details: { remediation: string } }[];
+  };
+  assert.deepEqual(unsupportedValue.diagnostics[0], {
+    code: "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+    severity: "error",
+    message: "The --project selector is unsupported.",
+    details: {
+      remediation: "Use --cwd <project-root> or --config <project-root>/.sdd/config.yaml to select one SDD Project.",
+    },
+  });
 
   const malformed = await execute(["unsupported", "json"]);
   assert.equal(malformed.exitCode, 3);

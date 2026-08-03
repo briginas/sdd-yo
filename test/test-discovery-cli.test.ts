@@ -111,7 +111,7 @@ describe("REQ-12E19D70 REQ-72BA737C sdd tests discover", () => {
     );
   });
 
-  test("binds explicit JUnit imports to one selected configured adapter and reports lost hierarchy", async () => {
+  test("REQ-6D8DDDF7 binds explicit JUnit imports and guides lost-hierarchy recovery", async () => {
     const root = await project(
       "  adapters:\n    - id: unit\n      type: junit\n      discover:\n        reports: [reports/configured/*.xml]\n",
     );
@@ -146,7 +146,10 @@ describe("REQ-12E19D70 REQ-72BA737C sdd tests discover", () => {
         code: "SDD_ADAPTER_JUNIT_HIERARCHY_UNAVAILABLE",
         severity: "warning",
         message: "A test producer did not retain nested suite hierarchy.",
-        details: { remediation: "Review the normalized full names or use a producer that retains hierarchy." },
+        details: {
+          remediation:
+            "Review normalized full names; place Requirement IDs directly in executable test names or use a producer that retains suite hierarchy.",
+        },
       },
     ]);
   });

@@ -293,6 +293,9 @@ function cliDiagnostic(
   return { code: codeValue, severity, message, details: { remediation } };
 }
 
+const projectSelectionRemediation =
+  "Use --cwd <project-root> or --config <project-root>/.sdd/config.yaml to select one SDD Project.";
+
 function parseInvocation(
   argv: readonly string[],
 ): { ok: true; value: Invocation } | { ok: false; diagnostic: Diagnostic } {
@@ -711,6 +714,15 @@ function parseInvocation(
     } else if ((command === "inspect" || command === "trace") && objectId === undefined && isObjectId(argument))
       objectId = argument;
     else if (command === "id" && idKind === undefined && isIdKind(argument)) idKind = argument;
+    else if (argument === "--project")
+      return {
+        ok: false,
+        diagnostic: cliDiagnostic(
+          "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+          "The --project selector is unsupported.",
+          projectSelectionRemediation,
+        ),
+      };
     else
       return {
         ok: false,
@@ -727,7 +739,7 @@ function parseInvocation(
       diagnostic: cliDiagnostic(
         "SDD_CONFIG_CLI_PROJECT_SELECTOR_CONFLICT",
         "--config and --cwd are mutually exclusive.",
-        "Select exactly one project resolution option.",
+        projectSelectionRemediation,
       ),
     };
   if (
@@ -2464,7 +2476,7 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
               cliDiagnostic(
                 code,
                 "A test producer did not retain nested suite hierarchy.",
-                "Review the normalized full names or use a producer that retains hierarchy.",
+                "Review normalized full names; place Requirement IDs directly in executable test names or use a producer that retains suite hierarchy.",
                 "warning",
               ),
             ),
