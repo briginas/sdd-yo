@@ -3,8 +3,8 @@
 ## Status
 
 - State: active
-- Current phase: Milestone 7 / Existing-project dogfood
-- Current leaf: Milestone 7.4e existing-project eval measurement completeness
+- Current phase: Milestone 8 / Agent Skill
+- Current leaf: Progressive-disclosure `sdd` Agent Skill
 - Last updated: 2026-08-03
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -926,7 +926,7 @@ Bounded leaves:
       not claim that two studies establish monorepo isolation, broader MVP
       usability, or cross-project behavior. The result is recorded in
       [`dogfood/README.md`](dogfood/README.md).
-- [ ] **7.4 — Confirmed-problem fixes.** Correct only problems confirmed by
+- [x] **7.4 — Confirmed-problem fixes.** Correct only problems confirmed by
       the two-study synthesis through contracts, validators, documentation, or
       evals, with each fix implemented and verified as its own bounded Change.
   - [x] **7.4a — Baseline evidence-retention contract clarification.** Define a
@@ -978,11 +978,16 @@ Bounded leaves:
         reconstructs producer-specific hierarchy.
         Requirement traceability: `REQ-0361538D`, `REQ-7C848ED0`,
         `REQ-382BBBD6`, `REQ-12E19D70`, `REQ-F7CEE6D0`, and `REQ-6D8DDDF7`.
-  - [ ] **7.4e — Existing-project eval measurement completeness.** Require
+  - [x] **7.4e — Existing-project eval measurement completeness.** Require
         future studies to record total time to first governed Capability, a
         repository-wide traceability denominator, semantic-candidate review
         quality, and author/developer/QA comprehension time without fabricating
-        missing measurements for `yo` or `pi`.
+        missing measurements for `yo` or `pi`. Future records now define total
+        wall-clock start, stop, inclusions, and exclusions; separate existing
+        executable-test numerator and repository-wide denominator counts;
+        useful, false-positive, and independently sought missed semantic review
+        relationships; and role-specific comprehension time and clarification.
+        The two completed studies retain explicit `not measured` gaps.
 
 ## Milestone 8 — Agent Skill
 
@@ -1024,9 +1029,9 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 7.4d is complete. Project-selection failures now name supported
-selectors, while formatter ownership and lost JUnit hierarchy have explicit
-producer-neutral onboarding recovery without host behavior in the core. The
-next bounded work is Milestone 7.4e: require complete measurements in future
-existing-project studies without fabricating the missing historical values for
-`yo` or `pi`.
+Milestone 7.4 is complete. Future existing-project studies now require complete
+and reproducible timing, traceability-denominator, semantic-review-quality, and
+role-comprehension measurements, while the missing historical `yo` and `pi`
+values remain explicit. The next bounded work is Milestone 8: implement one
+progressive-disclosure `sdd` Agent Skill over the stable deterministic CLI
+without reimplementing its rules in prompts.

@@ -123,14 +123,30 @@ Before the MVP is called usable, onboard at least three existing repositories:
 3. a monorepo with at least two independent SDD Projects.
 
 Each study begins without restructuring production code or tests merely for
-the tool. Record:
+the tool. Record the measurement method and the following values; an unavailable
+value remains explicitly `not measured` and cannot be reconstructed from commit
+timestamps or partial reports:
 
-- time to initialize and define the first governed Capability;
-- effort to write a custom adapter, if required;
-- percentage of existing tests whose names need Requirement IDs;
+- total wall-clock time from the clean selected baseline immediately before
+  the first onboarding action through a committed, valid first governed
+  Capability, including host setup, formatting, specification authoring,
+  traceability work, and waits; also record the start and stop conditions and
+  any excluded time;
+- effort to configure each existing adapter and to write a custom adapter, if
+  required;
+- the repository-wide count of existing executable tests at the selected
+  baseline, the count whose normalized test or ancestor-suite names require
+  Requirement IDs, and the resulting percentage; new tests and a focused
+  TestIndex are reported separately and cannot supply the denominator;
 - friction caused by Git history size and project boundaries;
-- false-positive and missed-review observations from semantic candidates;
-- time for an author, developer, and QA tester to understand affected scope;
+- the total semantic-candidate count and a human review classification of each
+  candidate as useful or false-positive, plus independently discovered missed
+  review relationships and the method used to look for them; an empty candidate
+  set without this review is not a quality measurement;
+- separate wall-clock comprehension time for an author, developer, and QA
+  tester to identify the affected Capability and Requirements, implementation
+  or test scope, and QA boundary from the same bounded review packet, together
+  with the clarifications each role required;
 - every place the tool accidentally implies whole-project completeness during
   partial adoption.
 

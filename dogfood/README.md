@@ -184,6 +184,31 @@ directly in applicable executable test names or selects a producer mode that
 retains suites. SDD Yo continues to report the loss and never reconstructs
 framework-specific hierarchy.
 
+### 7.4e resolution — Complete future-study measurements
+
+Milestone 7.4e tightens the existing-project onboarding eval so future studies
+measure total wall-clock time from the clean selected baseline through a
+committed, valid first governed Capability. The measurement includes host
+setup, formatting, authoring, traceability work, and waits, and records its
+start, stop, and any exclusions rather than substituting the isolated init
+command duration.
+
+Each future study also records the repository-wide existing executable-test
+count, the existing normalized names that require Requirement IDs, and the
+resulting percentage. New tests and focused TestIndexes remain separate and
+cannot provide that denominator. Semantic-candidate quality requires human
+classification of every candidate as useful or false-positive plus a stated
+method and results for finding missed review relationships. A zero-candidate
+package alone is not evidence that false positives or misses are absent.
+
+Author, developer, and QA comprehension are timed separately from the same
+bounded review packet, including the clarifications each role needs to identify
+affected specification, implementation or test, and QA scope. The `yo` and
+`pi` command timings, focused reports, and commit history do not satisfy these
+measurements. Their missing values remain `not measured`; this resolution
+changes the record required of future studies without fabricating historical
+results.
+
 ## Deferred claims
 
 - The existing-monorepo study and two-project isolation evidence remain
