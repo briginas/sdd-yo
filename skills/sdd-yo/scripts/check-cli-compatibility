@@ -1,11 +1,21 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { lstatSync } from "node:fs";
 import { isAbsolute, relative, resolve } from "node:path";
 
 const TECHNICAL_FAILURE = 3;
-const SUPPORTED_COMMANDS = new Set(["init", "id", "validate", "inspect", "trace"]);
+const SUPPORTED_OPERATIONS = new Set([
+  "init",
+  "id",
+  "validate",
+  "inspect",
+  "trace",
+  "proposal.validate",
+  "proposal.prepare",
+  "proposal.apply",
+]);
 const AUTHORING_ID_KINDS = new Map([
   ["capability", "CAP"],
   ["requirement", "REQ"],
@@ -27,6 +37,159 @@ function optionValue(arguments_, option) {
 
 function isRecord(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function isFingerprint(value) {
+  return typeof value === "string" && /^sha256:[0-9a-f]{64}$/u.test(value);
+}
+
+function isObjectId(value) {
+  return typeof value === "string" && /^(?:CAP|REQ|CON)-[0-9A-F]{8}$/u.test(value);
+}
+
+function isSortedUniqueStrings(values, predicate = () => true) {
+  return (
+    Array.isArray(values) &&
+    values.every((value) => typeof value === "string" && predicate(value)) &&
+    values.every((value, index) => index === 0 || values[index - 1] < value)
+  );
+}
+
+function hasExactKeys(value, required, optional = []) {
+  if (!isRecord(value)) return false;
+  const allowed = new Set([...required, ...optional]);
+  return required.every((key) => key in value) && Object.keys(value).every((key) => allowed.has(key));
+}
+
+function isSemanticCandidate(value) {
+  return (
+    hasExactKeys(value, ["objects", "reason"]) &&
+    isSortedUniqueStrings(value.objects, isObjectId) &&
+    value.objects.length > 0 &&
+    typeof value.reason === "string" &&
+    value.reason.length > 0
+  );
+}
+
+function isProjectPath(value) {
+  return (
+    typeof value === "string" &&
+    value.length > 0 &&
+    !value.includes("\\") &&
+    !isAbsolute(value) &&
+    value.split("/").every((segment) => segment !== "" && segment !== "." && segment !== "..")
+  );
+}
+
+function requireOption(arguments_, option, operation) {
+  const value = optionValue(arguments_, option);
+  if (value === undefined) fail(`${operation} requires ${option}.`);
+  return value;
+}
+
+function verifyProposalPackage(result, projectId) {
+  if (
+    !isRecord(result) ||
+    result.schema_version !== "1.0" ||
+    result.artifact_type !== "proposal_package" ||
+    result.project_id !== projectId ||
+    !["spec-code", "spec", "code"].includes(result.mode) ||
+    !isRecord(result.base) ||
+    typeof result.base.git_ref !== "string" ||
+    result.base.git_ref.length === 0 ||
+    !isFingerprint(result.base.tree_fingerprint) ||
+    !isRecord(result.candidate) ||
+    !["directory", "manifest"].includes(result.candidate.source) ||
+    !isFingerprint(result.candidate.tree_fingerprint) ||
+    !isRecord(result.object_delta) ||
+    !isFingerprint(result.object_delta.semantic_fingerprint) ||
+    !isFingerprint(result.object_delta.structural_fingerprint) ||
+    !isSortedUniqueStrings(result.object_delta.added, isObjectId) ||
+    !isSortedUniqueStrings(result.object_delta.modified, isObjectId) ||
+    !isSortedUniqueStrings(result.object_delta.deleted, isObjectId) ||
+    !Array.isArray(result.code_targets) ||
+    result.code_targets.some(
+      (target) =>
+        !hasExactKeys(target, ["requirement_id", "semantic_fingerprint", "structural_fingerprint"]) ||
+        typeof target.requirement_id !== "string" ||
+        !/^REQ-[0-9A-F]{8}$/u.test(target.requirement_id) ||
+        !isFingerprint(target.semantic_fingerprint) ||
+        !isFingerprint(target.structural_fingerprint),
+    ) ||
+    !isRecord(result.affected_scope) ||
+    !isFingerprint(result.affected_scope.fingerprint) ||
+    !isSortedUniqueStrings(result.affected_scope.requirements, (value) => /^REQ-[0-9A-F]{8}$/u.test(value)) ||
+    !isSortedUniqueStrings(result.affected_scope.capabilities, (value) => /^CAP-[0-9A-F]{8}$/u.test(value)) ||
+    !Array.isArray(result.diagnostics) ||
+    !Array.isArray(result.semantic_candidates) ||
+    result.semantic_candidates.some((candidate) => !isSemanticCandidate(candidate))
+  )
+    fail("the sdd CLI returned an invalid ProposalPackage result.");
+}
+
+function verifyConflictReport(result, projectId) {
+  return (
+    isRecord(result) &&
+    result.schema_version === "1.0" &&
+    result.artifact_type === "conflict_report" &&
+    result.project_id === projectId &&
+    typeof result.integration_ref === "string" &&
+    result.integration_ref.length > 0 &&
+    typeof result.branch_head === "string" &&
+    result.branch_head.length > 0 &&
+    typeof result.merge_base === "string" &&
+    result.merge_base.length > 0 &&
+    isFingerprint(result.config_fingerprint) &&
+    Array.isArray(result.mechanical_conflicts) &&
+    result.mechanical_conflicts.every(
+      (conflict) =>
+        hasExactKeys(conflict, ["path", "kind"], ["object_id"]) &&
+        isProjectPath(conflict.path) &&
+        ["add_add", "modify_modify", "modify_delete", "delete_modify", "id_reuse"].includes(conflict.kind) &&
+        (conflict.object_id === undefined || isObjectId(conflict.object_id)),
+    ) &&
+    Array.isArray(result.semantic_candidates) &&
+    result.semantic_candidates.every(isSemanticCandidate) &&
+    isFingerprint(result.input_fingerprint)
+  );
+}
+
+function verifySpecPatch(result, projectId) {
+  const operationsValid =
+    Array.isArray(result?.operations) &&
+    result.operations.every((operation) => {
+      if (!isRecord(operation) || !isProjectPath(operation.path)) return false;
+      if (operation.operation === "create" || operation.operation === "replace") {
+        const required =
+          operation.operation === "create"
+            ? ["operation", "path", "after_sha256", "content_utf8"]
+            : ["operation", "path", "before_sha256", "after_sha256", "content_utf8"];
+        if (
+          !hasExactKeys(operation, required) ||
+          typeof operation.content_utf8 !== "string" ||
+          !isFingerprint(operation.after_sha256) ||
+          (operation.operation === "replace" && !isFingerprint(operation.before_sha256))
+        )
+          return false;
+        const actual = `sha256:${createHash("sha256").update(operation.content_utf8, "utf8").digest("hex")}`;
+        return actual === operation.after_sha256;
+      }
+      return (
+        operation.operation === "delete" &&
+        hasExactKeys(operation, ["operation", "path", "before_sha256"]) &&
+        isFingerprint(operation.before_sha256)
+      );
+    });
+  return (
+    isRecord(result) &&
+    result.schema_version === "1.0" &&
+    result.artifact_type === "spec_patch" &&
+    result.project_id === projectId &&
+    isFingerprint(result.base_tree_fingerprint) &&
+    isFingerprint(result.result_tree_fingerprint) &&
+    operationsValid &&
+    result.operations.every((operation, index) => index === 0 || result.operations[index - 1].path < operation.path)
+  );
 }
 
 function verifyCreatedPaths(root, createdPaths) {
@@ -78,8 +241,9 @@ if (wrapperArguments.length > 0) {
 
 const commandArguments = process.argv.slice(separator + 1);
 const command = commandArguments[0];
-if (command === undefined || !SUPPORTED_COMMANDS.has(command))
-  fail("this skill slice permits only init, id, validate, inspect, and trace.");
+const operation = command === "proposal" ? `proposal.${commandArguments[1] ?? ""}` : command;
+if (command === undefined || !SUPPORTED_OPERATIONS.has(operation))
+  fail("this skill slice permits only init, id, validate, inspect, trace, and proposal validate, prepare, or apply.");
 if (commandArguments.includes("--output")) fail("--output is unavailable because JSON must remain on stdout.");
 if (commandArguments.includes("--format")) fail("omit --format; the compatibility wrapper always selects JSON.");
 
@@ -94,8 +258,22 @@ if (command === "init") {
   if (adoption !== "incremental" && adoption !== "complete")
     fail("init requires --adoption incremental or --adoption complete.");
 } else if (cwd === undefined && config === undefined) {
-  fail(`${command} requires an explicit --cwd or --config selector.`);
+  fail(`${operation} requires an explicit --cwd or --config selector.`);
 }
+
+if (operation === "proposal.validate") {
+  const mode = requireOption(commandArguments, "--mode", operation);
+  if (!["spec-code", "spec", "code"].includes(mode)) fail("proposal.validate requires a supported --mode.");
+  requireOption(commandArguments, "--base", operation);
+  requireOption(commandArguments, "--candidate", operation);
+}
+if (operation === "proposal.prepare") {
+  requireOption(commandArguments, "--package", operation);
+  requireOption(commandArguments, "--candidate", operation);
+  requireOption(commandArguments, "--branch-head", operation);
+  requireOption(commandArguments, "--integration-ref", operation);
+}
+if (operation === "proposal.apply") requireOption(commandArguments, "--patch", operation);
 
 let expectedIdCount;
 let expectedIdPrefix;
@@ -136,7 +314,7 @@ try {
 if (!isRecord(response)) fail("the sdd CLI returned a non-object JSON response.");
 if (typeof response.schema_version !== "string" || !/^1(?:\.[0-9]+)$/u.test(response.schema_version))
   fail(`the sdd CLI returned incompatible schema version ${JSON.stringify(response.schema_version)}.`);
-if (response.command !== command) fail(`the sdd CLI response command does not match ${command}.`);
+if (response.command !== operation) fail(`the sdd CLI response command does not match ${operation}.`);
 if (response.project_id !== null && typeof response.project_id !== "string")
   fail("the sdd CLI returned an invalid project_id.");
 if (!["ok", "blocked", "review_required", "error"].includes(response.status))
@@ -184,6 +362,37 @@ if (command === "id" && response.status === "ok") {
     response.result.history.resolved_ref.length === 0
   )
     fail("the sdd CLI returned an invalid project-aware ID result.");
+}
+if (operation === "proposal.validate" && response.status === "ok")
+  verifyProposalPackage(response.result, response.project_id);
+if (operation === "proposal.prepare") {
+  if (response.status === "ok" || response.status === "review_required") {
+    if (
+      !isRecord(response.result) ||
+      !verifyConflictReport(response.result.conflict_report, response.project_id) ||
+      (response.status === "ok"
+        ? !verifySpecPatch(response.result.spec_patch, response.project_id)
+        : response.result.spec_patch !== null)
+    )
+      fail("the sdd CLI returned an invalid proposal preparation result.");
+  } else if (response.status === "blocked" && response.result !== null) {
+    if (
+      !isRecord(response.result) ||
+      !verifyConflictReport(response.result.conflict_report, response.project_id) ||
+      response.result.spec_patch !== null
+    )
+      fail("the sdd CLI returned an invalid blocked proposal preparation result.");
+  }
+}
+if (operation === "proposal.apply" && response.status === "ok") {
+  if (
+    !isRecord(response.result) ||
+    !isFingerprint(response.result.result_tree_fingerprint) ||
+    !Array.isArray(response.result.applied_paths) ||
+    response.result.applied_paths.some((path) => !isProjectPath(path)) ||
+    new Set(response.result.applied_paths).size !== response.result.applied_paths.length
+  )
+    fail("the sdd CLI returned an invalid proposal apply result.");
 }
 
 process.stdout.write(execution.stdout);

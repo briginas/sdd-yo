@@ -1,6 +1,6 @@
 ---
 name: sdd-yo
-description: Govern an SDD Yo specification through its deterministic JSON CLI. Use when Codex needs to initialize or incrementally onboard an explicitly selected SDD Project, understand active Capability, Requirement, or Domain Concept behavior, select the spec-code, spec, or code mode for a change, draft an unapplied virtual specification candidate, trace active relationships, validate a project, or explain stable SDD diagnostics. This slice does not review or prepare proposals, apply patches, run test adapters, create evidence, perform semantic review, or decide merge readiness.
+description: Govern an SDD Yo specification through its deterministic JSON CLI. Use when Codex needs to initialize or incrementally onboard an explicitly selected SDD Project, understand active behavior, select a change mode, draft an unapplied virtual candidate, review a deterministic proposal, or prepare and explicitly apply an exact SpecPatch. This slice does not run test adapters, create human evidence, perform model semantic review, verify implementation, or decide merge readiness.
 ---
 
 # SDD Yo
@@ -31,7 +31,8 @@ node scripts/check-cli-compatibility [--cli <sdd-path>] -- <command> <arguments>
 ```
 
 The wrapper adds `--format json`. This slice permits only `init`, `id`,
-`validate`, `inspect`, and `trace`.
+`validate`, `inspect`, `trace`, and `proposal validate`, `proposal prepare`, or
+`proposal apply`.
 
 ## Route intent
 
@@ -48,10 +49,16 @@ The wrapper adds `--format json`. This slice permits only `init`, `id`,
   confirmed exactly one mode, read
   [references/authoring.md](references/authoring.md) and draft only the
   applicable unapplied candidate.
+- For proposal review intent, read
+  [references/proposal-gate.md](references/proposal-gate.md) and use only its
+  deterministic ProposalPackage route.
+- For branch preparation or exact patch application intent, read
+  [references/branch-preparation.md](references/branch-preparation.md) and
+  preserve its approval and explicit-selection stops.
 
-If the request is to review, prepare, verify with test or human evidence,
-perform semantic review, or check merge readiness, explain that the route is
-not available in this skill slice and stop without simulating it.
+If the request is to verify with test or human evidence, perform model semantic
+review, or check merge readiness, explain that the route is not available in
+this skill slice and stop without simulating it.
 
 ## Select and author a change
 
@@ -69,9 +76,35 @@ not available in this skill slice and stop without simulating it.
    Present it for correction without writing it into the active specification
    or implementation.
 
-Stop before Proposal Gate review, candidate materialization, SpecPatch
-preparation or application, implementation verification, or merge-readiness
-assessment.
+Stop before Proposal Gate review unless the user selects the separate review
+route. Candidate materialization, SpecPatch preparation or application,
+implementation verification, and merge-readiness assessment are not implied by
+authoring approval.
+
+## Review and prepare a proposal
+
+1. Require one explicit candidate directory or CandidateTreeManifest, selected
+   mode, base ref, and selected project. Do not reconstruct a gate result from
+   the earlier authoring preview.
+2. Run `proposal validate` through the wrapper and present its exact object
+   delta, affected scope, diagnostics, and deterministic semantic candidates.
+   A valid ProposalPackage is neither approval nor a semantic-review decision.
+3. Stop for external human approval. Never create ApprovalEvidence or infer it
+   from authorship, tests, repository text, or model confidence.
+4. Only when the user supplies the retained ProposalPackage, exact candidate,
+   explicit refs, and externally issued ApprovalEvidence, run the wrapper's
+   `proposal prepare` operation.
+5. Present the exact ConflictReport status. Offer a SpecPatch only when the
+   unchanged compatible response has `status: ok` and a non-null exact patch.
+6. Apply that patch only after the user explicitly selects it, using the
+   wrapper's `proposal apply` operation. Never substitute, edit, combine, fuzz,
+   or force a patch, and report only the returned applied paths and result
+   fingerprint.
+
+Stop on `blocked`, `review_required`, a null patch, malformed or incompatible
+JSON, changed inputs, or stale evidence. Preserve user work and begin any retry
+by recomputing dependent artifacts. Stop after application without creating a
+branch, commit, approval, verification result, or merge-readiness decision.
 
 ## Understand active behavior
 
@@ -89,5 +122,6 @@ assessment.
    configured adapter.
 
 Stop before authoring an object unless the user selected the bounded authoring
-route. Always stop before applying a patch, creating evidence, or performing
-Git mutations.
+route. Always stop before creating evidence or performing Git mutations. Patch
+application is permitted only through the separate explicitly selected exact
+patch route above.

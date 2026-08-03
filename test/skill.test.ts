@@ -21,6 +21,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 const args = process.argv.slice(2);
 const command = args[0];
+const operation = command === "proposal" ? \`proposal.\${args[1] ?? ""}\` : command;
 const mode = process.env.SDD_SKILL_FAKE_MODE ?? "valid";
 if (mode === "malformed") process.stdout.write("not json");
 else if (mode === "interrupted") process.kill(process.pid, "SIGTERM");
@@ -40,6 +41,26 @@ else {
   const countIndex = args.indexOf("--count");
   const count = countIndex === -1 ? 1 : Number(args[countIndex + 1]);
   const candidates = Array.from({ length: count }, (_, index) => \`${"${idPrefix}"}-A100000\${index + 1}\`);
+  const fingerprint = "sha256:" + "a".repeat(64);
+  const semanticCandidate = { objects: ["REQ-A1000001", "REQ-A1000002"], reason: "requirement-dependency" };
+  const proposalPackage = {
+    schema_version: "1.0", artifact_type: "proposal_package", project_id: "SDD-A1000001", mode: "spec-code",
+    base: { git_ref: "base123", tree_fingerprint: fingerprint },
+    candidate: { source: "manifest", tree_fingerprint: fingerprint },
+    object_delta: { semantic_fingerprint: fingerprint, structural_fingerprint: fingerprint, added: ["REQ-A1000001"], modified: [], deleted: [] },
+    code_targets: [],
+    affected_scope: { fingerprint, requirements: ["REQ-A1000001"], capabilities: ["CAP-A1000001"] },
+    diagnostics: [], semantic_candidates: [semanticCandidate],
+  };
+  const conflictReport = {
+    schema_version: "1.0", artifact_type: "conflict_report", project_id: "SDD-A1000001",
+    integration_ref: "integration123", branch_head: "branch123", merge_base: "base123",
+    config_fingerprint: fingerprint, mechanical_conflicts: [], semantic_candidates: [semanticCandidate], input_fingerprint: fingerprint,
+  };
+  const specPatch = {
+    schema_version: "1.0", artifact_type: "spec_patch", project_id: "SDD-A1000001",
+    base_tree_fingerprint: fingerprint, result_tree_fingerprint: fingerprint, operations: [],
+  };
   const result = command === "init"
     ? { created_paths: [".sdd/config.yaml", "spec/README.md", "spec/capabilities", "spec/concepts"] }
     : command === "id"
@@ -47,8 +68,16 @@ else {
           candidates: mode === "wrong-id-prefix" ? ["CON-A1000001"] : mode === "duplicate-id" ? ["REQ-A1000001", "REQ-A1000001"] : candidates,
           history: mode === "unchecked-id" ? { status: "unchecked", resolved_ref: null } : { status: "complete", resolved_ref: "abc123" },
         }
-      : { valid: true, fingerprints: [] };
-  process.stdout.write(JSON.stringify({ schema_version, command, project_id: "SDD-A1000001", status: "ok", result, diagnostics: [] }));
+      : operation === "proposal.validate"
+        ? mode === "invalid-proposal" ? { ...proposalPackage, semantic_candidates: null } : proposalPackage
+        : operation === "proposal.prepare"
+          ? { conflict_report: conflictReport, spec_patch: mode === "review-required" ? null : mode === "invalid-patch" ? { ...specPatch, project_id: "SDD-B1000001" } : specPatch }
+          : operation === "proposal.apply"
+            ? { result_tree_fingerprint: fingerprint, applied_paths: mode === "invalid-apply" ? ["../outside"] : ["spec/capabilities/example.md"] }
+            : { valid: true, fingerprints: [] };
+  const status = mode === "review-required" ? "review_required" : "ok";
+  process.stdout.write(JSON.stringify({ schema_version, command: operation, project_id: "SDD-A1000001", status, result, diagnostics: [] }));
+  if (mode === "review-required") process.exitCode = 2;
 }
 `,
   );
@@ -72,7 +101,7 @@ async function runChecker(
   }
 }
 
-test("REQ-E26A859E skill package discloses only the bounded 8.2 routes", async () => {
+test("REQ-E26A859E skill package discloses only the bounded 8.3 routes", async () => {
   const skill = await readFile(join(skillRoot, "SKILL.md"), "utf8");
   const agentMetadata = await readFile(join(skillRoot, "agents/openai.yaml"), "utf8");
   const references = await readdir(join(skillRoot, "references"));
@@ -82,17 +111,21 @@ test("REQ-E26A859E skill package discloses only the bounded 8.2 routes", async (
   assert.match(skill, /^---\nname: sdd-yo\n/u);
   assert.deepEqual(references.toSorted(), [
     "authoring.md",
+    "branch-preparation.md",
     "diagnostics.md",
     "modes.md",
     "object-model.md",
     "onboarding.md",
+    "proposal-gate.md",
   ]);
   assert.deepEqual(scripts, ["check-cli-compatibility"]);
   assert.deepEqual(templates.toSorted(), ["capability.md", "concept.md"]);
   assert.match(skill, /references\/modes\.md/u);
   assert.match(skill, /references\/authoring\.md/u);
-  assert.match(agentMetadata, /draft an unapplied change/u);
-  assert.doesNotMatch(skill, /references\/(?:proposal-gate|branch-preparation|verification|semantic-review)\.md/u);
+  assert.match(agentMetadata, /review, or prepare an exact approved change/u);
+  assert.match(skill, /references\/proposal-gate\.md/u);
+  assert.match(skill, /references\/branch-preparation\.md/u);
+  assert.doesNotMatch(skill, /references\/(?:verification|semantic-review)\.md/u);
 });
 
 test("REQ-E26A859E authoring route keeps modes distinct and candidates unapplied", async () => {
@@ -149,9 +182,9 @@ test("REQ-0361538D compatibility wrapper fails closed on unavailable or invalid 
   assert.equal(missing.code, 3);
   assert.match(missing.stderr, /CLI is missing/u);
 
-  const unsupported = await runChecker(cli, ["proposal", "validate", "--cwd", repositoryRoot]);
+  const unsupported = await runChecker(cli, ["findings", "validate", "--cwd", repositoryRoot]);
   assert.equal(unsupported.code, 3);
-  assert.match(unsupported.stderr, /permits only init, id, validate, inspect, and trace/u);
+  assert.match(unsupported.stderr, /proposal validate, prepare, or apply/u);
 });
 
 test("REQ-2C8E8085 compatibility wrapper accepts only project-aware authoring IDs", async () => {
@@ -177,4 +210,104 @@ test("REQ-2C8E8085 compatibility wrapper accepts only project-aware authoring ID
   const projectless = await runChecker(cli, ["id", "concept"]);
   assert.equal(projectless.code, 3);
   assert.match(projectless.stderr, /requires an explicit --cwd or --config selector/u);
+});
+
+test("REQ-8DE9E078 REQ-E80F09C6 REQ-18F84CE2 review route accepts only deterministic ProposalPackage JSON", async () => {
+  const cli = await fakeCli();
+  const args = [
+    "proposal",
+    "validate",
+    "--mode",
+    "spec-code",
+    "--base",
+    "main",
+    "--candidate",
+    ".sdd/staging/candidate.json",
+    "--cwd",
+    repositoryRoot,
+  ] as const;
+  const result = await runChecker(cli, args);
+  assert.equal(result.code, 0, result.stderr);
+  const response = JSON.parse(result.stdout) as {
+    readonly command: string;
+    readonly result: { readonly artifact_type: string; readonly semantic_candidates: readonly unknown[] };
+  };
+  assert.equal(response.command, "proposal.validate");
+  assert.equal(response.result.artifact_type, "proposal_package");
+  assert.equal(response.result.semantic_candidates.length, 1);
+
+  const invalid = await runChecker(cli, args, "invalid-proposal");
+  assert.equal(invalid.code, 3);
+  assert.match(invalid.stderr, /invalid ProposalPackage result/u);
+
+  const missingCandidate = await runChecker(cli, [
+    "proposal",
+    "validate",
+    "--mode",
+    "spec-code",
+    "--base",
+    "main",
+    "--cwd",
+    repositoryRoot,
+  ]);
+  assert.equal(missingCandidate.code, 3);
+  assert.match(missingCandidate.stderr, /requires --candidate/u);
+});
+
+test("REQ-AFD65A03 REQ-A8739118 REQ-7341DBB7 REQ-964B9F80 preparation preserves approval authority and exact patches", async () => {
+  const cli = await fakeCli();
+  const args = [
+    "proposal",
+    "prepare",
+    "--package",
+    ".sdd/staging/package.json",
+    "--candidate",
+    ".sdd/staging/candidate.json",
+    "--branch-head",
+    "HEAD",
+    "--integration-ref",
+    "main",
+    "--approval",
+    ".sdd/staging/approval.json",
+    "--cwd",
+    repositoryRoot,
+  ] as const;
+  const prepared = await runChecker(cli, args);
+  assert.equal(prepared.code, 0, prepared.stderr);
+  const response = JSON.parse(prepared.stdout) as {
+    readonly result: {
+      readonly conflict_report: { readonly artifact_type: string };
+      readonly spec_patch: { readonly artifact_type: string };
+    };
+  };
+  assert.equal(response.result.conflict_report.artifact_type, "conflict_report");
+  assert.equal(response.result.spec_patch.artifact_type, "spec_patch");
+
+  const review = await runChecker(cli, args, "review-required");
+  assert.equal(review.code, 2, review.stderr);
+  assert.equal((JSON.parse(review.stdout) as { result: { spec_patch: unknown } }).result.spec_patch, null);
+
+  const invalid = await runChecker(cli, args, "invalid-patch");
+  assert.equal(invalid.code, 3);
+  assert.match(invalid.stderr, /invalid proposal preparation result/u);
+});
+
+test("REQ-3BF12AAD REQ-7AFE9904 exact application route validates selected patch JSON", async () => {
+  const cli = await fakeCli();
+  const preparation = await readFile(join(skillRoot, "references/branch-preparation.md"), "utf8");
+  assert.match(preparation, /Ask the\s+user to select this exact patch for application/u);
+  assert.match(preparation, /Never create ApprovalEvidence/u);
+  assert.doesNotMatch(preparation, /merge check/u);
+
+  const args = ["proposal", "apply", "--patch", ".sdd/staging/patch.json", "--cwd", repositoryRoot] as const;
+  const applied = await runChecker(cli, args);
+  assert.equal(applied.code, 0, applied.stderr);
+  assert.deepEqual(
+    (JSON.parse(applied.stdout) as { result: { applied_paths: readonly string[] } }).result.applied_paths,
+    ["spec/capabilities/example.md"],
+  );
+
+  const invalid = await runChecker(cli, args, "invalid-apply");
+  assert.equal(invalid.code, 3);
+  assert.match(invalid.stderr, /invalid proposal apply result/u);
 });

@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 8 / Agent Skill
-- Current leaf: Review and preparation routes
+- Current leaf: Verification and merge-readiness routes
 - Last updated: 2026-08-03
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -1026,11 +1026,25 @@ Mode: `spec-code`.
       `REQ-8ACBC52D`, `REQ-DD91AD0F`, `REQ-8602BF02`, `REQ-0EF66B28`,
       `REQ-EAC56CB1`, `REQ-065A9911`, and `REQ-40A38BA1`. Promotion of
       `REQ-26234DC8` and `REQ-1DD46CA9` remains deferred to 8.5.
-- [ ] **8.3 — Review and preparation routes.** Present deterministic object
+- [x] **8.3 — Review and preparation routes.** Present deterministic object
       deltas and semantic candidates, preserve human approval authority, and
       offer only the exact SpecPatch produced by current compatible CLI JSON.
       Do not create ApprovalEvidence, apply an unselected patch, verify
-      implementation, or check merge readiness.
+      implementation, or check merge readiness. The skill now loads separate
+      proposal-review and branch-preparation references only for these intents.
+      Its compatibility wrapper admits `proposal validate`, `proposal prepare`,
+      and `proposal apply`, verifies their version 1 ProposalPackage,
+      ConflictReport, SpecPatch, and apply-result boundaries, and fails closed
+      on incompatible shapes or statuses. Proposal review presents exact
+      deterministic deltas, affected scope, diagnostics, and semantic
+      candidates without converting them into approval or Findings. Preparation
+      requires explicit retained package, candidate, refs, and externally
+      issued ApprovalEvidence; a patch is offered only from an `ok` response
+      and applied only after the user selects that exact patch. Requirement
+      traceability: `REQ-8DE9E078`, `REQ-E80F09C6`, `REQ-18F84CE2`,
+      `REQ-AFD65A03`, `REQ-A8739118`, `REQ-7341DBB7`, `REQ-964B9F80`,
+      `REQ-3BF12AAD`, and `REQ-7AFE9904`. Promotion of `REQ-26234DC8` and
+      `REQ-1DD46CA9` remains deferred to 8.5.
 - [ ] **8.4 — Verification and merge-readiness routes.** Route explicit test,
       QA, finding, resolution, VerificationReport, and MergeReport artifacts
       through the existing CLI; explain affected governed scope and current
@@ -1076,10 +1090,10 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 8.2 is complete. The next bounded work is 8.3: present deterministic
-object deltas and semantic candidates from current compatible CLI JSON,
-preserve human approval authority, and offer only the exact SpecPatch produced
-by branch preparation. It must not create ApprovalEvidence, apply an unselected
-patch, verify implementation, or check merge readiness. Verification,
-merge-readiness, semantic-model integration, and adversarial evals remain in
-their later leaves.
+Milestone 8.3 is complete. The next bounded work is 8.4: route explicit test,
+QA, finding, resolution, VerificationReport, and MergeReport artifacts through
+current compatible CLI JSON, explain affected governed scope and gate status,
+and preserve normal permission and human-evidence boundaries. It must not run
+configured adapters without normal permission, create human evidence, claim
+whole-project completeness, or absorb semantic-model integration and
+adversarial evals from 8.5.
