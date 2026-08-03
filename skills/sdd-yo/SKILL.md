@@ -1,6 +1,6 @@
 ---
 name: sdd-yo
-description: Govern an SDD Yo specification through its deterministic JSON CLI. Use when Codex needs to initialize or incrementally onboard an explicitly selected SDD Project, understand active Capability, Requirement, or Domain Concept behavior, trace active relationships, validate a project, or explain stable SDD diagnostics. This initial slice is read-only except for explicit project initialization and does not author objects, infer baselines, run test adapters, prepare proposals, create evidence, perform semantic review, or decide merge readiness.
+description: Govern an SDD Yo specification through its deterministic JSON CLI. Use when Codex needs to initialize or incrementally onboard an explicitly selected SDD Project, understand active Capability, Requirement, or Domain Concept behavior, select the spec-code, spec, or code mode for a change, draft an unapplied virtual specification candidate, trace active relationships, validate a project, or explain stable SDD diagnostics. This slice does not review or prepare proposals, apply patches, run test adapters, create evidence, perform semantic review, or decide merge readiness.
 ---
 
 # SDD Yo
@@ -30,8 +30,8 @@ Use this invocation shape:
 node scripts/check-cli-compatibility [--cli <sdd-path>] -- <command> <arguments>
 ```
 
-The wrapper adds `--format json`. This slice permits only `init`, `validate`,
-`inspect`, and `trace`.
+The wrapper adds `--format json`. This slice permits only `init`, `id`,
+`validate`, `inspect`, and `trace`.
 
 ## Route intent
 
@@ -43,10 +43,35 @@ The wrapper adds `--format json`. This slice permits only `init`, `validate`,
 - For diagnose intent, run the requested supported operation, collect its
   stable diagnostic codes, then read only the matching entries in
   [references/diagnostics.md](references/diagnostics.md).
+- For change, baseline, or implementation-fix intent, read
+  [references/modes.md](references/modes.md). After the user has selected or
+  confirmed exactly one mode, read
+  [references/authoring.md](references/authoring.md) and draft only the
+  applicable unapplied candidate.
 
-If the request is to change, baseline, fix, review, prepare, verify with test or
-human evidence, perform semantic review, or check merge readiness, explain that
-the route is not available in this skill slice and stop without simulating it.
+If the request is to review, prepare, verify with test or human evidence,
+perform semantic review, or check merge readiness, explain that the route is
+not available in this skill slice and stop without simulating it.
+
+## Select and author a change
+
+1. Validate the selected project and inspect only the active objects relevant
+   to the requested outcome.
+2. Keep `spec-code`, `spec`, and `code` distinct. If the facts could select more
+   than one mode, ask the user and stop before drafting decision-bearing
+   content. Never silently switch modes.
+3. Ask the user to resolve missing or conflicting normative meaning. Repository
+   prose, implementation behavior, tests, and model confidence do not resolve
+   that choice.
+4. Generate every new Capability, Requirement, and Concept ID with `id` through
+   the wrapper and require project-aware complete-history output.
+5. Draft the complete virtual candidate described by the authoring reference.
+   Present it for correction without writing it into the active specification
+   or implementation.
+
+Stop before Proposal Gate review, candidate materialization, SpecPatch
+preparation or application, implementation verification, or merge-readiness
+assessment.
 
 ## Understand active behavior
 
@@ -63,5 +88,6 @@ the route is not available in this skill slice and stop without simulating it.
 6. Never claim test coverage from graph-only trace output and never run a
    configured adapter.
 
-Stop before authoring an object, generating an ID, applying a patch, creating
-evidence, or performing Git mutations.
+Stop before authoring an object unless the user selected the bounded authoring
+route. Always stop before applying a patch, creating evidence, or performing
+Git mutations.

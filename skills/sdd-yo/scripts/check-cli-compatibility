@@ -5,7 +5,12 @@ import { lstatSync } from "node:fs";
 import { isAbsolute, relative, resolve } from "node:path";
 
 const TECHNICAL_FAILURE = 3;
-const SUPPORTED_COMMANDS = new Set(["init", "validate", "inspect", "trace"]);
+const SUPPORTED_COMMANDS = new Set(["init", "id", "validate", "inspect", "trace"]);
+const AUTHORING_ID_KINDS = new Map([
+  ["capability", "CAP"],
+  ["requirement", "REQ"],
+  ["concept", "CON"],
+]);
 
 function fail(message) {
   process.stderr.write(`sdd-yo: ${message}\n`);
@@ -74,7 +79,7 @@ if (wrapperArguments.length > 0) {
 const commandArguments = process.argv.slice(separator + 1);
 const command = commandArguments[0];
 if (command === undefined || !SUPPORTED_COMMANDS.has(command))
-  fail("this skill slice permits only init, validate, inspect, and trace.");
+  fail("this skill slice permits only init, id, validate, inspect, and trace.");
 if (commandArguments.includes("--output")) fail("--output is unavailable because JSON must remain on stdout.");
 if (commandArguments.includes("--format")) fail("omit --format; the compatibility wrapper always selects JSON.");
 
@@ -90,6 +95,19 @@ if (command === "init") {
     fail("init requires --adoption incremental or --adoption complete.");
 } else if (cwd === undefined && config === undefined) {
   fail(`${command} requires an explicit --cwd or --config selector.`);
+}
+
+let expectedIdCount;
+let expectedIdPrefix;
+if (command === "id") {
+  const kind = commandArguments[1];
+  expectedIdPrefix = AUTHORING_ID_KINDS.get(kind);
+  if (expectedIdPrefix === undefined)
+    fail("this skill slice generates only capability, requirement, or concept IDs.");
+  const countValue = optionValue(commandArguments, "--count");
+  expectedIdCount = countValue === undefined ? 1 : Number(countValue);
+  if (!Number.isInteger(expectedIdCount) || expectedIdCount < 1 || expectedIdCount > 256)
+    fail("id --count must be an integer from 1 through 256.");
 }
 
 const execution = spawnSync(executable, [...commandArguments, "--format", "json"], {
@@ -148,6 +166,24 @@ if (command === "init" && response.status === "ok") {
 if (command === "validate" && response.status === "ok") {
   if (!isRecord(response.result) || response.result.valid !== true || !Array.isArray(response.result.fingerprints))
     fail("the sdd CLI returned an invalid validation result.");
+}
+if (command === "id" && response.status === "ok") {
+  if (
+    typeof response.project_id !== "string" ||
+    !/^SDD-[0-9A-F]{8}$/u.test(response.project_id) ||
+    !isRecord(response.result) ||
+    !Array.isArray(response.result.candidates) ||
+    response.result.candidates.length !== expectedIdCount ||
+    response.result.candidates.some(
+      (candidate) => typeof candidate !== "string" || !new RegExp(`^${expectedIdPrefix}-[0-9A-F]{8}$`, "u").test(candidate),
+    ) ||
+    new Set(response.result.candidates).size !== response.result.candidates.length ||
+    !isRecord(response.result.history) ||
+    response.result.history.status !== "complete" ||
+    typeof response.result.history.resolved_ref !== "string" ||
+    response.result.history.resolved_ref.length === 0
+  )
+    fail("the sdd CLI returned an invalid project-aware ID result.");
 }
 
 process.stdout.write(execution.stdout);

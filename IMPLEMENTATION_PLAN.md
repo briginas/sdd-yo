@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 8 / Agent Skill
-- Current leaf: Mode selection and authoring routes
+- Current leaf: Review and preparation routes
 - Last updated: 2026-08-03
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -1009,11 +1009,23 @@ Mode: `spec-code`.
       `REQ-BFC18F28`, and `REQ-0361538D`; promotion of the Agent Skill
       Requirements remains deferred until the complete skill and its evals are
       verified.
-- [ ] **8.2 — Mode selection and authoring routes.** Route change, baseline,
+- [x] **8.2 — Mode selection and authoring routes.** Route change, baseline,
       and fix intents; ask before resolving ambiguous normative meaning, keep
       `spec-code`, `spec`, and `code` distinct, generate IDs only through the
       CLI, and draft complete virtual candidates without applying them. Do not
-      review, prepare, verify, or merge in this leaf.
+      review, prepare, verify, or merge in this leaf. The skill now loads
+      separate mode and authoring references only for these intents, requires
+      explicit human resolution of normative or mode ambiguity, and accepts
+      new Capability, Requirement, and Concept IDs only from project-aware,
+      complete-history `sdd id` JSON. Capability and Concept templates contain
+      no project-specific identity. The authoring handoff presents a logical
+      complete candidate with exact changed content while preserving unchanged
+      specification bytes; it does not materialize candidate files, run the
+      Proposal Gate, or modify specification or implementation files.
+      Requirement traceability: `REQ-E26A859E`, `REQ-2C8E8085`,
+      `REQ-8ACBC52D`, `REQ-DD91AD0F`, `REQ-8602BF02`, `REQ-0EF66B28`,
+      `REQ-EAC56CB1`, `REQ-065A9911`, and `REQ-40A38BA1`. Promotion of
+      `REQ-26234DC8` and `REQ-1DD46CA9` remains deferred to 8.5.
 - [ ] **8.3 — Review and preparation routes.** Present deterministic object
       deltas and semantic candidates, preserve human approval authority, and
       offer only the exact SpecPatch produced by current compatible CLI JSON.
@@ -1064,9 +1076,10 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 8.1 is complete. The next bounded work is 8.2: add change, baseline,
-and fix intent selection plus complete virtual candidate drafting. It must keep
-`spec-code`, `spec`, and `code` distinct, ask a human before resolving ambiguous
-normative meaning, and generate identities only through compatible CLI JSON.
-Review, preparation, verification, merge readiness, semantic-model integration,
-and adversarial evals remain in their later leaves.
+Milestone 8.2 is complete. The next bounded work is 8.3: present deterministic
+object deltas and semantic candidates from current compatible CLI JSON,
+preserve human approval authority, and offer only the exact SpecPatch produced
+by branch preparation. It must not create ApprovalEvidence, apply an unselected
+patch, verify implementation, or check merge readiness. Verification,
+merge-readiness, semantic-model integration, and adversarial evals remain in
+their later leaves.
