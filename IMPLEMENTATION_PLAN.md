@@ -1165,13 +1165,14 @@ Primary target Requirements:
           self-describing platform report only after the product, security,
           packaging, schema, build, type, and formatting checks pass; compare
           source and deterministic manifest fingerprints across macOS, Linux,
-          and Windows in a read-only workflow. The workflow uses current
-          official GitHub Action majors, read-only repository permissions,
-          disabled credential persistence, locked npm installation, immutable
-          per-platform artifacts, and an aggregate fail-closed comparison. Its
-          bootstrap tests and local report verify wiring but do not claim
-          platform evidence. Target traceability: proposed `REQ-F91F7D11`;
-          promotion remains deferred until 9.2c.2.
+          and Windows in a read-only workflow. The conformance jobs fetch
+          complete Git history so history-sensitive guarantees remain testable.
+          The workflow uses current official GitHub Action majors, read-only
+          repository permissions, disabled credential persistence, locked npm
+          installation, immutable per-platform artifacts, and an aggregate
+          fail-closed comparison. Its bootstrap tests and local report verify
+          wiring but do not claim platform evidence. Target traceability:
+          proposed `REQ-F91F7D11`; promotion remains deferred until 9.2c.2.
     - [ ] **9.2c.2 — Retained supported-platform evidence.** Run the matrix on
           the exact reviewed source, retain all three reports and the comparison
           summary, and require identical source and deterministic payload

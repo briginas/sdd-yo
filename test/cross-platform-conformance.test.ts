@@ -58,6 +58,7 @@ test("bootstrap cross-platform workflow is read-only and retains every platform 
   assert.match(workflow, /os: \[macos-latest, ubuntu-latest, windows-latest\]/u);
   assert.match(workflow, /persist-credentials: false/gu);
   assert.equal(workflow.match(/persist-credentials: false/gu)?.length, 2);
+  assert.equal(workflow.match(/fetch-depth: 0/gu)?.length, 1);
   assert.match(workflow, /actions\/upload-artifact@v7/gu);
   assert.equal(workflow.match(/actions\/upload-artifact@v7/gu)?.length, 2);
   assert.match(workflow, /actions\/download-artifact@v8/u);
