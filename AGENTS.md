@@ -5,11 +5,12 @@
 This repository develops SDD Yo: a repository-native specification governance
 system with a deterministic CLI and an optional Agent Skill.
 
-The repository is in incremental self-bootstrap. The TypeScript runtime,
-canonical `spec/`, deterministic read/inspect/diff/test-discovery commands,
-and Milestone 5 proposal validation, preparation, exact patch, and safe apply
-surfaces exist. Evidence composition, Verification and Merge gates, and the
-optional Agent Skill remain deferred.
+The repository has completed its incremental self-bootstrap MVP through
+Milestone 9. The TypeScript runtime, canonical `spec/`, deterministic version 1
+CLI, proposal and exact-patch workflow, evidence composition, Verification and
+Merge gates, enforced governed-scope integration, and optional `sdd-yo` Agent
+Skill exist. Milestone 10 now targets private package installation and first-run
+onboarding without registry or marketplace publication.
 
 ## Source-of-truth map
 
@@ -18,8 +19,12 @@ Read these in order before planning or editing:
 1. `proposal/README.md` — current package status and promotion rules.
 2. `proposal/spec/README.md` — complete target product behavior.
 3. `proposal/architecture/README.md` — implementation contracts and boundaries.
-4. `IMPLEMENTATION_PLAN.md` — active milestone and deferred work.
-5. `contracts/v1/inventory.json` — versioned contract and fixture inventory
+4. `IMPLEMENTATION_PLAN.md` — active milestone, immediate leaf, deferred work,
+   and candidate backlog.
+5. `plans/README.md` — completed-plan index; load historical plans only when the
+   current task needs their rationale, exact boundary, traceability, or evidence
+   pointers.
+6. `contracts/v1/inventory.json` — versioned contract and fixture inventory
    when working on Stage 0.
 
 Follow links from these maps only as needed for the current task. Do not load
@@ -47,8 +52,11 @@ the full specification when a small Capability or Requirement set is enough.
 - Package manager: npm.
 - Public executable: `sdd`.
 - Core behavior: provider-neutral library with a thin CLI adapter.
-- AI and the `sdd-yo` Agent Skill are deferred until the deterministic JSON CLI
-  contracts are stable.
+- Optional Agent Skill: `sdd-yo`, a progressive-disclosure orchestrator over
+  compatible deterministic CLI JSON; it does not replace CLI authority or human
+  evidence.
+- Distribution state: version `0.1.0` remains a private package; Milestone 10
+  validates local tarball installation without registry publication.
 
 Exact dependency versions are selected and locked during the scaffold
 milestone. Do not add a runtime dependency without explaining why a platform
