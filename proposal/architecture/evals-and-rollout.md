@@ -116,11 +116,16 @@ results.
 
 ## Existing-project onboarding eval
 
-Before the MVP is called usable, onboard at least three existing repositories:
+Before the MVP is called usable, onboard at least two existing repositories
+that cover both of these project shapes:
 
 1. a small single-language project with one test framework;
-2. a polyglot or multi-framework project;
-3. a monorepo with at least two independent SDD Projects.
+2. a polyglot or multi-framework project.
+
+An existing monorepo with at least two independent SDD Projects remains a
+post-MVP rollout study. The two MVP studies do not establish project or
+evidence isolation between sibling SDD Projects, cross-project behavior, or
+broader monorepo usability.
 
 Each study begins without restructuring production code or tests merely for
 the tool. Record the measurement method and the following values; an unavailable
@@ -237,7 +242,7 @@ response, and rollback policy.
 - [ ] Cross-platform conformance and security suites pass.
 - [ ] Performance targets are met or explicitly revised in the specification.
 - [ ] Adapter contract kit and JUnit importer are documented and tested.
-- [ ] Three existing-project onboarding studies complete.
+- [ ] Two complementary existing-project onboarding studies complete.
 - [ ] Agent Skill safety and workflow evals pass.
 - [ ] No known path permits a crash, stale artifact, or unavailable analyzer to
       produce `PASS`.

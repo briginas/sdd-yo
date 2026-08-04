@@ -12,12 +12,13 @@
 - Deferred study: an existing monorepo with two independent SDD Projects and
   explicit project and evidence isolation.
 
-This synthesis does not satisfy the three-repository MVP criterion in
-[`evals-and-rollout.md`](../proposal/architecture/evals-and-rollout.md), prove
-cross-project behavior, or establish whole-project completeness. The studies
-used `spec` Changes to baseline accepted existing behavior under incremental
-adoption; neither study claims that all behavior in its host repository is
-governed.
+This synthesis satisfies the two complementary existing-project study shapes
+required by the MVP checklist in
+[`evals-and-rollout.md`](../proposal/architecture/evals-and-rollout.md). It does
+not prove sibling-project isolation, cross-project behavior, broader monorepo
+usability, or whole-project completeness. The studies used `spec` Changes to
+baseline accepted existing behavior under incremental adoption; neither study
+claims that all behavior in its host repository is governed.
 
 ## Comparable results
 
@@ -213,7 +214,8 @@ results.
 
 - The existing-monorepo study and two-project isolation evidence remain
   deferred.
-- The three-repository MVP checklist item remains incomplete.
+- The two-study MVP onboarding criterion does not establish monorepo or
+  sibling-project isolation guarantees.
 - Cross-platform reproducibility, broader usability, and enforced merge policy
   remain outside these two studies.
 - No observation here authorizes a product fix, external-project mutation,

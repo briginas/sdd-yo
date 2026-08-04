@@ -1134,9 +1134,9 @@ Primary target Requirements:
 
 ## Deferred scope
 
-- Existing-monorepo onboarding and project/evidence-isolation rollout study;
-  the architecture's three-repository MVP criterion remains unmet and must not
-  be inferred from the two completed studies.
+- Post-MVP existing-monorepo onboarding and project/evidence-isolation rollout
+  study; its isolation, cross-project, and broader monorepo guarantees must not
+  be inferred from the two completed MVP studies.
 - Stage 0 verifier execution on Linux and Windows CI.
 - Hosted workflow service or durable workflow database.
 - Automatic branch, commit, push, merge, approval, or QA actions.
