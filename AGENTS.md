@@ -18,31 +18,35 @@ registry or marketplace publication.
 
 Read these in order before planning or editing:
 
-1. `proposal/README.md` — current package status and promotion rules.
-2. `proposal/spec/README.md` — complete target product behavior.
-3. `proposal/architecture/README.md` — implementation contracts and boundaries.
-4. `IMPLEMENTATION_PLAN.md` — active milestone, immediate leaf, deferred work,
+1. `IMPLEMENTATION_PLAN.md` — active milestone, immediate leaf, deferred work,
    and candidate backlog.
-5. `plans/README.md` — completed-plan index; load historical plans only when the
+2. `spec/README.md` — canonical implemented product behavior.
+3. `proposal/spec/README.md` — transition-only bootstrap target material during
+   Milestone 10; do not add new behavior to it.
+4. `proposal/README.md` and `proposal/architecture/bootstrap.md` — historical
+   promotion rules and current retirement inputs during Milestone 10.
+5. `proposal/architecture/README.md` — implementation contracts and boundaries.
+6. `plans/README.md` — completed-plan index; load historical plans only when the
    current task needs their rationale, exact boundary, traceability, or evidence
    pointers.
-6. `contracts/v1/inventory.json` — versioned contract and fixture inventory
-   when working on Stage 0.
+7. `contracts/v1/inventory.json` — versioned contract and fixture inventory when
+   working on Milestone 10 contract-oracle migration.
 
 Follow links from these maps only as needed for the current task. Do not load
 the full specification when a small Capability or Requirement set is enough.
 
 ## Canonical versus proposed behavior
 
-- `proposal/spec/` is a noncanonical target model. It may describe behavior
-  that does not exist.
+- During Milestone 10, `proposal/spec/` and the bootstrap procedure are read-only
+  transition inputs for inventory, contract-oracle decoupling, and retirement.
+  Do not add new Requirement definitions, use bootstrap promotion for new
+  behavior, or treat proposal IDs as normal-workflow reservations.
 - Root `spec/` content is canonical and may describe only behavior
   implemented and verified on the integration branch.
-- Promote Requirements incrementally according to
-  `proposal/architecture/bootstrap.md`.
-- Once a Requirement is promoted, change its normative meaning only in
-  canonical `spec/` through the applicable `spec-code`, `spec`, or `code`
-  workflow.
+- New behavior uses the applicable normal `spec-code`, `spec`, or `code`
+  workflow after the current retirement leaf permits it.
+- Existing canonical Requirement meaning changes only through the applicable
+  normal workflow; bootstrap history grants no alternate mutation path.
 - Architecture documents explain implementation choices. They do not override
   a product Requirement.
 

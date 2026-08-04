@@ -75,6 +75,60 @@ or regression surfaces. It removes only temporary promotion authority, resolves
 the remaining target-package backlog explicitly, and migrates still-useful
 fixture checks to an ordinary contract oracle.
 
+### Milestone 10 handoff contract
+
+Leaf 10.1 creates
+`plans/active/milestone-10-self-bootstrap-retirement.md` and links it from
+`plans/README.md`. That document is the reviewable disposition and dependency
+record consumed by 10.2 and 10.3; it is not a second active implementation plan.
+
+The 10.1 inventory starts from this checked baseline:
+
+- `proposal/spec/` contains exactly sixteen Requirement definitions absent from
+  canonical `spec/`;
+- every Capability ID defined under `proposal/spec/` is already present in
+  canonical `spec/`, so there are zero proposal-only Capabilities;
+- completed plans, Git history, and archived evidence are historical inputs, not
+  active authority to remove;
+- exact fixture payload bytes are retained when their malformed form,
+  canonical bytes, or fingerprint is an oracle; terminology alone does not
+  authorize rewriting them.
+
+The inventory contains two exhaustive tables. Each proposal-only Requirement
+row records its source ID and title, proposal path and anchor, canonical
+presence, implementation and test evidence, inbound inventory or fixture
+dependencies, one allowed disposition, rationale, retained provenance, and the
+future leaf or backlog destination. Each active-surface row records its path,
+current bootstrap role, maintained consumers, coverage or authority supplied,
+one of `retain-and-decouple`, `archive`, `rename`, or `remove`, the replacement
+or archive destination, and the leaf that executes the decision. A coverage map
+binds every retained Stage 0 verifier check to its intended contract-oracle
+replacement before 10.2 begins.
+
+Pre-canonical proposal IDs remain source provenance in the retirement record but
+lose active reservation when their proposal definitions are removed. A future
+normal Change generates and checks a fresh ID through `sdd id`; neither backlog
+prose nor a historical fixture occurrence reserves an object ID. The retirement
+record must not represent preserved backlog material as active Requirement
+blocks.
+
+For inventory scope, maintained active authority includes current repository
+instructions and plans, proposal and architecture maps, package commands,
+verifier and generator scripts, versioned inventory authority fields, maintained
+tests, fixture manifests, and documentation used by the required validation
+suite. Completed plans and immutable historical evidence are recorded only when
+needed to explain provenance or a disposition; they are not rewritten merely to
+remove bootstrap terminology.
+
+Leaf 10.1 is complete only when the Requirement table is set-equal to the sixteen
+proposal-only definitions, the zero proposal-only Capability baseline is
+reproduced, every maintained bootstrap-dependent path has one disposition,
+every retained check has a named coverage successor, local links resolve,
+Markdown formatting and `git diff --check` pass, and the diff changes only the
+retirement record, its plan index, this active plan, and transitional repository
+instructions. A missing, ambiguous, or multiply assigned item keeps 10.1
+incomplete.
+
 - [x] **10.0 — Active-plan compaction and private-distribution alignment.** Move
       the exact completed Milestones 0–9 execution record into the indexed
       completed-plan archive; keep only current state, active work, deferred
