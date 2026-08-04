@@ -3,8 +3,8 @@
 ## Status
 
 - State: active
-- Current phase: Milestone 9 / Enforced governed scope
-- Current leaf: Supported-platform conformance
+- Current phase: Milestone 9 complete / Enforced governed scope
+- Current leaf: None
 - Last updated: 2026-08-04
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
@@ -44,7 +44,8 @@ The public CLI exposes proposal validation, preparation, and application,
 finding validation, and advisory merge checking with versioned JSON and
 replaceable human output. It does not create branches, commits, tags, pushes,
 merges, approvals, or QA decisions. Cross-platform reproducibility evidence
-and enforced merge policy remain deferred. The optional progressive-disclosure
+and the provider-neutral enforced governed-scope integration contract are
+complete. The optional progressive-disclosure
 `sdd-yo` Agent Skill routes the complete version 1 workflow through compatible
 CLI JSON, preserves human and permission boundaries, and has passed its twelve
 scripted and identified human-review scenarios.
@@ -1132,7 +1133,7 @@ Primary target Requirements:
       modify branch protection, authenticate issuers, or supply owner
       acceptance. Requirement traceability: `REQ-220945C2`, `REQ-82256D82`,
       and `REQ-44068C1A`.
-- [ ] **9.2 — Meet documented performance and cross-platform targets.**
+- [x] **9.2 — Meet documented performance and cross-platform targets.**
   - [x] **9.2a — Deterministic performance benchmark harness.** Add a
         reproducible offline benchmark that measures validation of 10,000
         model objects and 100 MiB of specification content, TestIndex
@@ -1160,7 +1161,7 @@ Primary target Requirements:
         retained final-source report is
         `evals/performance/results/macos-arm64-node22-adoption-reporting.json`;
         this evidence applies only to the recorded environment.
-  - [ ] **9.2c — Supported-platform conformance.**
+  - [x] **9.2c — Supported-platform conformance.**
     - [x] **9.2c.1 — Cross-platform conformance harness and CI matrix.** Emit a
           self-describing platform report only after the product, security,
           packaging, schema, build, type, and formatting checks pass; compare
@@ -1173,12 +1174,14 @@ Primary target Requirements:
           fail-closed comparison. Its bootstrap tests and local report verify
           wiring but do not claim platform evidence. Target traceability:
           proposed `REQ-F91F7D11`; promotion remains deferred until 9.2c.2.
-    - [ ] **9.2c.2 — Retained supported-platform evidence.** Run the matrix on
+    - [x] **9.2c.2 — Retained supported-platform evidence.** Run the matrix on
           the exact reviewed source, retain all three reports and the comparison
           summary, and require identical source and deterministic payload
-          fingerprints. Stage 0 verifier execution on Linux and Windows remains
-          separately deferred.
-- [ ] **9.3 — Complete the MVP checklist in
+          fingerprints. GitHub Actions run `30935118969` passed on macOS,
+          Linux, and Windows for commit `23800ce`; the retained aggregate is
+          `MET`; `REQ-F91F7D11` is promoted. Stage 0 verifier execution on Linux
+          and Windows remains separately deferred.
+- [x] **9.3 — Complete the MVP checklist in
       `proposal/architecture/evals-and-rollout.md`.**
   - [x] **9.3a — Evidence-bound checklist audit.** Confirm grammar/schema
         synchronization through schema generation and Stage 0 verification;
@@ -1187,7 +1190,7 @@ Primary target Requirements:
         governed-scope documentation, and bootstrap promotion history. Leave
         cross-platform passage, the supported-platform no-false-`PASS` release
         claim, and human authorization understanding explicitly incomplete.
-  - [ ] **9.3b — Supported-platform release safety.** After 9.2c.2, confirm the
+  - [x] **9.3b — Supported-platform release safety.** After 9.2c.2, confirm the
         conformance and security suites pass on every supported platform and no
         known crash, stale-artifact, or unavailable-analyzer path can produce
         `PASS`.
@@ -1233,8 +1236,6 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-All locally executable Milestone 9 leaves and the identified project-owner
-acceptance are complete. Milestone 9.2c.2 now requires the exact reviewed source
-to be committed and made available to macOS, Linux, and Windows GitHub-hosted
-runners; retain the three reports and aggregate summary before claiming
-cross-platform conformance or promoting `REQ-F91F7D11`.
+Milestone 9 and the MVP checklist are complete. Select a new post-MVP bounded
+leaf before further implementation; the existing-monorepo onboarding study and
+Linux/Windows Stage 0 verifier execution remain explicitly deferred.

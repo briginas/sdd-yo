@@ -248,12 +248,12 @@ authorization, adapter execution, incident response, and rollback policy.
 ## MVP completion checklist
 
 - [x] Published Markdown grammar and JSON Schemas match implementation.
-- [ ] Cross-platform conformance and security suites pass.
+- [x] Cross-platform conformance and security suites pass.
 - [x] Performance targets are met or explicitly revised in the specification.
 - [x] Adapter contract kit and JUnit importer are documented and tested.
 - [x] Two complementary existing-project onboarding studies complete.
 - [x] Agent Skill safety and workflow evals pass.
-- [ ] No known path permits a crash, stale artifact, or unavailable analyzer to
+- [x] No known path permits a crash, stale artifact, or unavailable analyzer to
       produce `PASS`.
 - [x] Documentation clearly distinguishes governed scope from whole-project
       completeness.

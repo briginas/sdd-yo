@@ -1,0 +1,2 @@
+# Immutable external conformance evidence; preserve exact produced bytes.
+evals/conformance/results/*.json

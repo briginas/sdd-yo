@@ -61,6 +61,33 @@ output rendered as a replaceable view over the same result.
 - Stable diagnostic codes are available to automation.
 - Unknown newer major schemas are rejected.
 
+<a id="req-f91f7d11"></a>
+
+## REQ-F91F7D11 — Operate offline and reproducibly by default
+
+```sdd
+kind: quality
+verification: automated
+```
+
+### Relations <!-- sdd:relations -->
+
+- refers-to: [CON-EA57C937 — SDD Project](../concepts/sdd-project.md)
+
+### Statement <!-- sdd:statement -->
+
+The deterministic core shall require no network service or telemetry and shall
+produce equivalent fingerprints and JSON results on supported platforms for
+identical inputs.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- macOS, Linux, and Windows are supported.
+- Specification content is UTF-8.
+- Core processing does not transmit repository content.
+- Cache deletion does not change results.
+- AI and external issuer integrations remain explicit optional layers.
+
 <a id="req-24073d4f"></a>
 
 ## REQ-24073D4F — Query the active specification graph

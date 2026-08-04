@@ -14,7 +14,7 @@ import {
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 
-test("bootstrap cross-platform conformance manifest is deterministic and create-only", async () => {
+test("REQ-F91F7D11 cross-platform conformance manifest is deterministic and create-only", async () => {
   const first = await createPlatformConformanceReport({ root });
   const second = await createPlatformConformanceReport({ root });
   assert.equal(first.source_sha256, second.source_sha256);
@@ -33,7 +33,7 @@ test("bootstrap cross-platform conformance manifest is deterministic and create-
   }
 });
 
-test("bootstrap cross-platform comparison requires identical source and deterministic payloads", async () => {
+test("REQ-F91F7D11 cross-platform comparison requires identical source and deterministic payloads", async () => {
   const local = await createPlatformConformanceReport({ root, runId: "1", gitSha: "abc" });
   const reports = [
     { ...local, platform: "darwin" },
@@ -52,7 +52,7 @@ test("bootstrap cross-platform comparison requires identical source and determin
   );
 });
 
-test("bootstrap cross-platform workflow is read-only and retains every platform result", async () => {
+test("REQ-F91F7D11 cross-platform workflow is read-only and retains every platform result", async () => {
   const workflow = await readFile(join(root, ".github/workflows/cross-platform-conformance.yml"), "utf8");
   const attributes = await readFile(join(root, ".gitattributes"), "utf8");
   assert.equal(
@@ -69,4 +69,23 @@ test("bootstrap cross-platform workflow is read-only and retains every platform 
   assert.match(workflow, /actions\/download-artifact@v8/u);
   assert.doesNotMatch(workflow, /package-manager-cache/u);
   assert.doesNotMatch(workflow, /\b(push|pull_request_target):/u);
+});
+
+test("REQ-F91F7D11 retained supported-platform reports match their aggregate summary", async () => {
+  const resultsRoot = join(root, "evals/conformance/results");
+  const reports = await Promise.all(
+    ["macos.json", "linux.json", "windows.json"].map(async (name) =>
+      JSON.parse(await readFile(join(resultsRoot, name), "utf8")),
+    ),
+  );
+  const retainedSummary = JSON.parse(await readFile(join(resultsRoot, "summary.json"), "utf8"));
+  assert.ok(reports.every((report) => report.status === "MET"));
+  assert.ok(
+    reports.every(
+      (report) =>
+        report.external_run.run_id === "30935118969" &&
+        report.external_run.git_sha === "23800ce0081363853f063654c495c44aeb8f1c59",
+    ),
+  );
+  assert.deepEqual(comparePlatformConformanceReports(reports), retainedSummary);
 });
