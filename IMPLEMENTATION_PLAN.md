@@ -4,8 +4,8 @@
 
 - State: active
 - Current phase: Milestone 9 / Enforced governed scope
-- Current leaf: Operational authorization and rollback guidance
-- Last updated: 2026-08-03
+- Current leaf: Supported-platform conformance
+- Last updated: 2026-08-04
 - Target product behavior: [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture map:
   [`proposal/architecture/README.md`](proposal/architecture/README.md)
@@ -1124,13 +1124,97 @@ Primary target Requirements:
 
 ## Milestone 9 — Enforced governed scope
 
-- [ ] **9.1 — Operational authorization and rollback guidance.** Publish
-      operational authorization and rollback guidance.
-- [ ] Meet documented performance and cross-platform targets.
-- [ ] Complete the MVP checklist in
-      `proposal/architecture/evals-and-rollout.md`.
-- [ ] Allow external projects to require `PASS` only for declared governed
-      scope.
+- [x] **9.1 — Operational authorization and rollback guidance.** Publish an
+      operator-facing authorization record, fail-closed enforcement contract,
+      incident response, reversible external-enforcement rollback, restoration
+      procedure, and explicit project-owner acceptance boundary. The guide is
+      linked from the architecture and rollout maps and does not configure CI,
+      modify branch protection, authenticate issuers, or supply owner
+      acceptance. Requirement traceability: `REQ-220945C2`, `REQ-82256D82`,
+      and `REQ-44068C1A`.
+- [ ] **9.2 — Meet documented performance and cross-platform targets.**
+  - [x] **9.2a — Deterministic performance benchmark harness.** Add a
+        reproducible offline benchmark that measures validation of 10,000
+        model objects and 100 MiB of specification content, TestIndex
+        construction for 100,000 normalized test nodes, and warm graph-query
+        latency in isolated processes. Reports contain deterministic fixture
+        identity, median, p95, peak resident memory, platform, filesystem,
+        Node.js and tool versions, and distinct measurement and target states.
+        A smoke-profile bootstrap check verifies the harness without claiming
+        Requirement coverage or performance evidence. One full-scale harness
+        verification on macOS arm64 exposed the previous 5-second validation
+        target and missing TestIndex memory budget for product-owner decision.
+        This leaf neither revised targets nor claimed conformance. Target
+        traceability: proposed `REQ-F91F7D11`; no promotion occurred in this
+        harness leaf.
+  - [x] **9.2b — Performance target decision and evidence.** Apply the explicit
+        product-owner decisions of 25 seconds p95 for validation and 256 MiB
+        peak resident memory for TestIndex construction. Bind each report to
+        deterministic fixture and source fingerprints plus a complete
+        non-sensitive reference-machine profile, and retain results with
+        create-only output. The five-sample macOS arm64 report on Apple M2 Pro,
+        Node.js 22.22.3, and filesystem type `0x1a` records validation p95
+        20.246 seconds, TestIndex p95 72.275 milliseconds and peak resident
+        memory 187,072,512 bytes, warm inspect p95 1.966 milliseconds, and warm
+        trace p95 1.531 milliseconds; every accepted target is `MET`. The
+        retained final-source report is
+        `evals/performance/results/macos-arm64-node22-adoption-reporting.json`;
+        this evidence applies only to the recorded environment.
+  - [ ] **9.2c — Supported-platform conformance.**
+    - [x] **9.2c.1 — Cross-platform conformance harness and CI matrix.** Emit a
+          self-describing platform report only after the product, security,
+          packaging, schema, build, type, and formatting checks pass; compare
+          source and deterministic manifest fingerprints across macOS, Linux,
+          and Windows in a read-only workflow. The workflow uses current
+          official GitHub Action majors, read-only repository permissions,
+          disabled credential persistence, locked npm installation, immutable
+          per-platform artifacts, and an aggregate fail-closed comparison. Its
+          bootstrap tests and local report verify wiring but do not claim
+          platform evidence. Target traceability: proposed `REQ-F91F7D11`;
+          promotion remains deferred until 9.2c.2.
+    - [ ] **9.2c.2 — Retained supported-platform evidence.** Run the matrix on
+          the exact reviewed source, retain all three reports and the comparison
+          summary, and require identical source and deterministic payload
+          fingerprints. Stage 0 verifier execution on Linux and Windows remains
+          separately deferred.
+- [ ] **9.3 — Complete the MVP checklist in
+      `proposal/architecture/evals-and-rollout.md`.**
+  - [x] **9.3a — Evidence-bound checklist audit.** Confirm grammar/schema
+        synchronization through schema generation and Stage 0 verification;
+        bind the accepted performance report, documented and tested adapter
+        kit/JUnit importer, two completed onboarding studies, Agent Skill evals,
+        governed-scope documentation, and bootstrap promotion history. Leave
+        cross-platform passage, the supported-platform no-false-`PASS` release
+        claim, and human authorization understanding explicitly incomplete.
+  - [ ] **9.3b — Supported-platform release safety.** After 9.2c.2, confirm the
+        conformance and security suites pass on every supported platform and no
+        known crash, stale-artifact, or unavailable-analyzer path can produce
+        `PASS`.
+  - [x] **9.3c — Human role and authorization acceptance.** Ivan Briginas,
+        project owner, explicitly confirmed understanding and acceptance of the
+        issuer and actor authorization, adapter execution, incident response,
+        and rollback boundaries. Retain the exact statement and bind it to the
+        reviewed guide bytes in
+        `evals/governed-scope/ivan-briginas-acceptance.md`; do not infer the
+        decision from authored documentation or passing tests.
+- [x] **9.4 — Allow external projects to require `PASS` only for declared
+      governed scope.**
+  - [x] **9.4a — Honest adoption reporting and incremental PASS qualifier.**
+        Include configured adoption mode in successful and blocked validation
+        output, render incremental human MergeReport success with the exact
+        qualifier `PASS (governed scope only)`, and preserve structured `PASS`,
+        exact merge adoption metadata, exit code `0`, and all non-success
+        statuses. Promote and verify `REQ-7FCCF943`; related merge-readiness
+        traceability: `REQ-82256D82`.
+  - [x] **9.4b — External enforcement integration contract.** Publish and test
+        a provider-neutral fail-closed recipe that selects each externally
+        affected SDD Project, accepts only a complete current structured
+        MergeReport plus exit code `0`, labels incremental success honestly,
+        and leaves branch-protection mutation to an authorized external owner.
+        The integration test binds success to structured adoption mode and
+        governed project-scope fingerprint while retaining deterministic output,
+        exact exit mapping, and zero Git mutation. Requirement traceability:
+        `REQ-41EDF9A3`, `REQ-220945C2`, `REQ-82256D82`, and `REQ-44068C1A`.
 
 ## Deferred scope
 
@@ -1148,8 +1232,8 @@ Primary target Requirements:
 
 ## Immediate next leaf
 
-Milestone 8 is complete: all twelve Agent Skill scenarios have scripted and
-identified human-review coverage, and `REQ-26234DC8` plus `REQ-1DD46CA9` are
-canonical. The next bounded work is 9.1: publish operational authorization and
-rollback guidance. Do not absorb performance, cross-platform execution,
-enforcement, hosting, or merge-policy work into that documentation leaf.
+All locally executable Milestone 9 leaves and the identified project-owner
+acceptance are complete. Milestone 9.2c.2 now requires the exact reviewed source
+to be committed and made available to macOS, Linux, and Windows GitHub-hosted
+runners; retain the three reports and aggregate summary before claiming
+cross-platform conformance or promoting `REQ-F91F7D11`.

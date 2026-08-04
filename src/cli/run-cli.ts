@@ -204,6 +204,7 @@ export type IdResult = {
 
 export type ValidateResult = {
   readonly valid: true;
+  readonly adoption: { readonly mode: "incremental" | "complete" };
   readonly history: {
     readonly status: "complete" | "incomplete";
     readonly resolved_ref: GitObjectId | null;
@@ -216,6 +217,11 @@ export type ValidateResult = {
     readonly structural: string;
   }[];
   readonly comparison?: ValidateComparisonResult;
+};
+
+export type InvalidValidateResult = {
+  readonly valid: false;
+  readonly adoption: { readonly mode: "incremental" | "complete" };
 };
 
 export type InspectResult = {
@@ -266,6 +272,7 @@ export type CliResponse =
   | CliResponseEnvelope<"init", "ok", InitResult>
   | CliResponseEnvelope<"id", "ok", IdResult>
   | CliResponseEnvelope<"validate", "ok", ValidateResult>
+  | CliResponseEnvelope<"validate", "blocked", InvalidValidateResult>
   | CliResponseEnvelope<"inspect", "ok", InspectResult>
   | CliResponseEnvelope<"trace", "ok", TraceResult>
   | CliResponseEnvelope<"diff", "ok", DiffResult>
@@ -280,7 +287,7 @@ export type CliResponse =
       "ok" | "review_required",
       { readonly conflict_report: ConflictReport; readonly spec_patch: SpecPatch | null }
     >
-  | CliResponseEnvelope<Command, "blocked", { readonly valid: false } | null>
+  | CliResponseEnvelope<Exclude<Command, "validate">, "blocked", null>
   | CliResponseEnvelope<ResponseCommand, "error", null>;
 
 function cliDiagnostic(
@@ -1280,6 +1287,7 @@ function inspectResult(
 
 function validateResult(
   graph: ValidatedSpecificationGraph,
+  adoptionMode: ValidateResult["adoption"]["mode"],
   history: ValidateResult["history"],
   comparison?: ValidateComparisonResult,
 ): ValidateResult {
@@ -1290,6 +1298,7 @@ function validateResult(
   const requirements = [...graph.objects.values()].filter((object) => "anchor" in object);
   return {
     valid: true,
+    adoption: { mode: adoptionMode },
     history,
     object_counts: { capabilities: capabilities.length, requirements: requirements.length, concepts: concepts.length },
     fingerprints: [...graph.objects.entries()]
@@ -1348,21 +1357,24 @@ function knownRequirementIds(graph: ValidatedSpecificationGraph): ReadonlySet<Re
 function humanView(value: CliResponse): string {
   const lines = [`${value.command}: ${value.status}`];
   if (value.project_id !== null) lines.push(`project: ${value.project_id}`);
-  if (value.command === "validate" && value.status === "ok") {
-    const result = value.result as ValidateResult;
-    const counts = result.object_counts;
-    lines.push(
-      `objects: ${counts.capabilities} capabilities, ${counts.requirements} requirements, ${counts.concepts} concepts`,
-    );
-    if (result.comparison !== undefined)
+  if (value.command === "validate" && (value.status === "ok" || value.status === "blocked")) {
+    const result = value.result as ValidateResult | InvalidValidateResult;
+    lines.push(`adoption: ${result.adoption.mode}`);
+    if (result.valid) {
+      const counts = result.object_counts;
       lines.push(
-        `changed from: ${result.comparison.changed_from_ref}`,
-        `semantic: ${result.comparison.deltas.semantic.fingerprint}`,
-        `structural: ${result.comparison.deltas.structural.fingerprint}`,
-        result.comparison.deltas.verification === undefined
-          ? "verification: unavailable"
-          : `verification: ${result.comparison.deltas.verification.fingerprint}`,
+        `objects: ${counts.capabilities} capabilities, ${counts.requirements} requirements, ${counts.concepts} concepts`,
       );
+      if (result.comparison !== undefined)
+        lines.push(
+          `changed from: ${result.comparison.changed_from_ref}`,
+          `semantic: ${result.comparison.deltas.semantic.fingerprint}`,
+          `structural: ${result.comparison.deltas.structural.fingerprint}`,
+          result.comparison.deltas.verification === undefined
+            ? "verification: unavailable"
+            : `verification: ${result.comparison.deltas.verification.fingerprint}`,
+        );
+    }
   } else if (value.command === "inspect" && value.status === "ok") {
     const result = value.result as unknown as { object: { id: string; title: string }; document_path: string };
     lines.push(`${result.object.id} — ${result.object.title}`, `document: ${result.document_path}`);
@@ -1452,7 +1464,11 @@ function humanView(value: CliResponse): string {
   ) {
     const result = value.result as MergeReport;
     lines.push(
-      `readiness: ${result.status}`,
+      `readiness: ${
+        result.status === "PASS" && result.adoption.mode === "incremental"
+          ? "PASS (governed scope only)"
+          : result.status
+      }`,
       `branch head: ${result.branch_head}`,
       `integration: ${result.integration_ref}`,
       `merge base: ${result.merge_base}`,
@@ -2657,7 +2673,9 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
           invocation.command,
           project.configuration.project_id,
           technical ? "error" : "blocked",
-          invocation.command === "validate" && !technical ? { valid: false } : null,
+          invocation.command === "validate" && !technical
+            ? { valid: false, adoption: { mode: project.configuration.adoption.mode } }
+            : null,
           loaded.diagnostics,
         ),
         outputTarget,
@@ -2673,7 +2691,9 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
           invocation.command,
           project.configuration.project_id,
           "blocked",
-          invocation.command === "validate" ? { valid: false } : null,
+          invocation.command === "validate"
+            ? { valid: false, adoption: { mode: project.configuration.adoption.mode } }
+            : null,
           graph.diagnostics,
         ),
         outputTarget,
@@ -2826,9 +2846,13 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
         emit(
           runtime,
           invocation.format,
-          response("validate", project.configuration.project_id, "blocked", { valid: false }, [
-            duplicateProjectIdDiagnostic(),
-          ]),
+          response(
+            "validate",
+            project.configuration.project_id,
+            "blocked",
+            { valid: false, adoption: { mode: project.configuration.adoption.mode } },
+            [duplicateProjectIdDiagnostic()],
+          ),
           outputTarget,
         );
         return BLOCKED_EXIT_CODE;
@@ -2863,7 +2887,7 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
               "validate",
               project.configuration.project_id,
               "blocked",
-              { valid: false },
+              { valid: false, adoption: { mode: project.configuration.adoption.mode } },
               sortedReusedIds.map(reusedObjectIdDiagnostic),
             ),
             outputTarget,
@@ -2877,9 +2901,13 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
         emit(
           runtime,
           invocation.format,
-          response("validate", project.configuration.project_id, "blocked", { valid: false }, [
-            historyTechnicalDiagnostic(error),
-          ]),
+          response(
+            "validate",
+            project.configuration.project_id,
+            "blocked",
+            { valid: false, adoption: { mode: project.configuration.adoption.mode } },
+            [historyTechnicalDiagnostic(error)],
+          ),
           outputTarget,
         );
         return BLOCKED_EXIT_CODE;
@@ -2903,7 +2931,7 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
         invocation.command,
         project.configuration.project_id,
         "ok",
-        validateResult(graph.value, validationHistory, comparison),
+        validateResult(graph.value, project.configuration.adoption.mode, validationHistory, comparison),
         [...graph.diagnostics, ...historyDiagnostics],
       ),
       outputTarget,

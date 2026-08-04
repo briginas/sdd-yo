@@ -508,7 +508,7 @@ test("REQ-F7D39246 REQ-A76942A0 REQ-A3C3B779 findings validate imports explicit 
   assert.equal(escaped.exitCode, 3);
 });
 
-test("REQ-41EDF9A3 REQ-220945C2 REQ-82256D82 REQ-44068C1A merge check maps statuses without Git mutation", async () => {
+test("REQ-41EDF9A3 REQ-220945C2 REQ-82256D82 REQ-44068C1A REQ-7FCCF943 merge check maps statuses without Git mutation", async () => {
   const value = await fixture();
   const evidence = join(value.root, "evidence");
   const candidate = join(value.root, "candidate");
@@ -573,10 +573,13 @@ test("REQ-41EDF9A3 REQ-220945C2 REQ-82256D82 REQ-44068C1A merge check maps statu
   assert.equal(envelope.command, "merge.check");
   assert.equal(envelope.status, "ok");
   assert.equal(envelope.result.status, "PASS");
+  assert.equal(envelope.result.adoption.mode, "incremental");
+  assert.match(envelope.result.adoption.project_scope_fingerprint, /^sha256:[0-9a-f]{64}$/u);
   assert.ok(envelope.result.input_manifest.some((item) => item.artifact_type === "change_descriptor"));
   const human = await executeCli(baseArgs, value.root);
   assert.equal(human.exitCode, 0, human.output);
-  assert.match(human.output, /^readiness: PASS$/mu);
+  assert.match(human.output, /^readiness: PASS \(governed scope only\)$/mu);
+  assert.match(human.output, /^adoption: incremental$/mu);
   assert.match(human.output, /^affected requirements: REQ-A1000001$/mu);
   const blocked = await executeCli(
     baseArgs.map((argument) => (argument === "evidence/approval.json" ? "evidence/approval-blocked.json" : argument)),

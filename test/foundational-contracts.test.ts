@@ -68,12 +68,16 @@ test("bootstrap foundational generic envelopes and injected boundaries are struc
     message: "Unknown Requirement.",
     details: { target: "REQ-12345678", candidates: [] },
   };
-  const response: CliResponseEnvelope<"validate", "blocked", { readonly valid: false }> = {
+  const response: CliResponseEnvelope<
+    "validate",
+    "blocked",
+    { readonly valid: false; readonly adoption: { readonly mode: "incremental" } }
+  > = {
     schema_version: JSON_SCHEMA_VERSION_V1,
     command: "validate",
     project_id: projectIdValue,
     status: "blocked",
-    result: { valid: false },
+    result: { valid: false, adoption: { mode: "incremental" } },
     diagnostics: [diagnostic],
   };
   const result: ResultEnvelope<"ok", { readonly count: number }> = {

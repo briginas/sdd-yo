@@ -17,6 +17,7 @@ implementation choices into hidden product requirements.
 - [CLI](cli.md)
 - [Agent Skill](skill.md)
 - [Security and trust](security.md)
+- [Enforced governed scope operations](../../docs/enforced-governed-scope.md)
 - [Evals and rollout](evals-and-rollout.md)
 
 ## Architectural status

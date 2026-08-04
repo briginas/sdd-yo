@@ -1,0 +1,82 @@
+{
+  "schema_version": "1.0",
+  "benchmark": "sdd-performance",
+  "profile": "full",
+  "fixture_generation_version": "1",
+  "fixture_sha256": "sha256:db24d3be0298794fe52592a27b8a2f55062e323b8e60ad3038075823cf5214c5",
+  "source_sha256": "sha256:b77df6439e7a99c5b3cf10b089ef1108e8c6345c8421df673dfb13fb96f29ff0",
+  "scale": {
+    "capability_count": 100,
+    "requirements_per_capability": 99,
+    "model_object_count": 10000,
+    "specification_bytes": 104857600,
+    "test_node_count": 100000
+  },
+  "environment": {
+    "platform": "darwin",
+    "release": "25.5.0",
+    "architecture": "arm64",
+    "cpu_model": "Apple M2 Pro",
+    "logical_cpu_count": 12,
+    "total_memory_bytes": 34359738368,
+    "filesystem_type": "0x1a",
+    "node_version": "v22.22.3",
+    "tool_name": "sdd-yo",
+    "tool_version": "0.0.0"
+  },
+  "workloads": {
+    "validate": {
+      "measurement_status": "MEASURED",
+      "target_status": "MET",
+      "target": {
+        "p95_ms_max": 25000,
+        "peak_rss_bytes_max": null
+      },
+      "samples": 5,
+      "median_ms": 20035.457,
+      "p95_ms": 20246.38,
+      "peak_rss_bytes": 699154432,
+      "observed_count": 10000
+    },
+    "test_index": {
+      "measurement_status": "MEASURED",
+      "target_status": "MET",
+      "target": {
+        "p95_ms_max": null,
+        "peak_rss_bytes_max": 268435456
+      },
+      "samples": 5,
+      "median_ms": 68.534,
+      "p95_ms": 72.275,
+      "peak_rss_bytes": 187072512,
+      "observed_count": 100000
+    },
+    "warm_inspect": {
+      "measurement_status": "MEASURED",
+      "target_status": "MET",
+      "target": {
+        "p95_ms_max": 1000,
+        "peak_rss_bytes_max": null
+      },
+      "samples": 5,
+      "median_ms": 0.924,
+      "p95_ms": 1.966,
+      "peak_rss_bytes": 673464320,
+      "observed_count": 1
+    },
+    "warm_trace": {
+      "measurement_status": "MEASURED",
+      "target_status": "MET",
+      "target": {
+        "p95_ms_max": 1000,
+        "peak_rss_bytes_max": null
+      },
+      "samples": 5,
+      "median_ms": 1.457,
+      "p95_ms": 1.531,
+      "peak_rss_bytes": 702316544,
+      "observed_count": 1
+    }
+  },
+  "target_status": "MET"
+}

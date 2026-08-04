@@ -373,7 +373,7 @@ test("REQ-8B656FC5 incomplete history warns on validate and blocks reserved ID i
   );
 });
 
-test("REQ-0361538D REQ-7C848ED0 validate emits deterministic versioned JSON and a human view", async () => {
+test("REQ-0361538D REQ-7C848ED0 REQ-7FCCF943 validate emits deterministic versioned JSON and a human view", async () => {
   const first = await execute(["validate", "--format", "json"]);
   const second = await execute(["validate", "--format", "json"]);
   assert.equal(first.exitCode, 0);
@@ -386,6 +386,7 @@ test("REQ-0361538D REQ-7C848ED0 validate emits deterministic versioned JSON and 
     status: string;
     result: {
       valid: boolean;
+      adoption: { mode: string };
       history: { status: string; resolved_ref: string | null };
       fingerprints: readonly { id: string }[];
     };
@@ -406,7 +407,8 @@ test("REQ-0361538D REQ-7C848ED0 validate emits deterministic versioned JSON and 
 
   const human = await execute(["validate"]);
   assert.equal(human.exitCode, 0);
-  assert.match(human.standardOutput, /^validate: ok\nproject: SDD-17EF8B29\nobjects:/u);
+  assert.equal(value.result.adoption.mode, "incremental");
+  assert.match(human.standardOutput, /^validate: ok\nproject: SDD-17EF8B29\nadoption: incremental\nobjects:/u);
 
   const nearestFromChild = await execute(["validate", "--cwd", "src", "--format", "json"]);
   const explicit = await execute(["validate", "--config", ".sdd/config.yaml", "--format", "json"]);
@@ -511,9 +513,11 @@ test("REQ-7D93D64A maps blocking validation and technical failures to nonzero ex
   assert.equal(blocked.exitCode, 1);
   const blockedValue = JSON.parse(blocked.standardOutput) as {
     status: string;
+    result: { valid: false; adoption: { mode: string } };
     diagnostics: readonly { code: string; details: { remediation?: string } }[];
   };
   assert.equal(blockedValue.status, "blocked");
+  assert.deepEqual(blockedValue.result, { valid: false, adoption: { mode: "incremental" } });
   assert.equal(blockedValue.diagnostics[0]?.code, "SDD_GRAPH_LINK_BROKEN");
   assert.equal(typeof blockedValue.diagnostics[0]?.details.remediation, "string");
 

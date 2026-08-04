@@ -63,3 +63,28 @@ stable `SDD-XXXXXXXX` identifier.
 - Moving the project directory does not change the identifier.
 - Duplicate SDD Project identifiers within one Git repository block
   validation.
+
+<a id="req-7fccf943"></a>
+
+## REQ-7FCCF943 — Expose adoption state honestly
+
+```sdd
+kind: invariant
+verification: automated
+```
+
+### Relations <!-- sdd:relations -->
+
+- refers-to: [CON-EA57C937 — SDD Project](../concepts/sdd-project.md)
+
+### Statement <!-- sdd:statement -->
+
+Every validation and merge-readiness report shall identify the SDD Project and
+its configured adoption mode without presenting incremental scope as complete.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- Structured output includes `project_id` and adoption mode.
+- Human output distinguishes `PASS (governed scope only)` from complete
+  project `PASS`.
+- Missing or invalid adoption configuration blocks strict processing.

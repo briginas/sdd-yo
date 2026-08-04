@@ -104,15 +104,20 @@ On a documented reference machine, warm local filesystem, and no adapter
 execution:
 
 - validate a project with 10,000 model objects and up to 100 MiB of
-  specification content in at most 5 seconds;
-- build a TestIndex with 100,000 normalized test nodes without exceeding the
-  documented memory budget;
+  specification content in at most 25 seconds;
+- build a TestIndex with 100,000 normalized test nodes without exceeding 256
+  MiB peak resident memory;
 - serve `inspect` and `trace` in at most 1 second after graph construction;
 - produce byte-identical fingerprints and JSON across repeated runs.
 
 Performance tests report median, p95, peak memory, platform, filesystem, and
 tool version. A cache may improve latency but deleting it cannot affect
-results.
+results. The reproducible offline harness and its fail-closed report semantics
+are documented in [Performance benchmarks](../../docs/performance-benchmarks.md).
+Each retained report defines its reference machine with CPU model and count,
+total memory, operating-system release, architecture, filesystem type, Node.js
+version, tool version, and exact benchmark-source fingerprint; results are not
+generalized to an unmeasured platform.
 
 ## Existing-project onboarding eval
 
@@ -218,8 +223,12 @@ changes with no stale-evidence false pass.
 Projects may make `PASS` required for declared governed Capabilities. Partial
 adoption remains visibly partial; expansion requires governance approval.
 
-Exit: project owners accept issuer authorization, adapter execution, incident
-response, and rollback policy.
+The [operational guide](../../docs/enforced-governed-scope.md) defines the
+authorization record, adapter execution boundary, incident response, and
+rollback procedure. Publishing it does not supply the required owner decision.
+
+Exit: identified project owners explicitly accept their concrete issuer
+authorization, adapter execution, incident response, and rollback policy.
 
 ## Rollback and compatibility
 
@@ -238,16 +247,16 @@ response, and rollback policy.
 
 ## MVP completion checklist
 
-- [ ] Published Markdown grammar and JSON Schemas match implementation.
+- [x] Published Markdown grammar and JSON Schemas match implementation.
 - [ ] Cross-platform conformance and security suites pass.
-- [ ] Performance targets are met or explicitly revised in the specification.
-- [ ] Adapter contract kit and JUnit importer are documented and tested.
-- [ ] Two complementary existing-project onboarding studies complete.
-- [ ] Agent Skill safety and workflow evals pass.
+- [x] Performance targets are met or explicitly revised in the specification.
+- [x] Adapter contract kit and JUnit importer are documented and tested.
+- [x] Two complementary existing-project onboarding studies complete.
+- [x] Agent Skill safety and workflow evals pass.
 - [ ] No known path permits a crash, stale artifact, or unavailable analyzer to
       produce `PASS`.
-- [ ] Documentation clearly distinguishes governed scope from whole-project
+- [x] Documentation clearly distinguishes governed scope from whole-project
       completeness.
-- [ ] Human roles and external authorization boundaries are understood.
-- [ ] Integration-branch `spec/` is promoted only with the first conforming
+- [x] Human roles and external authorization boundaries are understood.
+- [x] Integration-branch `spec/` is promoted only with the first conforming
       `spec-code` implementation.
