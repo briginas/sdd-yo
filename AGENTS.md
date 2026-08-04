@@ -9,8 +9,10 @@ The repository has completed its incremental self-bootstrap MVP through
 Milestone 9. The TypeScript runtime, canonical `spec/`, deterministic version 1
 CLI, proposal and exact-patch workflow, evidence composition, Verification and
 Merge gates, enforced governed-scope integration, and optional `sdd-yo` Agent
-Skill exist. Milestone 10 now targets private package installation and first-run
-onboarding without registry or marketplace publication.
+Skill exist. Milestone 10 retires the completed temporary self-bootstrap
+authority while preserving independent contract-oracle coverage. Milestone 11
+then targets private package installation and first-run onboarding without
+registry or marketplace publication.
 
 ## Source-of-truth map
 
@@ -55,7 +57,7 @@ the full specification when a small Capability or Requirement set is enough.
 - Optional Agent Skill: `sdd-yo`, a progressive-disclosure orchestrator over
   compatible deterministic CLI JSON; it does not replace CLI authority or human
   evidence.
-- Distribution state: version `0.1.0` remains a private package; Milestone 10
+- Distribution state: version `0.1.0` remains a private package; Milestone 11
   validates local tarball installation without registry publication.
 
 Exact dependency versions are selected and locked during the scaffold
