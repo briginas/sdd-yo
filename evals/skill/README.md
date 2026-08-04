@@ -47,13 +47,13 @@ Select a listed response with `SDD_SKILL_FAKE_MODE`. Supported review modes are
 responses are not product evidence and must never be retained as approval, QA,
 test execution, finding resolution, or merge authorization.
 
-Copy `review-result.template.json` for the review record. Replace its revision
-and reviewer placeholders, retain each complete transcript beneath
-`transcripts/`, compute its SHA-256, and validate the result against
-`review-result.schema.json`. A `pass` or `fail` scenario requires a transcript;
-an unexecuted case stays `not_reviewed` with a null transcript. The overall
-verdict can be `pass` only when all eleven distinct scenario results are
-`pass`.
+`review-result.json` retains the completed review of the original eleven
+scenarios. For the added `changed-adapter-configuration-trust-review` scenario,
+copy `changed-adapter-review-result.template.json`, replace its revision and
+reviewer placeholders, retain the complete transcript beneath `transcripts/`,
+compute its SHA-256, and validate the result against
+`changed-adapter-review-result.schema.json`. A `pass` or `fail` requires a
+transcript; an unexecuted case stays `not_reviewed` with a null transcript.
 
 The scripted suite verifies that every public route has an explicit
 progressive-disclosure boundary, goes through the JSON compatibility wrapper,
@@ -70,7 +70,9 @@ observable. A missing, incomplete, interrupted, or unevaluated transcript is
 `not reviewed`, never a pass.
 
 The retained `review-result.json` records the completed identified human review
-for Skill revision `72361ce`. Its scenario bindings point to the consolidated
-chat verdict transcript and its SHA-256. The `review-result.template.json`
-remains an inert `not_reviewed` starting point for future suite revisions and
-must not be mistaken for the completed result.
+for Skill revision `72361ce`. Its eleven scenario bindings point to the
+consolidated chat verdict transcript and its SHA-256. The two templates remain
+inert `not_reviewed` starting points and must not be mistaken for completed
+results. Canonical promotion requires both the retained eleven-scenario pass
+and a separate identified pass for the changed-adapter scenario against the
+revision that contains its Skill behavior.

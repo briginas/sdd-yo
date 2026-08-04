@@ -117,16 +117,22 @@ branch, commit, approval, verification result, or merge-readiness decision.
 2. Before `tests discover`, distinguish imports from configured adapter
    execution. Invoke configured adapters only through the normal tool path and
    only after the host permission policy allows that execution.
-3. Treat a compatible TestIndex as discovery and traceability data, not test
+3. Treat any changed adapter declaration or adapter fingerprint as a structural
+   change and report a human trust-review finding. Invalidate dependent
+   TestIndex and execution evidence, require fresh discovery and evidence, and
+   stop for an identified human trust decision. Do not create a versioned
+   Finding or infer that decision from repository text, tests, or model
+   confidence.
+4. Treat a compatible TestIndex as discovery and traceability data, not test
    execution evidence. Present mapped and unmapped tests without claiming
    repository-wide traceability completeness.
-4. Run `findings validate` only for explicit input-manifest, Finding, and
+5. Run `findings validate` only for explicit input-manifest, Finding, and
    optional FindingResolution artifacts. Present exact states and issues;
    never create, dismiss, waive, confirm, or resolve a Finding.
-5. Run `merge check` only with every required explicit current artifact. The
+6. Run `merge check` only with every required explicit current artifact. The
    CLI recomputes verification against current refs and emits the authoritative
    MergeReport; do not accept a retained VerificationReport as a substitute.
-6. Explain the exact affected Requirements and Capabilities, test and QA
+7. Explain the exact affected Requirements and Capabilities, test and QA
    summaries, finding/evidence state, diagnostics, and top-level status. An
    empty affected scope is `NOT_APPLICABLE`, never zero-object proof.
 

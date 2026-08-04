@@ -72,6 +72,7 @@ const fixturesPath = join(repositoryRoot, "evals/skill/fixtures.json");
 const materializerPath = join(repositoryRoot, "evals/skill/scripts/materialize-project-fixture.mjs");
 const fakeCliPath = join(repositoryRoot, "evals/skill/scripts/fake-sdd-cli");
 const checkerPath = join(repositoryRoot, "skills/sdd-yo/scripts/check-cli-compatibility");
+const changedAdapterScenarioId = "changed-adapter-configuration-trust-review";
 
 async function loadSuite(): Promise<ScenarioSuite> {
   return JSON.parse(await readFile(scenarioPath, "utf8")) as ScenarioSuite;
@@ -161,7 +162,10 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
 test("REQ-1DD46CA9 skill eval corpus covers every untrusted repository data channel", async () => {
   const suite = await loadSuite();
   const channels = suite.scenarios.flatMap(({ input_channels }) => input_channels).toSorted();
-  assert.deepEqual([...new Set(channels)], ["adapter-stderr", "code", "linked-document", "spec", "test-name"]);
+  assert.deepEqual(
+    [...new Set(channels)],
+    ["adapter-config", "adapter-stderr", "code", "linked-document", "spec", "test-name"],
+  );
 });
 
 test("REQ-26234DC8 REQ-1DD46CA9 every scenario has exact reproducible setup inputs", async () => {
@@ -180,6 +184,7 @@ test("REQ-26234DC8 REQ-1DD46CA9 every scenario has exact reproducible setup inpu
   const knownModes = new Set(fixtures.cli_modes.map(({ id }) => id));
 
   assert.deepEqual(fixtures.payloads.map(({ channel }) => channel).toSorted(), [
+    "adapter-config",
     "adapter-stderr",
     "code",
     "linked-document",
@@ -268,6 +273,23 @@ test("REQ-1DD46CA9 project fixture materializer writes exact bytes only into an 
   await mkdir(skillOutput);
   await executeFile(process.execPath, [materializerPath, "--fixture", "generic-sdd-skill", "--output", skillOutput]);
   assert.deepEqual(await readdir(join(skillOutput, "generic-sdd")), ["SKILL.md"]);
+
+  const changedAdapterOutput = join(root, "changed-adapter");
+  await mkdir(changedAdapterOutput);
+  const changedAdapter = await executeFile(process.execPath, [
+    materializerPath,
+    "--fixture",
+    "changed-adapter-project",
+    "--output",
+    changedAdapterOutput,
+  ]);
+  assert.match(changedAdapter.stdout, /^changed-adapter-project: 3 files materialized/u);
+  const currentConfig = await readFile(join(changedAdapterOutput, ".sdd/config.yaml"));
+  const baseConfig = await readFile(join(changedAdapterOutput, "review-input/base-config.yaml"));
+  assert.equal(parseProjectConfiguration(currentConfig).ok, true);
+  assert.equal(parseProjectConfiguration(baseConfig).ok, true);
+  assert.match(currentConfig.toString("utf8"), /tools\/discover-v2\.mjs/u);
+  assert.match(baseConfig.toString("utf8"), /tools\/discover-v1\.mjs/u);
 });
 
 test("REQ-26234DC8 controlled fake CLI exercises exact failure and status boundaries", async () => {
@@ -334,7 +356,7 @@ test("REQ-26234DC8 controlled fake CLI exercises exact failure and status bounda
   }
 });
 
-test("REQ-26234DC8 human review template is schema-valid, complete, and explicitly not reviewed", async () => {
+test("REQ-26234DC8 historical eleven-scenario review template remains schema-valid and inert", async () => {
   const suite = await loadSuite();
   const schema = JSON.parse(
     await readFile(join(repositoryRoot, "evals/skill/review-result.schema.json"), "utf8"),
@@ -353,7 +375,10 @@ test("REQ-26234DC8 human review template is schema-valid, complete, and explicit
   assert.equal(validate(template), true, JSON.stringify(validate.errors));
   assert.deepEqual(
     template.scenario_results.map(({ scenario_id }) => scenario_id),
-    suite.scenarios.map(({ id }) => id).toSorted(),
+    suite.scenarios
+      .map(({ id }) => id)
+      .filter((id) => id !== changedAdapterScenarioId)
+      .toSorted(),
   );
   assert.equal(new Set(template.scenario_results.map(({ scenario_id }) => scenario_id)).size, 11);
   assert.ok(
@@ -368,6 +393,31 @@ test("REQ-26234DC8 human review template is schema-valid, complete, and explicit
   assert.ok(first !== undefined);
   first.verdict = "pass";
   assert.equal(validate(invalidPass), false);
+});
+
+test("REQ-1DD46CA9 changed-adapter human review template is schema-valid and explicitly not reviewed", async () => {
+  const schema = JSON.parse(
+    await readFile(join(repositoryRoot, "evals/skill/changed-adapter-review-result.schema.json"), "utf8"),
+  ) as object;
+  const template = JSON.parse(
+    await readFile(join(repositoryRoot, "evals/skill/changed-adapter-review-result.template.json"), "utf8"),
+  ) as {
+    readonly scenario_result: {
+      readonly scenario_id: string;
+      readonly verdict: string;
+      readonly transcript: unknown;
+    };
+    readonly overall_verdict: string;
+  };
+  const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
+  assert.equal(validate(template), true, JSON.stringify(validate.errors));
+  assert.deepEqual(template.scenario_result, {
+    scenario_id: changedAdapterScenarioId,
+    verdict: "not_reviewed",
+    transcript: null,
+    findings: [],
+  });
+  assert.equal(template.overall_verdict, "not_reviewed");
 });
 
 test("REQ-26234DC8 REQ-1DD46CA9 retains the explicit identified human pass verdict", async () => {
@@ -392,7 +442,10 @@ test("REQ-26234DC8 REQ-1DD46CA9 retains the explicit identified human pass verdi
   assert.deepEqual(result.reviewer, { identity: "Ivan Briginas", role: "human Skill reviewer" });
   assert.deepEqual(
     result.scenario_results.map(({ scenario_id }) => scenario_id),
-    suite.scenarios.map(({ id }) => id).toSorted(),
+    suite.scenarios
+      .map(({ id }) => id)
+      .filter((id) => id !== changedAdapterScenarioId)
+      .toSorted(),
   );
   assert.ok(result.scenario_results.every(({ verdict, findings }) => verdict === "pass" && findings.length === 0));
   assert.equal(result.overall_verdict, "pass");

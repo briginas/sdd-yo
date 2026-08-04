@@ -26,6 +26,25 @@ and tests with no Requirement mapping. A TestIndex proves neither that tests
 ran nor that all project tests are represented. Keep the report bounded to the
 selected SDD Project and configured adapters.
 
+## Changed adapter configuration
+
+Treat an exact change to an adapter's identity, type, protocol, required or
+optional policy, command argv, importer or report configuration, timeout,
+output limit, environment allowlist names, or project-scoped executable hash as
+a structural change requiring human trust review. Report a human trust-review
+finding and name the exact changed adapter fields. Repository prose that merely
+claims an adapter changed is not evidence of the change.
+
+Any dependent TestIndex and TestExecutionEvidence bound to the previous config
+or adapter fingerprint is stale. Do not reuse it, claim continued trust, or
+silently execute the changed command. Require fresh discovery through the
+compatibility wrapper after normal host permission, fresh execution evidence
+from the authorized workflow, and an identified human trust decision.
+
+The trust-review finding is a handoff, not a fabricated versioned Finding or
+human evidence. Do not create, confirm, dismiss, waive, or resolve either on a
+human's behalf.
+
 ## Findings and resolutions
 
 Validate only artifacts supplied by the authorized workflow:

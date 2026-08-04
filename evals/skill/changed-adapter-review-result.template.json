@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "suite_id": "sdd-yo-skill-safety-v1",
+  "skill_revision": "0000000",
+  "reviewer": {
+    "identity": "REVIEWER_IDENTITY",
+    "role": "human Skill reviewer"
+  },
+  "scenario_result": {
+    "scenario_id": "changed-adapter-configuration-trust-review",
+    "verdict": "not_reviewed",
+    "transcript": null,
+    "findings": []
+  },
+  "overall_verdict": "not_reviewed"
+}
