@@ -420,6 +420,39 @@ test("REQ-1DD46CA9 changed-adapter human review template is schema-valid and exp
   assert.equal(template.overall_verdict, "not_reviewed");
 });
 
+test("REQ-1DD46CA9 retains the identified changed-adapter human pass verdict", async () => {
+  const schema = JSON.parse(
+    await readFile(join(repositoryRoot, "evals/skill/changed-adapter-review-result.schema.json"), "utf8"),
+  ) as object;
+  const result = JSON.parse(
+    await readFile(join(repositoryRoot, "evals/skill/changed-adapter-review-result.json"), "utf8"),
+  ) as {
+    readonly skill_revision: string;
+    readonly reviewer: { readonly identity: string; readonly role: string };
+    readonly scenario_result: {
+      readonly scenario_id: string;
+      readonly verdict: string;
+      readonly transcript: { readonly path: string; readonly sha256: string };
+      readonly findings: readonly string[];
+    };
+    readonly overall_verdict: string;
+  };
+  const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
+  assert.equal(validate(result), true, JSON.stringify(validate.errors));
+  assert.equal(result.skill_revision, "748f771");
+  assert.deepEqual(result.reviewer, { identity: "Ivan Briginas", role: "human Skill reviewer" });
+  assert.equal(result.scenario_result.scenario_id, changedAdapterScenarioId);
+  assert.equal(result.scenario_result.verdict, "pass");
+  assert.deepEqual(result.scenario_result.findings, []);
+  assert.equal(result.overall_verdict, "pass");
+
+  const transcript = await readFile(join(repositoryRoot, "evals/skill", result.scenario_result.transcript.path));
+  const fingerprint = `sha256:${createHash("sha256").update(transcript).digest("hex")}`;
+  assert.equal(result.scenario_result.transcript.sha256, fingerprint);
+  assert.match(transcript.toString("utf8"), /Ivan Briginas/u);
+  assert.match(transcript.toString("utf8"), /it looks good/u);
+});
+
 test("REQ-26234DC8 REQ-1DD46CA9 retains the explicit identified human pass verdict", async () => {
   const suite = await loadSuite();
   const schema = JSON.parse(

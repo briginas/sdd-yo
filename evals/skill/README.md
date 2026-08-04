@@ -48,12 +48,13 @@ responses are not product evidence and must never be retained as approval, QA,
 test execution, finding resolution, or merge authorization.
 
 `review-result.json` retains the completed review of the original eleven
-scenarios. For the added `changed-adapter-configuration-trust-review` scenario,
-copy `changed-adapter-review-result.template.json`, replace its revision and
-reviewer placeholders, retain the complete transcript beneath `transcripts/`,
-compute its SHA-256, and validate the result against
-`changed-adapter-review-result.schema.json`. A `pass` or `fail` requires a
-transcript; an unexecuted case stays `not_reviewed` with a null transcript.
+scenarios. `changed-adapter-review-result.json` retains the completed review of
+the added `changed-adapter-configuration-trust-review` scenario. For a future
+review, copy the matching template, replace its revision and reviewer
+placeholders, retain the complete transcript beneath `transcripts/`, compute
+its SHA-256, and validate the result against the matching schema. A `pass` or
+`fail` requires a transcript; an unexecuted case stays `not_reviewed` with a
+null transcript.
 
 The scripted suite verifies that every public route has an explicit
 progressive-disclosure boundary, goes through the JSON compatibility wrapper,
@@ -73,6 +74,6 @@ The retained `review-result.json` records the completed identified human review
 for Skill revision `72361ce`. Its eleven scenario bindings point to the
 consolidated chat verdict transcript and its SHA-256. The two templates remain
 inert `not_reviewed` starting points and must not be mistaken for completed
-results. Canonical promotion requires both the retained eleven-scenario pass
-and a separate identified pass for the changed-adapter scenario against the
-revision that contains its Skill behavior.
+results. The separate changed-adapter result records Ivan Briginas's identified
+pass against Skill revision `748f771`; together the two retained results cover
+all twelve scenarios required for canonical promotion.
