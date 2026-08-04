@@ -54,6 +54,11 @@ test("bootstrap cross-platform comparison requires identical source and determin
 
 test("bootstrap cross-platform workflow is read-only and retains every platform result", async () => {
   const workflow = await readFile(join(root, ".github/workflows/cross-platform-conformance.yml"), "utf8");
+  const attributes = await readFile(join(root, ".gitattributes"), "utf8");
+  assert.equal(
+    attributes,
+    "* text=auto eol=lf\nfixtures/v1/markdown/documents/line-ending-normalization/crlf/README.md -text whitespace=cr-at-eol\n",
+  );
   assert.match(workflow, /^permissions:\n  contents: read$/mu);
   assert.match(workflow, /os: \[macos-latest, ubuntu-latest, windows-latest\]/u);
   assert.match(workflow, /persist-credentials: false/gu);

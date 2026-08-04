@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { mkdtemp, mkdir, readFile, realpath, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { describe, test } from "node:test";
 
 import { isProjectPath, parseProjectConfiguration, resolveConfiguredPath, resolveProject } from "../src/index.ts";
@@ -159,7 +159,8 @@ describe("REQ-0361538D project configuration", () => {
     const pathValue: unknown = "spec/README.md";
     assert.ok(isProjectPath(pathValue));
     const projectPath: ProjectPath = pathValue;
-    assert.equal(resolveConfiguredPath("/repo/packages/a", projectPath), "/repo/packages/a/spec/README.md");
+    const projectRoot = resolve("repo", "packages", "a");
+    assert.equal(resolveConfiguredPath(projectRoot, projectPath), join(projectRoot, "spec", "README.md"));
   });
 });
 

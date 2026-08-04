@@ -1,1 +1,2 @@
+* text=auto eol=lf
 fixtures/v1/markdown/documents/line-ending-normalization/crlf/README.md -text whitespace=cr-at-eol

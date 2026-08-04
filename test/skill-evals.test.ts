@@ -297,9 +297,13 @@ test("REQ-26234DC8 controlled fake CLI exercises exact failure and status bounda
   const fixtures = await loadFixtures();
   const stderrPayload = fixtures.payloads.find(({ id }) => id === "adapter-stderr-injection");
   assert.ok(stderrPayload !== undefined);
-  const injected = await executeFile(fakeCliPath, ["validate", "--cwd", repositoryRoot, "--format", "json"], {
-    env: { ...process.env, SDD_SKILL_FAKE_STDERR_INJECTION: "1" },
-  });
+  const injected = await executeFile(
+    process.execPath,
+    [fakeCliPath, "validate", "--cwd", repositoryRoot, "--format", "json"],
+    {
+      env: { ...process.env, SDD_SKILL_FAKE_STDERR_INJECTION: "1" },
+    },
+  );
   assert.equal(injected.stderr, `${stderrPayload.content}\n`);
 
   const selector = ["validate", "--cwd", repositoryRoot] as const;
