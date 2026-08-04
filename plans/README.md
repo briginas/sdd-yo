@@ -32,3 +32,31 @@ pointer.
   selected, rejected, or superseded.
 - Never infer current product behavior from a completed plan when canonical
   specification or current implementation evidence is available.
+
+## Milestone closeout contract
+
+Close one milestone before beginning the next:
+
+1. Confirm every leaf and the milestone done condition are complete and bind
+   each validation or human decision to its current subject. An unavailable,
+   failed, incomplete, or stale check cannot support closeout.
+2. Move the milestone's exact execution record out of
+   `../IMPLEMENTATION_PLAN.md` into
+   `completed/milestone-<number>-<short-slug>.md`. The existing combined
+   `completed/milestones-0-9.md` remains a historical exception; new milestones
+   use one file each.
+3. Preserve the objective, leaves, done condition, Requirement IDs, decisions,
+   exclusions, deferred or rejected items, evidence paths, validation results,
+   and retained run or commit identifiers. Do not reconstruct missing evidence
+   or measurements.
+4. Add the completed file to this index, retain deferred scope and candidate
+   follow-ups in the active plan, and compact `../IMPLEMENTATION_PLAN.md` so it
+   contains the next current milestone and immediate leaf rather than a second
+   editable copy of completed execution history.
+5. Check local links, retained anchors and identifiers, Markdown formatting,
+   trailing whitespace, unresolved TODO markers, and `git diff --check`; inspect
+   the exact closeout diff before any separately authorized commit.
+
+Perform the archive, index update, and active-plan compaction as one
+repository-maintenance change. Closeout creates no product Requirement, runtime
+behavior, approval, QA decision, or Git authority.

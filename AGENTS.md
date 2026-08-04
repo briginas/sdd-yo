@@ -75,6 +75,13 @@ API or existing dependency is insufficient.
 - Work on the first incomplete bounded leaf in `IMPLEMENTATION_PLAN.md`.
 - Keep one milestone independently testable before starting the next.
 - Update the plan when a leaf is completed, split, deferred, or invalidated.
+- After every leaf and the milestone done condition are verified, archive the
+  milestone's exact execution record under `plans/completed/`, update
+  `plans/README.md`, and compact `IMPLEMENTATION_PLAN.md` to the next active
+  milestone before beginning it. Preserve Requirement IDs, decisions,
+  exclusions, evidence, and retained run or commit identifiers; follow the
+  closeout contract in `plans/README.md`. Milestone completion does not itself
+  authorize a Git commit.
 - Keep normative behavior, architecture, implementation, tests, and evidence
   distinguishable.
 - Do not invent product behavior to unblock implementation. Surface the
