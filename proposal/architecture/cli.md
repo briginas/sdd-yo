@@ -72,6 +72,21 @@ failures.
 
 ## Commands
 
+### `sdd skill install`
+
+```text
+sdd skill install --root <repository-root>
+```
+
+Installs the verified Skill payload from the executing private package at
+`.agents/skills/sdd-yo` in one explicitly selected Git repository root. It can
+run before SDD Project initialization, does not use `--cwd` or `--config`, and
+refuses an existing destination, symlink traversal, incompatible payload, or a
+CLI path outside the selected repository. Its version 1 result contains the
+repository-relative destination, sorted installed paths, payload fingerprint,
+and exact compatibility identity. Update and removal are separate future
+commands.
+
 ### `sdd init`
 
 ```text

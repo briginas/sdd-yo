@@ -16,6 +16,7 @@ import type { GitReader } from "../platform/git-reader.ts";
 import type { ProjectWriter } from "../platform/project-writer.ts";
 import type { Randomness } from "../platform/randomness.ts";
 import type { ProcessRunner } from "../platform/process-runner.ts";
+import { SkillInstallationError, type SkillInstallationResult, type SkillInstaller } from "../skill-install/index.ts";
 import { discoverProcessGitReader, GitReadError } from "../platform/process-git-reader.ts";
 import { initializeProject } from "../init/initialize-project.ts";
 import type { GeneratedId, IdKind } from "../ids/generate-id.ts";
@@ -121,6 +122,7 @@ type ExitCode =
 type OutputFormat = "human" | "json";
 type Command =
   | "init"
+  | "skill.install"
   | "id"
   | "validate"
   | "inspect"
@@ -142,6 +144,9 @@ export type CliRuntime = {
   readonly projectWriter: ProjectWriter;
   readonly randomness: Randomness;
   readonly processRunner: ProcessRunner;
+  readonly skillInstaller?: SkillInstaller;
+  readonly packageRoot?: string;
+  readonly cliPath?: string;
   readonly adapterEnvironment?: Readonly<Record<string, string>>;
   readonly writeStandardOutput: (message: string) => void;
   readonly writeStandardError: (message: string) => void;
@@ -274,6 +279,7 @@ export type CandidateSnapshotResult = {
 export type CliResponse =
   | CliResponseEnvelope<"version", "ok", CliCompatibilityIdentity>
   | CliResponseEnvelope<"init", "ok", InitResult>
+  | CliResponseEnvelope<"skill.install", "ok", SkillInstallationResult>
   | CliResponseEnvelope<"id", "ok", IdResult>
   | CliResponseEnvelope<"validate", "ok", ValidateResult>
   | CliResponseEnvelope<"validate", "blocked", InvalidValidateResult>
@@ -311,19 +317,22 @@ function parseInvocation(
   argv: readonly string[],
 ): { ok: true; value: Invocation } | { ok: false; diagnostic: Diagnostic } {
   const command: string | undefined =
-    argv[0] === "tests" && argv[1] === "discover"
-      ? "tests.discover"
-      : argv[0] === "candidate" && argv[1] === "snapshot"
-        ? "candidate.snapshot"
-        : argv[0] === "findings" && argv[1] === "validate"
-          ? "findings.validate"
-          : argv[0] === "merge" && argv[1] === "check"
-            ? "merge.check"
-            : argv[0] === "proposal" && (argv[1] === "validate" || argv[1] === "prepare" || argv[1] === "apply")
-              ? `proposal.${argv[1]}`
-              : argv[0];
+    argv[0] === "skill" && argv[1] === "install"
+      ? "skill.install"
+      : argv[0] === "tests" && argv[1] === "discover"
+        ? "tests.discover"
+        : argv[0] === "candidate" && argv[1] === "snapshot"
+          ? "candidate.snapshot"
+          : argv[0] === "findings" && argv[1] === "validate"
+            ? "findings.validate"
+            : argv[0] === "merge" && argv[1] === "check"
+              ? "merge.check"
+              : argv[0] === "proposal" && (argv[1] === "validate" || argv[1] === "prepare" || argv[1] === "apply")
+                ? `proposal.${argv[1]}`
+                : argv[0];
   if (
     command !== "init" &&
+    command !== "skill.install" &&
     command !== "id" &&
     command !== "validate" &&
     command !== "inspect" &&
@@ -389,6 +398,7 @@ function parseInvocation(
   for (
     let index =
       command === "tests.discover" ||
+      command === "skill.install" ||
       command === "candidate.snapshot" ||
       command === "findings.validate" ||
       command === "merge.check" ||
@@ -765,7 +775,29 @@ function parseInvocation(
         "Use --root, --spec-path, --adoption, --format, or --quiet with init.",
       ),
     };
-  if (command !== "init" && (root !== undefined || specPath !== undefined || adoption !== undefined))
+  if (
+    command === "skill.install" &&
+    (root === undefined ||
+      configPath !== undefined ||
+      cwd !== undefined ||
+      outputPath !== undefined ||
+      includeExplanatory ||
+      specPath !== undefined ||
+      adoption !== undefined)
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "skill install requires only an explicit repository root.",
+        "Use sdd skill install --root <repository-root> with optional output formatting.",
+      ),
+    };
+  if (
+    command !== "init" &&
+    command !== "skill.install" &&
+    (root !== undefined || specPath !== undefined || adoption !== undefined)
+  )
     return {
       ok: false,
       diagnostic: cliDiagnostic(
@@ -1423,6 +1455,13 @@ function humanView(value: CliResponse): string {
   } else if (value.command === "init" && value.status === "ok") {
     const result = value.result as InitResult;
     lines.push(...result.created_paths.map((path) => `created: ${path}`));
+  } else if (value.command === "skill.install" && value.status === "ok") {
+    const result = value.result as SkillInstallationResult;
+    lines.push(
+      `destination: ${result.destination}`,
+      `payload: ${result.payload_fingerprint}`,
+      ...result.installed_paths.map((path) => `installed: ${path}`),
+    );
   } else if (value.command === "id" && value.status === "ok") {
     const result = value.result as IdResult;
     lines.push(...result.candidates, `history: ${result.history.status}`);
@@ -1700,25 +1739,27 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
   }
   const parsed = parseInvocation(runtime.argv);
   const inferredCommand: ResponseCommand =
-    runtime.argv[0] === "tests" && runtime.argv[1] === "discover"
-      ? "tests.discover"
-      : runtime.argv[0] === "candidate" && runtime.argv[1] === "snapshot"
-        ? "candidate.snapshot"
-        : runtime.argv[0] === "findings" && runtime.argv[1] === "validate"
-          ? "findings.validate"
-          : runtime.argv[0] === "merge" && runtime.argv[1] === "check"
-            ? "merge.check"
-            : runtime.argv[0] === "proposal" &&
-                (runtime.argv[1] === "validate" || runtime.argv[1] === "prepare" || runtime.argv[1] === "apply")
-              ? `proposal.${runtime.argv[1]}`
-              : runtime.argv[0] === "init" ||
-                  runtime.argv[0] === "id" ||
-                  runtime.argv[0] === "inspect" ||
-                  runtime.argv[0] === "trace" ||
-                  runtime.argv[0] === "diff" ||
-                  runtime.argv[0] === "validate"
-                ? runtime.argv[0]
-                : "unknown";
+    runtime.argv[0] === "skill" && runtime.argv[1] === "install"
+      ? "skill.install"
+      : runtime.argv[0] === "tests" && runtime.argv[1] === "discover"
+        ? "tests.discover"
+        : runtime.argv[0] === "candidate" && runtime.argv[1] === "snapshot"
+          ? "candidate.snapshot"
+          : runtime.argv[0] === "findings" && runtime.argv[1] === "validate"
+            ? "findings.validate"
+            : runtime.argv[0] === "merge" && runtime.argv[1] === "check"
+              ? "merge.check"
+              : runtime.argv[0] === "proposal" &&
+                  (runtime.argv[1] === "validate" || runtime.argv[1] === "prepare" || runtime.argv[1] === "apply")
+                ? `proposal.${runtime.argv[1]}`
+                : runtime.argv[0] === "init" ||
+                    runtime.argv[0] === "id" ||
+                    runtime.argv[0] === "inspect" ||
+                    runtime.argv[0] === "trace" ||
+                    runtime.argv[0] === "diff" ||
+                    runtime.argv[0] === "validate"
+                  ? runtime.argv[0]
+                  : "unknown";
   const inferredFormat: OutputFormat = runtime.argv.some(
     (argument, index) => argument === "--format" && runtime.argv[index + 1] === "json",
   )
@@ -1730,6 +1771,26 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
   }
   const invocation = parsed.value;
   try {
+    if (invocation.command === "skill.install") {
+      if (
+        invocation.root === undefined ||
+        runtime.skillInstaller === undefined ||
+        runtime.packageRoot === undefined ||
+        runtime.cliPath === undefined
+      )
+        throw new SkillInstallationError(
+          "SDD_SKILL_INSTALL_UNAVAILABLE",
+          "This sdd executable cannot locate its packaged Skill installation surface.",
+        );
+      const result = await runtime.skillInstaller.install({
+        repositoryRoot: resolve(runtime.workingDirectory, invocation.root),
+        packageRoot: runtime.packageRoot,
+        cliPath: runtime.cliPath,
+        compatibility: loadCliCompatibilityIdentity(),
+      });
+      emit(runtime, invocation.format, response("skill.install", null, "ok", result, []));
+      return VALID_EXIT_CODE;
+    }
     if (invocation.command === "init") {
       const initialized = await initializeProject(
         { fileSystem: runtime.fileSystem, writer: runtime.projectWriter, randomness: runtime.randomness },
@@ -2970,7 +3031,16 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
       outputTarget,
     );
     return VALID_EXIT_CODE;
-  } catch {
+  } catch (error) {
+    if (error instanceof SkillInstallationError) {
+      const diagnostic = cliDiagnostic(
+        error.code,
+        error.message,
+        "Select one safe Git repository root and an unused repository-scoped Skill destination.",
+      );
+      emit(runtime, invocation.format, response(invocation.command, null, "error", null, [diagnostic]));
+      return TECHNICAL_FAILURE_EXIT_CODE;
+    }
     const diagnostic = cliDiagnostic(
       "SDD_CONFIG_CLI_INTERNAL_FAILURE",
       "The command did not complete.",

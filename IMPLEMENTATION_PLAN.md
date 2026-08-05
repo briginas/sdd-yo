@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 11 / Private installation and first-run onboarding
-- Current leaf: 11.3 / Explicit repository-scoped Skill installation and first use
+- Current leaf: 11.4 / Explicit Skill update, removal, and lifecycle safety
 - Last updated: 2026-08-05
 
 ## Source-of-truth map
@@ -62,6 +62,26 @@ and the optional progressive-disclosure `sdd-yo` Agent Skill.
   smoke, 208 repository tests, schema generation, build, typecheck, formatting,
   26,700 contract checks, and `git diff --check` pass. No registry publication,
   installed repository Skill, or human QA decision is implied.
+- Milestone 11.3 is implemented and verified on feature branch
+  `codex/milestone-11-3-skill-install` through canonical `CAP-45C2C93F`,
+  `REQ-3F19778B`, `REQ-CF3A1070`, and `REQ-A0456614`. The exact proposal was
+  approved by configured issuer `product-review`, actor `Ivan Briginas`, for
+  base `fe5b59a1a38b15e4e651600f692855c76e140db2`; preparation against
+  candidate-spec commit `2017b02b8c7cdf30424054f32896bb703cbb4b63`
+  reported no mechanical conflict, and the exact SpecPatch applied in an
+  isolated base tree to approved result fingerprint
+  `sha256:8dc5854d20d685b02be58812ae47a324327ff12dfa4dbc65366a369433474788`.
+  `sdd skill install --root` verifies the packaged Skill inventory, installs
+  only under `.agents/skills/sdd-yo`, and writes a binding to its matching
+  repository-relative packaged CLI. The wrapper preflights exact compatibility
+  identity and never falls back to `PATH`; the private offline tarball path
+  completes explicit Skill installation, `init`, and first `validate` in a
+  clean external Git consumer. Requirement-named overwrite, modified-payload,
+  non-root, symlink, identity, package, and first-use checks pass alongside 211
+  repository tests, schema generation, build, typecheck, formatting, 26,930
+  contract checks, and `git diff --check`. No Skill update/removal, root
+  quickstart, cross-platform onboarding evidence, human QA, registry,
+  marketplace, or implementation commit is implied.
 - Former proposal-only meanings have the dispositions recorded by completed
   Milestone 10:
   later baseline candidates remain nonnormative plan backlog, one unimplemented
@@ -123,7 +143,7 @@ implementation.
       runtime baseline, prohibit install lifecycle mutation, bind every packaged
       surface to the compatible identity from 11.1, and extend package smoke
       tests with the exact Requirement IDs introduced by this leaf.
-- [ ] **11.3 — Explicit repository-scoped Skill installation and first use.**
+- [x] **11.3 — Explicit repository-scoped Skill installation and first use.**
       Use one bounded `spec-code` Change for explicit installation and
       compatibility checking under `.agents/skills/sdd-yo`. Bind installed Skill
       bytes to the selected private package artifact, make the wrapper resolve
@@ -213,7 +233,8 @@ authorization:
 
 ## Immediate next leaf
 
-The next incomplete leaf is 11.3, explicit repository-scoped Skill installation
-and first use. It has not started and requires a separate bounded normal
-`spec-code` Change and human approval before implementation. Do not infer 11.3
-authority from the completed 11.2 package artifact or its passing validation.
+The next incomplete leaf is 11.4, explicit Skill update, removal, and lifecycle
+safety. It has not started and requires a separate bounded normal `spec-code`
+Change and human approval before implementation. Do not infer overwrite,
+update, removal, interruption recovery, or adjacent-project mutation authority
+from the completed repository-scoped installation behavior in 11.3.

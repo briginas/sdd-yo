@@ -6,6 +6,11 @@ export type CliHelpEntry = {
 
 export const CLI_HELP_ENTRIES: readonly CliHelpEntry[] = [
   {
+    path: "skill install",
+    usage: "sdd skill install --root <repository-root>",
+    summary: "Install the packaged sdd-yo Skill in one explicit Git repository.",
+  },
+  {
     path: "init",
     usage: "sdd init [--root <path>] [--spec-path <path>] [--adoption incremental|complete]",
     summary: "Initialize a new SDD Project without overwriting existing files.",

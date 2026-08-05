@@ -160,7 +160,7 @@ function parsePackResult(standardOutput: string): PackResult {
   return result as PackResult;
 }
 
-test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-FFE60B5A REQ-D9CF3A46 REQ-97D96950 package builds, packs, installs, imports, and runs sdd offline", async () => {
+test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-3F19778B REQ-CF3A1070 REQ-A0456614 REQ-FFE60B5A REQ-D9CF3A46 REQ-97D96950 package builds, installs its repository Skill, and completes first use offline", async () => {
   const temporaryRoot = await mkdtemp(join(tmpdir(), "sdd-yo-package-smoke-"));
   const buildCache = join(temporaryRoot, "build-cache");
   const installCache = join(temporaryRoot, "install-cache");
@@ -333,7 +333,7 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-FFE60B5A REQ-D9CF3A46 REQ-97D96
     assert.equal(help.exitCode, 0, help.standardError);
     assert.equal(help.standardError, "");
     assert.match(help.standardOutput, /^sdd - repository-native specification governance\n/u);
-    for (const path of ["validate", "proposal prepare", "tests discover", "merge check"])
+    for (const path of ["skill install", "validate", "proposal prepare", "tests discover", "merge check"])
       assert.match(help.standardOutput, new RegExp(`  ${path}`, "u"));
 
     const commandHelp = await runCommand(process.execPath, [binTarget, "proposal", "prepare", "--help"], consumerRoot);
@@ -409,6 +409,80 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-FFE60B5A REQ-D9CF3A46 REQ-97D96
     assert.equal(compatibleResponse.project_id, "SDD-17EF8B29");
     assert.equal(compatibleResponse.status, "ok");
     assert.deepEqual(await listFiles(consumerRoot), consumerFilesBeforeIdentity);
+    assert.equal(await readFile(sentinelPath, "utf8"), "outside consumer\n");
+
+    const gitInitialization = await runCommand("git", ["init", "--quiet", "--initial-branch", "main"], consumerRoot);
+    assert.equal(gitInitialization.exitCode, 0, gitInitialization.standardError);
+    for (const [key, value] of [
+      ["user.name", "SDD Package Smoke"],
+      ["user.email", "sdd-package-smoke@example.invalid"],
+    ] as const) {
+      const configured = await runCommand("git", ["config", key, value], consumerRoot);
+      assert.equal(configured.exitCode, 0, configured.standardError);
+    }
+    const stagedConsumer = await runCommand("git", ["add", "package.json", "package-lock.json"], consumerRoot);
+    assert.equal(stagedConsumer.exitCode, 0, stagedConsumer.standardError);
+    const committedConsumer = await runCommand("git", ["commit", "--quiet", "-m", "initial consumer"], consumerRoot);
+    assert.equal(committedConsumer.exitCode, 0, committedConsumer.standardError);
+    const skillInstallation = await runCommand(
+      process.execPath,
+      [binTarget, "skill", "install", "--root", consumerRoot, "--format", "json"],
+      consumerRoot,
+    );
+    assert.equal(skillInstallation.exitCode, 0, skillInstallation.standardError || skillInstallation.standardOutput);
+    const installationResponse = JSON.parse(skillInstallation.standardOutput) as {
+      readonly command: string;
+      readonly project_id: null;
+      readonly status: string;
+      readonly result: {
+        readonly destination: string;
+        readonly installed_paths: readonly string[];
+        readonly payload_fingerprint: string;
+      };
+    };
+    assert.equal(installationResponse.command, "skill.install");
+    assert.equal(installationResponse.project_id, null);
+    assert.equal(installationResponse.status, "ok");
+    assert.equal(installationResponse.result.destination, ".agents/skills/sdd-yo");
+    assert.match(installationResponse.result.payload_fingerprint, /^sha256:[0-9a-f]{64}$/u);
+
+    const repositorySkillRoot = join(consumerRoot, installationResponse.result.destination);
+    assert.deepEqual(
+      (await listFiles(repositorySkillRoot)).filter((path) => path !== "installation.json"),
+      skillFiles,
+    );
+    for (const path of skillFiles)
+      assert.deepEqual(await readFile(join(repositorySkillRoot, path)), await readFile(join(installedSkillRoot, path)));
+    const binding = JSON.parse(await readFile(join(repositorySkillRoot, "installation.json"), "utf8")) as {
+      readonly cli: { readonly path: string; readonly version: string };
+      readonly skill: { readonly payload_fingerprint: string };
+    };
+    assert.equal(binding.cli.path, "node_modules/sdd-yo/dist/bin/sdd.js");
+    assert.equal(binding.cli.version, installedManifest.version);
+    assert.equal(binding.skill.payload_fingerprint, installationResponse.result.payload_fingerprint);
+
+    const repositoryWrapper = join(repositorySkillRoot, "scripts/check-cli-compatibility");
+    const firstInit = await runCommand(
+      process.execPath,
+      [repositoryWrapper, "--", "init", "--root", consumerRoot, "--adoption", "incremental"],
+      consumerRoot,
+    );
+    assert.equal(firstInit.exitCode, 0, firstInit.standardError || firstInit.standardOutput);
+    assert.equal(JSON.parse(firstInit.standardOutput).command, "init");
+    const firstValidate = await runCommand(
+      process.execPath,
+      [repositoryWrapper, "--", "validate", "--cwd", consumerRoot],
+      consumerRoot,
+    );
+    assert.equal(firstValidate.exitCode, 0, firstValidate.standardError || firstValidate.standardOutput);
+    const firstValidateResponse = JSON.parse(firstValidate.standardOutput) as {
+      readonly command: string;
+      readonly status: string;
+      readonly project_id: string;
+    };
+    assert.equal(firstValidateResponse.command, "validate");
+    assert.equal(firstValidateResponse.status, "ok");
+    assert.match(firstValidateResponse.project_id, /^SDD-[0-9A-F]{8}$/u);
     assert.equal(await readFile(sentinelPath, "utf8"), "outside consumer\n");
   } finally {
     await rm(temporaryRoot, { recursive: true, force: true });

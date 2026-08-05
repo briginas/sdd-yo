@@ -32,11 +32,25 @@ sdd-yo/
     proposal-request.json
   scripts/
     check-cli-compatibility
+  payload-manifest.json
 ```
 
 `SKILL.md` stays short and routes by user intent. References are loaded only
 when required. Templates mirror the published Markdown and JSON schemas and
 contain no project-specific IDs.
+
+The packed payload manifest binds every regular Skill file to exact SHA-256
+bytes and the package/Skill compatibility identity. Explicit
+`sdd skill install --root <repository-root>` copies that verified payload to
+`.agents/skills/sdd-yo` and adds `installation.json`. The installation binding
+records the selected package identity, repository-relative packaged CLI path,
+protocol versions, and payload fingerprint; it is repository state, not a
+packed source file.
+
+An installed compatibility wrapper resolves only that bound CLI unless the
+caller supplies one explicit absolute `--cli` path. It preflights exact
+machine-readable compatibility identity before every product command and never
+searches `PATH` for an accidental global `sdd` executable.
 
 ## Intent routing
 

@@ -25,7 +25,18 @@ const operation = ["proposal", "tests", "findings", "merge"].includes(command)
   ? \`\${command}.\${args[1] ?? ""}\`
   : command;
 const mode = process.env.SDD_SKILL_FAKE_MODE ?? "valid";
-if (mode === "malformed") process.stdout.write("not json");
+if (command === "--version") {
+  const identity = {
+    schema_version: "1.0", command: "version", project_id: null, status: "ok",
+    result: {
+      package: { name: "sdd-yo", version: mode === "identity-version-mismatch" ? "9.0.0" : "0.1.0" },
+      cli: { name: "sdd", version: mode === "identity-version-mismatch" ? "9.0.0" : "0.1.0" },
+      json_schema: { version: mode === "identity-incompatible" ? "2.0" : "1.0", compatible_major: mode === "identity-incompatible" ? 2 : 1 },
+      skill: { name: "sdd-yo", protocol_version: "1.0", compatible_major: 1 },
+    }, diagnostics: [],
+  };
+  process.stdout.write(mode === "identity-malformed" ? "not json" : JSON.stringify(identity));
+} else if (mode === "malformed") process.stdout.write("not json");
 else if (mode === "interrupted") process.kill(process.pid, "SIGTERM");
 else {
   const rootIndex = args.indexOf("--root");
@@ -225,6 +236,28 @@ test("REQ-0361538D compatibility wrapper fails closed on unavailable or invalid 
   const unsupported = await runChecker(cli, ["semantic", "analyze", "--cwd", repositoryRoot]);
   assert.equal(unsupported.code, 3);
   assert.match(unsupported.stderr, /tests discover, findings validate, or merge check/u);
+});
+
+test("REQ-CF3A1070 compatibility wrapper preflights the explicit CLI identity and never falls back to PATH", async () => {
+  const cli = await fakeCli();
+  for (const mode of ["identity-malformed", "identity-incompatible"] as const) {
+    const result = await runChecker(cli, ["validate", "--cwd", "."], mode);
+    assert.equal(result.code, 3);
+    assert.match(result.stderr, /compatibility identity/u);
+    assert.equal(result.stdout, "");
+  }
+  let unbound: { readonly stdout: string; readonly stderr: string; readonly code: number };
+  try {
+    await executeFile(process.execPath, [checker, "--", "validate", "--cwd", "."], {
+      env: { ...process.env, PATH: "" },
+    });
+    assert.fail("an unbound wrapper must fail");
+  } catch (error) {
+    unbound = error as { readonly stdout: string; readonly stderr: string; readonly code: number };
+  }
+  assert.equal(unbound.code, 3);
+  assert.match(unbound.stderr, /installation binding is missing/u);
+  assert.equal(unbound.stdout, "");
 });
 
 test("REQ-2C8E8085 compatibility wrapper accepts only project-aware authoring IDs", async () => {

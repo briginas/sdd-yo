@@ -86,6 +86,13 @@ Configuration cannot interpolate shell syntax. Environment variables are built
 from an allowlist plus protocol-owned values. Time, output, nesting, count, and
 memory limits are enforced.
 
+Repository-scoped Skill installation accepts one explicit Git repository root
+and uses a fixed `.agents/skills/sdd-yo` destination. It verifies the packaged
+payload inventory before writing, rejects symlinks and existing destinations,
+records a repository-relative packaged CLI binding, and rolls back a partial
+destination on technical failure. The installed wrapper preflights that CLI's
+exact compatibility identity and never resolves `sdd` through `PATH`.
+
 ### Malicious adapter output
 
 JSONL and XML are parsed with bounded, non-networked parsers. XML external

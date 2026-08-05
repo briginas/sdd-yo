@@ -2,8 +2,9 @@
 
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { lstatSync, readFileSync } from "node:fs";
-import { isAbsolute, relative, resolve } from "node:path";
+import { lstatSync, readFileSync, realpathSync } from "node:fs";
+import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const TECHNICAL_FAILURE = 3;
 const SUPPORTED_OPERATIONS = new Set([
@@ -24,6 +25,9 @@ const AUTHORING_ID_KINDS = new Map([
   ["requirement", "REQ"],
   ["concept", "CON"],
 ]);
+const scriptDirectory = dirname(fileURLToPath(import.meta.url));
+const installedRepositoryRoot = resolve(scriptDirectory, "../../../..");
+const installationManifestPath = resolve(scriptDirectory, "../installation.json");
 
 function fail(message) {
   process.stderr.write(`sdd-yo: ${message}\n`);
@@ -74,6 +78,76 @@ function hasExactKeys(value, required, optional = []) {
   if (!isRecord(value)) return false;
   const allowed = new Set([...required, ...optional]);
   return required.every((key) => key in value) && Object.keys(value).every((key) => allowed.has(key));
+}
+
+function isContained(root, path) {
+  const fromRoot = relative(root, path);
+  return fromRoot === "" || (!isAbsolute(fromRoot) && fromRoot !== ".." && !fromRoot.startsWith(`..${sep}`));
+}
+
+function readInstallationBinding(required) {
+  let value;
+  try {
+    value = JSON.parse(readFileSync(installationManifestPath, "utf8"));
+  } catch (error) {
+    if (!required && error?.code === "ENOENT") return undefined;
+    fail("the repository-scoped Skill installation binding is missing or malformed.");
+  }
+  if (
+    !hasExactKeys(value, ["schema_version", "artifact_type", "package", "cli", "json_schema", "skill"]) ||
+    value.schema_version !== "1.0" ||
+    value.artifact_type !== "sdd_yo_skill_installation" ||
+    !hasExactKeys(value.package, ["name", "version"]) ||
+    value.package.name !== "sdd-yo" ||
+    typeof value.package.version !== "string" ||
+    value.package.version.length === 0 ||
+    !hasExactKeys(value.cli, ["name", "version", "path"]) ||
+    value.cli.name !== "sdd" ||
+    value.cli.version !== value.package.version ||
+    !isProjectPath(value.cli.path) ||
+    !hasExactKeys(value.json_schema, ["version", "compatible_major"]) ||
+    value.json_schema.compatible_major !== 1 ||
+    !hasExactKeys(value.skill, ["name", "protocol_version", "compatible_major", "payload_fingerprint"]) ||
+    value.skill.name !== "sdd-yo" ||
+    value.skill.compatible_major !== 1 ||
+    !isFingerprint(value.skill.payload_fingerprint)
+  )
+    fail("the repository-scoped Skill installation binding is incompatible.");
+  return value;
+}
+
+function verifyCompatibilityIdentity(value, binding) {
+  if (
+    !hasExactKeys(value, ["schema_version", "command", "project_id", "status", "result", "diagnostics"]) ||
+    value.schema_version !== "1.0" ||
+    value.command !== "version" ||
+    value.project_id !== null ||
+    value.status !== "ok" ||
+    !Array.isArray(value.diagnostics) ||
+    value.diagnostics.length !== 0 ||
+    !hasExactKeys(value.result, ["package", "cli", "json_schema", "skill"]) ||
+    !hasExactKeys(value.result.package, ["name", "version"]) ||
+    value.result.package.name !== "sdd-yo" ||
+    !hasExactKeys(value.result.cli, ["name", "version"]) ||
+    value.result.cli.name !== "sdd" ||
+    value.result.cli.version !== value.result.package.version ||
+    !hasExactKeys(value.result.json_schema, ["version", "compatible_major"]) ||
+    value.result.json_schema.compatible_major !== 1 ||
+    !hasExactKeys(value.result.skill, ["name", "protocol_version", "compatible_major"]) ||
+    value.result.skill.name !== "sdd-yo" ||
+    value.result.skill.compatible_major !== 1 ||
+    (binding !== undefined &&
+      (value.result.package.name !== binding.package.name ||
+        value.result.package.version !== binding.package.version ||
+        value.result.cli.name !== binding.cli.name ||
+        value.result.cli.version !== binding.cli.version ||
+        value.result.json_schema.version !== binding.json_schema.version ||
+        value.result.json_schema.compatible_major !== binding.json_schema.compatible_major ||
+        value.result.skill.name !== binding.skill.name ||
+        value.result.skill.protocol_version !== binding.skill.protocol_version ||
+        value.result.skill.compatible_major !== binding.skill.compatible_major))
+  )
+    fail("the selected sdd CLI compatibility identity is missing, malformed, or incompatible.");
 }
 
 function isSemanticCandidate(value) {
@@ -423,11 +497,24 @@ const separator = process.argv.indexOf("--", 2);
 if (separator === -1) fail("usage: check-cli-compatibility [--cli <path>] -- <command> <arguments>");
 
 const wrapperArguments = process.argv.slice(2, separator);
-let executable = "sdd";
+const binding = readInstallationBinding(wrapperArguments.length === 0);
+let executable;
 if (wrapperArguments.length > 0) {
   if (wrapperArguments.length !== 2 || wrapperArguments[0] !== "--cli" || wrapperArguments[1] === undefined)
     fail("only --cli <path> may precede --.");
+  if (!isAbsolute(wrapperArguments[1])) fail("--cli requires one explicit absolute executable path.");
   executable = wrapperArguments[1];
+} else {
+  const boundPath = resolve(installedRepositoryRoot, binding.cli.path);
+  let resolvedBoundPath;
+  try {
+    resolvedBoundPath = realpathSync(boundPath);
+  } catch {
+    fail("the bound sdd CLI is missing or unavailable.");
+  }
+  if (!isContained(realpathSync(installedRepositoryRoot), resolvedBoundPath))
+    fail("the bound sdd CLI path escapes the selected repository.");
+  executable = resolvedBoundPath;
 }
 
 const commandArguments = process.argv.slice(separator + 1);
@@ -444,17 +531,36 @@ if (commandArguments.includes("--format")) fail("omit --format; the compatibilit
 
 let invocationExecutable = executable;
 let invocationPrefix = [];
-if (executable !== "sdd") {
-  try {
-    const firstLine = readFileSync(executable, "utf8").split(/\r?\n/u, 1)[0];
-    if (firstLine === "#!/usr/bin/env node") {
-      invocationExecutable = process.execPath;
-      invocationPrefix = [executable];
-    }
-  } catch {
-    // Preserve spawn's stable missing or unavailable CLI diagnostics below.
+try {
+  const firstLine = readFileSync(executable, "utf8").split(/\r?\n/u, 1)[0];
+  if (firstLine === "#!/usr/bin/env node") {
+    invocationExecutable = process.execPath;
+    invocationPrefix = [executable];
   }
+} catch {
+  // Preserve spawn's stable missing or unavailable CLI diagnostics below.
 }
+
+const identityExecution = spawnSync(invocationExecutable, [...invocationPrefix, "--version", "--format", "json"], {
+  encoding: "utf8",
+  maxBuffer: 1024 * 1024,
+  timeout: 120_000,
+  windowsHide: true,
+});
+if (identityExecution.error !== undefined) {
+  if (identityExecution.error.code === "ENOENT") fail("the sdd CLI is missing; install nothing and stop.");
+  if (identityExecution.error.code === "ETIMEDOUT") fail("the sdd CLI identity check was interrupted.");
+  fail(`the sdd CLI identity check could not complete: ${identityExecution.error.message}`);
+}
+if (identityExecution.signal !== null || identityExecution.status !== 0)
+  fail("the sdd CLI identity check did not complete successfully.");
+let identity;
+try {
+  identity = JSON.parse(identityExecution.stdout);
+} catch {
+  fail("the sdd CLI returned malformed compatibility identity JSON.");
+}
+verifyCompatibilityIdentity(identity, binding);
 
 const cwd = optionValue(commandArguments, "--cwd");
 const config = optionValue(commandArguments, "--config");

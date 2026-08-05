@@ -19,6 +19,9 @@ selected SDD Project.
 2. Run every supported CLI operation through
    `node scripts/check-cli-compatibility`. Do not parse human output or invoke
    `sdd` directly.
+   - A repository-installed Skill resolves only the packaged CLI path recorded
+     in its `installation.json` binding.
+   - `--cli` selects one explicit absolute path; it never falls back to `PATH`.
 3. Stop if the wrapper reports a missing, interrupted, malformed, incompatible,
    or unsupported CLI operation. Do not install or repair the CLI.
 4. Accept only the wrapper's unchanged version 1 JSON response. Treat a
@@ -30,7 +33,8 @@ Use this invocation shape:
 node scripts/check-cli-compatibility [--cli <sdd-path>] -- <command> <arguments>
 ```
 
-The wrapper adds `--format json`. This slice permits only `init`, `id`,
+Before each operation the wrapper requires compatible `--version --format json`
+identity. It then adds `--format json`. This slice permits only `init`, `id`,
 `validate`, `inspect`, `trace`, `proposal validate`, `proposal prepare`,
 `proposal apply`, `tests discover`, `findings validate`, and `merge check`.
 

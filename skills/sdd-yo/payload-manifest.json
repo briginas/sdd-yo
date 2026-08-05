@@ -1,0 +1,67 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "sdd_yo_skill_payload_manifest",
+  "package": {
+    "name": "sdd-yo",
+    "version": "0.1.0"
+  },
+  "skill": {
+    "name": "sdd-yo",
+    "protocol_version": "1.0",
+    "compatible_major": 1
+  },
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "sha256:b8e0d929d21f3213bc6b73145b4ed5532626c07697f7857fdfb0cb7961fc0ade"
+    },
+    {
+      "path": "agents/openai.yaml",
+      "sha256": "sha256:61d9742b79a8ce67a357c01f019bb448481f4885ec23148c8cd23e47812a0236"
+    },
+    {
+      "path": "references/authoring.md",
+      "sha256": "sha256:93a39908ddd587436304f004c1f079d0b1f2c9c4cda58bc09275ddf584cd7b6b"
+    },
+    {
+      "path": "references/branch-preparation.md",
+      "sha256": "sha256:7d77e5ee272b3de20054382c799246fbae88d8adeab02025d11db750c344d08c"
+    },
+    {
+      "path": "references/diagnostics.md",
+      "sha256": "sha256:afc354e307aac2cab2353da33be7ab73e017ae0ed49ce0cdeb44d65bd5a85219"
+    },
+    {
+      "path": "references/modes.md",
+      "sha256": "sha256:35c5c2f58e87fc78f882aed57f7c82c98700b7aa4d8fc4c2add1284b56ec7064"
+    },
+    {
+      "path": "references/object-model.md",
+      "sha256": "sha256:0fce52675f0a8cb1dfe86af79358de7a759cd7efac8f1fd4dfbc081d54eee83d"
+    },
+    {
+      "path": "references/onboarding.md",
+      "sha256": "sha256:476f4dff3dac8c94757c3f94f365e26259002512339bbe9c388d8472e044560e"
+    },
+    {
+      "path": "references/proposal-gate.md",
+      "sha256": "sha256:5c98567f160d2de2113e4e17bc43a246b27aa1f23789ba9145daa9bdb56174a1"
+    },
+    {
+      "path": "references/verification.md",
+      "sha256": "sha256:4a1e019e07eb79177acfc4fb75955700c0fb2af389660df004fc08b1041c2197"
+    },
+    {
+      "path": "scripts/check-cli-compatibility",
+      "sha256": "sha256:5c63b848661d1ecd99cd075fc433e636c40010e89519f4177fa625f985b73629"
+    },
+    {
+      "path": "templates/capability.md",
+      "sha256": "sha256:f1ef64c0bdbbe8b3b6cb7308d0aaf1c8a0e9518a024924ac2579dd87b3b28d44"
+    },
+    {
+      "path": "templates/concept.md",
+      "sha256": "sha256:51b7ea1cfb294b64bef99917f677c7bdd9f8c24821542fe0d42b958e778925b8"
+    }
+  ]
+}
