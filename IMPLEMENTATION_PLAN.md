@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 11 / Private installation and first-run onboarding
-- Current leaf: 11.1 / CLI discoverability and compatibility identity
+- Current leaf: 11.2 / Installable private npm tarball and version binding
 - Last updated: 2026-08-05
 
 ## Source-of-truth map
@@ -43,6 +43,12 @@ and the optional progressive-disclosure `sdd-yo` Agent Skill.
 - Version `0.1.0` is a private package. The source repository and npm package
   remain private during Milestone 11, and no registry or marketplace publication
   is implied.
+- Milestone 11.1 is implemented and verified on feature commit
+  `cfa7d106b88abf078a3773b8354bd105643f5b59`: stable top-level and
+  command-specific help, exact package/CLI version reporting, and deterministic
+  machine-readable compatibility identity pass Requirement-named CLI and
+  packaged-executable tests. Its approved SpecPatch applies cleanly to the exact
+  base and produces the approved candidate-tree fingerprint.
 - Former proposal-only meanings have the dispositions recorded by completed
   Milestone 10:
   later baseline candidates remain nonnormative plan backlog, one unimplemented
@@ -84,7 +90,7 @@ Milestone 11 does not use a permanent target package to stage new behavior and
 does not introduce a batch of unimplemented Requirements ahead of their
 implementation.
 
-- [ ] **11.1 — CLI discoverability and compatibility identity.** Use one bounded
+- [x] **11.1 — CLI discoverability and compatibility identity.** Use one bounded
       `spec-code` Change to introduce only the canonical Capability and
       Requirement set needed for stable top-level and command-specific help, CLI
       version reporting, and machine-readable package, CLI, JSON-schema, and
@@ -194,13 +200,12 @@ authorization:
 
 ## Immediate next leaf
 
-Implement only 11.1, CLI discoverability and compatibility identity. Use one
-bounded normal `spec-code` Change to generate and check fresh IDs, draft the
-smallest complete candidate for stable top-level and command-specific help, CLI
-version reporting, and machine-readable package, CLI, JSON-schema, and Skill
-compatibility identity, obtain the required human decision, apply only the exact
-approved SpecPatch, and implement Requirement-named CLI and packaged-executable
-tests. Preserve existing version 1 command response contracts and keep help and
-identity behavior free of project mutation. Do not change package contents,
-install or update the Skill, add the root quickstart, claim external-project
-onboarding readiness, or perform Git operations in this leaf.
+Implement only 11.2, installable private npm tarball and version binding. Use
+one bounded normal `spec-code` Change for the exact package-content and
+compatibility Requirements implemented by this leaf. Preserve `"private": true`,
+make the package metadata and local tarball installation-ready, include the
+built CLI, package library/schema files, and matching `sdd-yo` Skill payload,
+and verify exact packed contents from a clean install. Do not publish to any
+registry. Preserve the Node.js runtime baseline, prohibit install lifecycle
+mutation, bind every packaged surface to the compatible identity from 11.1,
+and add exact Requirement-named package smoke tests.
