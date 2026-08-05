@@ -22,6 +22,7 @@ verification conditions are satisfied.
 - [CAP-404305F6 — Multi-project CLI and skill integration](capabilities/multi-project-cli-and-skill.md)
 - [CAP-0AA61339 — CLI discoverability and compatibility identity](capabilities/cli-discoverability-and-compatibility-identity.md)
 - [CAP-6AD33965 — Private npm package distribution](capabilities/private-npm-package-distribution.md)
+- [CAP-45C2C93F — Repository-scoped Agent Skill installation](capabilities/repository-scoped-agent-skill-installation.md)
 
 ## Domain concepts <!-- sdd:concepts -->
 
