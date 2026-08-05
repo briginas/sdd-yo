@@ -98,6 +98,9 @@ import {
 } from "../verification/change-descriptor.ts";
 import { runMergeGate } from "../verification/merge-report.ts";
 import type { MergeReport } from "../verification/merge-report.ts";
+import { renderCliHelp } from "./help.ts";
+import { loadCliCompatibilityIdentity } from "./identity.ts";
+import type { CliCompatibilityIdentity } from "./identity.ts";
 
 export const VALID_EXIT_CODE = 0 as const;
 export const BLOCKED_EXIT_CODE = 1 as const;
@@ -130,7 +133,7 @@ type Command =
   | "proposal.validate"
   | "proposal.prepare"
   | "proposal.apply";
-type ResponseCommand = Command | "unknown";
+type ResponseCommand = Command | "version" | "unknown";
 
 export type CliRuntime = {
   readonly argv: readonly string[];
@@ -269,6 +272,7 @@ export type CandidateSnapshotResult = {
 };
 
 export type CliResponse =
+  | CliResponseEnvelope<"version", "ok", CliCompatibilityIdentity>
   | CliResponseEnvelope<"init", "ok", InitResult>
   | CliResponseEnvelope<"id", "ok", IdResult>
   | CliResponseEnvelope<"validate", "ok", ValidateResult>
@@ -1175,6 +1179,12 @@ function parseInvocation(
   };
 }
 
+function versionInvocationFormat(argv: readonly string[]): OutputFormat | undefined {
+  if (argv.length === 1 && argv[0] === "--version") return "human";
+  if (argv.length === 3 && argv[0] === "--version" && argv[1] === "--format" && argv[2] === "json") return "json";
+  return undefined;
+}
+
 function response(
   command: ResponseCommand,
   projectId: ProjectId | null,
@@ -1665,6 +1675,29 @@ async function resolveSafeOutputTarget(
 }
 
 export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
+  const help = renderCliHelp(runtime.argv);
+  if (help !== undefined) {
+    runtime.writeStandardOutput(help);
+    return VALID_EXIT_CODE;
+  }
+  const versionFormat = versionInvocationFormat(runtime.argv);
+  if (versionFormat !== undefined) {
+    try {
+      const identity = loadCliCompatibilityIdentity();
+      if (versionFormat === "human") runtime.writeStandardOutput(`${identity.cli.version}\n`);
+      else emit(runtime, versionFormat, response("version", null, "ok", identity, []));
+      return VALID_EXIT_CODE;
+    } catch {
+      const diagnostic = cliDiagnostic(
+        "SDD_CONFIG_CLI_INTERNAL_FAILURE",
+        "The command did not complete.",
+        "Retry the command and report the stable diagnostic code if it persists.",
+      );
+      emit(runtime, versionFormat, response("version", null, "error", null, [diagnostic]));
+      runtime.writeStandardError("sdd: command failed with an internal technical error.\n");
+      return TECHNICAL_FAILURE_EXIT_CODE;
+    }
+  }
   const parsed = parseInvocation(runtime.argv);
   const inferredCommand: ResponseCommand =
     runtime.argv[0] === "tests" && runtime.argv[1] === "discover"

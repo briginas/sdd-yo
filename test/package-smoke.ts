@@ -104,7 +104,7 @@ function parsePackResult(standardOutput: string): PackResult {
   return result as PackResult;
 }
 
-test("package builds, packs, stages, imports, and runs sdd offline", async () => {
+test("REQ-FFE60B5A REQ-D9CF3A46 REQ-97D96950 package builds, packs, stages, imports, and runs sdd offline", async () => {
   const temporaryRoot = await mkdtemp(join(tmpdir(), "sdd-yo-package-smoke-"));
   const npmCache = join(temporaryRoot, "npm-cache");
 
@@ -131,6 +131,8 @@ test("package builds, packs, stages, imports, and runs sdd offline", async () =>
     );
     assert.equal(extract.exitCode, 0, extract.standardError);
     const installedManifest = JSON.parse(await readFile(join(installedPackageRoot, "package.json"), "utf8")) as {
+      readonly name: string;
+      readonly version: string;
       readonly bin?: Readonly<Record<string, string>>;
     };
     assert.deepEqual(installedManifest.bin, { sdd: "./dist/bin/sdd.js" });
@@ -166,6 +168,46 @@ test("package builds, packs, stages, imports, and runs sdd offline", async () =>
 
     const binTarget = join(installedPackageRoot, installedManifest.bin.sdd ?? "");
     assert.match(await readFile(binTarget, "utf8"), /^#!\/usr\/bin\/env node\n/);
+
+    const consumerFilesBeforeIdentity = await listFiles(consumerRoot);
+    const help = await runCommand(process.execPath, [binTarget, "--help"], consumerRoot);
+    assert.equal(help.exitCode, 0, help.standardError);
+    assert.equal(help.standardError, "");
+    assert.match(help.standardOutput, /^sdd - repository-native specification governance\n/u);
+    for (const path of ["validate", "proposal prepare", "tests discover", "merge check"])
+      assert.match(help.standardOutput, new RegExp(`  ${path}`, "u"));
+
+    const commandHelp = await runCommand(process.execPath, [binTarget, "proposal", "prepare", "--help"], consumerRoot);
+    assert.equal(commandHelp.exitCode, 0, commandHelp.standardError);
+    assert.equal(commandHelp.standardError, "");
+    assert.match(commandHelp.standardOutput, /^Usage: sdd proposal prepare /u);
+
+    const version = await runCommand(process.execPath, [binTarget, "--version"], consumerRoot);
+    assert.deepEqual(version, {
+      exitCode: 0,
+      signal: null,
+      standardOutput: `${installedManifest.version}\n`,
+      standardError: "",
+    });
+
+    const jsonVersion = await runCommand(process.execPath, [binTarget, "--version", "--format", "json"], consumerRoot);
+    assert.equal(jsonVersion.exitCode, 0, jsonVersion.standardError);
+    assert.equal(jsonVersion.standardError, "");
+    assert.deepEqual(JSON.parse(jsonVersion.standardOutput), {
+      schema_version: "1.0",
+      command: "version",
+      project_id: null,
+      status: "ok",
+      result: {
+        package: { name: installedManifest.name, version: installedManifest.version },
+        cli: { name: "sdd", version: installedManifest.version },
+        json_schema: { version: "1.0", compatible_major: 1 },
+        skill: { name: "sdd-yo", protocol_version: "1.0", compatible_major: 1 },
+      },
+      diagnostics: [],
+    });
+    assert.deepEqual(await listFiles(consumerRoot), consumerFilesBeforeIdentity);
+
     const cli = await runCommand(process.execPath, [binTarget, "validate"], consumerRoot);
     assert.equal(cli.exitCode, 3);
     assert.equal(cli.signal, null);
