@@ -55,7 +55,7 @@
     "proposal/architecture/artifact-schemas.md#approvalevidence"
   ],
   "oracle_semantics": {
-    "fixture_form": "Scenario definitions describe path-bearing artifact input, filesystem topology, and deterministic mutation hooks. Runtime tests materialize the exact-patch topology inside isolated temporary project roots; other families remain bootstrap scenarios until their bounded leaves.",
+    "fixture_form": "Scenario definitions describe path-bearing artifact input, filesystem topology, and deterministic mutation hooks. Runtime tests materialize the exact-patch topology inside isolated temporary project roots; other families remain contract-fixture scenarios unless materialized by runtime tests in a bounded implementation leaf.",
     "path_domain": "Paths are non-empty normalized project-relative UTF-8 paths using slash separators and must remain beneath the configured specification root.",
     "lexical_rejection": "Reject absolute, drive-relative, dot-segment, NUL-bearing, ambiguous-separator, and platform-reserved paths before filesystem mutation.",
     "component_topology_rejection": "Inspect every existing component from the project root to the target without following a symlink or junction outside project scope.",
