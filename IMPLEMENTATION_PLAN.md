@@ -48,7 +48,7 @@ and the optional progressive-disclosure `sdd-yo` Agent Skill.
   until its Milestone 10 disposition is executed. New behavior after retirement
   uses the normal `spec-code`, `spec`, or `code` workflow from a bounded candidate
   tree rather than adding a new long-lived bootstrap proposal.
-- The completed self-bootstrap still has active repository dependencies: sixteen
+- The completed self-bootstrap still has active repository dependencies: fifteen
   proposal-only Requirement definitions, the Stage 0 verifier and inventory
   authority links, bootstrap terminology in maintained tests and fixtures, and
   active documentation routes. These surfaces must be retired without deleting
@@ -84,7 +84,7 @@ record consumed by 10.2 and 10.3; it is not a second active implementation plan.
 
 The 10.1 inventory starts from this checked baseline:
 
-- `proposal/spec/` contains exactly sixteen Requirement definitions absent from
+- `proposal/spec/` contains exactly fifteen Requirement definitions absent from
   canonical `spec/`;
 - every Capability ID defined under `proposal/spec/` is already present in
   canonical `spec/`, so there are zero proposal-only Capabilities;
@@ -120,7 +120,7 @@ suite. Completed plans and immutable historical evidence are recorded only when
 needed to explain provenance or a disposition; they are not rewritten merely to
 remove bootstrap terminology.
 
-Leaf 10.1 is complete only when the Requirement table is set-equal to the sixteen
+Leaf 10.1 is complete only when the Requirement table is set-equal to the fifteen
 proposal-only definitions, the zero proposal-only Capability baseline is
 reproduced, every maintained bootstrap-dependent path has one disposition,
 every retained check has a named coverage successor, local links resolve,
