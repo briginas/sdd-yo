@@ -8,19 +8,21 @@ work into every planning or implementation task.
 The current milestone, immediate leaf, deferred scope, and candidate backlog
 remain in [`../IMPLEMENTATION_PLAN.md`](../IMPLEMENTATION_PLAN.md).
 
-Milestone 10 execution uses the reviewable disposition and dependency record in
-[`active/milestone-10-self-bootstrap-retirement.md`](active/milestone-10-self-bootstrap-retirement.md).
-The root plan remains authoritative for leaf status and sequencing.
-
 ## Completed plans
 
 - [`completed/milestones-0-9.md`](completed/milestones-0-9.md) — preserved
   bootstrap-through-MVP execution record, including Requirement traceability,
   decisions, exclusions, evidence links, and completion notes.
+- [`completed/self-bootstrap-procedure.md`](completed/self-bootstrap-procedure.md)
+  — historical target-package route, temporary ID-reservation rules, incremental
+  promotion procedure, validation levels, and exit criteria retired by
+  Milestone 10.
+- [`completed/milestone-10-self-bootstrap-retirement.md`](completed/milestone-10-self-bootstrap-retirement.md)
+  — completed retirement inventory, disposition tables, contract-oracle
+  coverage handoff, execution evidence, exclusions, and closeout result.
 
 Completed plans are historical records. Use the current canonical
-[`../spec/README.md`](../spec/README.md), target
-[`../proposal/spec/README.md`](../proposal/spec/README.md), architecture
+[`../spec/README.md`](../spec/README.md), architecture
 [`../proposal/architecture/README.md`](../proposal/architecture/README.md), and
 active plan for current behavior and next work. Load a completed plan only when
 the task needs its historical rationale, exact milestone boundary, or evidence

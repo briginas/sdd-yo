@@ -188,9 +188,10 @@ CLI artifact, even if its conclusion happens to be correct.
 ### Contract-fixture baseline
 
 Maintain schemas, golden Markdown, adapter fixtures, and gate truth tables. No
-claim of production readiness follows from fixture coverage. The original
-[self-bootstrap procedure](bootstrap.md) remains a transition input until its
-Milestone 10 retirement.
+claim of production readiness follows from fixture coverage. The completed
+self-bootstrap procedure is retained only as a
+[historical execution record](../../plans/completed/self-bootstrap-procedure.md)
+and grants no active workflow authority.
 
 Exit: all parser, graph, fingerprint, artifact, and security fixture suites pass
 on supported platforms.
@@ -259,5 +260,5 @@ authorization, adapter execution, incident response, and rollback policy.
 - [x] Documentation clearly distinguishes governed scope from whole-project
       completeness.
 - [x] Human roles and external authorization boundaries are understood.
-- [x] Integration-branch `spec/` is promoted only with the first conforming
-      `spec-code` implementation.
+- [x] Integration-branch `spec/` received behavior only with its first
+      conforming `spec-code` implementation.

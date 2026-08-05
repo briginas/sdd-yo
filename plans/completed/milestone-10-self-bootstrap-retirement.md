@@ -2,19 +2,61 @@
 
 ## Status and authority
 
-- Status: leaves 10.1 and 10.2 are complete; execution is pending in leaf 10.3.
-- Recorded against: repository state after `6d4ce40` on 2026-08-05.
-- Active milestone authority remains
-  [`../../IMPLEMENTATION_PLAN.md`](../../IMPLEMENTATION_PLAN.md). This record is
-  the disposition and dependency handoff consumed by 10.2 and 10.3; it is not a
-  second implementation plan.
+- Status: completed archive; leaves 10.0 through 10.3 and the milestone done
+  condition completed on 2026-08-05.
+- Recorded against: repository history through `3eed6f5` plus the validated 10.3
+  working-tree retirement and closeout change; no 10.3 commit or other Git
+  operation was created.
+- Current milestone authority remains
+  [`../../IMPLEMENTATION_PLAN.md`](../../IMPLEMENTATION_PLAN.md). This record
+  preserves the completed disposition, dependency, retained-coverage, and
+  execution evidence for Milestone 10; it is not an active implementation plan.
 - Canonical behavior remains under [`../../spec/`](../../spec/README.md).
-  Proposed definitions recorded here are transition inputs, not canonical
-  behavior or reserved future IDs.
+  Former proposal definitions recorded here are historical provenance, not
+  canonical behavior or reserved future IDs.
 
 This inventory changes no product behavior, Requirement meaning, contract or
 fixture bytes, script or command name, package contents, runtime code, evidence,
 or Git history. It does not execute any disposition.
+
+## Milestone objective and execution leaves
+
+Milestone 10 retired the completed temporary self-bootstrap procedure as active
+repository authority, preserved useful contract-oracle coverage and historical
+rationale, and made the normal `spec-code`, `spec`, and `code` workflows the
+only active paths for changing product behavior before private distribution
+work began.
+
+- **10.0 — Active-plan compaction and private-distribution alignment.** Moved
+  the completed Milestones 0–9 execution record into the indexed archive,
+  refreshed repository instructions, preserved the private source and package
+  boundary, and made local tarball installation the Milestone 11 distribution
+  target. Completed at `312bc67`; it changed no product Requirement, runtime
+  behavior, package contents, installed Skill state, or Git history.
+- **10.1 — Self-bootstrap retirement inventory and disposition.** Reproduced
+  the live 15-Requirement and zero-Capability proposal-only baselines, gave
+  every maintained bootstrap-bound surface one disposition, and named one 10.2
+  coverage successor for every retained verifier check. Completed at `c4b5709`;
+  it did not execute a disposition or create canonical behavior.
+- **10.2 — Contract-oracle decoupling.** Replaced `verify:stage-0` with the
+  ordinary `verify:contracts` oracle, retained all 30 diagnostic families, 37
+  contract IDs, 17 fixture-family IDs, and 176 required-case mappings, and kept
+  all 15 protected historical producer payloads byte-identical. Completed at
+  `3eed6f5`; it changed no product behavior or canonical Requirement meaning.
+- **10.3 — Bootstrap authority and target-package retirement.** Executed
+  `S04`–`S09`, preserved the nonnormative destinations below, archived the
+  historical procedure and evidence pointers, removed active promotion
+  authority and the former target specification, and retained normal proposal
+  runtime, schemas, fixtures, and exact-patch behavior. Completed in the
+  validated working tree after `3eed6f5`; no Git operation was created.
+
+The milestone done condition passed: the former target specification and
+bootstrap procedure are no longer active authority; all 15 former proposal-only
+Requirements retain an executed or scheduled disposition; the independent
+contract verifier remains authoritative without proposal dependencies; active
+instructions name only normal product workflows; and focused plus full
+validation passed while normal ProposalPackage and exact-patch behavior stayed
+intact.
 
 ## Reproduced baseline
 
@@ -72,23 +114,23 @@ decoupled in 10.2:
 The following table is set-equal to the 15 proposal-only definitions. Every row
 has one disposition; no row creates a canonical Requirement or claims approval.
 
-| Source Requirement                                                              | Proposal source and canonical presence                                                                                                                            | Evidence                | Inbound dependencies        | Disposition                                           | Rationale, provenance, and destination                                                                                                                                                                                                                                                  |
-| ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- | --------------------------- | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `REQ-13CE0529` — Align implementation to active contract in code mode           | [`proposal-modes-and-workflow-gates.md#req-13ce0529`](../../proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-13ce0529); absent canonically     | `MODES`                 | `D-MODES`                   | `baseline-implemented-behavior-through-normal-change` | Code mode already requires empty semantic/structural delta and bound active Requirement targets. Preserve this row and the completed-plan evidence; schedule a post-Milestone 11 normal `spec` baseline candidate with a fresh ID.                                                      |
-| `REQ-168CDE5F` — Remove completed Change state from canonical specification     | [`proposal-modes-and-workflow-gates.md#req-168cde5f`](../../proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-168cde5f); absent canonically     | `MODES`                 | none                        | `retire-with-rationale`                               | Canonical `REQ-A3C3B779` already keeps workflow state external, and the canonical Markdown graph contains no workflow record type. Retain this row as provenance; no replacement Requirement is planned.                                                                                |
-| `REQ-20F8CA5C` — Support generic JSONL test protocols                           | [`test-traceability-and-qa.md#req-20f8ca5c`](../../proposal/spec/capabilities/test-traceability-and-qa.md#req-20f8ca5c); absent canonically                       | `JSONL`                 | `D-JSONL`                   | `baseline-implemented-behavior-through-normal-change` | JSONL discovery, execution input, argv-array commands, and bounded failure handling exist with direct tests. Schedule a post-Milestone 11 normal `spec` baseline candidate with a fresh ID; 10.2 removes this historical ID from active test and fixture mappings.                      |
-| `REQ-24C14972` — Remove inactive objects from canonical content                 | [`specification-model-and-authoring.md#req-24c14972`](../../proposal/spec/capabilities/specification-model-and-authoring.md#req-24c14972); absent canonically     | `GRAPH`                 | none                        | `baseline-implemented-behavior-through-normal-change` | Active graph validation, guarded deletion, dependent checks, and historical non-reuse exist. Schedule a post-Milestone 11 normal `spec` baseline candidate with a fresh ID.                                                                                                             |
-| `REQ-784F200F` — Support incremental adoption                                   | [`project-initialization-and-adoption.md#req-784f200f`](../../proposal/spec/capabilities/project-initialization-and-adoption.md#req-784f200f); absent canonically | `ADOPTION`              | none                        | `baseline-implemented-behavior-through-normal-change` | Incremental initialization, partial-adoption dogfood, scoped reports, and governed-scope qualification exist. Schedule the adoption baseline set as one bounded post-Milestone 11 normal `spec` Change using fresh IDs.                                                                 |
-| `REQ-8D1283E5` — Exclude ordinary maintenance from SDD modes                    | [`proposal-modes-and-workflow-gates.md#req-8d1283e5`](../../proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-8d1283e5); absent canonically     | `MODES`                 | none                        | `retire-with-rationale`                               | Canonical `REQ-E26A859E` already states that ordinary maintenance outside contract synchronization creates no SDD Change. The proposed block adds no independent active behavior; retain this rationale only.                                                                           |
-| `REQ-983914F3` — Change contract and implementation in spec-code mode           | [`proposal-modes-and-workflow-gates.md#req-983914f3`](../../proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-983914f3); absent canonically     | `MODES`                 | `D-MODES`                   | `baseline-implemented-behavior-through-normal-change` | Mechanical deltas, approval binding, preparation, and later verification implement the bounded workflow; completed Milestone 6 records the qualitative claim as complete. Schedule the mode baseline set as a post-Milestone 11 normal `spec` Change with fresh IDs.                    |
-| `REQ-9D265509` — Use four explicit workflow gates                               | [`proposal-modes-and-workflow-gates.md#req-9d265509`](../../proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-9d265509); absent canonically     | `MODES`                 | `D-VERIFICATION`, `D-MODES` | `baseline-implemented-behavior-through-normal-change` | Proposal validation, approval-bound preparation, VerificationReport, and MergeReport are explicit deterministic surfaces. Schedule a post-Milestone 11 normal `spec` baseline candidate with a fresh ID; 10.2 rebinds contract authority.                                               |
-| `REQ-A44EB430` — Keep normative behavior repository-local                       | [`specification-model-and-authoring.md#req-a44eb430`](../../proposal/spec/capabilities/specification-model-and-authoring.md#req-a44eb430); absent canonically     | `NO-LOCAL-NORM`         | none                        | `preserve-as-nonnormative-backlog`                    | The external-URL quality-finding acceptance rule is not implemented and must not be baselined. Preserve only a post-Milestone 11 candidate describing repository-local normative authority; selection requires a new bounded normal Change and fresh ID.                                |
-| `REQ-B1BB25C9` — Baseline existing behavior without changing it                 | [`project-initialization-and-adoption.md#req-b1bb25c9`](../../proposal/spec/capabilities/project-initialization-and-adoption.md#req-b1bb25c9); absent canonically | `ADOPTION`, `MODES`     | none                        | `baseline-implemented-behavior-through-normal-change` | Spec mode, explicit approval, and the retained dogfood baseline demonstrate the accepted-existing-behavior path without a product mutation claim. Schedule with the adoption/mode baseline candidates after Milestone 11 using a fresh ID.                                              |
-| `REQ-BDAFD401` — Avoid completeness claims for semantic analysis                | [`semantic-review-and-conflicts.md#req-bdafd401`](../../proposal/spec/capabilities/semantic-review-and-conflicts.md#req-bdafd401); absent canonically             | `SEMANTIC`              | `D-SEMANTIC`                | `baseline-implemented-behavior-through-normal-change` | Findings assessment deterministically returns `semantic_completeness_claimed: false`, and current tests cover stale and contradictory review. Schedule a post-Milestone 11 normal `spec` baseline candidate with a fresh ID.                                                            |
-| `REQ-BFAC609F` — Derive governed scope from canonical presence                  | [`project-initialization-and-adoption.md#req-bfac609f`](../../proposal/spec/capabilities/project-initialization-and-adoption.md#req-bfac609f); absent canonically | `ADOPTION`, `ISOLATION` | none                        | `baseline-implemented-behavior-through-normal-change` | Project scope is computed from the selected canonical graph, no object stores a governed flag, and incremental reports avoid completeness claims. Schedule with the adoption baseline set after Milestone 11 using a fresh ID.                                                          |
-| `REQ-D5A7A5DF` — Complete adoption by governance decision                       | [`project-initialization-and-adoption.md#req-d5a7a5df`](../../proposal/spec/capabilities/project-initialization-and-adoption.md#req-d5a7a5df); absent canonically | `ADOPTION`              | `D-GOVERNANCE`              | `baseline-implemented-behavior-through-normal-change` | GovernanceEvidence, adoption-transition subjects, freshness, negative/contradictory decisions, and Merge gate assessment exist; the CLI does not infer a transition. Schedule with the adoption baseline set after Milestone 11 using a fresh ID.                                       |
-| `REQ-FB76FC6F` — Align specification to accepted existing behavior in spec mode | [`proposal-modes-and-workflow-gates.md#req-fb76fc6f`](../../proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-fb76fc6f); absent canonically     | `MODES`, `ADOPTION`     | `D-MODES`                   | `baseline-implemented-behavior-through-normal-change` | Spec mode requires a semantic delta, keeps behavior judgment human, and was exercised by retained dogfood evidence. Schedule with the mode baseline set after Milestone 11 using a fresh ID.                                                                                            |
-| `REQ-FBB24D6C` — Isolate project graphs                                         | [`multi-project-cli-and-skill.md#req-fbb24d6c`](../../proposal/spec/capabilities/multi-project-cli-and-skill.md#req-fbb24d6c); absent canonically                 | `ISOLATION`             | `D-CONFIG`                  | `baseline-implemented-behavior-through-normal-change` | Each invocation selects one project; graph paths, identifiers, adapters, evidence, and reports are project-bound, and orchestration remains external. Schedule a post-Milestone 11 normal `spec` baseline candidate with a fresh ID; do not expand it into cross-project orchestration. |
+| Source Requirement                                                              | Proposal source and canonical presence                                                                      | Evidence                | Inbound dependencies        | Disposition                                           | Rationale, provenance, and destination                                                                                                                                                                                                                                                  |
+| ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ----------------------- | --------------------------- | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `REQ-13CE0529` — Align implementation to active contract in code mode           | `former proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-13ce0529`; absent canonically   | `MODES`                 | `D-MODES`                   | `baseline-implemented-behavior-through-normal-change` | Code mode already requires empty semantic/structural delta and bound active Requirement targets. Preserve this row and the completed-plan evidence; schedule a post-Milestone 11 normal `spec` baseline candidate with a fresh ID.                                                      |
+| `REQ-168CDE5F` — Remove completed Change state from canonical specification     | `former proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-168cde5f`; absent canonically   | `MODES`                 | none                        | `retire-with-rationale`                               | Canonical `REQ-A3C3B779` already keeps workflow state external, and the canonical Markdown graph contains no workflow record type. Retain this row as provenance; no replacement Requirement is planned.                                                                                |
+| `REQ-20F8CA5C` — Support generic JSONL test protocols                           | `former proposal/spec/capabilities/test-traceability-and-qa.md#req-20f8ca5c`; absent canonically            | `JSONL`                 | `D-JSONL`                   | `baseline-implemented-behavior-through-normal-change` | JSONL discovery, execution input, argv-array commands, and bounded failure handling exist with direct tests. Schedule a post-Milestone 11 normal `spec` baseline candidate with a fresh ID; 10.2 removes this historical ID from active test and fixture mappings.                      |
+| `REQ-24C14972` — Remove inactive objects from canonical content                 | `former proposal/spec/capabilities/specification-model-and-authoring.md#req-24c14972`; absent canonically   | `GRAPH`                 | none                        | `baseline-implemented-behavior-through-normal-change` | Active graph validation, guarded deletion, dependent checks, and historical non-reuse exist. Schedule a post-Milestone 11 normal `spec` baseline candidate with a fresh ID.                                                                                                             |
+| `REQ-784F200F` — Support incremental adoption                                   | `former proposal/spec/capabilities/project-initialization-and-adoption.md#req-784f200f`; absent canonically | `ADOPTION`              | none                        | `baseline-implemented-behavior-through-normal-change` | Incremental initialization, partial-adoption dogfood, scoped reports, and governed-scope qualification exist. Schedule the adoption baseline set as one bounded post-Milestone 11 normal `spec` Change using fresh IDs.                                                                 |
+| `REQ-8D1283E5` — Exclude ordinary maintenance from SDD modes                    | `former proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-8d1283e5`; absent canonically   | `MODES`                 | none                        | `retire-with-rationale`                               | Canonical `REQ-E26A859E` already states that ordinary maintenance outside contract synchronization creates no SDD Change. The proposed block adds no independent active behavior; retain this rationale only.                                                                           |
+| `REQ-983914F3` — Change contract and implementation in spec-code mode           | `former proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-983914f3`; absent canonically   | `MODES`                 | `D-MODES`                   | `baseline-implemented-behavior-through-normal-change` | Mechanical deltas, approval binding, preparation, and later verification implement the bounded workflow; completed Milestone 6 records the qualitative claim as complete. Schedule the mode baseline set as a post-Milestone 11 normal `spec` Change with fresh IDs.                    |
+| `REQ-9D265509` — Use four explicit workflow gates                               | `former proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-9d265509`; absent canonically   | `MODES`                 | `D-VERIFICATION`, `D-MODES` | `baseline-implemented-behavior-through-normal-change` | Proposal validation, approval-bound preparation, VerificationReport, and MergeReport are explicit deterministic surfaces. Schedule a post-Milestone 11 normal `spec` baseline candidate with a fresh ID; 10.2 rebinds contract authority.                                               |
+| `REQ-A44EB430` — Keep normative behavior repository-local                       | `former proposal/spec/capabilities/specification-model-and-authoring.md#req-a44eb430`; absent canonically   | `NO-LOCAL-NORM`         | none                        | `preserve-as-nonnormative-backlog`                    | The external-URL quality-finding acceptance rule is not implemented and must not be baselined. Preserve only a post-Milestone 11 candidate describing repository-local normative authority; selection requires a new bounded normal Change and fresh ID.                                |
+| `REQ-B1BB25C9` — Baseline existing behavior without changing it                 | `former proposal/spec/capabilities/project-initialization-and-adoption.md#req-b1bb25c9`; absent canonically | `ADOPTION`, `MODES`     | none                        | `baseline-implemented-behavior-through-normal-change` | Spec mode, explicit approval, and the retained dogfood baseline demonstrate the accepted-existing-behavior path without a product mutation claim. Schedule with the adoption/mode baseline candidates after Milestone 11 using a fresh ID.                                              |
+| `REQ-BDAFD401` — Avoid completeness claims for semantic analysis                | `former proposal/spec/capabilities/semantic-review-and-conflicts.md#req-bdafd401`; absent canonically       | `SEMANTIC`              | `D-SEMANTIC`                | `baseline-implemented-behavior-through-normal-change` | Findings assessment deterministically returns `semantic_completeness_claimed: false`, and current tests cover stale and contradictory review. Schedule a post-Milestone 11 normal `spec` baseline candidate with a fresh ID.                                                            |
+| `REQ-BFAC609F` — Derive governed scope from canonical presence                  | `former proposal/spec/capabilities/project-initialization-and-adoption.md#req-bfac609f`; absent canonically | `ADOPTION`, `ISOLATION` | none                        | `baseline-implemented-behavior-through-normal-change` | Project scope is computed from the selected canonical graph, no object stores a governed flag, and incremental reports avoid completeness claims. Schedule with the adoption baseline set after Milestone 11 using a fresh ID.                                                          |
+| `REQ-D5A7A5DF` — Complete adoption by governance decision                       | `former proposal/spec/capabilities/project-initialization-and-adoption.md#req-d5a7a5df`; absent canonically | `ADOPTION`              | `D-GOVERNANCE`              | `baseline-implemented-behavior-through-normal-change` | GovernanceEvidence, adoption-transition subjects, freshness, negative/contradictory decisions, and Merge gate assessment exist; the CLI does not infer a transition. Schedule with the adoption baseline set after Milestone 11 using a fresh ID.                                       |
+| `REQ-FB76FC6F` — Align specification to accepted existing behavior in spec mode | `former proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-fb76fc6f`; absent canonically   | `MODES`, `ADOPTION`     | `D-MODES`                   | `baseline-implemented-behavior-through-normal-change` | Spec mode requires a semantic delta, keeps behavior judgment human, and was exercised by retained dogfood evidence. Schedule with the mode baseline set after Milestone 11 using a fresh ID.                                                                                            |
+| `REQ-FBB24D6C` — Isolate project graphs                                         | `former proposal/spec/capabilities/multi-project-cli-and-skill.md#req-fbb24d6c`; absent canonically         | `ISOLATION`             | `D-CONFIG`                  | `baseline-implemented-behavior-through-normal-change` | Each invocation selects one project; graph paths, identifiers, adapters, evidence, and reports are project-bound, and orchestration remains external. Schedule a post-Milestone 11 normal `spec` baseline candidate with a fresh ID; do not expand it into cross-project orchestration. |
 
 ## Active-surface dispositions
 
@@ -270,3 +312,46 @@ destinations in active-plan backlog prose, never as Requirement blocks:
 
 The two retire-with-rationale rows need no future candidate. Milestone 11 does
 not select any of these candidates implicitly.
+
+## Leaf 10.3 execution result
+
+Leaf 10.3 completed on 2026-08-05 in the working tree based on `3eed6f5`; no
+commit or other Git operation was created. It executed only `S04`–`S09`:
+
+- the former target-package route and complete temporary procedure moved to
+  [`self-bootstrap-procedure.md`](self-bootstrap-procedure.md) as historical,
+  non-authoritative rationale;
+- all nine files under the former `proposal/spec/` tree and the two active
+  bootstrap route files were removed after maintained links were decoupled;
+- canonical, architecture, repository-instruction, rollout, and plan maps now
+  name normal bounded Changes as the only path for product behavior;
+- the twelve baseline destinations, one nonnormative future-behavior candidate,
+  and two retire-with-rationale decisions remain preserved in this record and
+  the active-plan backlog without active Requirement blocks or reserved IDs;
+- `src/proposal/`, ProposalPackage, SpecPatch, schemas, fixtures, tests, and
+  version 1 CLI behavior were not changed.
+
+Focused retirement verification reproduced exactly 15 disposition rows: 12
+`baseline-implemented-behavior-through-normal-change`, one
+`preserve-as-nonnormative-backlog`, and two `retire-with-rationale`. It found no
+file under the former target tree, no maintained Markdown link to a retired
+path, and no active target-package or bootstrap-authority reference. Normal
+proposal imports remained only under `src/proposal/` and their tests.
+
+The complete required validation passed against the retired surface:
+`npm test` (202 tests), `npm run test:package` (one packaged-consumer smoke
+test), `npm run check:schemas`, `npm run build`, `npm run typecheck`,
+`npm run format:check`, `npm run verify:contracts` (26,506 checks), and
+`git diff --check`. The lower contract-oracle count is the intended removal of
+the retired target Markdown files from local-link and model-document
+denominators; no maintained contract, fixture, diagnostic family, or required
+case was removed. The unrelated pre-existing `src/.DS_Store` remained
+unmodified and outside the leaf.
+
+After the active record was archived, the plan index updated, and the active
+plan compacted to Milestone 11, the complete suite passed again against the
+final closeout subject with 202 tests, one packaged-consumer smoke test, current
+generated schemas, a successful build and typecheck, repository formatting,
+26,370 contract-oracle checks, and `git diff --check`. The further oracle-count
+decrease is the expected removal of completed Milestone 10 prose from the active
+plan denominator, not loss of a maintained contract or fixture check.

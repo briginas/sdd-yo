@@ -1,13 +1,12 @@
 # SDD Yo Architecture
 
-This set explains how the target behavior in the
-[product specification](../spec/README.md) can be implemented without turning
+This set records how the implemented behavior in the canonical
+[product specification](../../spec/README.md) is realized without turning
 implementation choices into hidden product requirements.
 
 ## Architecture map
 
 - [System overview](overview.md)
-- [Self-bootstrap and incremental promotion](bootstrap.md)
 - [Implementation stack](implementation-stack.md)
 - [Markdown dialect](markdown-format.md)
 - [Project configuration](configuration.md)
@@ -22,8 +21,8 @@ implementation choices into hidden product requirements.
 
 ## Architectural status
 
-These documents record the chosen target design. Some bounded subsets are
-implemented and promoted into canonical `spec/`, while the remaining target
-behavior stays under `proposal/spec/`. The applicable product Requirement
-remains authoritative when an architecture detail and product behavior
-conflict.
+These documents record maintained implementation choices and boundaries.
+Canonical product Requirements remain authoritative when architecture and
+product behavior conflict. New behavior enters through a bounded normal
+`spec-code`, `spec`, or `code` Change; architecture prose does not create or
+reserve product behavior.

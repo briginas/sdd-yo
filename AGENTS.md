@@ -5,14 +5,13 @@
 This repository develops SDD Yo: a repository-native specification governance
 system with a deterministic CLI and an optional Agent Skill.
 
-The repository has completed its incremental self-bootstrap MVP through
-Milestone 9. The TypeScript runtime, canonical `spec/`, deterministic version 1
+The repository has completed its incremental self-bootstrap MVP and retired
+the temporary bootstrap authority through Milestone 10. The TypeScript runtime,
+canonical `spec/`, deterministic version 1
 CLI, proposal and exact-patch workflow, evidence composition, Verification and
 Merge gates, enforced governed-scope integration, and optional `sdd-yo` Agent
-Skill exist. Milestone 10 retires the completed temporary self-bootstrap
-authority while preserving independent contract-oracle coverage. Milestone 11
-then targets private package installation and first-run onboarding without
-registry or marketplace publication.
+Skill exist. Milestone 11 targets private package installation and first-run
+onboarding without registry or marketplace publication.
 
 ## Source-of-truth map
 
@@ -20,36 +19,26 @@ Read these in order before planning or editing:
 
 1. `IMPLEMENTATION_PLAN.md` — active milestone, immediate leaf, deferred work,
    and candidate backlog.
-2. `plans/active/milestone-10-self-bootstrap-retirement.md` — the approved
-   disposition, dependency, and retained-coverage handoff consumed by Milestone
-   10.2 and 10.3; it does not override the active plan.
-3. `spec/README.md` — canonical implemented product behavior.
-4. `proposal/spec/README.md` — transition-only bootstrap target material during
-   Milestone 10; do not add new behavior to it.
-5. `proposal/README.md` and `proposal/architecture/bootstrap.md` — historical
-   promotion rules and current retirement inputs during Milestone 10.
-6. `proposal/architecture/README.md` — implementation contracts and boundaries.
-7. `plans/README.md` — active-record and completed-plan index; load historical
+2. `spec/README.md` — canonical implemented product behavior.
+3. `proposal/architecture/README.md` — implementation contracts and boundaries.
+4. `plans/README.md` — completed-plan index; load historical
    plans only when the current task needs their rationale, exact boundary,
    traceability, or evidence pointers.
-8. `contracts/v1/inventory.json` — versioned contract and fixture inventory when
-   working on Milestone 10 contract-oracle migration.
+5. `contracts/v1/inventory.json` — versioned contract and fixture inventory when
+   working on schemas, wire contracts, or fixture-oracle coverage.
 
 Follow links from these maps only as needed for the current task. Do not load
 the full specification when a small Capability or Requirement set is enough.
 
-## Canonical versus proposed behavior
+## Canonical behavior and normal Changes
 
-- During Milestone 10, `proposal/spec/` and the bootstrap procedure are read-only
-  transition inputs for inventory, contract-oracle decoupling, and retirement.
-  Do not add new Requirement definitions, use bootstrap promotion for new
-  behavior, or treat proposal IDs as normal-workflow reservations.
 - Root `spec/` content is canonical and may describe only behavior
   implemented and verified on the integration branch.
 - New behavior uses the applicable normal `spec-code`, `spec`, or `code`
-  workflow after the current retirement leaf permits it.
+  workflow from a bounded candidate tree.
 - Existing canonical Requirement meaning changes only through the applicable
-  normal workflow; bootstrap history grants no alternate mutation path.
+  normal workflow; completed bootstrap history grants no alternate mutation or
+  ID-reservation path.
 - Architecture documents explain implementation choices. They do not override
   a product Requirement.
 
@@ -88,7 +77,8 @@ API or existing dependency is insufficient.
 - Keep normative behavior, architecture, implementation, tests, and evidence
   distinguishable.
 - Do not invent product behavior to unblock implementation. Surface the
-  ambiguity and update the target specification only after human resolution.
+  ambiguity and update the applicable candidate or canonical specification
+  through the normal workflow only after human resolution.
 - Do not create branches, commits, tags, pushes, merges, approvals, QA
   decisions, or finding resolutions unless the user explicitly requests them.
 

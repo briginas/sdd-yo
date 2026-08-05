@@ -11,12 +11,10 @@ current canonical specification, architecture, or
 - State: completed archive
 - Scope: Milestones 0–9
 - Archived: 2026-08-04
-- Target product behavior:
-  [`proposal/spec/README.md`](../../proposal/spec/README.md)
+- Retired target-package and promotion procedure:
+  [`self-bootstrap-procedure.md`](self-bootstrap-procedure.md)
 - Architecture map:
   [`proposal/architecture/README.md`](../../proposal/architecture/README.md)
-- Bootstrap procedure:
-  [`proposal/architecture/bootstrap.md`](../../proposal/architecture/bootstrap.md)
 
 ## Objective
 

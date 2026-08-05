@@ -6,7 +6,9 @@ sdd:
 # SDD Yo implemented specification
 
 This canonical specification contains only implemented and verified behavior.
-Remaining target behavior stays under `proposal/spec/` until promotion.
+New behavior enters through a bounded normal `spec-code`, `spec`, or `code`
+Change and becomes canonical only after its applicable implementation and
+verification conditions are satisfied.
 
 ## Capabilities <!-- sdd:capabilities -->
 

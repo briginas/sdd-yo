@@ -3,21 +3,20 @@
 ## Status
 
 - State: active
-- Current phase: Milestone 10 / Self-bootstrap retirement and normal-workflow transition
-- Current leaf: 10.3 / Bootstrap authority and target-package retirement
+- Current phase: Milestone 11 / Private installation and first-run onboarding
+- Current leaf: 11.1 / CLI discoverability and compatibility identity
 - Last updated: 2026-08-05
 
 ## Source-of-truth map
 
 - Canonical product behavior: [`spec/README.md`](spec/README.md)
-- Remaining bootstrap target package, transition-only:
-  [`proposal/spec/README.md`](proposal/spec/README.md)
 - Architecture: [`proposal/architecture/README.md`](proposal/architecture/README.md)
-- Historical bootstrap and promotion procedure, transition-only:
-  [`proposal/architecture/bootstrap.md`](proposal/architecture/bootstrap.md)
 - Plan index and completed history: [`plans/README.md`](plans/README.md)
-- Completed Milestones 0–9:
-  [`plans/completed/milestones-0-9.md`](plans/completed/milestones-0-9.md)
+- Historical bootstrap procedure:
+  [`plans/completed/self-bootstrap-procedure.md`](plans/completed/self-bootstrap-procedure.md)
+- Completed Milestones 0–10:
+  [`plans/completed/milestones-0-9.md`](plans/completed/milestones-0-9.md) and
+  [`plans/completed/milestone-10-self-bootstrap-retirement.md`](plans/completed/milestone-10-self-bootstrap-retirement.md)
 
 Read the completed plan only when a task needs historical rationale, exact
 milestone boundaries, Requirement traceability, or retained evidence pointers.
@@ -39,165 +38,29 @@ and the optional progressive-disclosure `sdd-yo` Agent Skill.
 - The optional `sdd-yo` Skill routes the implemented workflow through compatible
   CLI JSON and preserves human evidence, permission, and Git side-effect
   boundaries.
-- Milestones 0–9 and the MVP checklist are complete; their detailed record is in
-  the completed-plan archive.
+- Milestones 0–10 and the MVP checklist are complete; their detailed records are
+  in the completed-plan archive.
 - Version `0.1.0` is a private package. The source repository and npm package
   remain private during Milestone 11, and no registry or marketplace publication
   is implied.
-- Pre-existing unimplemented target behavior remains under `proposal/spec/`
-  until its Milestone 10 disposition is executed. New behavior after retirement
-  uses the normal `spec-code`, `spec`, or `code` workflow from a bounded candidate
-  tree rather than adding a new long-lived bootstrap proposal.
-- The 10.1 retirement record accounts for all fifteen proposal-only Requirement
-  definitions, all maintained bootstrap-bound surfaces, and every retained Stage
-  0 check. It assigns twelve meanings to later normal baseline Changes, preserves
-  one unimplemented meaning as nonnormative backlog, retires two redundant
-  meanings with rationale, and gives 10.2 and 10.3 non-overlapping execution
-  boundaries.
-- Leaf 10.2 replaced the Stage 0 verifier with the ordinary
+- Former proposal-only meanings have the dispositions recorded by completed
+  Milestone 10:
+  later baseline candidates remain nonnormative plan backlog, one unimplemented
+  meaning remains a future candidate, and two redundant meanings are retired.
+  New behavior uses the normal `spec-code`, `spec`, or `code` workflow from a
+  bounded candidate tree rather than a long-lived bootstrap target package.
+- Milestone 10 replaced the Stage 0 verifier with the ordinary
   `verify:contracts` contract oracle, removed proposal-only Requirement mappings
   from active inventory and fixture authority, and preserved every contract ID,
   fixture-family ID, required-case mapping, byte-sensitive historical payload,
-  and retained diagnostic family. The remaining proposal target package and
-  bootstrap procedure stay active transition inputs only until 10.3 executes
-  their recorded dispositions.
+  and retained diagnostic family. It archived the completed bootstrap procedure,
+  removed the target package and active promotion route, and preserved the
+  recorded future candidates as nonnormative active-plan backlog.
 
 Repository-wide work discipline and validation commands remain authoritative in
 [`AGENTS.md`](AGENTS.md). Architecture decisions live under
 [`proposal/architecture/`](proposal/architecture/README.md), not in this active
 plan.
-
-## Milestone 10 — Self-bootstrap retirement and normal-workflow transition
-
-Goal: retire the completed temporary self-bootstrap procedure as active
-repository authority, preserve useful contract-oracle coverage and historical
-rationale, and make the normal `spec-code`, `spec`, and `code` workflows the only
-active paths for changing product behavior before private distribution work
-begins.
-
-Milestones 0–9 implemented and verified the mechanisms required for ordinary
-incremental Changes. Milestone 10 preserves `src/proposal/`, the ProposalPackage,
-exact SpecPatch workflow, schemas, contract fixtures, and truth tables as product
-or regression surfaces. It removes only temporary promotion authority, resolves
-the remaining target-package backlog explicitly, and migrates still-useful
-fixture checks to an ordinary contract oracle.
-
-### Milestone 10 handoff contract
-
-Leaf 10.1 created
-`plans/active/milestone-10-self-bootstrap-retirement.md` and links it from
-`plans/README.md`. That document is the reviewable disposition and dependency
-record consumed by 10.2 and 10.3; it is not a second active implementation plan.
-
-The 10.1 inventory starts from this checked baseline:
-
-- `proposal/spec/` contains exactly fifteen Requirement definitions absent from
-  canonical `spec/`;
-- every Capability ID defined under `proposal/spec/` is already present in
-  canonical `spec/`, so there are zero proposal-only Capabilities;
-- completed plans, Git history, and archived evidence are historical inputs, not
-  active authority to remove;
-- exact fixture payload bytes are retained when their malformed form,
-  canonical bytes, or fingerprint is an oracle; terminology alone does not
-  authorize rewriting them.
-
-The inventory contains two exhaustive tables. Each proposal-only Requirement
-row records its source ID and title, proposal path and anchor, canonical
-presence, implementation and test evidence, inbound inventory or fixture
-dependencies, one allowed disposition, rationale, retained provenance, and the
-future leaf or backlog destination. Each active-surface row records its path,
-current bootstrap role, maintained consumers, coverage or authority supplied,
-one of `retain-and-decouple`, `archive`, `rename`, or `remove`, the replacement
-or archive destination, and the leaf that executes the decision. A coverage map
-binds every retained Stage 0 verifier check to its intended contract-oracle
-replacement before 10.2 begins.
-
-Pre-canonical proposal IDs remain source provenance in the retirement record but
-lose active reservation when their proposal definitions are removed. A future
-normal Change generates and checks a fresh ID through `sdd id`; neither backlog
-prose nor a historical fixture occurrence reserves an object ID. The retirement
-record must not represent preserved backlog material as active Requirement
-blocks.
-
-For inventory scope, maintained active authority includes current repository
-instructions and plans, proposal and architecture maps, package commands,
-verifier and generator scripts, versioned inventory authority fields, maintained
-tests, fixture manifests, and documentation used by the required validation
-suite. Completed plans and immutable historical evidence are recorded only when
-needed to explain provenance or a disposition; they are not rewritten merely to
-remove bootstrap terminology.
-
-Leaf 10.1 is complete only when the Requirement table is set-equal to the fifteen
-proposal-only definitions, the zero proposal-only Capability baseline is
-reproduced, every maintained bootstrap-dependent path has one disposition,
-every retained check has a named coverage successor, local links resolve,
-Markdown formatting and `git diff --check` pass, and the diff changes only the
-retirement record, its plan index, this active plan, and transitional repository
-instructions. A missing, ambiguous, or multiply assigned item keeps 10.1
-incomplete.
-
-- [x] **10.0 — Active-plan compaction and private-distribution alignment.** Move
-      the exact completed Milestones 0–9 execution record into the indexed
-      completed-plan archive; keep only current state, active work, deferred
-      scope, and candidate follow-ups in this file; refresh stale repository
-      instructions; preserve the private source and package boundary; and make
-      local tarball installation, rather than publication, the Milestone 11
-      distribution target. This repository-maintenance leaf changes no product
-      Requirement, runtime behavior, package contents, installed Skill state, or
-      Git history.
-- [x] **10.1 — Self-bootstrap retirement inventory and disposition.** Create
-      one exact, reviewable inventory of every proposal-only Requirement and
-      every maintained reference that treats `proposal/spec/`, Stage 0, or the
-      bootstrap procedure as active authority. Assign each proposal-only
-      Requirement exactly one disposition: select later through a normal
-      Change, preserve as nonnormative backlog material, baseline already
-      implemented behavior through an applicable normal Change, or retire with
-      rationale. Classify each verifier, inventory, fixture, test, script, and
-      documentation surface as retain-and-decouple, archive, rename, or remove.
-      Record coverage and dependency evidence for every decision. This leaf is
-      documentation and inventory only: it does not move or delete proposal
-      content, rename commands, change fixture bytes, alter product behavior, or
-      create canonical Requirements. Completed on 2026-08-05 in
-      [`plans/active/milestone-10-self-bootstrap-retirement.md`](plans/active/milestone-10-self-bootstrap-retirement.md):
-      the live 15-Requirement and zero-Capability baselines were reproduced,
-      every maintained surface received one disposition, and every retained
-      verifier check received a named 10.2 successor.
-- [x] **10.2 — Contract-oracle decoupling.** Replace the active Stage 0
-      repository-maintenance verifier boundary with an ordinary contract-fixture
-      oracle that no longer requires proposal Requirement definitions or
-      bootstrap-only authority links. Preserve useful JSON, JSONL, schema,
-      fingerprint, truth-table, path, link, ID-format, coverage, and malformed
-      fixture checks; map implemented contract authority to canonical
-      Requirements or explicit versioned contract sources; and rename maintained
-      scripts, package commands, diagnostics, tests, and documentation where the
-      old Stage 0 name incorrectly implies an active phase. Preserve historical
-      fixture bytes when their exact content is itself an oracle. Demonstrate
-      equal or stronger retained coverage before removing `verify:stage-0` from
-      the required validation suite. This leaf changes no product behavior or
-      canonical Requirement meaning. Completed on 2026-08-05: all 30 diagnostic
-      families, 37 contract IDs, 17 fixture-family IDs, and 176 required-case
-      mappings were retained; all 15 protected historical producer payloads
-      remained byte-identical; the replacement passed 27,369 checks from both
-      the repository root and an external working directory; and the complete
-      validation suite passed.
-- [ ] **10.3 — Bootstrap authority and target-package retirement.** Execute the
-      approved 10.1 dispositions after 10.2 has removed verifier dependencies:
-      preserve selected future behavior as clearly nonnormative backlog material,
-      schedule any already-implemented behavior for an applicable normal Change,
-      archive the completed bootstrap procedure and evidence pointers, remove
-      active promotion instructions and stale bootstrap terminology from source
-      maps and rollout documentation, and remove `proposal/spec/` only when no
-      maintained authority or link depends on it. Keep normal proposal runtime,
-      schemas, fixtures, and exact-patch behavior intact. Run the focused
-      retirement checks and the complete repository validation suite before
-      making 11.1 current.
-
-Done when `proposal/spec/` and the bootstrap procedure are no longer active
-authority, every former proposal-only Requirement has an explicit executed or
-scheduled disposition, the required contract verifier retains equal or stronger
-coverage without proposal dependencies, active repository instructions name
-only normal product workflows, all focused and full validation passes, and
-normal ProposalPackage and exact-patch behavior remains intact.
 
 ## Milestone 11 — Private installation and first-run onboarding
 
@@ -287,18 +150,19 @@ These candidates remain available for selection after Milestone 11. They are
 not implied work and require a new bounded milestone plus any necessary human
 authorization:
 
-- baseline the already implemented adoption semantics recorded by 10.1 through
+- baseline the already implemented adoption semantics recorded by completed
+  Milestone 10 through
   one bounded normal `spec` Change with fresh IDs: incremental adoption,
   canonical governed scope, explicit governance transition, and accepted
   existing-behavior baseline;
 - baseline the already implemented qualitative synchronization-mode and
-  four-gate semantics recorded by 10.1 through one or more bounded normal
+  four-gate semantics recorded by completed Milestone 10 through one or more bounded normal
   `spec` Changes with fresh IDs;
 - baseline the already implemented inactive-object, generic JSONL adapter,
-  semantic-completeness, and per-project isolation semantics recorded by 10.1
+  semantic-completeness, and per-project isolation semantics recorded by completed Milestone 10
   through independently reviewable normal `spec` Changes with fresh IDs;
 - consider repository-local normative authority and external-link quality
-  findings as a new behavior candidate; the 10.1 inventory found no complete
+  findings as a new behavior candidate; the completed Milestone 10 inventory found no complete
   implementation evidence for that former proposal meaning;
 - publish through a private organization registry if distribution needs outgrow
   local tarballs; this would require a scoped package and an explicit decision to
@@ -330,13 +194,13 @@ authorization:
 
 ## Immediate next leaf
 
-Implement only 10.3, the bootstrap authority and target-package retirement
-recorded in `plans/active/milestone-10-self-bootstrap-retirement.md`. Execute the
-approved Requirement and surface dispositions now that the contract verifier
-has no proposal-definition dependency: preserve the selected nonnormative
-backlog, schedule applicable normal baseline Changes, archive the completed
-bootstrap procedure and evidence pointers, remove active promotion authority,
-and remove `proposal/spec/` only after maintained links are decoupled. Do not
-change product behavior or canonical Requirement meaning, remove normal proposal
-runtime/schema/fixture/exact-patch surfaces, begin Milestone 11, or perform Git
-operations in this leaf.
+Implement only 11.1, CLI discoverability and compatibility identity. Use one
+bounded normal `spec-code` Change to generate and check fresh IDs, draft the
+smallest complete candidate for stable top-level and command-specific help, CLI
+version reporting, and machine-readable package, CLI, JSON-schema, and Skill
+compatibility identity, obtain the required human decision, apply only the exact
+approved SpecPatch, and implement Requirement-named CLI and packaged-executable
+tests. Preserve existing version 1 command response contracts and keep help and
+identity behavior free of project mutation. Do not change package contents,
+install or update the Skill, add the root quickstart, claim external-project
+onboarding readiness, or perform Git operations in this leaf.
