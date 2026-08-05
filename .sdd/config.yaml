@@ -13,4 +13,4 @@ ids:
 tests:
   adapters: []
 evidence:
-  allowed_issuers: []
+  allowed_issuers: [product-review]
