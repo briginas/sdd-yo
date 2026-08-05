@@ -40,13 +40,13 @@ async function readJson(path: string): Promise<Record<string, unknown>> {
   return value;
 }
 
-test("bootstrap dependency contract keeps every selected package exact-pinned", async () => {
+test("dependency contract keeps every selected package exact-pinned", async () => {
   const manifest = (await readJson("package.json")) as PackageManifest;
   assert.deepEqual(manifest.dependencies, expectedDependencies);
   assert.equal(manifest.devDependencies?.["json-schema-to-typescript"], "15.0.4");
 });
 
-test("bootstrap dependency contract validates Draft 2020-12 local refs and formats", async () => {
+test("dependency contract validates Draft 2020-12 local refs and formats", async () => {
   const addFormats = formatsPluginModule.default;
   const validator = new Ajv2020({ allErrors: true, strictSchema: true, strictTypes: false });
   validator.addKeyword({ keyword: "x-sdd-ordering", schemaType: "string", valid: true });
@@ -76,7 +76,7 @@ test("bootstrap dependency contract validates Draft 2020-12 local refs and forma
   assert.equal(validateTimestamp("2026-99-99T12:00:00Z"), false);
 });
 
-test("bootstrap dependency contract rejects unsafe YAML features before typed use", () => {
+test("dependency contract rejects unsafe YAML features before typed use", () => {
   const duplicate = parseDocument("project_id: first\nproject_id: second\n", {
     customTags: [],
     uniqueKeys: true,
@@ -93,7 +93,7 @@ test("bootstrap dependency contract rejects unsafe YAML features before typed us
   assert.throws(() => alias.toJS({ maxAliasCount: 0 }), /Alias resolution is disabled|Excessive alias count/);
 });
 
-test("bootstrap dependency contract preserves Markdown AST positions and extensions", () => {
+test("dependency contract preserves Markdown AST positions and extensions", () => {
   const tree = unified()
     .use(remarkParse)
     .use(remarkFrontmatter, ["yaml"])
@@ -110,7 +110,7 @@ test("bootstrap dependency contract preserves Markdown AST positions and extensi
   );
 });
 
-test("bootstrap dependency contract rejects XML doctypes before entity processing", async () => {
+test("dependency contract rejects XML doctypes before entity processing", async () => {
   const xml = await readFile("fixtures/v1/adapters/junit/external-entity.xml", "utf8");
   const parser = new SaxesParser();
   let elementSeen = false;
@@ -128,7 +128,7 @@ test("bootstrap dependency contract rejects XML doctypes before entity processin
   assert.equal(elementSeen, false);
 });
 
-test("bootstrap dependency contract generates TypeScript from checked-in schema refs", async () => {
+test("dependency contract generates TypeScript from checked-in schema refs", async () => {
   const source = await compileFromFile("contracts/v1/schemas/change-descriptor.schema.json", {
     bannerComment: "",
     unknownAny: true,
@@ -138,7 +138,7 @@ test("bootstrap dependency contract generates TypeScript from checked-in schema 
   assert.doesNotMatch(source, /\bany\b/);
 });
 
-test("bootstrap dependency contract uses Node CLI and direct-spawn boundaries", async () => {
+test("dependency contract uses Node CLI and direct-spawn boundaries", async () => {
   const parsed = parseArgs({
     args: ["--config", ".sdd/config.yaml"],
     options: { config: { type: "string" } },

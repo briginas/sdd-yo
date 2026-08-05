@@ -72,10 +72,10 @@ are emitted; absent inapplicable fields are not. Paths, display titles,
 explanatory sections, source formatting, and input object-key order are not
 copied into canonical values.
 
-Stage 0 object fixtures use a language-independent parsed-model projection as
-their input boundary. That projection is a bootstrap oracle, not a public CLI
-wire format. Later parser tests must demonstrate that Markdown produces the
-same projection before the fingerprint implementation consumes it.
+Contract object fixtures use a language-independent parsed-model projection as
+their input boundary. That projection is a contract oracle, not a public CLI
+wire format. Parser tests demonstrate that Markdown produces the same
+projection before the fingerprint implementation consumes it.
 
 ## Fingerprint classes
 
@@ -116,9 +116,9 @@ requirement_ids, reachable_fragments
 ```
 
 The envelope supplies object type and ID for every class. Prose fields in the
-Stage 0 projection are normalized block-AST arrays. Version 1 fixtures cover
-paragraph and text nodes; node keys are ordered `type`, then `children` or
-`value`. Acceptance criteria, constraints, and states are arrays of block-AST
+contract-fixture projection are normalized block-AST arrays. Version 1 fixtures
+cover paragraph and text nodes; node keys are ordered `type`, then `children`
+or `value`. Acceptance criteria, constraints, and states are arrays of block-AST
 arrays so their outer source order remains observable. `reachable_fragments`
 contains sorted arrays of the Requirement IDs contributed by each reachable
 fragment, ordered lexicographically by their canonical JSON bytes; it does not
@@ -172,7 +172,7 @@ hashing. A change confined to explanatory content therefore produces empty
 semantic, structural, and verification deltas; there is no explanatory
 fingerprint class.
 
-The Stage 0 byte and truth-table oracle is the
+The contract byte and truth-table oracle is the
 [`fingerprint-deltas` fixture manifest](../../fixtures/v1/fingerprints/deltas/cases.json).
 
 ### Base delta computation

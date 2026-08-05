@@ -1,6 +1,6 @@
 {
   "fixture_manifest_version": "1.0",
-  "status": "bootstrap-fixture-manifest",
+  "status": "contract-fixture-manifest",
   "fixture_family_id": "security-path-process",
   "completed_leaves": [
     "0.7-path-safety-scenarios",
@@ -28,7 +28,6 @@
     "REQ-7AFE9904",
     "REQ-12E19D70",
     "REQ-6D8DDDF7",
-    "REQ-20F8CA5C",
     "REQ-1DD46CA9",
     "REQ-F91F7D11",
     "REQ-E85A06C3",
@@ -38,7 +37,6 @@
     "spec/capabilities/validation-fingerprints-and-patches.md#req-7afe9904",
     "spec/capabilities/test-traceability-and-qa.md#req-12e19d70",
     "spec/capabilities/test-traceability-and-qa.md#req-6d8dddf7",
-    "proposal/spec/capabilities/test-traceability-and-qa.md#req-20f8ca5c",
     "spec/capabilities/multi-project-cli-and-skill.md#req-1dd46ca9",
     "spec/capabilities/multi-project-cli-and-skill.md#req-f91f7d11",
     "spec/capabilities/merge-readiness.md#req-e85a06c3",
@@ -579,7 +577,6 @@
         "pass_allowed_after_spawn_failure": false,
         "basis_requirements": [
           "REQ-12E19D70",
-          "REQ-20F8CA5C",
           "REQ-1DD46CA9",
           "REQ-F91F7D11"
         ]

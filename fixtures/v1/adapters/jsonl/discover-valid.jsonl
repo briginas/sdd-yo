@@ -1,4 +1,4 @@
 {"schema_version":"1.0","record_type":"test_stream","operation":"discover","adapter_id":"unit"}
 {"schema_version":"1.0","record_type":"suite","local_id":"suite-1","parent_id":null,"name":"Adapter contract examples"}
 {"schema_version":"1.0","record_type":"test","local_id":"test-1","parent_id":"suite-1","name":"discovers a normalized test REQ-12E19D70","source":{"path":"tests/adapter-contract.case","line":12}}
-{"schema_version":"1.0","record_type":"test","local_id":"test-2","parent_id":"suite-1","name":"emits a generic JSONL stream REQ-20F8CA5C"}
+{"schema_version":"1.0","record_type":"test","local_id":"test-2","parent_id":"suite-1","name":"emits a normalized JSONL stream REQ-12E19D70"}

@@ -71,7 +71,7 @@ function processResult(stdout: Uint8Array, exitCode: number | null = 0, signal: 
   return { exitCode, signal, standardOutput: stdout, standardError: new Uint8Array() };
 }
 
-describe("REQ-20F8CA5C JSONL discovery import and command adapter boundary", () => {
+describe("REQ-12E19D70 JSONL discovery import and command adapter boundary", () => {
   test("imports the version 1 discovery stream without computing hierarchy or Requirement mappings", async () => {
     const imported = parseDiscoveryJsonl(await fixture("forward-parent.jsonl"), {
       maxBytes: 4_096,

@@ -1,6 +1,6 @@
 {
   "fixture_manifest_version": "1.0",
-  "status": "bootstrap-fixture-manifest",
+  "status": "contract-fixture-manifest",
   "contract_id": "artifact.candidate-tree-manifest",
   "schema": "../../../../../contracts/v1/schemas/candidate-tree-manifest.schema.json",
   "requirements": [

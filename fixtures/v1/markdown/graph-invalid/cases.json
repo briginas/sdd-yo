@@ -1,6 +1,6 @@
 {
   "fixture_manifest_version": "1.0",
-  "status": "bootstrap-fixture-manifest",
+  "status": "contract-fixture-manifest",
   "fixture_family_id": "markdown-graph-invalid",
   "contracts": [
     "markdown.index-document",
@@ -13,8 +13,7 @@
     "REQ-8D157EBE",
     "REQ-99605FAB",
     "REQ-7D93D64A",
-    "REQ-13CF54D6",
-    "REQ-FBB24D6C"
+    "REQ-13CF54D6"
   ],
   "cases": [
     {

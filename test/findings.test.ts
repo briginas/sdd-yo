@@ -296,7 +296,7 @@ test("REQ-18F84CE2 REQ-2AF962EB requires current human review when optional mode
   assert.equal(reviewed.semantic_completeness_claimed, false);
 });
 
-test("REQ-2AF962EB REQ-BDAFD401 rejects stale or contradictory human review without completeness claims", () => {
+test("REQ-2AF962EB rejects stale or contradictory human review without completeness claims", () => {
   const stale = assess({
     model_analysis_performed: false,
     human_reviews: [humanReview([], { candidate_input_fingerprint: fingerprint("b") })],

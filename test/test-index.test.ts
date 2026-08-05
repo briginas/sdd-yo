@@ -57,7 +57,6 @@ function subject(discoveries: readonly AdapterDiscovery[]) {
 
 const known = new Set<RequirementId>([
   requirement("REQ-12E19D70"),
-  requirement("REQ-20F8CA5C"),
   requirement("REQ-E451458E"),
   requirement("REQ-F7CEE6D0"),
 ]);

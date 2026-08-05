@@ -1,9 +1,9 @@
 {
   "fixture_manifest_version": "1.0",
-  "status": "bootstrap-fixture-manifest",
+  "status": "contract-fixture-manifest",
   "fixture_family_id": "freshness-and-subjects",
   "leaf": "0.5c",
-  "scope": "Decision truth tables for current, stale, missing, negative, contradictory, and mode-inapplicable evidence at Merge Gate. Inputs are abstract validated artifact states; malformed artifact shape remains covered by the Stage 0.2 artifact fixture matrix.",
+  "scope": "Decision truth tables for current, stale, missing, negative, contradictory, and mode-inapplicable evidence at Merge Gate. Inputs are abstract validated artifact states; malformed artifact shape remains covered by the contract artifact fixture matrix.",
   "contracts": [
     "artifact.approval-evidence",
     "artifact.test-index",

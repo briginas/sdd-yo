@@ -1,6 +1,6 @@
 {
   "fixture_manifest_version": "1.0",
-  "status": "bootstrap-fixture-manifest",
+  "status": "contract-fixture-manifest",
   "fixture_family_id": "adapter-jsonl",
   "completed_leaves": [
     "0.6a",
@@ -20,7 +20,6 @@
     "REQ-F7CEE6D0",
     "REQ-E451458E",
     "REQ-5A832396",
-    "REQ-20F8CA5C",
     "REQ-72BA737C"
   ],
   "authorities": [
@@ -28,7 +27,6 @@
     "spec/capabilities/test-traceability-and-qa.md#req-f7cee6d0",
     "spec/capabilities/test-traceability-and-qa.md#req-e451458e",
     "spec/capabilities/test-traceability-and-qa.md#req-5a832396",
-    "proposal/spec/capabilities/test-traceability-and-qa.md#req-20f8ca5c",
     "spec/capabilities/test-traceability-and-qa.md#req-72ba737c",
     "proposal/architecture/test-adapters.md#normalized-discovery-protocol",
     "proposal/architecture/test-adapters.md#normalized-execution-protocol",
@@ -58,7 +56,6 @@
       "REQ-F7CEE6D0",
       "REQ-E451458E",
       "REQ-5A832396",
-      "REQ-20F8CA5C",
       "REQ-72BA737C"
     ],
     "normalized_node_order": "adapter_id then local_id, independent of input record order after the header",

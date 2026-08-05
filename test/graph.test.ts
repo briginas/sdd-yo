@@ -73,7 +73,7 @@ describe("REQ-DD91AD0F REQ-0EF66B28 REQ-8D157EBE REQ-99605FAB REQ-F3A241BE REQ-7
     const result = validateSpecificationGraph(await documents(validRoot), "README.md" as ProjectPath);
     assert.equal(result.ok, true, result.ok ? undefined : result.diagnostics[0]?.code);
   });
-  test("rejects every Stage 0 invalid graph family with stable diagnostics", async () => {
+  test("rejects every contract-fixture invalid graph family with stable diagnostics", async () => {
     const expectations = {
       "duplicate-id": "SDD_GRAPH_DUPLICATE_ID",
       "broken-link": "SDD_GRAPH_LINK_BROKEN",

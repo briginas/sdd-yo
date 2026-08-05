@@ -131,7 +131,7 @@ async function walk(directory: string): Promise<string[]> {
   return files;
 }
 
-async function parseJson<T = unknown>(file: string, code = "S0_JSON_PARSE"): Promise<T | undefined> {
+async function parseJson<T = unknown>(file: string, code = "CONTRACT_JSON_PARSE"): Promise<T | undefined> {
   try {
     return JSON.parse(await readFile(file, "utf8")) as T;
   } catch (error) {
@@ -158,7 +158,7 @@ function validateIds(value: unknown, file: string): void {
   for (const id of collectIds(value)) {
     const prefix = id.slice(0, 3);
     const pattern = ID_PATTERNS[prefix as keyof typeof ID_PATTERNS];
-    assert(pattern?.test(id), file, "S0_ID_FORMAT", `invalid identifier ${JSON.stringify(id)}`);
+    assert(pattern?.test(id), file, "CONTRACT_ID_FORMAT", `invalid identifier ${JSON.stringify(id)}`);
   }
 }
 
@@ -187,7 +187,7 @@ function validateDuplicateNames(value: unknown, file: string): void {
   for (const collection of collectNamedEntries(value)) {
     const seen = new Set<string>();
     for (const name of collection.names) {
-      assert(!seen.has(name), file, "S0_DUPLICATE_FIXTURE_NAME", `duplicate ${collection.key} ${JSON.stringify(name)} at ${collection.location}`);
+      assert(!seen.has(name), file, "CONTRACT_DUPLICATE_FIXTURE_NAME", `duplicate ${collection.key} ${JSON.stringify(name)} at ${collection.location}`);
       seen.add(name);
     }
   }
@@ -198,17 +198,17 @@ function localTarget(source: string, reference: string): string {
   return path.resolve(path.dirname(source), target);
 }
 
-async function validateTarget(source: string, reference: string, code = "S0_MISSING_TARGET"): Promise<boolean> {
+async function validateTarget(source: string, reference: string, code = "CONTRACT_MISSING_TARGET"): Promise<boolean> {
   const target = localTarget(source, reference);
   const inRepository = target === repositoryRoot || target.startsWith(`${repositoryRoot}${path.sep}`);
-  assert(inRepository, source, "S0_PATH_ESCAPE", `reference escapes the repository: ${JSON.stringify(reference)}`);
+  assert(inRepository, source, "CONTRACT_PATH_ESCAPE", `reference escapes the repository: ${JSON.stringify(reference)}`);
   if (!inRepository) return false;
   const present = await exists(target);
   assert(present, source, code, `missing target ${JSON.stringify(reference)}`);
   if (present) {
     const [realRepository, realTarget] = await Promise.all([realpath(repositoryRoot), realpath(target)]);
     const realInRepository = realTarget === realRepository || realTarget.startsWith(`${realRepository}${path.sep}`);
-    assert(realInRepository, source, "S0_PATH_ESCAPE", `reference resolves through a symlink outside the repository: ${JSON.stringify(reference)}`);
+    assert(realInRepository, source, "CONTRACT_PATH_ESCAPE", `reference resolves through a symlink outside the repository: ${JSON.stringify(reference)}`);
     if (!realInRepository) return false;
   }
   return present;
@@ -242,7 +242,7 @@ async function validateAnchor(source: string, reference: string): Promise<void> 
       if (explicitAnchor) anchors.add(explicitAnchor.toLowerCase());
     }
   }
-  assert(anchors.has(anchor), source, "S0_MISSING_ANCHOR", `missing anchor #${anchor} in ${relative(target)}`);
+  assert(anchors.has(anchor), source, "CONTRACT_MISSING_ANCHOR", `missing anchor #${anchor} in ${relative(target)}`);
 }
 
 async function validateAuthorities(manifest: FixtureManifest, file: string): Promise<void> {
@@ -250,7 +250,7 @@ async function validateAuthorities(manifest: FixtureManifest, file: string): Pro
     if (typeof authority !== "string") continue;
     const [authorityPath = "", authorityAnchor] = authority.split("#", 2);
     const present = await validateTarget(file, path.relative(path.dirname(file), path.join(repositoryRoot, authorityPath)) + (authorityAnchor === undefined ? "" : `#${authorityAnchor}`));
-    if (present) await validateAnchor(path.join(repositoryRoot, ".stage-0-root"), authority);
+    if (present) await validateAnchor(path.join(repositoryRoot, ".contract-root"), authority);
   }
 }
 
@@ -273,7 +273,7 @@ async function validateMarkdownLinks(files: string[]): Promise<void> {
       if (!reference || /^(?:https?:|mailto:)/i.test(reference)) continue;
       const present = reference.startsWith("#")
         ? true
-        : await validateTarget(file, reference, "S0_MARKDOWN_LINK_TARGET");
+        : await validateTarget(file, reference, "CONTRACT_MARKDOWN_LINK_TARGET");
       if (present) await validateAnchor(file, reference);
     }
   }
@@ -310,10 +310,10 @@ async function validateSchemaRefs(schemaFiles: string[], parsedJson: Map<string,
     for (const reference of collectSchemaRefs(schema)) {
       const [targetPart, fragment = ""] = reference.split("#", 2);
       const target = targetPart ? path.resolve(path.dirname(file), targetPart) : file;
-      const present = await validateTarget(file, targetPart || path.basename(file), "S0_SCHEMA_REF_TARGET");
+      const present = await validateTarget(file, targetPart || path.basename(file), "CONTRACT_SCHEMA_REF_TARGET");
       if (!present) continue;
       const targetSchema = target === file ? schema : parsedJson.get(target) ?? (await parseJson(target));
-      assert(decodeJsonPointer(targetSchema, fragment ? `#${fragment}` : "#") !== undefined, file, "S0_SCHEMA_REF_POINTER", `unresolved $ref ${JSON.stringify(reference)}`);
+      assert(decodeJsonPointer(targetSchema, fragment ? `#${fragment}` : "#") !== undefined, file, "CONTRACT_SCHEMA_REF_POINTER", `unresolved $ref ${JSON.stringify(reference)}`);
     }
   }
 }
@@ -343,7 +343,7 @@ async function validateManifestReferences(manifest: FixtureManifest, file: strin
     if (typeof item.file === "string") await validateTarget(file, item.file);
     if (typeof item.root === "string") {
       const root = path.resolve(path.dirname(file), item.root);
-      assert(await exists(root), file, "S0_MISSING_TARGET", `missing fixture root ${JSON.stringify(item.root)}`);
+      assert(await exists(root), file, "CONTRACT_MISSING_TARGET", `missing fixture root ${JSON.stringify(item.root)}`);
       if (typeof item.entrypoint === "string") await validateTarget(file, path.join(item.root, item.entrypoint));
     }
     for (const variant of item.variants ?? []) {
@@ -370,7 +370,7 @@ function validateFingerprintGoldens(manifest: FixtureManifest, file: string): vo
     else if (isRecord(value)) {
       if (typeof value.canonical_json_utf8 === "string" && typeof value.expected_fingerprint === "string") {
         const actual = `sha256:${createHash("sha256").update(value.canonical_json_utf8, "utf8").digest("hex")}`;
-        assert(actual === value.expected_fingerprint, file, "S0_FINGERPRINT_MISMATCH", `expected ${value.expected_fingerprint}, calculated ${actual}`);
+        assert(actual === value.expected_fingerprint, file, "CONTRACT_FINGERPRINT_MISMATCH", `expected ${value.expected_fingerprint}, calculated ${actual}`);
       }
       Object.values(value).forEach(visit);
     }
@@ -396,7 +396,7 @@ async function validateJsonl(manifests: ParsedManifest[]): Promise<void> {
   const jsonlFiles = (await walk(path.join(repositoryRoot, "fixtures"))).filter((file) => file.endsWith(".jsonl"));
   for (const file of jsonlFiles) {
     const declaration = declarations.get(file);
-    assert(Boolean(declaration), file, "S0_UNDECLARED_FIXTURE", "JSONL fixture is not declared by a manifest");
+    assert(Boolean(declaration), file, "CONTRACT_UNDECLARED_FIXTURE", "JSONL fixture is not declared by a manifest");
     if (!declaration || declaration.stream_valid === false || declaration.utf8_valid === false) continue;
     let text;
     try {
@@ -404,7 +404,7 @@ async function validateJsonl(manifests: ParsedManifest[]): Promise<void> {
       checks += 1;
     } catch (error) {
       checks += 1;
-      record(file, "S0_JSONL_UTF8", errorMessage(error));
+      record(file, "CONTRACT_JSONL_UTF8", errorMessage(error));
       continue;
     }
     for (const [index, line] of text.split(/\r?\n/).entries()) {
@@ -414,7 +414,7 @@ async function validateJsonl(manifests: ParsedManifest[]): Promise<void> {
         checks += 1;
       } catch (error) {
         checks += 1;
-        record(file, "S0_JSONL_PARSE", `line ${index + 1}: ${errorMessage(error)}`);
+        record(file, "CONTRACT_JSONL_PARSE", `line ${index + 1}: ${errorMessage(error)}`);
       }
     }
   }
@@ -435,14 +435,14 @@ function validateCoverage(manifests: ParsedManifest[], inventory: Inventory): vo
     const firstEntry = entries[0];
     if (!firstEntry) continue;
     const inventoryFamily = families.get(familyId);
-    assert(Boolean(inventoryFamily), firstEntry.file, "S0_UNKNOWN_FIXTURE_FAMILY", `fixture family ${JSON.stringify(familyId)} is absent from inventory`);
+    assert(Boolean(inventoryFamily), firstEntry.file, "CONTRACT_UNKNOWN_FIXTURE_FAMILY", `fixture family ${JSON.stringify(familyId)} is absent from inventory`);
     if (!inventoryFamily) continue;
 
     const actualIds = new Set(entries.flatMap((entry) => [...manifestCaseIds(entry.value)]));
     const coverage = new Map();
     for (const entry of entries) {
       for (const [requiredCase, caseIds] of Object.entries(entry.value.inventory_required_case_coverage ?? {})) {
-        assert(!coverage.has(requiredCase), entry.file, "S0_DUPLICATE_COVERAGE_KEY", `duplicate coverage key ${JSON.stringify(requiredCase)} for family ${familyId}`);
+        assert(!coverage.has(requiredCase), entry.file, "CONTRACT_DUPLICATE_COVERAGE_KEY", `duplicate coverage key ${JSON.stringify(requiredCase)} for family ${familyId}`);
         coverage.set(requiredCase, { caseIds, file: entry.file });
       }
     }
@@ -450,9 +450,9 @@ function validateCoverage(manifests: ParsedManifest[], inventory: Inventory): vo
     for (const requiredCase of inventoryFamily.required_cases) {
       const mapped = coverage.get(requiredCase);
       const covered = mapped ? Array.isArray(mapped.caseIds) && mapped.caseIds.length > 0 : actualIds.has(requiredCase);
-      assert(covered, firstEntry.file, "S0_TRUTH_TABLE_INCOMPLETE", `required case ${JSON.stringify(requiredCase)} is not covered for family ${familyId}`);
+      assert(covered, firstEntry.file, "CONTRACT_TRUTH_TABLE_INCOMPLETE", `required case ${JSON.stringify(requiredCase)} is not covered for family ${familyId}`);
       for (const caseId of mapped?.caseIds ?? []) {
-        assert(actualIds.has(caseId), mapped.file, "S0_COVERAGE_TARGET", `coverage target ${JSON.stringify(caseId)} does not name a case in family ${familyId}`);
+        assert(actualIds.has(caseId), mapped.file, "CONTRACT_COVERAGE_TARGET", `coverage target ${JSON.stringify(caseId)} does not name a case in family ${familyId}`);
       }
     }
   }
@@ -470,13 +470,7 @@ async function validateSpecificationModels(modelFiles: string[], manifests: Pars
       const id = match[1];
       if (!id) continue;
       const previous = definitions.get(id);
-      const splitCapability =
-        id.startsWith("CAP-") &&
-        previous !== undefined &&
-        path.basename(previous) === path.basename(file) &&
-        [previous, file].some((candidate) => relative(candidate).startsWith("proposal/spec/capabilities/")) &&
-        [previous, file].some((candidate) => relative(candidate).startsWith("spec/capabilities/"));
-      assert(!previous || splitCapability, file, "S0_DUPLICATE_MODEL_ID", `${id} is already defined in ${previous ? relative(previous) : "the specification models"}`);
+      assert(!previous, file, "CONTRACT_DUPLICATE_MODEL_ID", `${id} is already defined in ${previous ? relative(previous) : "the canonical specification model"}`);
       if (!previous) definitions.set(id, file);
     }
 
@@ -485,9 +479,9 @@ async function validateSpecificationModels(modelFiles: string[], manifests: Pars
       const end = requirementMatches[index + 1]?.index ?? text.length;
       const block = text.slice(match.index, end);
       const id = match[1] ?? "unknown Requirement";
-      assert(/```sdd\s+[\s\S]*?\bkind:\s*\S+[\s\S]*?\bverification:\s*\S+[\s\S]*?```/.test(block), file, "S0_REQUIREMENT_SHAPE", `${id} is missing its kind and verification metadata block`);
-      assert(/^### Statement\s+<!--\s*sdd:statement\s*-->\s*$/m.test(block), file, "S0_REQUIREMENT_SHAPE", `${id} is missing its Statement section`);
-      assert(/^### Acceptance criteria\s+<!--\s*sdd:acceptance\s*-->\s*$/m.test(block), file, "S0_REQUIREMENT_SHAPE", `${id} is missing its Acceptance criteria section`);
+      assert(/```sdd\s+[\s\S]*?\bkind:\s*\S+[\s\S]*?\bverification:\s*\S+[\s\S]*?```/.test(block), file, "CONTRACT_REQUIREMENT_SHAPE", `${id} is missing its kind and verification metadata block`);
+      assert(/^### Statement\s+<!--\s*sdd:statement\s*-->\s*$/m.test(block), file, "CONTRACT_REQUIREMENT_SHAPE", `${id} is missing its Statement section`);
+      assert(/^### Acceptance criteria\s+<!--\s*sdd:acceptance\s*-->\s*$/m.test(block), file, "CONTRACT_REQUIREMENT_SHAPE", `${id} is missing its Acceptance criteria section`);
     }
   }
 
@@ -496,7 +490,7 @@ async function validateSpecificationModels(modelFiles: string[], manifests: Pars
   for (const family of inventory.fixture_families ?? []) for (const id of family.requirements ?? []) referencedRequirements.add(id);
   for (const { value } of manifests) for (const id of value.requirements ?? []) referencedRequirements.add(id);
   for (const id of referencedRequirements) {
-    assert(definitions.has(id), path.join(repositoryRoot, "contracts", "v1", "inventory.json"), "S0_UNKNOWN_REQUIREMENT", `referenced Requirement ${id} has no proposal or canonical definition`);
+    assert(definitions.has(id), path.join(repositoryRoot, "contracts", "v1", "inventory.json"), "CONTRACT_UNKNOWN_REQUIREMENT", `referenced Requirement ${id} has no canonical definition`);
   }
 }
 
@@ -505,7 +499,7 @@ async function main(): Promise<void> {
   const nodeMajor = Number.parseInt(nodeMajorText, 10);
   const nodeMinor = Number.parseInt(nodeMinorText, 10);
   const supportedNode = nodeMajor > 22 || (nodeMajor === 22 && nodeMinor >= 18);
-  assert(supportedNode, path.join(repositoryRoot, "scripts", "verify-stage-0.ts"), "S0_NODE_VERSION", `Node.js 22.18 or newer is required; found ${process.versions.node}`);
+  assert(supportedNode, path.join(repositoryRoot, "scripts", "verify-contracts.ts"), "CONTRACT_NODE_VERSION", `Node.js 22.18 or newer is required; found ${process.versions.node}`);
 
   const contractsRoot = path.join(repositoryRoot, "contracts", "v1");
   const fixturesRoot = path.join(repositoryRoot, "fixtures", "v1");
@@ -516,17 +510,17 @@ async function main(): Promise<void> {
   const parsedJson = new Map<string, unknown>();
 
   for (const file of manifestFiles) {
-    const value = await parseJson<FixtureManifest>(file, "S0_MANIFEST_PARSE");
+    const value = await parseJson<FixtureManifest>(file, "CONTRACT_MANIFEST_PARSE");
     if (!value) continue;
     manifests.push({ file, value });
     parsedJson.set(file, value);
-    assert(value.status === "bootstrap-fixture-manifest" || value.status === "bootstrap-artifact-fixture-matrix", file, "S0_MANIFEST_SHAPE", "unexpected or missing bootstrap manifest status");
-    if (value.status === "bootstrap-fixture-manifest") {
-      assert(value.fixture_manifest_version === "1.0", file, "S0_MANIFEST_SHAPE", "fixture_manifest_version must be 1.0");
-      assert(Array.isArray(value.cases) || Array.isArray(value.pairs), file, "S0_MANIFEST_SHAPE", "fixture manifest must declare cases or pairs");
+    assert(value.status === "contract-fixture-manifest" || value.status === "contract-artifact-fixture-matrix", file, "CONTRACT_MANIFEST_SHAPE", "unexpected or missing contract manifest status");
+    if (value.status === "contract-fixture-manifest") {
+      assert(value.fixture_manifest_version === "1.0", file, "CONTRACT_MANIFEST_SHAPE", "fixture_manifest_version must be 1.0");
+      assert(Array.isArray(value.cases) || Array.isArray(value.pairs), file, "CONTRACT_MANIFEST_SHAPE", "fixture manifest must declare cases or pairs");
     } else {
-      assert(value.fixture_matrix_version === "1.0", file, "S0_MANIFEST_SHAPE", "fixture_matrix_version must be 1.0");
-      assert(Array.isArray(value.manifests), file, "S0_MANIFEST_SHAPE", "artifact fixture matrix must declare manifests");
+      assert(value.fixture_matrix_version === "1.0", file, "CONTRACT_MANIFEST_SHAPE", "fixture_matrix_version must be 1.0");
+      assert(Array.isArray(value.manifests), file, "CONTRACT_MANIFEST_SHAPE", "artifact fixture matrix must declare manifests");
     }
     validateIds(value, file);
     validateDuplicateNames(value, file);
@@ -540,7 +534,7 @@ async function main(): Promise<void> {
     for (const item of value.cases ?? []) {
       if (value.contract_id?.startsWith("artifact.") && typeof item.path === "string" && item.path.endsWith(".json")) {
         const fixture = path.resolve(path.dirname(file), item.path);
-        assert(!declaredArtifactJson.has(fixture), file, "S0_DUPLICATE_FIXTURE_NAME", `artifact fixture ${JSON.stringify(item.path)} is declared more than once`);
+        assert(!declaredArtifactJson.has(fixture), file, "CONTRACT_DUPLICATE_FIXTURE_NAME", `artifact fixture ${JSON.stringify(item.path)} is declared more than once`);
         declaredArtifactJson.add(fixture);
       }
       if (item.parse_valid === false && typeof item.path === "string" && item.path.endsWith(".json")) {
@@ -550,7 +544,7 @@ async function main(): Promise<void> {
   }
 
   for (const file of fixtureFiles.filter((item) => item.endsWith(".json") && relative(item).startsWith("fixtures/v1/artifacts/") && path.basename(item) !== "cases.json")) {
-    assert(declaredArtifactJson.has(file), file, "S0_UNDECLARED_FIXTURE", "artifact JSON fixture is not declared by its manifest");
+    assert(declaredArtifactJson.has(file), file, "CONTRACT_UNDECLARED_FIXTURE", "artifact JSON fixture is not declared by its manifest");
   }
 
   for (const file of [...contractFiles, ...fixtureFiles].filter((item) => item.endsWith(".json"))) {
@@ -558,7 +552,7 @@ async function main(): Promise<void> {
     if (intentionallyMalformedJson.has(file)) {
       try {
         JSON.parse(await readFile(file, "utf8"));
-        assert(false, file, "S0_EXPECTED_MALFORMED_JSON", "fixture is declared parse_invalid but contains valid JSON");
+        assert(false, file, "CONTRACT_EXPECTED_MALFORMED_JSON", "fixture is declared parse_invalid but contains valid JSON");
       } catch {
         checks += 1;
       }
@@ -575,13 +569,13 @@ async function main(): Promise<void> {
   const inventory = parsedJson.get(inventoryFile) as Inventory | undefined;
   if (inventory) {
     const contractIds = inventory.contracts.map((contract) => contract.contract_id);
-    assert(new Set(contractIds).size === contractIds.length, inventoryFile, "S0_DUPLICATE_CONTRACT", "inventory contains duplicate contract_id values");
+    assert(new Set(contractIds).size === contractIds.length, inventoryFile, "CONTRACT_DUPLICATE_CONTRACT", "inventory contains duplicate contract_id values");
     const familyIds = inventory.fixture_families.map((family) => family.fixture_family_id);
-    assert(new Set(familyIds).size === familyIds.length, inventoryFile, "S0_DUPLICATE_FIXTURE_FAMILY", "inventory contains duplicate fixture_family_id values");
+    assert(new Set(familyIds).size === familyIds.length, inventoryFile, "CONTRACT_DUPLICATE_FIXTURE_FAMILY", "inventory contains duplicate fixture_family_id values");
     const knownContracts = new Set(contractIds);
     for (const { file, value } of manifests) {
       for (const contract of [...(value.contracts ?? []), ...(value.contract_id ? [value.contract_id] : [])]) {
-        assert(knownContracts.has(contract), file, "S0_UNKNOWN_CONTRACT", `contract ${JSON.stringify(contract)} is absent from inventory`);
+        assert(knownContracts.has(contract), file, "CONTRACT_UNKNOWN_CONTRACT", `contract ${JSON.stringify(contract)} is absent from inventory`);
       }
     }
     validateCoverage(manifests, inventory);
@@ -593,7 +587,7 @@ async function main(): Promise<void> {
 
   const proposalFiles = await walk(path.join(repositoryRoot, "proposal"));
   const canonicalFiles = await walk(path.join(repositoryRoot, "spec"));
-  if (inventory) await validateSpecificationModels([...proposalFiles, ...canonicalFiles], manifests, inventory);
+  if (inventory) await validateSpecificationModels(canonicalFiles, manifests, inventory);
   const documentationFiles = [
     ...proposalFiles,
     ...canonicalFiles,
@@ -606,29 +600,29 @@ async function main(): Promise<void> {
     if (!/\.(?:json|jsonl|md|ts)$/.test(file)) continue;
     const text = await readFile(file, "utf8");
     for (const [index, line] of text.split(/\r?\n/).entries()) {
-      if (/[ \t]+$/.test(line)) record(file, "S0_TRAILING_WHITESPACE", `line ${index + 1} has trailing whitespace`);
+      if (/[ \t]+$/.test(line)) record(file, "CONTRACT_TRAILING_WHITESPACE", `line ${index + 1} has trailing whitespace`);
       checks += 1;
     }
     if (!relative(file).startsWith("fixtures/v1/security/prompt-injection/")) {
       const todoSurface = file.endsWith(".md")
         ? text.replace(/```[\s\S]*?```/g, "").replace(/`[^`]*`/g, "")
         : text;
-      assert(!/\bTODO\b/.test(todoSurface), file, "S0_UNRESOLVED_TODO", "unresolved TODO marker");
+      assert(!/\bTODO\b/.test(todoSurface), file, "CONTRACT_UNRESOLVED_TODO", "unresolved TODO marker");
     }
   }
 
   diagnostics.sort((a, b) => a.file.localeCompare(b.file) || a.code.localeCompare(b.code) || a.message.localeCompare(b.message));
   if (diagnostics.length > 0) {
     for (const diagnostic of diagnostics) console.error(`${diagnostic.file} [${diagnostic.code}] ${diagnostic.message}`);
-    console.error(`Stage 0 verification failed: ${diagnostics.length} ${diagnostics.length === 1 ? "error" : "errors"}`);
+    console.error(`Contract verification failed: ${diagnostics.length} ${diagnostics.length === 1 ? "error" : "errors"}`);
     process.exitCode = 1;
     return;
   }
-  console.log(`Stage 0 verification passed: ${checks} checks`);
+  console.log(`Contract verification passed: ${checks} checks`);
 }
 
 main().catch((error) => {
-  console.error(`scripts/verify-stage-0.ts [S0_INTERNAL_ERROR] ${errorStack(error)}`);
-  console.error("Stage 0 verification failed: 1 error");
+  console.error(`scripts/verify-contracts.ts [CONTRACT_INTERNAL_ERROR] ${errorStack(error)}`);
+  console.error("Contract verification failed: 1 error");
   process.exitCode = 1;
 });

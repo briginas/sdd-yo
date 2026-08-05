@@ -1,6 +1,6 @@
 {
   "fixture_manifest_version": "1.0",
-  "status": "bootstrap-fixture-manifest",
+  "status": "contract-fixture-manifest",
   "contract_id": "artifact.conflict-report",
   "schema": "../../../../../contracts/v1/schemas/conflict-report.schema.json",
   "requirements": [

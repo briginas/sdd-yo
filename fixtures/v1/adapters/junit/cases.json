@@ -1,6 +1,6 @@
 {
   "fixture_manifest_version": "1.0",
-  "status": "bootstrap-fixture-manifest",
+  "status": "contract-fixture-manifest",
   "fixture_family_id": "adapter-junit",
   "completed_leaves": [
     "0.6c"
@@ -33,7 +33,7 @@
       "otherwise_completed": "passed"
     },
     "source_mapping": "retain project-relative testcase.file and positive integer testcase.line when present",
-    "time_mapping": "retain testcase.time in seconds when present without assigning a Stage 0 runtime representation",
+    "time_mapping": "retain testcase.time in seconds when present without assigning a product runtime representation",
     "derived_id_components": [
       "report_path",
       "suite_path",

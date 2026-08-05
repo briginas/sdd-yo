@@ -27,7 +27,7 @@ import type {
   ResultEnvelope,
 } from "../src/index.ts";
 
-test("bootstrap foundational contract guards accept only version 1 lexical values", () => {
+test("foundational contract guards accept only version 1 lexical values", () => {
   assert.equal(isProjectId("SDD-17EF8B29"), true);
   assert.equal(isProjectId("sdd-17EF8B29"), false);
   assert.equal(isCapabilityId("CAP-0B417FC4"), true);
@@ -43,20 +43,20 @@ test("bootstrap foundational contract guards accept only version 1 lexical value
   assert.equal(isGitObjectId(""), false);
 });
 
-test("bootstrap foundational contract exposes fixed version 1 values", () => {
+test("foundational contract exposes fixed version 1 values", () => {
   assert.equal(JSON_SCHEMA_VERSION_V1, "1.0");
   assert.equal(CONFIG_SCHEMA_VERSION_V1, 1);
   assert.equal(FINGERPRINT_CANONICALIZATION_VERSION_V1, 1);
 });
 
-test("bootstrap foundational diagnostics keep stable machine values separate from messages", () => {
+test("foundational diagnostics keep stable machine values separate from messages", () => {
   assert.equal(isDiagnosticCode("SDD_GRAPH_UNKNOWN_REQUIREMENT"), true);
   assert.equal(isDiagnosticCode("graph_unknown_requirement"), false);
   assert.equal(isDiagnosticSeverity("warning"), true);
   assert.equal(isDiagnosticSeverity("fatal"), false);
 });
 
-test("bootstrap foundational generic envelopes and injected boundaries are structurally usable", () => {
+test("foundational generic envelopes and injected boundaries are structurally usable", () => {
   const projectIdValue: unknown = "SDD-17EF8B29";
   const diagnosticCodeValue: unknown = "SDD_GRAPH_UNKNOWN_REQUIREMENT";
   assert.ok(isProjectId(projectIdValue));

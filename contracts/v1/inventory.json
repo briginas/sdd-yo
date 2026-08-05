@@ -1,13 +1,13 @@
 {
   "inventory_schema_version": "1.0",
   "product_contract_version": "1.0",
-  "status": "bootstrap-contract-inventory",
-  "scope": "Every version 1 configuration, Markdown, artifact, adapter, diagnostic, fingerprint, and gate contract required before runtime implementation.",
+  "status": "contract-inventory",
+  "scope": "Every maintained version 1 configuration, Markdown, artifact, adapter, diagnostic, fingerprint, and gate contract.",
   "authority_order": [
-    "proposal/spec",
-    "proposal/architecture",
-    "IMPLEMENTATION_PLAN.md",
-    "contracts/v1/inventory.json"
+    "spec",
+    "contracts/v1/schemas",
+    "contracts/v1/inventory.json",
+    "proposal/architecture"
   ],
   "mapping_semantics": {
     "contracts.requirements": "Target Requirements that normatively constrain the contract.",
@@ -18,11 +18,11 @@
   "metadata": {
     "owner": "SDD Yo maintainers",
     "last_reviewed": "2026-08-01",
-    "source_of_truth": "Inventory of planned contracts; product Requirements remain authoritative for behavior.",
-    "verification_status": "bootstrap-validated",
+    "source_of_truth": "Canonical product Requirements constrain behavior; checked-in versioned schemas and this inventory define maintained wire and fixture contracts.",
+    "verification_status": "contract-verified",
     "known_staleness_risks": [
-      "A target Requirement or architecture contract changes without updating this inventory.",
-      "Stage 0.2 materializes a schema with a different wire name or major version.",
+      "A canonical Requirement or versioned contract source changes without updating this inventory.",
+      "A materialized schema changes wire name or major version without updating this inventory.",
       "A new gate or adapter record is added only to prose."
     ]
   },
@@ -186,7 +186,6 @@
       "authority": "proposal/architecture/configuration.md#initial-schema",
       "requirements": [
         "REQ-0361538D",
-        "REQ-FBB24D6C",
         "REQ-F91F7D11",
         "REQ-7FCCF943"
       ],
@@ -686,7 +685,6 @@
       "materialized_schema": "contracts/v1/schemas/governance-evidence.schema.json",
       "authority": "proposal/architecture/artifact-schemas.md#governanceevidence",
       "requirements": [
-        "REQ-D5A7A5DF",
         "REQ-220945C2",
         "REQ-E85A06C3"
       ],
@@ -793,8 +791,7 @@
       "materialized_schema": "contracts/v1/schemas/human-semantic-review-evidence.schema.json",
       "authority": "proposal/architecture/artifact-schemas.md#humansemanticreviewevidence",
       "requirements": [
-        "REQ-2AF962EB",
-        "REQ-BDAFD401"
+        "REQ-2AF962EB"
       ],
       "required_fields": [
         "schema_version",
@@ -895,9 +892,8 @@
       "version": "1.0",
       "definition_status": "specified",
       "materialized_schema": "contracts/v1/schemas/verification-report.schema.json",
-      "authority": "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-9d265509",
+      "authority": "contracts/v1/schemas/verification-report.schema.json",
       "requirements": [
-        "REQ-9D265509",
         "REQ-E451458E",
         "REQ-5A832396",
         "REQ-CDE94D0B",
@@ -990,7 +986,6 @@
       "authority": "proposal/architecture/test-adapters.md#normalized-discovery-protocol",
       "requirements": [
         "REQ-12E19D70",
-        "REQ-20F8CA5C",
         "REQ-72BA737C"
       ],
       "required_fields": [
@@ -1079,8 +1074,7 @@
       "definition_status": "specified",
       "authority": "proposal/architecture/test-adapters.md#normalized-execution-protocol",
       "requirements": [
-        "REQ-5A832396",
-        "REQ-20F8CA5C"
+        "REQ-5A832396"
       ],
       "required_fields": [
         "schema_version",
@@ -1109,7 +1103,6 @@
       "materialized_schema": "contracts/v1/schemas/test-selection.schema.json",
       "authority": "proposal/architecture/test-adapters.md#test-selection-file",
       "requirements": [
-        "REQ-20F8CA5C",
         "REQ-72BA737C"
       ],
       "required_fields": [
@@ -1136,7 +1129,6 @@
       "authority": "proposal/architecture/test-adapters.md#command-adapter",
       "requirements": [
         "REQ-12E19D70",
-        "REQ-20F8CA5C",
         "REQ-1DD46CA9"
       ],
       "required_fields": [
@@ -1381,9 +1373,8 @@
       "wire_format": "typed-operation",
       "version": "1.0",
       "definition_status": "specified-at-behavior-level",
-      "authority": "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-9d265509",
+      "authority": "spec/capabilities/test-traceability-and-qa.md#req-e451458e",
       "requirements": [
-        "REQ-9D265509",
         "REQ-E451458E",
         "REQ-5A832396",
         "REQ-CDE94D0B",
@@ -1421,7 +1412,7 @@
       "wire_format": "typed-operation",
       "version": "1.0",
       "definition_status": "specified",
-      "authority": "proposal/spec/capabilities/merge-readiness.md",
+      "authority": "spec/capabilities/merge-readiness.md#req-64db876b",
       "requirements": [
         "REQ-64DB876B",
         "REQ-BCFA15D8",
@@ -1473,7 +1464,6 @@
       ],
       "requirements": [
         "REQ-0361538D",
-        "REQ-FBB24D6C",
         "REQ-F91F7D11",
         "REQ-7FCCF943"
       ],
@@ -1537,8 +1527,7 @@
         "REQ-8D157EBE",
         "REQ-99605FAB",
         "REQ-7D93D64A",
-        "REQ-13CF54D6",
-        "REQ-FBB24D6C"
+        "REQ-13CF54D6"
       ],
       "required_cases": [
         "duplicate-id",
@@ -1640,7 +1629,6 @@
       "requirements": [
         "REQ-64DB876B",
         "REQ-A3C3B779",
-        "REQ-9D265509",
         "REQ-82256D82"
       ],
       "required_cases": [
@@ -1669,7 +1657,6 @@
         "REQ-7341DBB7",
         "REQ-CDE94D0B",
         "REQ-C11ACC55",
-        "REQ-D5A7A5DF",
         "REQ-20AAA622",
         "REQ-220945C2"
       ],
@@ -1756,7 +1743,6 @@
         "REQ-F7CEE6D0",
         "REQ-E451458E",
         "REQ-5A832396",
-        "REQ-20F8CA5C",
         "REQ-72BA737C"
       ],
       "required_cases": [
@@ -1841,11 +1827,7 @@
       ],
       "requirements": [
         "REQ-E26A859E",
-        "REQ-983914F3",
-        "REQ-FB76FC6F",
-        "REQ-13CE0529",
         "REQ-7341DBB7",
-        "REQ-9D265509",
         "REQ-BCFA15D8",
         "REQ-8E2D9A5F"
       ],
@@ -1928,7 +1910,6 @@
         "REQ-7AFE9904",
         "REQ-12E19D70",
         "REQ-6D8DDDF7",
-        "REQ-20F8CA5C",
         "REQ-1DD46CA9",
         "REQ-F91F7D11",
         "REQ-E85A06C3",
@@ -2022,7 +2003,7 @@
     },
     {
       "assertion_id": "known-requirement-reference",
-      "rule": "Every REQ identifier exists in proposal/spec."
+      "rule": "Every active REQ identifier exists in canonical spec."
     },
     {
       "assertion_id": "one-version-form-per-profile",
@@ -2037,5 +2018,5 @@
       "rule": "Every fixture family has at least one contract, Requirement, and required case."
     }
   ],
-  "stage_0_2_detail_queue": []
+  "contract_detail_queue": []
 }

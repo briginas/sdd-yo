@@ -1,8 +1,7 @@
 # Product dependency selection
 
-Milestone 1.3 locks the standards-heavy libraries needed by the first product
-leaves. It adds no product parser, type, schema output, or public command. The
-bootstrap-only tests in `test/dependency-contracts.test.ts` are dependency
+Milestone 1.3 locked the standards-heavy libraries needed by the first product
+leaves. The tests in `test/dependency-contracts.test.ts` remain dependency
 contract probes and claim no Requirement coverage.
 
 ## Selected packages
@@ -31,8 +30,9 @@ third-party declaration implementations only; strict checking, including
 
 Ajv is configured with `strictSchema: true`, the checked-in annotation keyword
 `x-sdd-ordering`, and `strictTypes: false`. The last setting disables Ajv's
-optional schema-style lint because valid conditional subschemas in the Stage 0
-contracts apply `minItems` or `maxItems` to properties typed by their parent.
+optional schema-style lint because valid conditional subschemas in the
+versioned contracts apply `minItems` or `maxItems` to properties typed by their
+parent.
 It does not relax runtime instance validation. YAML callers must reject both
 parse errors and warnings, use `uniqueKeys: true`, provide no custom tags, and
 apply a configured alias limit when converting a document to values.
@@ -62,8 +62,8 @@ belong to the later injected-adapter integration tests.
 
 ## Rejected or deferred alternatives
 
-- Zod, TypeBox, and schema-first TypeScript DSLs were rejected because Stage 0
-  already chose checked-in Draft 2020-12 schemas as the single typed source.
+- Zod, TypeBox, and schema-first TypeScript DSLs were rejected because the
+  checked-in Draft 2020-12 schemas are the single typed source.
   Adding another authoring model would create two normative representations.
 - `js-yaml` was rejected in favor of `yaml`'s YAML 1.2 document diagnostics and
   alias controls. A hand-written configuration parser would be a standards and
@@ -86,6 +86,6 @@ belong to the later injected-adapter integration tests.
 `npm test` verifies exact pins, ESM loading, Draft 2020-12 local references and
 formats, YAML rejection signals and alias limits, Markdown extension nodes and
 positions, XML `DOCTYPE` fail-fast behavior, schema-to-TypeScript generation,
-strict `parseArgs`, and literal argv direct spawning. The normal full scaffold
-validation remains authoritative for build, type safety, formatting, Stage 0
-contracts, and whitespace.
+strict `parseArgs`, and literal argv direct spawning. The normal full validation
+remains authoritative for build, type safety, formatting, contract fixtures,
+and whitespace.

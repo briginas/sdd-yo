@@ -30,7 +30,7 @@ const expectedArtifactSchemas = [
   "verification-report.schema.json",
 ] as const;
 
-test("bootstrap schema generation covers every inventory-materialized artifact schema", async () => {
+test("schema generation covers every inventory-materialized artifact schema", async () => {
   const schemaPaths = await inventoryArtifactSchemaPaths();
   assert.deepEqual(
     schemaPaths.map((schemaPath) => path.basename(schemaPath)).sort(),
@@ -38,11 +38,11 @@ test("bootstrap schema generation covers every inventory-materialized artifact s
   );
 });
 
-test("bootstrap artifact schema generation resolves only the checked-in local schema graph", async () => {
+test("artifact schema generation resolves only the checked-in local schema graph", async () => {
   await assertLocalSchemaReferencesResolve(await inventoryArtifactSchemaPaths());
 });
 
-test("bootstrap schema generation is deterministic and preserves source schema bytes", async () => {
+test("schema generation is deterministic and preserves source schema bytes", async () => {
   const schemaDirectory = path.join(repositoryRoot, "contracts/v1/schemas");
   const schemaFilenames = (await readdir(schemaDirectory))
     .filter((filename) => filename.endsWith(".schema.json"))
@@ -56,7 +56,7 @@ test("bootstrap schema generation is deterministic and preserves source schema b
   assert.deepEqual(after, before);
 });
 
-test("bootstrap generated artifact types expose representative version 1 shapes", () => {
+test("generated artifact types expose representative version 1 shapes", () => {
   const approval = {
     schema_version: "1.0",
     artifact_type: "approval_evidence",

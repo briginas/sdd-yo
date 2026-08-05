@@ -1,11 +1,10 @@
 {
   "fixture_manifest_version": "1.0",
-  "status": "bootstrap-fixture-manifest",
+  "status": "contract-fixture-manifest",
   "contract_id": "artifact.human-semantic-review-evidence",
   "schema": "../../../../../contracts/v1/schemas/human-semantic-review-evidence.schema.json",
   "requirements": [
-    "REQ-2AF962EB",
-    "REQ-BDAFD401"
+    "REQ-2AF962EB"
   ],
   "context": {
     "project_id": "SDD-17EF8B29",

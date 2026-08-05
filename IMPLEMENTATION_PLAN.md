@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 10 / Self-bootstrap retirement and normal-workflow transition
-- Current leaf: 10.2 / Contract-oracle decoupling
+- Current leaf: 10.3 / Bootstrap authority and target-package retirement
 - Last updated: 2026-08-05
 
 ## Source-of-truth map
@@ -53,8 +53,14 @@ and the optional progressive-disclosure `sdd-yo` Agent Skill.
   0 check. It assigns twelve meanings to later normal baseline Changes, preserves
   one unimplemented meaning as nonnormative backlog, retires two redundant
   meanings with rationale, and gives 10.2 and 10.3 non-overlapping execution
-  boundaries. The old surfaces remain active until those leaves execute their
-  recorded dispositions.
+  boundaries.
+- Leaf 10.2 replaced the Stage 0 verifier with the ordinary
+  `verify:contracts` contract oracle, removed proposal-only Requirement mappings
+  from active inventory and fixture authority, and preserved every contract ID,
+  fixture-family ID, required-case mapping, byte-sensitive historical payload,
+  and retained diagnostic family. The remaining proposal target package and
+  bootstrap procedure stay active transition inputs only until 10.3 executes
+  their recorded dispositions.
 
 Repository-wide work discipline and validation commands remain authoritative in
 [`AGENTS.md`](AGENTS.md). Architecture decisions live under
@@ -156,7 +162,7 @@ incomplete.
       the live 15-Requirement and zero-Capability baselines were reproduced,
       every maintained surface received one disposition, and every retained
       verifier check received a named 10.2 successor.
-- [ ] **10.2 — Contract-oracle decoupling.** Replace the active Stage 0
+- [x] **10.2 — Contract-oracle decoupling.** Replace the active Stage 0
       repository-maintenance verifier boundary with an ordinary contract-fixture
       oracle that no longer requires proposal Requirement definitions or
       bootstrap-only authority links. Preserve useful JSON, JSONL, schema,
@@ -168,7 +174,12 @@ incomplete.
       fixture bytes when their exact content is itself an oracle. Demonstrate
       equal or stronger retained coverage before removing `verify:stage-0` from
       the required validation suite. This leaf changes no product behavior or
-      canonical Requirement meaning.
+      canonical Requirement meaning. Completed on 2026-08-05: all 30 diagnostic
+      families, 37 contract IDs, 17 fixture-family IDs, and 176 required-case
+      mappings were retained; all 15 protected historical producer payloads
+      remained byte-identical; the replacement passed 27,369 checks from both
+      the repository root and an external working directory; and the complete
+      validation suite passed.
 - [ ] **10.3 — Bootstrap authority and target-package retirement.** Execute the
       approved 10.1 dispositions after 10.2 has removed verifier dependencies:
       preserve selected future behavior as clearly nonnormative backlog material,
@@ -319,11 +330,13 @@ authorization:
 
 ## Immediate next leaf
 
-Implement only 10.2, the contract-oracle decoupling recorded in
-`plans/active/milestone-10-self-bootstrap-retirement.md`. Introduce the ordinary
-contract verifier, migrate inventory authority and active fixture/test
-terminology, preserve exact oracular bytes, and prove equal or stronger coverage
-before removing `verify:stage-0` from required validation. Do not remove or move
-`proposal/spec/`, archive the bootstrap procedure, change product behavior or
-canonical Requirement meaning, execute 10.3, begin Milestone 11, or perform Git
+Implement only 10.3, the bootstrap authority and target-package retirement
+recorded in `plans/active/milestone-10-self-bootstrap-retirement.md`. Execute the
+approved Requirement and surface dispositions now that the contract verifier
+has no proposal-definition dependency: preserve the selected nonnormative
+backlog, schedule applicable normal baseline Changes, archive the completed
+bootstrap procedure and evidence pointers, remove active promotion authority,
+and remove `proposal/spec/` only after maintained links are decoupled. Do not
+change product behavior or canonical Requirement meaning, remove normal proposal
+runtime/schema/fixture/exact-patch surfaces, begin Milestone 11, or perform Git
 operations in this leaf.

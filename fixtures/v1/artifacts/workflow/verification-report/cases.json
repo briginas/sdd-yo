@@ -1,10 +1,9 @@
 {
   "fixture_manifest_version": "1.0",
-  "status": "bootstrap-fixture-manifest",
+  "status": "contract-fixture-manifest",
   "contract_id": "artifact.verification-report",
   "schema": "../../../../../contracts/v1/schemas/verification-report.schema.json",
   "requirements": [
-    "REQ-9D265509",
     "REQ-E451458E",
     "REQ-5A832396",
     "REQ-CDE94D0B",

@@ -32,7 +32,7 @@
     "test": "node --test test/*.test.ts",
     "test:package": "node --test test/package-smoke.ts",
     "typecheck": "tsc --noEmit",
-    "verify:stage-0": "node scripts/verify-stage-0.ts"
+    "verify:contracts": "node scripts/verify-contracts.ts"
   },
   "devDependencies": {
     "@types/node": "22.20.1",

@@ -10,13 +10,13 @@ import {
   writePerformanceBenchmarkReport,
 } from "../scripts/performance-benchmark.ts";
 
-test("bootstrap performance benchmark computes nearest-rank percentiles", () => {
+test("performance benchmark computes nearest-rank percentiles", () => {
   assert.equal(percentile([5, 1, 4, 2, 3], 0.5), 3);
   assert.equal(percentile([5, 1, 4, 2, 3], 0.95), 5);
   assert.throws(() => percentile([], 0.95));
 });
 
-test("bootstrap performance benchmark smoke profile measures every workload against accepted targets", async () => {
+test("performance benchmark smoke profile measures every workload against accepted targets", async () => {
   const first = await runPerformanceBenchmark({ profile: "smoke", samples: 1 });
   const second = await runPerformanceBenchmark({ profile: "smoke", samples: 1 });
 

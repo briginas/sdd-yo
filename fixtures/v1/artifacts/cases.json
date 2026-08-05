@@ -1,6 +1,6 @@
 {
   "fixture_matrix_version": "1.0",
-  "status": "bootstrap-artifact-fixture-matrix",
+  "status": "contract-artifact-fixture-matrix",
   "scope": "The fifteen artifact contracts materialized by Milestone 0.2b; ChangeDescriptor remains covered by Milestone 0.2a.",
   "project_id": "SDD-17EF8B29",
   "manifests": [
@@ -78,7 +78,6 @@
       "schema": "../../../contracts/v1/schemas/governance-evidence.schema.json",
       "manifest": "evidence/governance-evidence/cases.json",
       "requirements": [
-        "REQ-D5A7A5DF",
         "REQ-220945C2",
         "REQ-E85A06C3"
       ]
@@ -107,8 +106,7 @@
       "schema": "../../../contracts/v1/schemas/human-semantic-review-evidence.schema.json",
       "manifest": "findings/human-semantic-review-evidence/cases.json",
       "requirements": [
-        "REQ-2AF962EB",
-        "REQ-BDAFD401"
+        "REQ-2AF962EB"
       ]
     },
     {
@@ -136,7 +134,6 @@
       "schema": "../../../contracts/v1/schemas/verification-report.schema.json",
       "manifest": "workflow/verification-report/cases.json",
       "requirements": [
-        "REQ-9D265509",
         "REQ-E451458E",
         "REQ-5A832396",
         "REQ-CDE94D0B",

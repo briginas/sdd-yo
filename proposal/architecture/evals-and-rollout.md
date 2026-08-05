@@ -185,11 +185,12 @@ CLI artifact, even if its conclusion happens to be correct.
 
 ## Rollout stages
 
-### Stage 0 — Contract fixtures
+### Contract-fixture baseline
 
-Publish schemas, golden Markdown, adapter kit, and gate truth tables. No claim
-of production readiness. For SDD Yo itself, follow the
-[self-bootstrap procedure](bootstrap.md).
+Maintain schemas, golden Markdown, adapter fixtures, and gate truth tables. No
+claim of production readiness follows from fixture coverage. The original
+[self-bootstrap procedure](bootstrap.md) remains a transition input until its
+Milestone 10 retirement.
 
 Exit: all parser, graph, fingerprint, artifact, and security fixture suites pass
 on supported platforms.

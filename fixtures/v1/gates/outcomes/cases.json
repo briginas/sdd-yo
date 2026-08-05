@@ -1,6 +1,6 @@
 {
   "fixture_manifest_version": "1.0",
-  "status": "bootstrap-fixture-manifest",
+  "status": "contract-fixture-manifest",
   "fixture_family_id": "mode-and-gate-truth-tables",
   "leaf": "0.5b",
   "scope": "Outcome composition for Proposal, Branch Preparation, Verification, and Merge gates. Concrete current, stale, missing, negative, contradictory, and mode-specific evidence combinations are defined by the Milestone 0.5c freshness-and-subjects oracle.",
@@ -15,7 +15,6 @@
     "REQ-E80F09C6",
     "REQ-A8739118",
     "REQ-964B9F80",
-    "REQ-9D265509",
     "REQ-E451458E",
     "REQ-5A832396",
     "REQ-CDE94D0B",
@@ -29,7 +28,6 @@
     "spec/capabilities/proposal-modes-and-workflow-gates.md#req-8de9e078",
     "spec/capabilities/proposal-modes-and-workflow-gates.md#req-e80f09c6",
     "spec/capabilities/proposal-modes-and-workflow-gates.md#req-a8739118",
-    "proposal/spec/capabilities/proposal-modes-and-workflow-gates.md#req-9d265509",
     "spec/capabilities/validation-fingerprints-and-patches.md#req-964b9f80",
     "spec/capabilities/test-traceability-and-qa.md#req-e451458e",
     "spec/capabilities/test-traceability-and-qa.md#req-5a832396",
@@ -268,7 +266,6 @@
         ],
         "cli_exit_code": 0,
         "basis_requirements": [
-          "REQ-9D265509",
           "REQ-E451458E",
           "REQ-5A832396",
           "REQ-CDE94D0B",

@@ -49,7 +49,7 @@ function canonicalJson(delta: { readonly canonicalBytes: Uint8Array }): string {
   return new TextDecoder().decode(delta.canonicalBytes);
 }
 
-test("REQ-24A372E7 matches every Stage 0 canonical delta byte and fingerprint golden", async () => {
+test("REQ-24A372E7 matches every contract-fixture canonical delta byte and fingerprint golden", async () => {
   const manifest = JSON.parse(await readFile("fixtures/v1/fingerprints/deltas/cases.json", "utf8")) as {
     delta_goldens: readonly {
       golden_id: string;

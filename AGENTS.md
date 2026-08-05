@@ -104,7 +104,7 @@ When executable tests begin:
 - suite inheritance may cover multiple descendant tests;
 - comments and source strings do not count as coverage;
 - a test may cover multiple Requirements;
-- bootstrap-only contract checks do not claim Requirement coverage.
+- contract-fixture checks do not claim Requirement coverage.
 
 Do not add implementation-file links to canonical Requirements. Traceability
 from Requirements to tests is discovered through test names and adapters.
@@ -130,14 +130,14 @@ npm run check:schemas
 npm run build
 npm run typecheck
 npm run format:check
-npm run verify:stage-0
+npm run verify:contracts
 git diff --check
 ```
 
 `npm test` uses the Node.js test runner directly; it does not require a test
 framework dependency. `npm run test:package` builds and packs the local private
-bootstrap package, stages the exact tarball in a temporary consumer layout,
-and verifies the ESM exports, declarations, versioned schemas, and `sdd`
+package, stages the exact tarball in a temporary consumer layout, and verifies
+the ESM exports, declarations, versioned schemas, and `sdd`
 executable wiring without dependency resolution or network access.
 `npm run check:schemas` regenerates version 1 artifact
 types in memory from the checked-in JSON Schema source and fails on stale or
@@ -147,8 +147,8 @@ development-only dependency because Node.js and TypeScript do not provide a
 repository formatter. Product dependencies remain subject to focused
 selection in their implementation leaves. The format check covers the
 maintained schema type generator, product source, tests, and root Markdown and
-JSON control files; Stage 0 fixture bytes and the existing bootstrap verifier
-surface remain outside this formatting baseline.
+JSON control files; contract-fixture bytes and the independent contract
+verifier surface remain outside this formatting baseline.
 
 Never claim a validation command ran when it did not. A failure, crash,
 timeout, unavailable dependency, or incomplete result cannot be reported as a

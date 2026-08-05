@@ -2,8 +2,7 @@
 
 ## Status and authority
 
-- Status: leaf 10.1 completed inventory; execution is pending in leaves 10.2
-  and 10.3.
+- Status: leaves 10.1 and 10.2 are complete; execution is pending in leaf 10.3.
 - Recorded against: repository state after `6d4ce40` on 2026-08-05.
 - Active milestone authority remains
   [`../../IMPLEMENTATION_PLAN.md`](../../IMPLEMENTATION_PLAN.md). This record is
@@ -214,6 +213,43 @@ Leaf 10.2 cannot remove `verify:stage-0` until the replacement produces a
 complete exit-zero result over the retained denominator and a focused
 comparison confirms every retained row above is equal or stronger. An
 unavailable, crashed, truncated, or partially migrated run is not equivalence.
+
+## Leaf 10.2 execution result
+
+Leaf 10.2 completed on 2026-08-05 in the working tree based on `c4b5709`; no
+commit or other Git operation was created. The old verifier completed first at
+27,567 checks. The replacement `npm run verify:contracts` then completed at
+27,369 checks from both the repository root and `/private/tmp`. The raw total is
+not the equivalence denominator because proposal model definition/shape checks
+and retired mapping lines intentionally left the active surface.
+
+The focused before/after comparison produced:
+
+| Retained surface                       |   Before |    After | Result                                                               |
+| -------------------------------------- | -------: | -------: | -------------------------------------------------------------------- |
+| Normalized diagnostic families         |       30 |       30 | Exact family set retained under the `CONTRACT_*` prefix.             |
+| Version 1 contract IDs                 |       37 |       37 | Exact ordered ID set retained.                                       |
+| Fixture-family IDs                     |       17 |       17 | Exact ordered ID set retained.                                       |
+| Inventory-required cases               |      176 |      176 | Exact per-family case sets retained.                                 |
+| Fixture manifests and matrices         |       28 |       28 | All use ordinary contract-fixture statuses.                          |
+| Contract files / JSON Schema files     |  19 / 18 |  19 / 18 | Denominators retained.                                               |
+| Fixture files / JSONL streams          | 310 / 14 | 310 / 14 | Denominators retained.                                               |
+| Declared artifact payload files        |      188 |      188 | Denominator retained.                                                |
+| Historical producer-literal payloads   |       15 |       15 | All fifteen are byte-identical to `c4b5709`.                         |
+| Active historical Requirement mappings |       19 |        0 | Removed without reserving or canonizing the historical proposal IDs. |
+
+The only non-manifest fixture edit was
+`fixtures/v1/adapters/jsonl/discover-valid.jsonl`, whose historical
+`REQ-20F8CA5C` test-name mapping was rebound to canonical `REQ-12E19D70` as
+specified by `S17`. All malformed JSON, canonical JSON bytes, fingerprints,
+case IDs, contract IDs, fixture-family IDs, truth-table required cases, and the
+fifteen `sdd-yo-bootstrap-fixtures` producer payloads were preserved.
+
+The complete required validation passed: `npm test` (202 tests),
+`npm run test:package`, `npm run check:schemas`, `npm run build`,
+`npm run typecheck`, `npm run format:check`, `npm run verify:contracts`, and
+`git diff --check`. This satisfies the dependency for leaf 10.3; it does not
+execute any 10.3 disposition.
 
 ## 10.2 and 10.3 execution handoff
 
