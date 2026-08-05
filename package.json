@@ -16,7 +16,18 @@
   },
   "files": [
     "dist",
-    "contracts/v1/schemas"
+    "contracts/v1/schemas",
+    "skills/sdd-yo"
+  ],
+  "bundleDependencies": [
+    "ajv",
+    "ajv-formats",
+    "remark-frontmatter",
+    "remark-gfm",
+    "remark-parse",
+    "saxes",
+    "unified",
+    "yaml"
   ],
   "engines": {
     "node": ">=22.18.0"

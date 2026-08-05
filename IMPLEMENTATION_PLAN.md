@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 11 / Private installation and first-run onboarding
-- Current leaf: 11.2 / Installable private npm tarball and version binding
+- Current leaf: 11.3 / Explicit repository-scoped Skill installation and first use
 - Last updated: 2026-08-05
 
 ## Source-of-truth map
@@ -49,6 +49,19 @@ and the optional progressive-disclosure `sdd-yo` Agent Skill.
   machine-readable compatibility identity pass Requirement-named CLI and
   packaged-executable tests. Its approved SpecPatch applies cleanly to the exact
   base and produces the approved candidate-tree fingerprint.
+- Milestone 11.2 is implemented and verified in the current feature worktree
+  through canonical `CAP-6AD33965`, `REQ-B0B35D6D`, `REQ-A2199BC2`, and
+  `REQ-43B4311E`. The private `sdd-yo@0.1.0` tarball retains
+  `"private": true` and Node.js `>=22.18.0`, bundles the exact locked production
+  dependency set, built CLI/library/declarations, version 1 schemas, and all 13
+  `sdd-yo` Skill files, declares no install lifecycle hook, and installs through
+  npm offline mode in a clean consumer without manual extraction or symlinks.
+  The retained local tarball has SHA-256
+  `58d120aaeb19c49f5dbfb38ceb19a8c848ba961062e7111d310b6e6e80a54b51`,
+  2,097 entries, and 82 bundled production packages. Requirement-named package
+  smoke, 208 repository tests, schema generation, build, typecheck, formatting,
+  26,700 contract checks, and `git diff --check` pass. No registry publication,
+  installed repository Skill, or human QA decision is implied.
 - Former proposal-only meanings have the dispositions recorded by completed
   Milestone 10:
   later baseline candidates remain nonnormative plan backlog, one unimplemented
@@ -100,7 +113,7 @@ implementation.
       add exact Requirement-named CLI and packaged-executable tests. This leaf
       does not change package contents, install the Skill, add the root
       quickstart, or claim external-project onboarding readiness.
-- [ ] **11.2 — Installable private npm tarball and version binding.** Use one
+- [x] **11.2 — Installable private npm tarball and version binding.** Use one
       bounded `spec-code` Change for the exact package-content and compatibility
       Requirements implemented by this leaf. Preserve
       `"private": true`, make the package metadata and local tarball
@@ -200,12 +213,7 @@ authorization:
 
 ## Immediate next leaf
 
-Implement only 11.2, installable private npm tarball and version binding. Use
-one bounded normal `spec-code` Change for the exact package-content and
-compatibility Requirements implemented by this leaf. Preserve `"private": true`,
-make the package metadata and local tarball installation-ready, include the
-built CLI, package library/schema files, and matching `sdd-yo` Skill payload,
-and verify exact packed contents from a clean install. Do not publish to any
-registry. Preserve the Node.js runtime baseline, prohibit install lifecycle
-mutation, bind every packaged surface to the compatible identity from 11.1,
-and add exact Requirement-named package smoke tests.
+The next incomplete leaf is 11.3, explicit repository-scoped Skill installation
+and first use. It has not started and requires a separate bounded normal
+`spec-code` Change and human approval before implementation. Do not infer 11.3
+authority from the completed 11.2 package artifact or its passing validation.
