@@ -815,13 +815,22 @@ function parseInvocation(
         "Read the ID result from standard output.",
       ),
     };
-  if (command !== "id" && (idKind !== undefined || count !== undefined || historyRef !== undefined))
+  if (command !== "id" && (idKind !== undefined || count !== undefined))
     return {
       ok: false,
       diagnostic: cliDiagnostic(
         "SDD_CONFIG_CLI_ARGUMENT_INVALID",
         "An ID-generation option was used with another command.",
         "Use ID-generation options only with sdd id.",
+      ),
+    };
+  if (command !== "id" && command !== "validate" && historyRef !== undefined)
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "A history ref option was used with an unsupported command.",
+        "Use --history-ref only with sdd id or sdd validate.",
       ),
     };
   if (
@@ -2897,13 +2906,14 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
       resolvedValidationRefs.set(ref, objectId);
       return objectId;
     };
+    const validationHistoryRef = invocation.historyRef ?? project.configuration.git.default_target_ref;
     let comparison: ValidateComparisonResult | undefined;
     if (invocation.changedFrom !== undefined) {
       try {
         const reader = await getValidationReader();
         const [changedFromRef] = await Promise.all([
           resolveValidationRef(invocation.changedFrom),
-          resolveValidationRef(project.configuration.git.default_target_ref),
+          resolveValidationRef(validationHistoryRef),
           resolveValidationRef("HEAD"),
         ]);
         const baseGraph = await loadCanonicalProjectGraphAt(reader, changedFromRef, project.configuration.project_id);
@@ -2951,7 +2961,7 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
         );
         return BLOCKED_EXIT_CODE;
       }
-      const resolvedRef = await resolveValidationRef(project.configuration.git.default_target_ref);
+      const resolvedRef = await resolveValidationRef(validationHistoryRef);
       const currentRevision = await resolveValidationRef("HEAD");
       const mergeBase = await reader.findMergeBase(currentRevision, resolvedRef);
       const historyStatus = await reader.historyStatus();

@@ -337,6 +337,43 @@ test("REQ-8B656FC5 unresolved configured integration refs are technical failures
   );
 });
 
+test("REQ-8B656FC5 validate accepts an explicit resolvable history ref", async () => {
+  const root = await mkdtemp(join(tmpdir(), "sdd-cli-explicit-history-ref-"));
+  await executeFile("git", ["init", "--quiet", "--initial-branch", "trunk"], { cwd: root });
+  await executeFile("git", ["config", "user.name", "SDD Test"], { cwd: root });
+  await executeFile("git", ["config", "user.email", "sdd@example.invalid"], { cwd: root });
+  assert.equal((await execute(["init", "--format", "json"], root)).exitCode, 0);
+  await executeFile("git", ["add", ".sdd/config.yaml", "spec"], { cwd: root });
+  await executeFile("git", ["commit", "--quiet", "-m", "trunk baseline"], { cwd: root });
+
+  const validated = await execute(["validate", "--history-ref", "trunk", "--format", "json"], root);
+  assert.equal(validated.exitCode, 0, validated.standardOutput);
+  const resolved = (await executeFile("git", ["rev-parse", "trunk"], { cwd: root })).stdout.trim();
+  assert.equal(
+    (JSON.parse(validated.standardOutput) as { result: { history: { resolved_ref: string } } }).result.history
+      .resolved_ref,
+    resolved,
+  );
+});
+
+test("REQ-8B656FC5 validate maps an unresolvable explicit history ref to a technical failure", async () => {
+  const validated = await execute(["validate", "--history-ref", "missing-history-ref", "--format", "json"]);
+  assert.equal(validated.exitCode, 3, validated.standardOutput);
+  assert.equal(
+    (JSON.parse(validated.standardOutput) as { diagnostics: readonly { code: string }[] }).diagnostics[0]?.code,
+    "SDD_GIT_REF_UNRESOLVED",
+  );
+});
+
+test("REQ-8B656FC5 history ref is rejected by unsupported commands", async () => {
+  const inspected = await execute(["inspect", "CAP-A1000001", "--history-ref", "HEAD", "--format", "json"]);
+  assert.equal(inspected.exitCode, 3, inspected.standardOutput);
+  assert.equal(
+    (JSON.parse(inspected.standardOutput) as { diagnostics: readonly { code: string }[] }).diagnostics[0]?.code,
+    "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+  );
+});
+
 test("REQ-8B656FC5 incomplete history warns on validate and blocks reserved ID issuance", async () => {
   const origin = await mkdtemp(join(tmpdir(), "sdd-cli-shallow-origin-"));
   await executeFile("git", ["init", "--quiet", "--initial-branch", "main"], { cwd: origin });
