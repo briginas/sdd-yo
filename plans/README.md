@@ -8,6 +8,10 @@ work into every planning or implementation task.
 The current milestone, immediate leaf, deferred scope, and candidate backlog
 remain in [`../IMPLEMENTATION_PLAN.md`](../IMPLEMENTATION_PLAN.md).
 
+Milestone 10 execution uses the reviewable disposition and dependency record in
+[`active/milestone-10-self-bootstrap-retirement.md`](active/milestone-10-self-bootstrap-retirement.md).
+The root plan remains authoritative for leaf status and sequencing.
+
 ## Completed plans
 
 - [`completed/milestones-0-9.md`](completed/milestones-0-9.md) — preserved

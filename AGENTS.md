@@ -20,16 +20,19 @@ Read these in order before planning or editing:
 
 1. `IMPLEMENTATION_PLAN.md` — active milestone, immediate leaf, deferred work,
    and candidate backlog.
-2. `spec/README.md` — canonical implemented product behavior.
-3. `proposal/spec/README.md` — transition-only bootstrap target material during
+2. `plans/active/milestone-10-self-bootstrap-retirement.md` — the approved
+   disposition, dependency, and retained-coverage handoff consumed by Milestone
+   10.2 and 10.3; it does not override the active plan.
+3. `spec/README.md` — canonical implemented product behavior.
+4. `proposal/spec/README.md` — transition-only bootstrap target material during
    Milestone 10; do not add new behavior to it.
-4. `proposal/README.md` and `proposal/architecture/bootstrap.md` — historical
+5. `proposal/README.md` and `proposal/architecture/bootstrap.md` — historical
    promotion rules and current retirement inputs during Milestone 10.
-5. `proposal/architecture/README.md` — implementation contracts and boundaries.
-6. `plans/README.md` — completed-plan index; load historical plans only when the
-   current task needs their rationale, exact boundary, traceability, or evidence
-   pointers.
-7. `contracts/v1/inventory.json` — versioned contract and fixture inventory when
+6. `proposal/architecture/README.md` — implementation contracts and boundaries.
+7. `plans/README.md` — active-record and completed-plan index; load historical
+   plans only when the current task needs their rationale, exact boundary,
+   traceability, or evidence pointers.
+8. `contracts/v1/inventory.json` — versioned contract and fixture inventory when
    working on Milestone 10 contract-oracle migration.
 
 Follow links from these maps only as needed for the current task. Do not load

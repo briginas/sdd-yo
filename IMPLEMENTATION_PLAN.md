@@ -4,8 +4,8 @@
 
 - State: active
 - Current phase: Milestone 10 / Self-bootstrap retirement and normal-workflow transition
-- Current leaf: 10.1 / Self-bootstrap retirement inventory and disposition
-- Last updated: 2026-08-04
+- Current leaf: 10.2 / Contract-oracle decoupling
+- Last updated: 2026-08-05
 
 ## Source-of-truth map
 
@@ -48,12 +48,13 @@ and the optional progressive-disclosure `sdd-yo` Agent Skill.
   until its Milestone 10 disposition is executed. New behavior after retirement
   uses the normal `spec-code`, `spec`, or `code` workflow from a bounded candidate
   tree rather than adding a new long-lived bootstrap proposal.
-- The completed self-bootstrap still has active repository dependencies: fifteen
-  proposal-only Requirement definitions, the Stage 0 verifier and inventory
-  authority links, bootstrap terminology in maintained tests and fixtures, and
-  active documentation routes. These surfaces must be retired without deleting
-  independent contract-oracle coverage or confusing the normal ProposalPackage
-  workflow with bootstrap promotion.
+- The 10.1 retirement record accounts for all fifteen proposal-only Requirement
+  definitions, all maintained bootstrap-bound surfaces, and every retained Stage
+  0 check. It assigns twelve meanings to later normal baseline Changes, preserves
+  one unimplemented meaning as nonnormative backlog, retires two redundant
+  meanings with rationale, and gives 10.2 and 10.3 non-overlapping execution
+  boundaries. The old surfaces remain active until those leaves execute their
+  recorded dispositions.
 
 Repository-wide work discipline and validation commands remain authoritative in
 [`AGENTS.md`](AGENTS.md). Architecture decisions live under
@@ -77,7 +78,7 @@ fixture checks to an ordinary contract oracle.
 
 ### Milestone 10 handoff contract
 
-Leaf 10.1 creates
+Leaf 10.1 created
 `plans/active/milestone-10-self-bootstrap-retirement.md` and links it from
 `plans/README.md`. That document is the reviewable disposition and dependency
 record consumed by 10.2 and 10.3; it is not a second active implementation plan.
@@ -138,7 +139,7 @@ incomplete.
       distribution target. This repository-maintenance leaf changes no product
       Requirement, runtime behavior, package contents, installed Skill state, or
       Git history.
-- [ ] **10.1 — Self-bootstrap retirement inventory and disposition.** Create
+- [x] **10.1 — Self-bootstrap retirement inventory and disposition.** Create
       one exact, reviewable inventory of every proposal-only Requirement and
       every maintained reference that treats `proposal/spec/`, Stage 0, or the
       bootstrap procedure as active authority. Assign each proposal-only
@@ -150,7 +151,11 @@ incomplete.
       Record coverage and dependency evidence for every decision. This leaf is
       documentation and inventory only: it does not move or delete proposal
       content, rename commands, change fixture bytes, alter product behavior, or
-      create canonical Requirements.
+      create canonical Requirements. Completed on 2026-08-05 in
+      [`plans/active/milestone-10-self-bootstrap-retirement.md`](plans/active/milestone-10-self-bootstrap-retirement.md):
+      the live 15-Requirement and zero-Capability baselines were reproduced,
+      every maintained surface received one disposition, and every retained
+      verifier check received a named 10.2 successor.
 - [ ] **10.2 — Contract-oracle decoupling.** Replace the active Stage 0
       repository-maintenance verifier boundary with an ordinary contract-fixture
       oracle that no longer requires proposal Requirement definitions or
@@ -271,6 +276,19 @@ These candidates remain available for selection after Milestone 11. They are
 not implied work and require a new bounded milestone plus any necessary human
 authorization:
 
+- baseline the already implemented adoption semantics recorded by 10.1 through
+  one bounded normal `spec` Change with fresh IDs: incremental adoption,
+  canonical governed scope, explicit governance transition, and accepted
+  existing-behavior baseline;
+- baseline the already implemented qualitative synchronization-mode and
+  four-gate semantics recorded by 10.1 through one or more bounded normal
+  `spec` Changes with fresh IDs;
+- baseline the already implemented inactive-object, generic JSONL adapter,
+  semantic-completeness, and per-project isolation semantics recorded by 10.1
+  through independently reviewable normal `spec` Changes with fresh IDs;
+- consider repository-local normative authority and external-link quality
+  findings as a new behavior candidate; the 10.1 inventory found no complete
+  implementation evidence for that former proposal meaning;
 - publish through a private organization registry if distribution needs outgrow
   local tarballs; this would require a scoped package and an explicit decision to
   replace `"private": true` with registry-constrained publication metadata;
@@ -301,11 +319,11 @@ authorization:
 
 ## Immediate next leaf
 
-Implement only 10.1, the self-bootstrap retirement inventory and disposition.
-Account for every proposal-only Requirement and every active bootstrap-bound
-verifier, inventory, fixture, test, script, and documentation reference; bind
-each item to one explicit disposition and retained-coverage decision; and stop
-after reviewable documentation records the result. Do not delete or move
-`proposal/spec/`, rename `verify:stage-0`, rewrite fixture bytes, change runtime
-or package behavior, create canonical Requirements, begin 10.2 or Milestone 11,
-or perform Git operations in this leaf.
+Implement only 10.2, the contract-oracle decoupling recorded in
+`plans/active/milestone-10-self-bootstrap-retirement.md`. Introduce the ordinary
+contract verifier, migrate inventory authority and active fixture/test
+terminology, preserve exact oracular bytes, and prove equal or stronger coverage
+before removing `verify:stage-0` from required validation. Do not remove or move
+`proposal/spec/`, archive the bootstrap procedure, change product behavior or
+canonical Requirement meaning, execute 10.3, begin Milestone 11, or perform Git
+operations in this leaf.
