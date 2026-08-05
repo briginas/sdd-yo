@@ -13,6 +13,14 @@ Require all of these explicit retained inputs:
 - externally issued project-relative ApprovalEvidence when approval is
   expected.
 
+Before preparation, verify that the explicit branch-head ref resolves to a
+commit whose configured specification tree contains the exact approved
+candidate. A dedicated feature branch is the normal development arrangement,
+but it is not a protocol requirement: commit identity, not the branch name, is
+authoritative. If no suitable branch or commit exists, stop and request
+separate user authorization to create the branch or commit. Never create either
+as an implied preparation side effect.
+
 Never create ApprovalEvidence, infer a human decision, change the approved
 mode, or choose replacement refs. Invoke preparation only through:
 
