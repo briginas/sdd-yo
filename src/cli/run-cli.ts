@@ -10,9 +10,10 @@ import type {
 } from "../contracts/identifiers.ts";
 import { isObjectId, isProjectPath, isRequirementId } from "../contracts/identifiers.ts";
 import type { CliResponseEnvelope } from "../contracts/result.ts";
-import { resolve } from "node:path";
+import { relative, resolve, sep } from "node:path";
 import type { FileSystem } from "../platform/filesystem.ts";
 import type { GitReader } from "../platform/git-reader.ts";
+import { SpecificationWritePreconditionError } from "../platform/project-writer.ts";
 import type { ProjectWriter } from "../platform/project-writer.ts";
 import type { Randomness } from "../platform/randomness.ts";
 import type { ProcessRunner } from "../platform/process-runner.ts";
@@ -58,6 +59,8 @@ import type { TestIndex } from "../tests/index.ts";
 import {
   generateSpecPatch,
   applyProposal,
+  ApprovalEvidenceRecordError,
+  createApprovalEvidence,
   createCandidateTreeManifest,
   importSpecPatch,
   importProposalPackage,
@@ -70,9 +73,13 @@ import {
   ProposalApplyError,
   ProposalPackageInputError,
   ProposalPreparationError,
+  ProposalRevalidationError,
   ProposalValidationError,
   serializeCandidateTreeManifest,
+  serializeApprovalEvidence,
   SpecPatchInputError,
+  MAX_APPROVAL_TEXT_BYTES,
+  revalidateProposalPackage,
   validateProposal,
 } from "../proposal/index.ts";
 import type {
@@ -137,6 +144,7 @@ type Command =
   | "trace"
   | "diff"
   | "candidate.snapshot"
+  | "approval.record"
   | "tests.discover"
   | "findings.validate"
   | "merge.check"
@@ -190,6 +198,11 @@ type Invocation = {
   readonly proposalMode?: ProposalMode;
   readonly candidatePath?: string;
   readonly manifestPath?: ProjectPath;
+  readonly issuer?: string;
+  readonly actor?: string;
+  readonly decision?: "approved" | "rejected";
+  readonly reasonPath?: ProjectPath;
+  readonly evidencePath?: ProjectPath;
   readonly codeTargets: readonly RequirementId[];
   readonly packagePath?: string;
   readonly branchHeadRef?: string;
@@ -284,6 +297,17 @@ export type CandidateSnapshotResult = {
   readonly file_count: number;
 };
 
+export type ApprovalRecordResult = {
+  readonly evidence_path: ProjectPath;
+  readonly decision: "approved" | "rejected";
+  readonly mode: ProposalMode;
+  readonly subject: {
+    readonly base_ref: GitObjectId;
+    readonly semantic_delta_fingerprint: Fingerprint;
+    readonly structural_delta_fingerprint: Fingerprint;
+  };
+};
+
 export type CliResponse =
   | CliResponseEnvelope<"version", "ok", CliCompatibilityIdentity>
   | CliResponseEnvelope<"init", "ok", InitResult>
@@ -297,6 +321,7 @@ export type CliResponse =
   | CliResponseEnvelope<"trace", "ok", TraceResult>
   | CliResponseEnvelope<"diff", "ok", DiffResult>
   | CliResponseEnvelope<"candidate.snapshot", "ok", CandidateSnapshotResult>
+  | CliResponseEnvelope<"approval.record", "ok", ApprovalRecordResult>
   | CliResponseEnvelope<"tests.discover", "ok", TestIndex>
   | CliResponseEnvelope<"findings.validate", "ok" | "blocked", FindingAssessment>
   | CliResponseEnvelope<"merge.check", "ok" | "blocked" | "review_required", MergeReport>
@@ -331,15 +356,17 @@ function parseInvocation(
       ? `skill.${argv[1]}`
       : argv[0] === "tests" && argv[1] === "discover"
         ? "tests.discover"
-        : argv[0] === "candidate" && argv[1] === "snapshot"
-          ? "candidate.snapshot"
-          : argv[0] === "findings" && argv[1] === "validate"
-            ? "findings.validate"
-            : argv[0] === "merge" && argv[1] === "check"
-              ? "merge.check"
-              : argv[0] === "proposal" && (argv[1] === "validate" || argv[1] === "prepare" || argv[1] === "apply")
-                ? `proposal.${argv[1]}`
-                : argv[0];
+        : argv[0] === "approval" && argv[1] === "record"
+          ? "approval.record"
+          : argv[0] === "candidate" && argv[1] === "snapshot"
+            ? "candidate.snapshot"
+            : argv[0] === "findings" && argv[1] === "validate"
+              ? "findings.validate"
+              : argv[0] === "merge" && argv[1] === "check"
+                ? "merge.check"
+                : argv[0] === "proposal" && (argv[1] === "validate" || argv[1] === "prepare" || argv[1] === "apply")
+                  ? `proposal.${argv[1]}`
+                  : argv[0];
   if (
     command !== "init" &&
     command !== "skill.install" &&
@@ -351,6 +378,7 @@ function parseInvocation(
     command !== "trace" &&
     command !== "diff" &&
     command !== "candidate.snapshot" &&
+    command !== "approval.record" &&
     command !== "tests.discover" &&
     command !== "findings.validate" &&
     command !== "merge.check" &&
@@ -393,6 +421,11 @@ function parseInvocation(
   let proposalMode: ProposalMode | undefined;
   let candidatePath: string | undefined;
   let manifestPath: ProjectPath | undefined;
+  let issuer: string | undefined;
+  let actor: string | undefined;
+  let decision: "approved" | "rejected" | undefined;
+  let reasonPath: ProjectPath | undefined;
+  let evidencePath: ProjectPath | undefined;
   const codeTargets: RequirementId[] = [];
   let packagePath: string | undefined;
   let branchHeadRef: string | undefined;
@@ -414,6 +447,7 @@ function parseInvocation(
       command === "skill.update" ||
       command === "skill.remove" ||
       command === "candidate.snapshot" ||
+      command === "approval.record" ||
       command === "findings.validate" ||
       command === "merge.check" ||
       command === "proposal.validate" ||
@@ -455,6 +489,11 @@ function parseInvocation(
       argument === "--branch-head" ||
       argument === "--integration-ref" ||
       argument === "--approval" ||
+      argument === "--issuer" ||
+      argument === "--actor" ||
+      argument === "--decision" ||
+      argument === "--reason" ||
+      argument === "--evidence" ||
       argument === "--change" ||
       argument === "--input-manifest" ||
       argument === "--findings" ||
@@ -476,7 +515,42 @@ function parseInvocation(
           ),
         };
       index += 1;
-      if (argument === "--manifest") {
+      if (argument === "--reason" || argument === "--evidence") {
+        if (!isProjectPath(value))
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              argument === "--reason" ? "SDD_APPROVAL_REASON_PATH_INVALID" : "SDD_APPROVAL_TARGET_PATH_INVALID",
+              `The approval ${argument === "--reason" ? "reason" : "evidence target"} path is not project-relative and portable.`,
+              "Supply a safe project-relative path inside the selected project.",
+            ),
+          };
+        if (argument === "--reason") reasonPath = value;
+        else evidencePath = value;
+      } else if (argument === "--issuer" || argument === "--actor") {
+        if (value.length === 0 || value.includes("\0"))
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              argument === "--issuer" ? "SDD_APPROVAL_ISSUER_INVALID" : "SDD_APPROVAL_ACTOR_INVALID",
+              `The approval ${argument.slice(2)} is invalid.`,
+              `Supply a non-empty explicit approval ${argument.slice(2)}.`,
+            ),
+          };
+        if (argument === "--issuer") issuer = value;
+        else actor = value;
+      } else if (argument === "--decision") {
+        if (value !== "approved" && value !== "rejected")
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_APPROVAL_DECISION_INVALID",
+              "The approval decision is unsupported.",
+              "Use approved or rejected.",
+            ),
+          };
+        decision = value;
+      } else if (argument === "--manifest") {
         if (!isProjectPath(value))
           return {
             ok: false,
@@ -948,6 +1022,7 @@ function parseInvocation(
   if (
     command !== "proposal.validate" &&
     command !== "proposal.prepare" &&
+    command !== "approval.record" &&
     command !== "merge.check" &&
     (proposalMode !== undefined || candidatePath !== undefined || codeTargets.length > 0)
   )
@@ -988,6 +1063,7 @@ function parseInvocation(
     };
   if (
     command !== "proposal.prepare" &&
+    command !== "approval.record" &&
     command !== "merge.check" &&
     (packagePath !== undefined || approvalPaths.length > 0)
   )
@@ -997,6 +1073,57 @@ function parseInvocation(
         "SDD_CONFIG_CLI_ARGUMENT_INVALID",
         "A proposal preparation option was used with another command.",
         "Use preparation options only with sdd proposal prepare.",
+      ),
+    };
+  if (
+    command === "approval.record" &&
+    (packagePath === undefined ||
+      candidatePath === undefined ||
+      issuer === undefined ||
+      actor === undefined ||
+      decision === undefined ||
+      reasonPath === undefined ||
+      evidencePath === undefined)
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_APPROVAL_INPUTS_REQUIRED",
+        "approval record requires package, candidate, issuer, actor, decision, reason, and evidence inputs.",
+        "Supply every explicit approval recording input.",
+      ),
+    };
+  if (
+    command === "approval.record" &&
+    (proposalMode !== undefined ||
+      codeTargets.length > 0 ||
+      baseRef !== undefined ||
+      targetRef !== undefined ||
+      approvalPaths.length > 0 ||
+      outputPath !== undefined)
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "An unsupported option was used with approval record.",
+        "Use only package, candidate, issuer, actor, decision, reason, evidence, project selection, and formatting inputs.",
+      ),
+    };
+  if (
+    command !== "approval.record" &&
+    (issuer !== undefined ||
+      actor !== undefined ||
+      decision !== undefined ||
+      reasonPath !== undefined ||
+      evidencePath !== undefined)
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "An approval recording option was used with another command.",
+        "Use approval recording options only with sdd approval record.",
       ),
     };
   if (command !== "proposal.prepare" && (branchHeadRef !== undefined || integrationRef !== undefined))
@@ -1231,6 +1358,11 @@ function parseInvocation(
       ...(proposalMode === undefined ? {} : { proposalMode }),
       ...(candidatePath === undefined ? {} : { candidatePath }),
       ...(manifestPath === undefined ? {} : { manifestPath }),
+      ...(issuer === undefined ? {} : { issuer }),
+      ...(actor === undefined ? {} : { actor }),
+      ...(decision === undefined ? {} : { decision }),
+      ...(reasonPath === undefined ? {} : { reasonPath }),
+      ...(evidencePath === undefined ? {} : { evidencePath }),
       codeTargets,
       ...(packagePath === undefined ? {} : { packagePath }),
       ...(branchHeadRef === undefined ? {} : { branchHeadRef }),
@@ -1489,6 +1621,16 @@ function humanView(value: CliResponse): string {
       `base tree: ${result.base_tree_fingerprint}`,
       `candidate tree: ${result.candidate_tree_fingerprint}`,
       `files: ${result.file_count}`,
+    );
+  } else if (value.command === "approval.record" && value.status === "ok") {
+    const result = value.result as ApprovalRecordResult;
+    lines.push(
+      `evidence: ${result.evidence_path}`,
+      `decision: ${result.decision}`,
+      `mode: ${result.mode}`,
+      `base: ${result.subject.base_ref}`,
+      `semantic: ${result.subject.semantic_delta_fingerprint}`,
+      `structural: ${result.subject.structural_delta_fingerprint}`,
     );
   } else if (value.command === "init" && value.status === "ok") {
     const result = value.result as InitResult;
@@ -1760,6 +1902,81 @@ async function resolveSafeOutputTarget(
     }
   }
   return { ok: true, target: resolveConfiguredPath(projectRoot, outputPath) };
+}
+
+async function readApprovalReason(
+  fileSystem: FileSystem,
+  projectRoot: string,
+  reasonPath: ProjectPath,
+): Promise<string> {
+  const target = resolveConfiguredPath(projectRoot, reasonPath);
+  let metadata;
+  try {
+    metadata = await fileSystem.metadata(target);
+  } catch {
+    throw new ApprovalEvidenceRecordError(
+      "SDD_APPROVAL_REASON_UNAVAILABLE",
+      "The approval reason file is unavailable.",
+    );
+  }
+  if (metadata.kind !== "file")
+    throw new ApprovalEvidenceRecordError(
+      "SDD_APPROVAL_REASON_INVALID",
+      "The approval reason input is not a regular file.",
+    );
+  if (metadata.size > MAX_APPROVAL_TEXT_BYTES)
+    throw new ApprovalEvidenceRecordError(
+      "SDD_APPROVAL_REASON_LIMIT_EXCEEDED",
+      "The approval reason exceeds its byte limit.",
+    );
+  try {
+    const [realRoot, realTarget] = await Promise.all([fileSystem.realPath(projectRoot), fileSystem.realPath(target)]);
+    const containment = relative(realRoot, realTarget);
+    if (containment === ".." || containment.startsWith(`..${sep}`))
+      throw new ApprovalEvidenceRecordError(
+        "SDD_APPROVAL_REASON_PATH_UNSAFE",
+        "The approval reason resolves outside the selected project.",
+      );
+    const bytes = await fileSystem.readFile(target);
+    if (bytes.byteLength > MAX_APPROVAL_TEXT_BYTES)
+      throw new ApprovalEvidenceRecordError(
+        "SDD_APPROVAL_REASON_LIMIT_EXCEEDED",
+        "The approval reason exceeds its byte limit.",
+      );
+    try {
+      return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    } catch {
+      throw new ApprovalEvidenceRecordError("SDD_APPROVAL_REASON_NOT_UTF8", "The approval reason is not valid UTF-8.");
+    }
+  } catch (error) {
+    if (error instanceof ApprovalEvidenceRecordError) throw error;
+    throw new ApprovalEvidenceRecordError(
+      "SDD_APPROVAL_REASON_UNAVAILABLE",
+      "The approval reason file is unavailable.",
+    );
+  }
+}
+
+async function ensureApprovalTargetIgnored(
+  processRunner: ProcessRunner,
+  projectRoot: string,
+  evidencePath: ProjectPath,
+): Promise<void> {
+  const ignored = await processRunner.run({
+    executable: "git",
+    arguments: ["check-ignore", "--quiet", "--", evidencePath],
+    workingDirectory: projectRoot,
+    environment: { GIT_OPTIONAL_LOCKS: "0", LC_ALL: "C" },
+    timeoutMilliseconds: 30_000,
+    maxOutputBytes: 1024 * 1024,
+  });
+  if (ignored.exitCode === 1)
+    throw new ApprovalEvidenceRecordError(
+      "SDD_APPROVAL_TARGET_NOT_IGNORED",
+      "The ApprovalEvidence target is not ignored by Git.",
+    );
+  if (ignored.exitCode !== 0)
+    throw new GitReadError("GIT_COMMAND_FAILED", "Git could not validate the ApprovalEvidence target.");
 }
 
 export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
@@ -2150,6 +2367,115 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
           response("candidate.snapshot", project.configuration.project_id, "error", null, [diagnostic]),
         );
         return TECHNICAL_FAILURE_EXIT_CODE;
+      }
+    }
+    if (invocation.command === "approval.record") {
+      try {
+        if (
+          invocation.packagePath === undefined ||
+          invocation.candidatePath === undefined ||
+          invocation.issuer === undefined ||
+          invocation.actor === undefined ||
+          invocation.decision === undefined ||
+          invocation.reasonPath === undefined ||
+          invocation.evidencePath === undefined
+        )
+          throw new Error("Parsed approval record invocation is missing required inputs.");
+        if (
+          invocation.evidencePath === project.configuration.spec.root ||
+          invocation.evidencePath.startsWith(`${project.configuration.spec.root}/`)
+        )
+          throw new ApprovalEvidenceRecordError(
+            "SDD_APPROVAL_TARGET_IN_SPEC",
+            "The ApprovalEvidence target is inside the governed specification tree.",
+          );
+        const selectedEvidence = await resolveSafeOutputTarget(
+          runtime.fileSystem,
+          project.project_root,
+          invocation.evidencePath,
+        );
+        if (!selectedEvidence.ok)
+          throw new ApprovalEvidenceRecordError("SDD_APPROVAL_TARGET_UNSAFE", selectedEvidence.diagnostic.message);
+        await ensureApprovalTargetIgnored(runtime.processRunner, project.project_root, invocation.evidencePath);
+        const [packageValue, reason, reader] = await Promise.all([
+          importProposalPackage(runtime.fileSystem, resolve(runtime.workingDirectory, invocation.packagePath)),
+          readApprovalReason(runtime.fileSystem, project.project_root, invocation.reasonPath),
+          discoverProcessGitReader(runtime.processRunner, project.project_root),
+        ]);
+        const revalidated = await revalidateProposalPackage({
+          fileSystem: runtime.fileSystem,
+          gitReader: reader,
+          project,
+          package: packageValue,
+          candidatePath: resolve(runtime.workingDirectory, invocation.candidatePath),
+        });
+        const cliIdentity = loadCliCompatibilityIdentity().cli;
+        const evidence = createApprovalEvidence({
+          projectId: project.configuration.project_id,
+          package: revalidated.package,
+          allowedIssuers: new Set(project.configuration.evidence.allowed_issuers),
+          issuer: invocation.issuer,
+          actor: invocation.actor,
+          decision: invocation.decision,
+          reason,
+          producer: { name: cliIdentity.name, version: cliIdentity.version },
+        });
+        await ensureApprovalTargetIgnored(runtime.processRunner, project.project_root, invocation.evidencePath);
+        await runtime.projectWriter.replaceSpecificationFilesAtomically(project.project_root, [
+          { operation: "create", target: selectedEvidence.target, content: serializeApprovalEvidence(evidence) },
+        ]);
+        const result: ApprovalRecordResult = {
+          evidence_path: invocation.evidencePath,
+          decision: evidence.decision,
+          mode: evidence.mode,
+          subject: evidence.subject,
+        };
+        emit(
+          runtime,
+          invocation.format,
+          response("approval.record", project.configuration.project_id, "ok", result, []),
+        );
+        return VALID_EXIT_CODE;
+      } catch (error) {
+        const revalidationCode =
+          error instanceof ProposalRevalidationError
+            ? error.code.replace(/^SDD_PREPARE_/u, "SDD_APPROVAL_")
+            : undefined;
+        const blocked =
+          revalidationCode !== undefined ||
+          (error instanceof ProposalValidationError && !error.technical) ||
+          (error instanceof ProposalInputError && !error.technical) ||
+          (error instanceof ApprovalEvidenceRecordError && error.code === "SDD_APPROVAL_ISSUER_UNCONFIGURED");
+        const code =
+          revalidationCode ??
+          (error instanceof ApprovalEvidenceRecordError || error instanceof ProposalInputError
+            ? error.code
+            : error instanceof ProposalValidationError
+              ? error.diagnostic.code
+              : error instanceof ProposalPackageInputError
+                ? "SDD_APPROVAL_PACKAGE_INVALID"
+                : error instanceof SpecificationWritePreconditionError
+                  ? error.code === "SDD_APPLY_TARGET_EXISTS"
+                    ? "SDD_APPROVAL_TARGET_EXISTS"
+                    : "SDD_APPROVAL_TARGET_UNSAFE"
+                  : error instanceof GitReadError
+                    ? "SDD_APPROVAL_GIT_CHECK_FAILED"
+                    : "SDD_APPROVAL_WRITE_FAILED");
+        const diagnostic = cliDiagnostic(
+          code,
+          error instanceof Error ? error.message : "ApprovalEvidence could not be recorded.",
+          blocked
+            ? "Restore the exact package, candidate, configured issuer, and human decision inputs."
+            : "Correct the bounded inputs or safe ignored target and run the command again.",
+        );
+        emit(
+          runtime,
+          invocation.format,
+          response("approval.record", project.configuration.project_id, blocked ? "blocked" : "error", null, [
+            diagnostic,
+          ]),
+        );
+        return blocked ? BLOCKED_EXIT_CODE : TECHNICAL_FAILURE_EXIT_CODE;
       }
     }
     if (invocation.command === "findings.validate") {

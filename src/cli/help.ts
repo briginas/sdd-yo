@@ -56,6 +56,12 @@ export const CLI_HELP_ENTRIES: readonly CliHelpEntry[] = [
     summary: "Create an immutable candidate-tree manifest in an ignored staging path.",
   },
   {
+    path: "approval record",
+    usage:
+      "sdd approval record --package <path> --candidate <path> --issuer <name> --actor <identity> --decision approved|rejected --reason <project-relative-path> --evidence <project-relative-path>",
+    summary: "Record one explicit human decision as immutable ApprovalEvidence.",
+  },
+  {
     path: "tests discover",
     usage:
       "sdd tests discover --head <git-ref> [--adapter <id> ...] [--import-junit <path> ...] [--import-jsonl <path> ...]",

@@ -12,15 +12,10 @@ import type { ApprovalEvidence, HumanDecisionEvidenceIssue } from "../verificati
 import { generateSemanticCandidates } from "../verification/semantic-review.ts";
 import type { SemanticCandidate } from "../verification/semantic-review.ts";
 import { parseProposalPackage } from "./package-input.ts";
-import {
-  buildSpecificationTree,
-  compareUnicodeCodePoints,
-  loadBaseSpecificationTree,
-  loadCandidateSpecificationTree,
-} from "./specification-tree.ts";
+import { buildSpecificationTree, compareUnicodeCodePoints, loadBaseSpecificationTree } from "./specification-tree.ts";
 import type { SpecificationTree, SpecificationTreeFile } from "./specification-tree.ts";
 import type { ProposalPackage } from "./validate-proposal.ts";
-import { validateProposal } from "./validate-proposal.ts";
+import { ProposalRevalidationError, revalidateProposalPackage } from "./revalidate-proposal.ts";
 
 export type MechanicalConflictKind = "add_add" | "modify_modify" | "modify_delete" | "delete_modify" | "id_reuse";
 
@@ -65,13 +60,10 @@ export type ApprovedPreparedProposal = PreparedProposal & {
   readonly issues: readonly PreparationGateIssue[];
 };
 
-export class ProposalPreparationError extends Error {
-  readonly code: string;
-
+export class ProposalPreparationError extends ProposalRevalidationError {
   constructor(code: string, message: string) {
-    super(message);
+    super(code, message);
     this.name = "ProposalPreparationError";
-    this.code = code;
   }
 }
 
@@ -298,10 +290,6 @@ function uniqueConflicts(values: readonly MechanicalConflict[]): readonly Mechan
   return [...map.values()].toSorted(compareConflicts);
 }
 
-function equalPackage(left: ProposalPackage, right: ProposalPackage): boolean {
-  return JSON.stringify(left) === JSON.stringify(right);
-}
-
 export async function prepareProposal(input: {
   readonly fileSystem: FileSystem;
   readonly gitReader: GitReader;
@@ -312,53 +300,16 @@ export async function prepareProposal(input: {
   readonly integrationRef: GitObjectId;
   readonly afterCandidateRevalidation?: () => Promise<void>;
 }): Promise<PreparedProposal> {
-  const packageValue = parseProposalPackage(input.package);
-  if (packageValue.project_id !== input.project.configuration.project_id)
-    throw new ProposalPreparationError(
-      "SDD_PREPARE_PACKAGE_PROJECT_MISMATCH",
-      "The package project does not match the selected project.",
-    );
-  const baseRef = await input.gitReader.resolveRevision(packageValue.base.git_ref);
-  if (baseRef !== packageValue.base.git_ref)
-    throw new ProposalPreparationError(
-      "SDD_PREPARE_PACKAGE_BASE_UNBOUND",
-      "The package base is not its resolved Git object ID.",
-    );
-  const base = await loadBaseSpecificationTree(input.gitReader, baseRef, input.project);
-  const revalidated = await validateProposal({
-    fileSystem: input.fileSystem,
-    gitReader: input.gitReader,
-    project: input.project,
-    baseRef,
-    candidatePath: input.candidatePath,
-    mode: packageValue.mode,
-    codeTargets: packageValue.code_targets.map((target) => target.requirement_id),
-  });
-  if (revalidated.candidate.source !== packageValue.candidate.source)
-    throw new ProposalPreparationError(
-      "SDD_PREPARE_CANDIDATE_SOURCE_MISMATCH",
-      "The candidate input kind differs from the package.",
-    );
-  if (!equalPackage(packageValue, revalidated))
-    throw new ProposalPreparationError(
-      "SDD_PREPARE_PACKAGE_STALE",
-      "The candidate or its derived bindings no longer match the ProposalPackage.",
-    );
-  await input.afterCandidateRevalidation?.();
-  const candidate = await loadCandidateSpecificationTree({
-    fileSystem: input.fileSystem,
-    candidatePath: input.candidatePath,
-    selected: input.project,
-    baseFingerprint: base.fingerprint,
-  });
-  if (
-    candidate.source !== packageValue.candidate.source ||
-    candidate.tree.fingerprint !== packageValue.candidate.tree_fingerprint
-  )
-    throw new ProposalPreparationError(
-      "SDD_PREPARE_CANDIDATE_CHANGED",
-      "The candidate changed after package revalidation.",
-    );
+  let revalidated;
+  try {
+    revalidated = await revalidateProposalPackage(input);
+  } catch (error) {
+    if (error instanceof ProposalRevalidationError) throw new ProposalPreparationError(error.code, error.message);
+    throw error;
+  }
+  const packageValue = revalidated.package;
+  const base = revalidated.base;
+  const candidate = revalidated.candidate;
   const [branch, integration, mergeBase] = await Promise.all([
     loadBaseSpecificationTree(input.gitReader, input.branchHead, input.project),
     loadBaseSpecificationTree(input.gitReader, input.integrationRef, input.project),
@@ -369,15 +320,15 @@ export async function prepareProposal(input: {
       "SDD_PREPARE_MERGE_BASE_MISSING",
       "Branch head and integration have no merge base.",
     );
-  const merged = mergeSpecificationTrees(base, candidate.tree, integration);
+  const merged = mergeSpecificationTrees(base, candidate, integration);
   const idReuse: MechanicalConflict[] = [];
   for (const id of packageValue.object_delta.added) {
     if (!base.graph.objects.has(id) && integration.graph.objects.has(id)) {
-      const path = owningPath(candidate.tree.graph, id) ?? owningPath(integration.graph, id);
+      const path = owningPath(candidate.graph, id) ?? owningPath(integration.graph, id);
       if (path !== undefined) idReuse.push({ path, kind: "id_reuse", object_id: id });
     }
   }
-  const conflicts = uniqueConflicts([...merged.conflicts, ...driftConflicts(base, candidate.tree, branch), ...idReuse]);
+  const conflicts = uniqueConflicts([...merged.conflicts, ...driftConflicts(base, candidate, branch), ...idReuse]);
   const integrationDelta = computeGraphObjectDelta(base.graph, integration.graph);
   const integrationChanged = new Set(
     [...integrationDelta.semantic.entries, ...integrationDelta.structural.entries].map((entry) => entry.id),
@@ -394,7 +345,7 @@ export async function prepareProposal(input: {
   const inputFingerprint = fingerprintInput({
     canonicalization_version: "1",
     package: packageValue,
-    candidate_tree_fingerprint: candidate.tree.fingerprint,
+    candidate_tree_fingerprint: candidate.fingerprint,
     branch_head: input.branchHead,
     integration_ref: input.integrationRef,
     merge_base: mergeBase,
@@ -411,7 +362,7 @@ export async function prepareProposal(input: {
     mechanical_conflicts: conflicts,
     semantic_candidates: generateSemanticCandidates({
       base: base.graph,
-      candidate: candidate.tree.graph,
+      candidate: candidate.graph,
       comparison: integration.graph,
     }),
     input_fingerprint: inputFingerprint,

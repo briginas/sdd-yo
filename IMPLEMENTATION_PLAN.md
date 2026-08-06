@@ -2,9 +2,9 @@
 
 ## Status
 
-- State: Milestone 12 in progress; Milestones 12.1 and 12.2 complete
-- Current phase: deterministic ApprovalEvidence recorder implementation
-- Current leaf: Milestone 12.3 — deterministic ApprovalEvidence recorder
+- State: Milestone 12 in progress; Milestones 12.1–12.3 complete
+- Current phase: approval-gated Skill orchestration
+- Current leaf: Milestone 12.4 — Approval-gated Skill orchestration
 - Last updated: 2026-08-06
 
 ## Source-of-truth map
@@ -213,6 +213,24 @@ Done means focused Requirement-named library and CLI tests pass. This leaf does
 not change the Skill, create QA or other human evidence, prepare or apply a
 SpecPatch, or modify Git.
 
+Status: complete on 2026-08-06. The pure constructor and bounded canonical
+serializer record the `sdd` producer, explicit human actor and decision, exact
+decoded UTF-8 reason, and only package-derived subject fields without an
+ambient timestamp. `sdd approval record` now requires every explicit input,
+reuses proposal preparation's extracted package/candidate revalidation path,
+rechecks Git-ignore state before publication, and creates one immutable
+project-scoped artifact through exclusive atomic output with interruption
+rollback.
+
+Focused `REQ-32C76ED3`, `REQ-F7D39246`, `REQ-7341DBB7`, and `REQ-AFD65A03`
+tests cover approved and rejected decisions, exact message and subject bytes,
+package/candidate drift, project and issuer mismatch, bounded malformed input,
+path traversal, symbolic links, specification-root and non-ignored targets,
+existing output, and interrupted publication. The recorder and retained
+proposal-preparation focused run passed 17 tests with no failures. The Skill,
+human Skill review, closeout evidence, and all Git operations remain outside
+this leaf.
+
 #### 12.4 — Approval-gated Skill orchestration
 
 Add the command to the compatible wrapper and progressive-disclosure approval
@@ -309,10 +327,9 @@ human authorization before implementation:
 
 ## Immediate next leaf
 
-Milestone 12.2 is the only selected next leaf. It begins with a separate
-identified human product decision bound to the exact retained Milestone 12.1
-subject. Rejection or any changed, stale, contradictory, or missing decision
-stops without canonical writes. Approval permits `proposal prepare` only after
-the exact evidence is supplied; applying the unchanged SpecPatch remains a
-separate user selection. This leaf excludes runtime, Skill, tests, commits, and
-all other Git operations.
+Milestone 12.4 is the only selected next leaf. It adds the compatible-wrapper
+and progressive-disclosure Skill route over the implemented deterministic
+recorder, including informed subject and target display, explicit human input,
+post-pause rechecks, rejection handling, and separation from later proposal
+preparation. It excludes human Skill approval, QA, closeout, commits, and all
+other Git operations.
