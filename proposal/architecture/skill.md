@@ -22,6 +22,7 @@ sdd-yo/
     modes.md
     authoring.md
     proposal-gate.md
+    approval.md
     branch-preparation.md
     verification.md
     semantic-review.md
@@ -70,6 +71,7 @@ treated as lifecycle authority.
 | Baseline accepted behavior        | Select `spec`, confirm existing behavior and QA plan, draft specification                                                   |
 | Fix implementation to active spec | Select `code`, name exact Requirement targets, leave spec unchanged                                                         |
 | Review a proposal                 | Show object delta and unresolved semantic candidates; never self-approve                                                    |
+| Record an approval decision       | Display and recheck the exact subject, then record only explicit human decision inputs                                      |
 | Prepare a branch                  | Validate approval subject, call prepare, offer exact patch application                                                      |
 | Verify implementation             | Discover tests, compute affected scope, request missing QA/evidence                                                         |
 | Check merge readiness             | Gather explicit artifacts, call `merge check`, explain status                                                               |
@@ -93,8 +95,11 @@ decision-bearing proposal. It does not silently switch modes after approval.
 7. Draft a complete virtual candidate tree.
 8. Call the relevant CLI gate with JSON output.
 9. Present exact diagnostics, object delta, affected scope, and open decisions.
-10. Apply only an explicitly selected exact SpecPatch.
-11. Stop before branch, commit, push, approval, QA decision, or merge.
+10. When explicitly asked to record a human decision, display and recheck its
+    exact subject around the pause, write only the bounded reason input, and
+    invoke `approval record` with explicit issuer, actor, decision, and message.
+11. Apply only an explicitly selected exact SpecPatch.
+12. Stop before branch, commit, push, QA decision, or merge.
 
 ## Trust rules
 
@@ -108,10 +113,11 @@ The skill:
 - does not call configured adapter commands without normal runtime permission;
 - flags changed adapter configuration for human trust review;
 - never turns model confidence into a gate decision;
-- never creates ApprovalEvidence, QAEvidence, or FindingResolution on behalf of
-  a human;
-- may format an external human decision only when the decision and issuer
-  identity are supplied through the authorized workflow;
+- never decides, approves, rejects, or creates QAEvidence or FindingResolution
+  on behalf of a human;
+- may invoke the deterministic ApprovalEvidence recorder only when the exact
+  subject and target were displayed, every human input was supplied explicitly,
+  and retained inputs still match after the human pause;
 - does not report success if the CLI is missing, incompatible, interrupted, or
   returns malformed JSON.
 
@@ -149,5 +155,7 @@ The skill must be evaluated for:
 - refusal to fabricate human evidence;
 - prompt-injection resistance from every repository data channel;
 - correct handling of stale refs and fingerprints;
+- explicit approval and rejection recording without inferred decisions or
+  downstream authority;
 - cross-project isolation in monorepos;
 - clear distinction between governed scope and complete-project claims.

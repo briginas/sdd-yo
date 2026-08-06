@@ -5,7 +5,7 @@ import { join } from "node:path";
 
 const args = process.argv.slice(2);
 const command = args[0];
-const operation = ["proposal", "tests", "findings", "merge"].includes(command)
+const operation = ["approval", "proposal", "tests", "findings", "merge"].includes(command)
   ? `${command}.${args[1] ?? ""}`
   : command;
 const mode = process.env.SDD_SKILL_FAKE_MODE ?? "valid";
@@ -79,6 +79,19 @@ const proposalPackage = {
   },
   diagnostics: [],
   semantic_candidates: [semanticCandidate],
+};
+if (mode === "changed-subject") {
+  proposalPackage.object_delta.semantic_fingerprint = `sha256:${"b".repeat(64)}`;
+}
+const approvalRecord = {
+  evidence_path: ".sdd/staging/approval.json",
+  decision: mode === "rejected-approval" ? "rejected" : "approved",
+  mode: proposalPackage.mode,
+  subject: {
+    base_ref: proposalPackage.base.git_ref,
+    semantic_delta_fingerprint: proposalPackage.object_delta.semantic_fingerprint,
+    structural_delta_fingerprint: proposalPackage.object_delta.structural_fingerprint,
+  },
 };
 const conflictReport = {
   schema_version: "1.0",
@@ -176,22 +189,24 @@ const result =
     ? { created_paths: [".sdd/config.yaml", "spec/README.md", "spec/capabilities", "spec/concepts"] }
     : command === "id"
       ? { candidates, history: { status: "complete", resolved_ref: "abc123" } }
-      : operation === "proposal.validate"
-        ? proposalPackage
-        : operation === "proposal.prepare"
-          ? { conflict_report: conflictReport, spec_patch: mode === "review-required" ? null : specPatch }
-          : operation === "proposal.apply"
-            ? {
-                result_tree_fingerprint: fingerprint,
-                applied_paths: ["spec/capabilities/example.md"],
-              }
-            : operation === "tests.discover"
-              ? testIndex
-              : operation === "findings.validate"
-                ? findingAssessment
-                : operation === "merge.check"
-                  ? mergeReport
-                  : { valid: true, fingerprints: [] };
+      : operation === "approval.record"
+        ? approvalRecord
+        : operation === "proposal.validate"
+          ? proposalPackage
+          : operation === "proposal.prepare"
+            ? { conflict_report: conflictReport, spec_patch: mode === "review-required" ? null : specPatch }
+            : operation === "proposal.apply"
+              ? {
+                  result_tree_fingerprint: fingerprint,
+                  applied_paths: ["spec/capabilities/example.md"],
+                }
+              : operation === "tests.discover"
+                ? testIndex
+                : operation === "findings.validate"
+                  ? findingAssessment
+                  : operation === "merge.check"
+                    ? mergeReport
+                    : { valid: true, fingerprints: [] };
 
 const status =
   mode === "review-required" || mode === "review-required-merge"

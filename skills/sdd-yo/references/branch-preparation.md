@@ -10,8 +10,7 @@ Require all of these explicit retained inputs:
 - the ProposalPackage file;
 - the exact candidate directory or CandidateTreeManifest bound by the package;
 - branch-head and integration Git refs;
-- externally issued project-relative ApprovalEvidence when approval is
-  expected.
+- current project-relative ApprovalEvidence when approval is expected.
 
 Before preparation, verify that the explicit branch-head ref resolves to a
 commit whose configured specification tree contains the exact approved
@@ -21,8 +20,10 @@ authoritative. If no suitable branch or commit exists, stop and request
 separate user authorization to create the branch or commit. Never create either
 as an implied preparation side effect.
 
-Never create ApprovalEvidence, infer a human decision, change the approved
-mode, or choose replacement refs. Invoke preparation only through:
+Never infer a human decision, synthesize ApprovalEvidence, change the approved
+mode, or choose replacement refs. ApprovalEvidence recorded by the separate
+explicit decision route is acceptable only when it is current for these exact
+inputs. Invoke preparation only through:
 
 ```text
 node scripts/check-cli-compatibility -- proposal prepare --package <path> --candidate <path> --branch-head <git-ref> --integration-ref <git-ref> [--approval <project-relative-path> ...] --cwd <directory>

@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const TECHNICAL_FAILURE = 3;
 const SUPPORTED_OPERATIONS = new Set([
+  "approval.record",
   "init",
   "id",
   "validate",
@@ -60,6 +61,20 @@ function isRequirementId(value) {
 
 function isCapabilityId(value) {
   return typeof value === "string" && /^CAP-[0-9A-F]{8}$/u.test(value);
+}
+
+function verifyApprovalRecordResult(result) {
+  return (
+    hasExactKeys(result, ["evidence_path", "decision", "mode", "subject"]) &&
+    isProjectPath(result.evidence_path) &&
+    ["approved", "rejected"].includes(result.decision) &&
+    ["spec-code", "spec", "code"].includes(result.mode) &&
+    hasExactKeys(result.subject, ["base_ref", "semantic_delta_fingerprint", "structural_delta_fingerprint"]) &&
+    typeof result.subject.base_ref === "string" &&
+    result.subject.base_ref.length > 0 &&
+    isFingerprint(result.subject.semantic_delta_fingerprint) &&
+    isFingerprint(result.subject.structural_delta_fingerprint)
+  );
 }
 
 function isFindingId(value) {
@@ -519,12 +534,12 @@ if (wrapperArguments.length > 0) {
 
 const commandArguments = process.argv.slice(separator + 1);
 const command = commandArguments[0];
-const operation = ["proposal", "tests", "findings", "merge"].includes(command)
+const operation = ["approval", "proposal", "tests", "findings", "merge"].includes(command)
   ? `${command}.${commandArguments[1] ?? ""}`
   : command;
 if (command === undefined || !SUPPORTED_OPERATIONS.has(operation))
   fail(
-    "this skill slice permits only init, id, validate, inspect, trace, proposal validate/prepare/apply, tests discover, findings validate, or merge check.",
+    "this skill slice permits only init, id, validate, inspect, trace, approval record, proposal validate/prepare/apply, tests discover, findings validate, or merge check.",
   );
 if (commandArguments.includes("--output")) fail("--output is unavailable because JSON must remain on stdout.");
 if (commandArguments.includes("--format")) fail("omit --format; the compatibility wrapper always selects JSON.");
@@ -581,6 +596,13 @@ if (operation === "proposal.validate") {
   if (!["spec-code", "spec", "code"].includes(mode)) fail("proposal.validate requires a supported --mode.");
   requireOption(commandArguments, "--base", operation);
   requireOption(commandArguments, "--candidate", operation);
+}
+if (operation === "approval.record") {
+  for (const option of ["--package", "--candidate", "--issuer", "--actor", "--decision", "--reason", "--evidence"])
+    requireOption(commandArguments, option, operation);
+  const decision = optionValue(commandArguments, "--decision");
+  if (decision !== "approved" && decision !== "rejected")
+    fail("approval.record requires --decision approved or rejected.");
 }
 if (operation === "proposal.prepare") {
   requireOption(commandArguments, "--package", operation);
@@ -697,6 +719,14 @@ if (command === "id" && response.status === "ok") {
 }
 if (operation === "proposal.validate" && response.status === "ok")
   verifyProposalPackage(response.result, response.project_id);
+if (operation === "approval.record" && response.status === "ok") {
+  if (
+    !verifyApprovalRecordResult(response.result) ||
+    response.result.evidence_path !== optionValue(commandArguments, "--evidence") ||
+    response.result.decision !== optionValue(commandArguments, "--decision")
+  )
+    fail("the sdd CLI returned an invalid approval recording result.");
+}
 if (operation === "proposal.prepare") {
   if (response.status === "ok" || response.status === "review_required") {
     if (

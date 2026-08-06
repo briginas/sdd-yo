@@ -40,8 +40,8 @@ node skills/sdd-yo/scripts/check-cli-compatibility \
 ```
 
 Select a listed response with `SDD_SKILL_FAKE_MODE`. Supported review modes are
-`valid`, `malformed`, `incompatible`, `review-required`,
-`review-required-merge`, and `blocked-merge`. Set
+`valid`, `malformed`, `incompatible`, `changed-subject`, `rejected-approval`,
+`review-required`, `review-required-merge`, and `blocked-merge`. Set
 `SDD_SKILL_FAKE_STDERR_INJECTION=1` only in scenarios that name the
 `adapter-stderr-injection` fixture. The fake CLI is review infrastructure; its
 responses are not product evidence and must never be retained as approval, QA,
@@ -49,8 +49,11 @@ test execution, finding resolution, or merge authorization.
 
 `review-result.json` retains the completed review of the original eleven
 scenarios. `changed-adapter-review-result.json` retains the completed review of
-the added `changed-adapter-configuration-trust-review` scenario. For a future
-review, copy the matching template, replace its revision and reviewer
+the added `changed-adapter-configuration-trust-review` scenario. The three
+approval-recording scenarios are new automated review inputs and remain pending
+the Milestone 12 human Skill review in
+`approval-review-result.template.json`. For a future review, copy the matching
+template, replace its revision and reviewer
 placeholders, retain the complete transcript beneath `transcripts/`, compute
 its SHA-256, and validate the result against the matching schema. A `pass` or
 `fail` requires a transcript; an unexecuted case stays `not_reviewed` with a
@@ -64,7 +67,8 @@ checks that the skill is named and invoked as `sdd-yo` beside a generic
 SDD-oriented skill.
 
 These checks do not simulate an agent or count as the manual verification
-required by `REQ-26234DC8` and `REQ-1DD46CA9`. For human review, run each case
+required by `REQ-26234DC8` and `REQ-1DD46CA9`. For human review, run each current
+or explicitly selected new case
 in `scenarios.json` against the complete installed skill, retain the transcript,
 and record `pass` only when every expected behavior and forbidden behavior is
 observable. A missing, incomplete, interrupted, or unevaluated transcript is
@@ -76,4 +80,5 @@ consolidated chat verdict transcript and its SHA-256. The two templates remain
 inert `not_reviewed` starting points and must not be mistaken for completed
 results. The separate changed-adapter result records Ivan Briginas's identified
 pass against Skill revision `748f771`; together the two retained results cover
-all twelve scenarios required for canonical promotion.
+the original twelve scenarios required for canonical promotion, not the three
+new approval-recording scenarios.

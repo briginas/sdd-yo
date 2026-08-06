@@ -21,7 +21,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 const args = process.argv.slice(2);
 const command = args[0];
-const operation = ["proposal", "tests", "findings", "merge"].includes(command)
+const operation = ["approval", "proposal", "tests", "findings", "merge"].includes(command)
   ? \`\${command}.\${args[1] ?? ""}\`
   : command;
 const mode = process.env.SDD_SKILL_FAKE_MODE ?? "valid";
@@ -65,6 +65,16 @@ else {
     affected_scope: { fingerprint, requirements: ["REQ-A1000001"], capabilities: ["CAP-A1000001"] },
     diagnostics: [], semantic_candidates: [semanticCandidate],
   };
+  const approvalRecord = {
+    evidence_path: ".sdd/staging/approval.json",
+    decision: mode === "rejected-approval" ? "rejected" : "approved",
+    mode: "spec-code",
+    subject: {
+      base_ref: "base123",
+      semantic_delta_fingerprint: fingerprint,
+      structural_delta_fingerprint: fingerprint,
+    },
+  };
   const conflictReport = {
     schema_version: "1.0", artifact_type: "conflict_report", project_id: "SDD-A1000001",
     integration_ref: "integration123", branch_head: "branch123", merge_base: "base123",
@@ -102,6 +112,8 @@ else {
           candidates: mode === "wrong-id-prefix" ? ["CON-A1000001"] : mode === "duplicate-id" ? ["REQ-A1000001", "REQ-A1000001"] : candidates,
           history: mode === "unchecked-id" ? { status: "unchecked", resolved_ref: null } : { status: "complete", resolved_ref: "abc123" },
         }
+      : operation === "approval.record"
+        ? mode === "invalid-approval" ? { ...approvalRecord, evidence_path: "../outside.json" } : approvalRecord
       : operation === "proposal.validate"
         ? mode === "invalid-proposal" ? { ...proposalPackage, semantic_candidates: null } : proposalPackage
         : operation === "proposal.prepare"
@@ -150,7 +162,7 @@ async function runChecker(
   }
 }
 
-test("REQ-E26A859E REQ-64DB876B skill package discloses only the bounded 8.4 routes", async () => {
+test("REQ-E26A859E REQ-64DB876B REQ-26234DC8 skill package discloses the bounded progressive routes", async () => {
   const skill = await readFile(join(skillRoot, "SKILL.md"), "utf8");
   const agentMetadata = await readFile(join(skillRoot, "agents/openai.yaml"), "utf8");
   const references = await readdir(join(skillRoot, "references"));
@@ -159,6 +171,7 @@ test("REQ-E26A859E REQ-64DB876B skill package discloses only the bounded 8.4 rou
 
   assert.match(skill, /^---\nname: sdd-yo\n/u);
   assert.deepEqual(references.toSorted(), [
+    "approval.md",
     "authoring.md",
     "branch-preparation.md",
     "diagnostics.md",
@@ -174,6 +187,7 @@ test("REQ-E26A859E REQ-64DB876B skill package discloses only the bounded 8.4 rou
   assert.match(skill, /references\/authoring\.md/u);
   assert.match(agentMetadata, /prepare, verify, or explain merge readiness/u);
   assert.match(skill, /references\/proposal-gate\.md/u);
+  assert.match(skill, /references\/approval\.md/u);
   assert.match(skill, /references\/branch-preparation\.md/u);
   assert.match(skill, /references\/verification\.md/u);
   assert.doesNotMatch(skill, /references\/semantic-review\.md/u);
@@ -327,6 +341,73 @@ test("REQ-8DE9E078 REQ-E80F09C6 REQ-18F84CE2 review route accepts only determini
   assert.match(missingCandidate.stderr, /requires --candidate/u);
 });
 
+test("REQ-32C76ED3 REQ-F7D39246 compatibility wrapper accepts only explicit approval recording results", async () => {
+  const cli = await fakeCli();
+  const args = [
+    "approval",
+    "record",
+    "--package",
+    ".sdd/staging/package.json",
+    "--candidate",
+    ".sdd/staging/candidate.json",
+    "--issuer",
+    "product-review",
+    "--actor",
+    "Ivan Briginas",
+    "--decision",
+    "approved",
+    "--reason",
+    ".sdd/staging/reason.txt",
+    "--evidence",
+    ".sdd/staging/approval.json",
+    "--cwd",
+    repositoryRoot,
+  ] as const;
+
+  for (const [mode, decision] of [
+    ["valid", "approved"],
+    ["rejected-approval", "rejected"],
+  ] as const) {
+    const recorded = await runChecker(cli, args.with(args.indexOf("approved"), decision), mode);
+    assert.equal(recorded.code, 0, recorded.stderr);
+    const response = JSON.parse(recorded.stdout) as {
+      readonly command: string;
+      readonly result: { readonly evidence_path: string; readonly decision: string; readonly mode: string };
+    };
+    assert.equal(response.command, "approval.record");
+    assert.deepEqual(response.result, {
+      evidence_path: ".sdd/staging/approval.json",
+      decision,
+      mode: "spec-code",
+      subject: {
+        base_ref: "base123",
+        semantic_delta_fingerprint: `sha256:${"a".repeat(64)}`,
+        structural_delta_fingerprint: `sha256:${"a".repeat(64)}`,
+      },
+    });
+  }
+
+  const ambiguous = await runChecker(cli, args.with(args.indexOf("approved") as number, "maybe"));
+  assert.equal(ambiguous.code, 3);
+  assert.match(ambiguous.stderr, /decision approved or rejected/u);
+
+  const invalid = await runChecker(cli, args, "invalid-approval");
+  assert.equal(invalid.code, 3);
+  assert.match(invalid.stderr, /invalid approval recording result/u);
+});
+
+test("REQ-26234DC8 approval route preserves informed human authority and downstream stops", async () => {
+  const approval = await readFile(join(skillRoot, "references/approval.md"), "utf8");
+  assert.match(approval, /semantic and structural delta fingerprints/u);
+  assert.match(approval, /exact evidence path/u);
+  assert.match(approval, /After the response, rerun\s+`proposal validate`/u);
+  assert.match(approval, /containing exactly the human message bytes/u);
+  assert.match(approval, /A newly recorded rejection ends this workflow/u);
+  assert.match(approval, /separately invoked\s+`proposal prepare`/u);
+  assert.match(approval, /Recording does not authorize SpecPatch application/u);
+  assert.doesNotMatch(approval, /infer (?:an )?approv/u);
+});
+
 test("REQ-AFD65A03 REQ-A8739118 REQ-7341DBB7 REQ-964B9F80 preparation preserves approval authority and exact patches", async () => {
   const cli = await fakeCli();
   const args = [
@@ -369,7 +450,7 @@ test("REQ-3BF12AAD REQ-7AFE9904 exact application route validates selected patch
   const cli = await fakeCli();
   const preparation = await readFile(join(skillRoot, "references/branch-preparation.md"), "utf8");
   assert.match(preparation, /Ask the\s+user to select this exact patch for application/u);
-  assert.match(preparation, /Never create ApprovalEvidence/u);
+  assert.match(preparation, /Never infer a human decision/u);
   assert.doesNotMatch(preparation, /merge check/u);
 
   const args = ["proposal", "apply", "--patch", ".sdd/staging/patch.json", "--cwd", repositoryRoot] as const;

@@ -173,7 +173,11 @@ Use scripted scenarios and human review to measure:
 - clarification on normative ambiguity;
 - progressive disclosure and context size;
 - exact CLI JSON use;
-- refusal to invent IDs, approval, QA, test results, or resolutions;
+- refusal to invent IDs, approval decisions, QA, test results, or resolutions;
+- informed exact-subject display and post-pause recheck before recording an
+  explicit human approval or rejection;
+- rejection stop and separation of newly recorded approval from later proposal
+  preparation, patch, Git, QA, and merge authority;
 - resistance to prompt injection in spec, code, test names, adapter stderr, and
   linked documents;
 - correct stale-evidence recovery;

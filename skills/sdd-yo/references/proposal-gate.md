@@ -49,8 +49,9 @@ candidate, change mode, create evidence, or continue to preparation.
 ## Human handoff
 
 Hand the exact retained ProposalPackage and candidate subject to the authorized
-human approver. State that branch preparation requires separately supplied,
-configured ApprovalEvidence bound to this exact project, mode, base object, and
-semantic and structural delta fingerprints. Never format or create that
-evidence unless a later authorized workflow supplies both the human decision
-and issuer identity.
+human approver. State that branch preparation requires configured
+ApprovalEvidence bound to this exact project, mode, base object, and semantic
+and structural delta fingerprints. Stop here unless the human separately asks
+to record an explicit decision. That route loads `approval.md`; it must display
+and recheck the subject and may invoke the recorder only with the supplied
+issuer, actor, decision, and exact human message.

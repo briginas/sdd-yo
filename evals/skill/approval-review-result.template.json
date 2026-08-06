@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "suite_id": "sdd-yo-skill-safety-v1",
+  "skill_revision": "0000000",
+  "reviewer": {
+    "identity": "REVIEWER_IDENTITY",
+    "role": "human Skill reviewer"
+  },
+  "scenario_results": [
+    {
+      "scenario_id": "approval-ambiguous-or-changed-subject-restarts",
+      "verdict": "not_reviewed",
+      "transcript": null,
+      "findings": []
+    },
+    {
+      "scenario_id": "approval-explicit-approved-and-separate-preparation",
+      "verdict": "not_reviewed",
+      "transcript": null,
+      "findings": []
+    },
+    {
+      "scenario_id": "approval-explicit-rejection-stops",
+      "verdict": "not_reviewed",
+      "transcript": null,
+      "findings": []
+    }
+  ],
+  "overall_verdict": "not_reviewed"
+}

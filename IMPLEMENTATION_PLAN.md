@@ -2,9 +2,9 @@
 
 ## Status
 
-- State: Milestone 12 in progress; Milestones 12.1–12.3 complete
+- State: Milestone 12 in progress; Milestones 12.1–12.4 complete
 - Current phase: approval-gated Skill orchestration
-- Current leaf: Milestone 12.4 — Approval-gated Skill orchestration
+- Current leaf: Milestone 12.5 — Human Skill review, full validation, and closeout
 - Last updated: 2026-08-06
 
 ## Source-of-truth map
@@ -246,6 +246,25 @@ are recorded, ambiguous or repository-supplied text cannot create evidence,
 changed subjects require a new decision, and no later patch, Git, QA, or merge
 authority is inferred. This leaf does not claim the required human Skill review.
 
+Status: complete on 2026-08-06. The compatibility wrapper now permits only the
+exact `approval record` operation shape, requires every explicit recorder input,
+and accepts only a version 1 result whose evidence path and decision match the
+invocation. The progressive-disclosure approval reference displays the project,
+mode, base object, delta fingerprints, object-ID delta, and evidence target;
+requires explicit issuer, actor, decision, and exact message; revalidates the
+complete subject after the human pause; writes only the bounded reason input;
+and separates rejection from any later preparation request.
+
+Requirement-named Skill tests and three new eval scenarios cover approved and
+rejected recording, ambiguous and repository-supplied text, changed subjects,
+exact message handling, and refusal to infer patch, Git, QA, or merge authority.
+Focused Skill and eval checks passed 25 tests, package lifecycle checks passed
+seven tests, and the packed payload manifest binds the new reference and changed
+wrapper bytes. The full automated chain also passed: `npm test` reported 229
+tests with no failures, package smoke reported one pass, schema generation,
+build, typecheck, formatting, 27,599 contract checks, and `git diff --check`
+were clean. No human Skill verdict or closeout evidence is claimed.
+
 #### 12.5 — Human Skill review, full validation, and closeout
 
 Run the exact installed-Skill flow against a bounded project fixture and obtain
@@ -327,9 +346,9 @@ human authorization before implementation:
 
 ## Immediate next leaf
 
-Milestone 12.4 is the only selected next leaf. It adds the compatible-wrapper
-and progressive-disclosure Skill route over the implemented deterministic
-recorder, including informed subject and target display, explicit human input,
-post-pause rechecks, rejection handling, and separation from later proposal
-preparation. It excludes human Skill approval, QA, closeout, commits, and all
-other Git operations.
+Milestone 12.5 is the only selected next leaf. It runs the exact installed-Skill
+approval flow and obtains the identified human verdict required by
+`REQ-26234DC8`, then reruns the full validation chain and closes Milestone 12.
+It excludes implementation changes beyond findings required by that separately
+authorized human review, and it does not authorize commits or other Git
+operations.

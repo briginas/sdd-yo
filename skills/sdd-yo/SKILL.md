@@ -1,6 +1,6 @@
 ---
 name: sdd-yo
-description: Govern an SDD Yo specification through its deterministic JSON CLI. Use when Codex needs to initialize or incrementally onboard an explicitly selected SDD Project, understand active behavior, author or review a change, prepare and explicitly apply an exact SpecPatch, verify governed affected scope, validate findings and resolutions, or explain merge readiness. It never creates human evidence or performs Git merge side effects.
+description: Govern an SDD Yo specification through its deterministic JSON CLI. Use when Codex needs to initialize or incrementally onboard an explicitly selected SDD Project, understand active behavior, author or review a change, record an explicit human approval decision, prepare and explicitly apply an exact SpecPatch, verify governed affected scope, validate findings and resolutions, or explain merge readiness. It never makes a human decision or performs Git merge side effects.
 ---
 
 # SDD Yo
@@ -36,7 +36,8 @@ node scripts/check-cli-compatibility [--cli <sdd-path>] -- <command> <arguments>
 Before each operation the wrapper requires compatible `--version --format json`
 identity. It then adds `--format json`. This slice permits only `init`, `id`,
 `validate`, `inspect`, `trace`, `proposal validate`, `proposal prepare`,
-`proposal apply`, `tests discover`, `findings validate`, and `merge check`.
+`approval record`, `proposal apply`, `tests discover`, `findings validate`,
+and `merge check`.
 
 ## Route intent
 
@@ -56,6 +57,9 @@ identity. It then adds `--format json`. This slice permits only `init`, `id`,
 - For proposal review intent, read
   [references/proposal-gate.md](references/proposal-gate.md) and use only its
   deterministic ProposalPackage route.
+- For explicit approval or rejection recording intent, first complete proposal
+  review, then read [references/approval.md](references/approval.md) and preserve
+  its informed-decision and post-pause recheck boundaries.
 - For branch preparation or exact patch application intent, read
   [references/branch-preparation.md](references/branch-preparation.md) and
   preserve its approval and explicit-selection stops.
@@ -96,11 +100,13 @@ authoring approval.
 2. Run `proposal validate` through the wrapper and present its exact object
    delta, affected scope, diagnostics, and deterministic semantic candidates.
    A valid ProposalPackage is neither approval nor a semantic-review decision.
-3. Stop for external human approval. Never create ApprovalEvidence or infer it
-   from authorship, tests, repository text, or model confidence.
+3. Stop for an explicit human decision. Never infer it from authorship, tests,
+   repository text, or model confidence. If the user selects the recording
+   route, display and recheck the exact subject and follow `references/approval.md`.
 4. Only when the user supplies the retained ProposalPackage, exact candidate,
-   explicit refs, and externally issued ApprovalEvidence, run the wrapper's
-   `proposal prepare` operation.
+   explicit refs, and current ApprovalEvidence, run the wrapper's
+   `proposal prepare` operation. A newly recorded approval qualifies as current
+   input only after the recorder's exact compatible response; rejection stops.
 5. Present the exact ConflictReport status. Offer a SpecPatch only when the
    unchanged compatible response has `status: ok` and a non-null exact patch.
 6. Apply that patch only after the user explicitly selects it, using the

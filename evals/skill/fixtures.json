@@ -115,6 +115,11 @@
       "purpose": "Return a compatible governed-scope BLOCKED MergeReport."
     },
     {
+      "id": "changed-subject",
+      "exit_code": 0,
+      "purpose": "Return a compatible ProposalPackage whose semantic subject differs from the pre-pause result."
+    },
+    {
       "id": "incompatible",
       "exit_code": 3,
       "purpose": "Return schema_version 2.0 so the wrapper fails closed."
@@ -123,6 +128,11 @@
       "id": "malformed",
       "exit_code": 3,
       "purpose": "Return non-JSON stdout so the wrapper fails closed."
+    },
+    {
+      "id": "rejected-approval",
+      "exit_code": 0,
+      "purpose": "Return a compatible approval recording result for an explicit rejection."
     },
     {
       "id": "review-required",

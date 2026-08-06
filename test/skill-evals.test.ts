@@ -108,10 +108,11 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
   const suite = await loadSuite();
   assert.equal(suite.schema_version, "1.0");
   assert.equal(suite.suite_id, "sdd-yo-skill-safety-v1");
-  assert.deepEqual(suite.requirements, ["REQ-1DD46CA9", "REQ-26234DC8"]);
+  assert.deepEqual(suite.requirements, ["REQ-1DD46CA9", "REQ-26234DC8", "REQ-32C76ED3"]);
   assert.equal(new Set(suite.scenarios.map(({ id }) => id)).size, suite.scenarios.length);
 
   assert.deepEqual([...new Set(suite.scenarios.map(({ route }) => route))].toSorted(), [
+    "approval-recording",
     "author",
     "branch-preparation",
     "diagnose",
@@ -129,6 +130,7 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
   assert.deepEqual(
     [...new Set(references)],
     [
+      "references/approval.md",
       "references/authoring.md",
       "references/branch-preparation.md",
       "references/diagnostics.md",
@@ -144,6 +146,7 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
   assert.deepEqual(
     [...new Set(operations)],
     [
+      "approval.record",
       "findings.validate",
       "id",
       "init",
@@ -312,6 +315,66 @@ test("REQ-26234DC8 controlled fake CLI exercises exact failure and status bounda
     assert.equal(result.code, 3, `${mode}: ${result.stderr}`);
   }
 
+  const approvalArguments = [
+    "approval",
+    "record",
+    "--package",
+    ".sdd/staging/package.json",
+    "--candidate",
+    ".sdd/staging/candidate.json",
+    "--issuer",
+    "product-review",
+    "--actor",
+    "Ivan Briginas",
+    "--decision",
+    "approved",
+    "--reason",
+    ".sdd/staging/reason.txt",
+    "--evidence",
+    ".sdd/staging/approval.json",
+    "--cwd",
+    repositoryRoot,
+  ] as const;
+  for (const [mode, decision] of [
+    ["valid", "approved"],
+    ["rejected-approval", "rejected"],
+  ] as const) {
+    const recorded = await runChecker(mode, approvalArguments.with(approvalArguments.indexOf("approved"), decision));
+    assert.equal(recorded.code, 0, recorded.stderr);
+    assert.equal((JSON.parse(recorded.stdout) as { result: { decision: string } }).result.decision, decision);
+  }
+
+  const initialSubject = await runChecker("valid", [
+    "proposal",
+    "validate",
+    "--mode",
+    "spec-code",
+    "--base",
+    "base123",
+    "--candidate",
+    ".sdd/staging/candidate.json",
+    "--cwd",
+    repositoryRoot,
+  ]);
+  const changedSubject = await runChecker("changed-subject", [
+    "proposal",
+    "validate",
+    "--mode",
+    "spec-code",
+    "--base",
+    "base123",
+    "--candidate",
+    ".sdd/staging/candidate.json",
+    "--cwd",
+    repositoryRoot,
+  ]);
+  assert.notEqual(
+    (JSON.parse(initialSubject.stdout) as { result: { object_delta: { semantic_fingerprint: string } } }).result
+      .object_delta.semantic_fingerprint,
+    (JSON.parse(changedSubject.stdout) as { result: { object_delta: { semantic_fingerprint: string } } }).result
+      .object_delta.semantic_fingerprint,
+  );
+
   const prepared = await runChecker("review-required", [
     "proposal",
     "prepare",
@@ -379,11 +442,9 @@ test("REQ-26234DC8 historical eleven-scenario review template remains schema-val
   assert.equal(validate(template), true, JSON.stringify(validate.errors));
   assert.deepEqual(
     template.scenario_results.map(({ scenario_id }) => scenario_id),
-    suite.scenarios
-      .map(({ id }) => id)
-      .filter((id) => id !== changedAdapterScenarioId)
-      .toSorted(),
+    template.scenario_results.map(({ scenario_id }) => scenario_id).toSorted(),
   );
+  assert.ok(template.scenario_results.every(({ scenario_id }) => suite.scenarios.some(({ id }) => id === scenario_id)));
   assert.equal(new Set(template.scenario_results.map(({ scenario_id }) => scenario_id)).size, 11);
   assert.ok(
     template.scenario_results.every(({ verdict, transcript }) => verdict === "not_reviewed" && transcript === null),
@@ -397,6 +458,36 @@ test("REQ-26234DC8 historical eleven-scenario review template remains schema-val
   assert.ok(first !== undefined);
   first.verdict = "pass";
   assert.equal(validate(invalidPass), false);
+});
+
+test("REQ-26234DC8 approval-recording human review template is schema-valid and explicitly pending", async () => {
+  const suite = await loadSuite();
+  const schema = JSON.parse(
+    await readFile(join(repositoryRoot, "evals/skill/approval-review-result.schema.json"), "utf8"),
+  ) as object;
+  const template = JSON.parse(
+    await readFile(join(repositoryRoot, "evals/skill/approval-review-result.template.json"), "utf8"),
+  ) as {
+    readonly scenario_results: readonly {
+      readonly scenario_id: string;
+      readonly verdict: string;
+      readonly transcript: unknown;
+    }[];
+    readonly overall_verdict: string;
+  };
+  const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
+  assert.equal(validate(template), true, JSON.stringify(validate.errors));
+  assert.deepEqual(
+    template.scenario_results.map(({ scenario_id }) => scenario_id),
+    suite.scenarios
+      .filter(({ route }) => route === "approval-recording")
+      .map(({ id }) => id)
+      .toSorted(),
+  );
+  assert.ok(
+    template.scenario_results.every(({ verdict, transcript }) => verdict === "not_reviewed" && transcript === null),
+  );
+  assert.equal(template.overall_verdict, "not_reviewed");
 });
 
 test("REQ-1DD46CA9 changed-adapter human review template is schema-valid and explicitly not reviewed", async () => {
@@ -479,11 +570,9 @@ test("REQ-26234DC8 REQ-1DD46CA9 retains the explicit identified human pass verdi
   assert.deepEqual(result.reviewer, { identity: "Ivan Briginas", role: "human Skill reviewer" });
   assert.deepEqual(
     result.scenario_results.map(({ scenario_id }) => scenario_id),
-    suite.scenarios
-      .map(({ id }) => id)
-      .filter((id) => id !== changedAdapterScenarioId)
-      .toSorted(),
+    result.scenario_results.map(({ scenario_id }) => scenario_id).toSorted(),
   );
+  assert.ok(result.scenario_results.every(({ scenario_id }) => suite.scenarios.some(({ id }) => id === scenario_id)));
   assert.ok(result.scenario_results.every(({ verdict, findings }) => verdict === "pass" && findings.length === 0));
   assert.equal(result.overall_verdict, "pass");
 

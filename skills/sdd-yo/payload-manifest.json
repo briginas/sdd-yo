@@ -13,11 +13,15 @@
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "sha256:b8e0d929d21f3213bc6b73145b4ed5532626c07697f7857fdfb0cb7961fc0ade"
+      "sha256": "sha256:72f12a37ebbba32c4af93be63aa37612a333196b5d6b199a9c82be0ccc3bd9cd"
     },
     {
       "path": "agents/openai.yaml",
-      "sha256": "sha256:61d9742b79a8ce67a357c01f019bb448481f4885ec23148c8cd23e47812a0236"
+      "sha256": "sha256:c1546f837455ed28d490513b7b768d769105aa1ad348d01f9b60427d3c59916c"
+    },
+    {
+      "path": "references/approval.md",
+      "sha256": "sha256:c35f2702aa1b126a85a4a34ab5de854e5f914dddc36a533223b326e3021561dd"
     },
     {
       "path": "references/authoring.md",
@@ -25,7 +29,7 @@
     },
     {
       "path": "references/branch-preparation.md",
-      "sha256": "sha256:7d77e5ee272b3de20054382c799246fbae88d8adeab02025d11db750c344d08c"
+      "sha256": "sha256:ef6d4cafbade49ccb26007d97f3b613c6ad016499de3c2db0856d3295250202e"
     },
     {
       "path": "references/diagnostics.md",
@@ -45,7 +49,7 @@
     },
     {
       "path": "references/proposal-gate.md",
-      "sha256": "sha256:5c98567f160d2de2113e4e17bc43a246b27aa1f23789ba9145daa9bdb56174a1"
+      "sha256": "sha256:2dc34c569afb9910f90de7e5c249e4ab9e00479ee08d824f7820f07176a52e87"
     },
     {
       "path": "references/verification.md",
@@ -53,7 +57,7 @@
     },
     {
       "path": "scripts/check-cli-compatibility",
-      "sha256": "sha256:5c63b848661d1ecd99cd075fc433e636c40010e89519f4177fa625f985b73629"
+      "sha256": "sha256:f485029420b03ad6d71cb66d30087e1943ed1a094202f8eb8fb57256c9f0ba84"
     },
     {
       "path": "templates/capability.md",
