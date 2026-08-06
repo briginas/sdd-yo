@@ -162,6 +162,17 @@ test("REQ-2C8E8085 projectless id emits unique candidates with unchecked history
   assert.match(human.standardOutput, /^id: ok\nCON-[0-9A-F]{8}\nhistory: unchecked\n$/u);
 });
 
+test("REQ-AA165BDE Skill lifecycle commands reject traversal before invoking an installer", async () => {
+  for (const operation of ["update", "remove"] as const) {
+    const result = await execute(["skill", operation, "--root", "repository/../adjacent", "--format", "json"]);
+    assert.equal(result.exitCode, 3);
+    assert.equal(
+      (JSON.parse(result.standardOutput) as { diagnostics: readonly { code: string }[] }).diagnostics[0]?.code,
+      "SDD_SKILL_INSTALL_ROOT_INVALID",
+    );
+  }
+});
+
 test("REQ-2C8E8085 projectless id rejects invalid counts and history claims", async () => {
   const root = await mkdtemp(join(tmpdir(), "sdd-cli-id-invalid-"));
   for (const count of ["0", "257", "1.5", "01"]) {

@@ -4,8 +4,8 @@
 
 - State: active
 - Current phase: Milestone 11 / Private installation and first-run onboarding
-- Current leaf: 11.4 / Explicit Skill update, removal, and lifecycle safety
-- Last updated: 2026-08-05
+- Current leaf: 11.5 / User-facing quickstart and recovery documentation
+- Last updated: 2026-08-06
 
 ## Source-of-truth map
 
@@ -82,6 +82,25 @@ and the optional progressive-disclosure `sdd-yo` Agent Skill.
   contract checks, and `git diff --check`. No Skill update/removal, root
   quickstart, cross-platform onboarding evidence, human QA, registry,
   marketplace, or implementation commit is implied.
+- Milestone 11.4 is implemented and verified in the current feature worktree
+  through canonical `CAP-6C317966`, `REQ-DAF21960`, `REQ-8DC50806`, and
+  `REQ-AA165BDE`. The exact proposal was approved by configured issuer
+  `product-review`, actor `Ivan Briginas`, for base
+  `363d383e25d367239f72b4c10459ce17780883f7`; preparation against candidate
+  commit `078ead29c8d233b02980a86b7068d8e4b586a887` reported no mechanical
+  conflict, and the exact SpecPatch applied in an isolated base tree to
+  approved result fingerprint
+  `sha256:ecf5d825597e4681ca354ef45c2bddab11c1bcd3f0574b1215fe8802e9b7c462`.
+  Explicit `sdd skill update --root` verifies current ownership and replacement
+  compatibility, stages a complete replacement, reports exact no-op state, and
+  rolls back handled interruption. Explicit `sdd skill remove --root` detaches
+  only the verified installation inventory. Traversal, symlink, stale binding,
+  modified or undeclared bytes, concurrent state, and adjacent-repository
+  mutation fail closed. Requirement-named focused tests, the packed offline
+  lifecycle smoke, 220 repository tests, schema generation, build, typecheck,
+  formatting, 27,186 contract checks from `/private/tmp`, and `git diff --check`
+  pass. No quickstart, cross-platform onboarding evidence, human QA, registry,
+  marketplace, or implementation commit is implied.
 - Former proposal-only meanings have the dispositions recorded by completed
   Milestone 10:
   later baseline candidates remain nonnormative plan backlog, one unimplemented
@@ -153,7 +172,7 @@ implementation.
       traversal, symlink escape, an incompatible version, an existing
       unapproved destination, mutation outside the selected repository, and any
       implicit global Skill installation or unrelated package-manager change.
-- [ ] **11.4 — Explicit Skill update, removal, and lifecycle safety.** Use one
+- [x] **11.4 — Explicit Skill update, removal, and lifecycle safety.** Use one
       bounded `spec-code` Change for compatibility-aware update and removal of
       the selected repository-scoped installation. Require explicit commands,
       refuse silent overwrite and adjacent-project mutation, remove only bytes
@@ -233,8 +252,9 @@ authorization:
 
 ## Immediate next leaf
 
-The next incomplete leaf is 11.4, explicit Skill update, removal, and lifecycle
-safety. It has not started and requires a separate bounded normal `spec-code`
-Change and human approval before implementation. Do not infer overwrite,
-update, removal, interruption recovery, or adjacent-project mutation authority
-from the completed repository-scoped installation behavior in 11.3.
+The next incomplete leaf is 11.5, user-facing quickstart and recovery
+documentation. It has not started. Document only commands verified through the
+packed consumer layout, keep deterministic CLI results distinct from human
+approval and QA, and do not infer cross-platform onboarding evidence, registry
+publication, marketplace availability, or Milestone 11 closeout from local
+documentation verification.

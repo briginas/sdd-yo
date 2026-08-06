@@ -9,6 +9,19 @@ export type SkillInstallationResult = {
   readonly compatibility: CliCompatibilityIdentity;
 };
 
+export type SkillUpdateResult = {
+  readonly outcome: "updated" | "unchanged";
+  readonly destination: typeof SKILL_INSTALLATION_DESTINATION;
+  readonly owned_paths: readonly string[];
+  readonly payload_fingerprint: `sha256:${string}`;
+  readonly compatibility: CliCompatibilityIdentity;
+};
+
+export type SkillRemovalResult = {
+  readonly destination: typeof SKILL_INSTALLATION_DESTINATION;
+  readonly removed_paths: readonly string[];
+};
+
 export type SkillInstallationInput = {
   readonly repositoryRoot: string;
   readonly packageRoot: string;
@@ -18,6 +31,8 @@ export type SkillInstallationInput = {
 
 export type SkillInstaller = {
   install(input: SkillInstallationInput): Promise<SkillInstallationResult>;
+  update(input: SkillInstallationInput): Promise<SkillUpdateResult>;
+  remove(input: SkillInstallationInput): Promise<SkillRemovalResult>;
 };
 
 export class SkillInstallationError extends Error {

@@ -93,6 +93,13 @@ records a repository-relative packaged CLI binding, and rolls back a partial
 destination on technical failure. The installed wrapper preflights that CLI's
 exact compatibility identity and never resolves `sdd` through `PATH`.
 
+Explicit update and removal revalidate the installed binding, inventory, file
+hashes, compatible protocol majors, and fixed repository destination before
+publication. Update stages a complete replacement beside the destination and
+rolls back handled interruption before publication. Removal detaches only the
+verified installation. Unknown entries, stale bytes, path traversal, symlinks,
+and adjacent repositories remain outside lifecycle authority.
+
 ### Malicious adapter output
 
 JSONL and XML are parsed with bounded, non-networked parsers. XML external

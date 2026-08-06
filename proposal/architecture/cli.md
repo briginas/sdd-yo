@@ -72,10 +72,12 @@ failures.
 
 ## Commands
 
-### `sdd skill install`
+### `sdd skill install`, `sdd skill update`, and `sdd skill remove`
 
 ```text
 sdd skill install --root <repository-root>
+sdd skill update --root <repository-root>
+sdd skill remove --root <repository-root>
 ```
 
 Installs the verified Skill payload from the executing private package at
@@ -84,8 +86,15 @@ run before SDD Project initialization, does not use `--cwd` or `--config`, and
 refuses an existing destination, symlink traversal, incompatible payload, or a
 CLI path outside the selected repository. Its version 1 result contains the
 repository-relative destination, sorted installed paths, payload fingerprint,
-and exact compatibility identity. Update and removal are separate future
-commands.
+and exact compatibility identity.
+
+Update and removal are separate explicit commands. They verify the installed
+binding, exact inventory, payload fingerprint, every owned byte, compatible
+protocol majors, and the selected Git repository root before mutation. Update
+stages and publishes one complete replacement or reports that the installation
+is already exact. Removal deletes only the verified installation inventory.
+Neither operation follows symbolic links, accepts traversal, mutates adjacent
+repository content, or runs implicitly from an ordinary product command.
 
 ### `sdd init`
 

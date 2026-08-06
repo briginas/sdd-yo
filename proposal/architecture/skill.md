@@ -52,6 +52,14 @@ caller supplies one explicit absolute `--cli` path. It preflights exact
 machine-readable compatibility identity before every product command and never
 searches `PATH` for an accidental global `sdd` executable.
 
+Explicit `sdd skill update --root <repository-root>` and
+`sdd skill remove --root <repository-root>` own the later repository lifecycle.
+Both require an exact compatible installation binding and verified byte
+inventory. Update uses private sibling staging plus rollback before publishing
+a complete replacement; removal first detaches only the verified destination.
+Stale, modified, undeclared, symbolic-link, or cross-repository content is not
+treated as lifecycle authority.
+
 ## Intent routing
 
 | User intent                       | Skill behavior                                                                                                              |

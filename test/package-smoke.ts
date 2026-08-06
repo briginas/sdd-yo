@@ -160,7 +160,7 @@ function parsePackResult(standardOutput: string): PackResult {
   return result as PackResult;
 }
 
-test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-3F19778B REQ-CF3A1070 REQ-A0456614 REQ-FFE60B5A REQ-D9CF3A46 REQ-97D96950 package builds, installs its repository Skill, and completes first use offline", async () => {
+test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-3F19778B REQ-CF3A1070 REQ-A0456614 REQ-DAF21960 REQ-8DC50806 REQ-AA165BDE REQ-FFE60B5A REQ-D9CF3A46 REQ-97D96950 package builds, manages its repository Skill, and completes first use offline", async () => {
   const temporaryRoot = await mkdtemp(join(tmpdir(), "sdd-yo-package-smoke-"));
   const buildCache = join(temporaryRoot, "build-cache");
   const installCache = join(temporaryRoot, "install-cache");
@@ -333,7 +333,15 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-3F19778B REQ-CF3A1070 REQ-A0456
     assert.equal(help.exitCode, 0, help.standardError);
     assert.equal(help.standardError, "");
     assert.match(help.standardOutput, /^sdd - repository-native specification governance\n/u);
-    for (const path of ["skill install", "validate", "proposal prepare", "tests discover", "merge check"])
+    for (const path of [
+      "skill install",
+      "skill update",
+      "skill remove",
+      "validate",
+      "proposal prepare",
+      "tests discover",
+      "merge check",
+    ])
       assert.match(help.standardOutput, new RegExp(`  ${path}`, "u"));
 
     const commandHelp = await runCommand(process.execPath, [binTarget, "proposal", "prepare", "--help"], consumerRoot);
@@ -461,6 +469,22 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-3F19778B REQ-CF3A1070 REQ-A0456
     assert.equal(binding.cli.version, installedManifest.version);
     assert.equal(binding.skill.payload_fingerprint, installationResponse.result.payload_fingerprint);
 
+    const skillUpdate = await runCommand(
+      process.execPath,
+      [binTarget, "skill", "update", "--root", consumerRoot, "--format", "json"],
+      consumerRoot,
+    );
+    assert.equal(skillUpdate.exitCode, 0, skillUpdate.standardError || skillUpdate.standardOutput);
+    const updateResponse = JSON.parse(skillUpdate.standardOutput) as {
+      readonly command: string;
+      readonly status: string;
+      readonly result: { readonly outcome: string; readonly owned_paths: readonly string[] };
+    };
+    assert.equal(updateResponse.command, "skill.update");
+    assert.equal(updateResponse.status, "ok");
+    assert.equal(updateResponse.result.outcome, "unchanged");
+    assert.deepEqual(updateResponse.result.owned_paths, installationResponse.result.installed_paths);
+
     const repositoryWrapper = join(repositorySkillRoot, "scripts/check-cli-compatibility");
     const firstInit = await runCommand(
       process.execPath,
@@ -483,6 +507,22 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-3F19778B REQ-CF3A1070 REQ-A0456
     assert.equal(firstValidateResponse.command, "validate");
     assert.equal(firstValidateResponse.status, "ok");
     assert.match(firstValidateResponse.project_id, /^SDD-[0-9A-F]{8}$/u);
+
+    const skillRemoval = await runCommand(
+      process.execPath,
+      [binTarget, "skill", "remove", "--root", consumerRoot, "--format", "json"],
+      consumerRoot,
+    );
+    assert.equal(skillRemoval.exitCode, 0, skillRemoval.standardError || skillRemoval.standardOutput);
+    const removalResponse = JSON.parse(skillRemoval.standardOutput) as {
+      readonly command: string;
+      readonly status: string;
+      readonly result: { readonly removed_paths: readonly string[] };
+    };
+    assert.equal(removalResponse.command, "skill.remove");
+    assert.equal(removalResponse.status, "ok");
+    assert.deepEqual(removalResponse.result.removed_paths, installationResponse.result.installed_paths);
+    await assert.rejects(readFile(join(repositorySkillRoot, "installation.json")), /ENOENT/u);
     assert.equal(await readFile(sentinelPath, "utf8"), "outside consumer\n");
   } finally {
     await rm(temporaryRoot, { recursive: true, force: true });

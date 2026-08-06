@@ -16,7 +16,13 @@ import type { GitReader } from "../platform/git-reader.ts";
 import type { ProjectWriter } from "../platform/project-writer.ts";
 import type { Randomness } from "../platform/randomness.ts";
 import type { ProcessRunner } from "../platform/process-runner.ts";
-import { SkillInstallationError, type SkillInstallationResult, type SkillInstaller } from "../skill-install/index.ts";
+import {
+  SkillInstallationError,
+  type SkillInstallationResult,
+  type SkillInstaller,
+  type SkillRemovalResult,
+  type SkillUpdateResult,
+} from "../skill-install/index.ts";
 import { discoverProcessGitReader, GitReadError } from "../platform/process-git-reader.ts";
 import { initializeProject } from "../init/initialize-project.ts";
 import type { GeneratedId, IdKind } from "../ids/generate-id.ts";
@@ -123,6 +129,8 @@ type OutputFormat = "human" | "json";
 type Command =
   | "init"
   | "skill.install"
+  | "skill.update"
+  | "skill.remove"
   | "id"
   | "validate"
   | "inspect"
@@ -280,6 +288,8 @@ export type CliResponse =
   | CliResponseEnvelope<"version", "ok", CliCompatibilityIdentity>
   | CliResponseEnvelope<"init", "ok", InitResult>
   | CliResponseEnvelope<"skill.install", "ok", SkillInstallationResult>
+  | CliResponseEnvelope<"skill.update", "ok", SkillUpdateResult>
+  | CliResponseEnvelope<"skill.remove", "ok", SkillRemovalResult>
   | CliResponseEnvelope<"id", "ok", IdResult>
   | CliResponseEnvelope<"validate", "ok", ValidateResult>
   | CliResponseEnvelope<"validate", "blocked", InvalidValidateResult>
@@ -317,8 +327,8 @@ function parseInvocation(
   argv: readonly string[],
 ): { ok: true; value: Invocation } | { ok: false; diagnostic: Diagnostic } {
   const command: string | undefined =
-    argv[0] === "skill" && argv[1] === "install"
-      ? "skill.install"
+    argv[0] === "skill" && (argv[1] === "install" || argv[1] === "update" || argv[1] === "remove")
+      ? `skill.${argv[1]}`
       : argv[0] === "tests" && argv[1] === "discover"
         ? "tests.discover"
         : argv[0] === "candidate" && argv[1] === "snapshot"
@@ -333,6 +343,8 @@ function parseInvocation(
   if (
     command !== "init" &&
     command !== "skill.install" &&
+    command !== "skill.update" &&
+    command !== "skill.remove" &&
     command !== "id" &&
     command !== "validate" &&
     command !== "inspect" &&
@@ -399,6 +411,8 @@ function parseInvocation(
     let index =
       command === "tests.discover" ||
       command === "skill.install" ||
+      command === "skill.update" ||
+      command === "skill.remove" ||
       command === "candidate.snapshot" ||
       command === "findings.validate" ||
       command === "merge.check" ||
@@ -602,8 +616,21 @@ function parseInvocation(
         format = value;
       } else if (argument === "--config") configPath = value;
       else if (argument === "--cwd") cwd = value;
-      else if (argument === "--root") root = value;
-      else if (argument === "--spec-path") {
+      else if (argument === "--root") {
+        if (
+          (command === "skill.install" || command === "skill.update" || command === "skill.remove") &&
+          value.split(/[\\/]/u).some((segment) => segment === "..")
+        )
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_SKILL_INSTALL_ROOT_INVALID",
+              "The selected Skill lifecycle root contains path traversal.",
+              "Supply the explicit Git repository root without traversal segments.",
+            ),
+          };
+        root = value;
+      } else if (argument === "--spec-path") {
         if (!isProjectPath(value))
           return {
             ok: false,
@@ -776,7 +803,7 @@ function parseInvocation(
       ),
     };
   if (
-    command === "skill.install" &&
+    (command === "skill.install" || command === "skill.update" || command === "skill.remove") &&
     (root === undefined ||
       configPath !== undefined ||
       cwd !== undefined ||
@@ -789,13 +816,15 @@ function parseInvocation(
       ok: false,
       diagnostic: cliDiagnostic(
         "SDD_CONFIG_CLI_ARGUMENT_INVALID",
-        "skill install requires only an explicit repository root.",
-        "Use sdd skill install --root <repository-root> with optional output formatting.",
+        `${command.replace(".", " ")} requires only an explicit repository root.`,
+        `Use sdd ${command.replace(".", " ")} --root <repository-root> with optional output formatting.`,
       ),
     };
   if (
     command !== "init" &&
     command !== "skill.install" &&
+    command !== "skill.update" &&
+    command !== "skill.remove" &&
     (root !== undefined || specPath !== undefined || adoption !== undefined)
   )
     return {
@@ -1471,6 +1500,17 @@ function humanView(value: CliResponse): string {
       `payload: ${result.payload_fingerprint}`,
       ...result.installed_paths.map((path) => `installed: ${path}`),
     );
+  } else if (value.command === "skill.update" && value.status === "ok") {
+    const result = value.result as SkillUpdateResult;
+    lines.push(
+      `outcome: ${result.outcome}`,
+      `destination: ${result.destination}`,
+      `payload: ${result.payload_fingerprint}`,
+      ...result.owned_paths.map((path) => `owned: ${path}`),
+    );
+  } else if (value.command === "skill.remove" && value.status === "ok") {
+    const result = value.result as SkillRemovalResult;
+    lines.push(`destination: ${result.destination}`, ...result.removed_paths.map((path) => `removed: ${path}`));
   } else if (value.command === "id" && value.status === "ok") {
     const result = value.result as IdResult;
     lines.push(...result.candidates, `history: ${result.history.status}`);
@@ -1748,8 +1788,9 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
   }
   const parsed = parseInvocation(runtime.argv);
   const inferredCommand: ResponseCommand =
-    runtime.argv[0] === "skill" && runtime.argv[1] === "install"
-      ? "skill.install"
+    runtime.argv[0] === "skill" &&
+    (runtime.argv[1] === "install" || runtime.argv[1] === "update" || runtime.argv[1] === "remove")
+      ? `skill.${runtime.argv[1]}`
       : runtime.argv[0] === "tests" && runtime.argv[1] === "discover"
         ? "tests.discover"
         : runtime.argv[0] === "candidate" && runtime.argv[1] === "snapshot"
@@ -1780,7 +1821,11 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
   }
   const invocation = parsed.value;
   try {
-    if (invocation.command === "skill.install") {
+    if (
+      invocation.command === "skill.install" ||
+      invocation.command === "skill.update" ||
+      invocation.command === "skill.remove"
+    ) {
       if (
         invocation.root === undefined ||
         runtime.skillInstaller === undefined ||
@@ -1791,13 +1836,19 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
           "SDD_SKILL_INSTALL_UNAVAILABLE",
           "This sdd executable cannot locate its packaged Skill installation surface.",
         );
-      const result = await runtime.skillInstaller.install({
+      const input = {
         repositoryRoot: resolve(runtime.workingDirectory, invocation.root),
         packageRoot: runtime.packageRoot,
         cliPath: runtime.cliPath,
         compatibility: loadCliCompatibilityIdentity(),
-      });
-      emit(runtime, invocation.format, response("skill.install", null, "ok", result, []));
+      };
+      const result =
+        invocation.command === "skill.install"
+          ? await runtime.skillInstaller.install(input)
+          : invocation.command === "skill.update"
+            ? await runtime.skillInstaller.update(input)
+            : await runtime.skillInstaller.remove(input);
+      emit(runtime, invocation.format, response(invocation.command, null, "ok", result, []));
       return VALID_EXIT_CODE;
     }
     if (invocation.command === "init") {
@@ -3046,7 +3097,9 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
       const diagnostic = cliDiagnostic(
         error.code,
         error.message,
-        "Select one safe Git repository root and an unused repository-scoped Skill destination.",
+        invocation.command === "skill.install"
+          ? "Select one safe Git repository root and an unused repository-scoped Skill destination."
+          : "Select the exact Git repository root and restore a compatible owned Skill installation before retrying.",
       );
       emit(runtime, invocation.format, response(invocation.command, null, "error", null, [diagnostic]));
       return TECHNICAL_FAILURE_EXIT_CODE;

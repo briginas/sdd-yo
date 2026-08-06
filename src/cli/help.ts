@@ -11,6 +11,16 @@ export const CLI_HELP_ENTRIES: readonly CliHelpEntry[] = [
     summary: "Install the packaged sdd-yo Skill in one explicit Git repository.",
   },
   {
+    path: "skill update",
+    usage: "sdd skill update --root <repository-root>",
+    summary: "Update one verified repository-scoped sdd-yo Skill installation.",
+  },
+  {
+    path: "skill remove",
+    usage: "sdd skill remove --root <repository-root>",
+    summary: "Remove one verified repository-scoped sdd-yo Skill installation.",
+  },
+  {
     path: "init",
     usage: "sdd init [--root <path>] [--spec-path <path>] [--adoption incremental|complete]",
     summary: "Initialize a new SDD Project without overwriting existing files.",
