@@ -2,9 +2,9 @@
 
 ## Status
 
-- State: active
-- Current phase: Milestone 11 / Private installation and first-run onboarding
-- Current leaf: 11.6 / Clean external-project onboarding evidence
+- State: awaiting next milestone selection
+- Current phase: post-Milestone 11 candidate selection
+- Current leaf: none selected
 - Last updated: 2026-08-06
 
 ## Source-of-truth map
@@ -12,16 +12,18 @@
 - Canonical product behavior: [`spec/README.md`](spec/README.md)
 - Architecture: [`proposal/architecture/README.md`](proposal/architecture/README.md)
 - Plan index and completed history: [`plans/README.md`](plans/README.md)
+- Completed Milestones 0–11:
+  [`plans/completed/milestones-0-9.md`](plans/completed/milestones-0-9.md),
+  [`plans/completed/milestone-10-self-bootstrap-retirement.md`](plans/completed/milestone-10-self-bootstrap-retirement.md),
+  and
+  [`plans/completed/milestone-11-private-installation-and-onboarding.md`](plans/completed/milestone-11-private-installation-and-onboarding.md)
 - Historical bootstrap procedure:
   [`plans/completed/self-bootstrap-procedure.md`](plans/completed/self-bootstrap-procedure.md)
-- Completed Milestones 0–10:
-  [`plans/completed/milestones-0-9.md`](plans/completed/milestones-0-9.md) and
-  [`plans/completed/milestone-10-self-bootstrap-retirement.md`](plans/completed/milestone-10-self-bootstrap-retirement.md)
 
-Read the completed plan only when a task needs historical rationale, exact
-milestone boundaries, Requirement traceability, or retained evidence pointers.
-Current specification, architecture, implementation, and evidence outrank the
-historical plan.
+Read a completed plan only when a task needs historical rationale, exact
+milestone boundaries, Requirement traceability, decisions, exclusions, or
+retained evidence pointers. Current specification, architecture,
+implementation, and evidence outrank historical plans.
 
 ## Objective
 
@@ -32,239 +34,69 @@ and the optional progressive-disclosure `sdd-yo` Agent Skill.
 
 ## Current state
 
+- Milestones 0–11 and the incremental self-bootstrap MVP are complete. Their
+  exact execution records are indexed under [`plans/completed/`](plans/README.md).
 - The deterministic version 1 library, CLI, artifact schemas, proposal and exact
   patch workflow, evidence composition, findings validation, merge readiness,
   and enforced governed-scope integration are implemented and verified.
-- The optional `sdd-yo` Skill routes the implemented workflow through compatible
-  CLI JSON and preserves human evidence, permission, and Git side-effect
-  boundaries.
-- Milestones 0–10 and the MVP checklist are complete; their detailed records are
-  in the completed-plan archive.
-- Version `0.1.0` is a private package. The source repository and npm package
-  remain private during Milestone 11, and no registry or marketplace publication
-  is implied.
-- Milestone 11.1 is implemented and verified on feature commit
-  `cfa7d106b88abf078a3773b8354bd105643f5b59`: stable top-level and
-  command-specific help, exact package/CLI version reporting, and deterministic
-  machine-readable compatibility identity pass Requirement-named CLI and
-  packaged-executable tests. Its approved SpecPatch applies cleanly to the exact
-  base and produces the approved candidate-tree fingerprint.
-- Milestone 11.2 is implemented and verified in the current feature worktree
-  through canonical `CAP-6AD33965`, `REQ-B0B35D6D`, `REQ-A2199BC2`, and
-  `REQ-43B4311E`. The private `sdd-yo@0.1.0` tarball retains
-  `"private": true` and Node.js `>=22.18.0`, bundles the exact locked production
-  dependency set, built CLI/library/declarations, version 1 schemas, and all 13
-  `sdd-yo` Skill files, declares no install lifecycle hook, and installs through
-  npm offline mode in a clean consumer without manual extraction or symlinks.
-  The retained local tarball has SHA-256
-  `58d120aaeb19c49f5dbfb38ceb19a8c848ba961062e7111d310b6e6e80a54b51`,
-  2,097 entries, and 82 bundled production packages. Requirement-named package
-  smoke, 208 repository tests, schema generation, build, typecheck, formatting,
-  26,700 contract checks, and `git diff --check` pass. No registry publication,
-  installed repository Skill, or human QA decision is implied.
-- Milestone 11.3 is implemented and verified on feature branch
-  `codex/milestone-11-3-skill-install` through canonical `CAP-45C2C93F`,
-  `REQ-3F19778B`, `REQ-CF3A1070`, and `REQ-A0456614`. The exact proposal was
-  approved by configured issuer `product-review`, actor `Ivan Briginas`, for
-  base `fe5b59a1a38b15e4e651600f692855c76e140db2`; preparation against
-  candidate-spec commit `2017b02b8c7cdf30424054f32896bb703cbb4b63`
-  reported no mechanical conflict, and the exact SpecPatch applied in an
-  isolated base tree to approved result fingerprint
-  `sha256:8dc5854d20d685b02be58812ae47a324327ff12dfa4dbc65366a369433474788`.
-  `sdd skill install --root` verifies the packaged Skill inventory, installs
-  only under `.agents/skills/sdd-yo`, and writes a binding to its matching
-  repository-relative packaged CLI. The wrapper preflights exact compatibility
-  identity and never falls back to `PATH`; the private offline tarball path
-  completes explicit Skill installation, `init`, and first `validate` in a
-  clean external Git consumer. Requirement-named overwrite, modified-payload,
-  non-root, symlink, identity, package, and first-use checks pass alongside 211
-  repository tests, schema generation, build, typecheck, formatting, 26,930
-  contract checks, and `git diff --check`. No Skill update/removal, root
-  quickstart, cross-platform onboarding evidence, human QA, registry,
-  marketplace, or implementation commit is implied.
-- Milestone 11.4 is implemented and verified in the current feature worktree
-  through canonical `CAP-6C317966`, `REQ-DAF21960`, `REQ-8DC50806`, and
-  `REQ-AA165BDE`. The exact proposal was approved by configured issuer
-  `product-review`, actor `Ivan Briginas`, for base
-  `363d383e25d367239f72b4c10459ce17780883f7`; preparation against candidate
-  commit `078ead29c8d233b02980a86b7068d8e4b586a887` reported no mechanical
-  conflict, and the exact SpecPatch applied in an isolated base tree to
-  approved result fingerprint
-  `sha256:ecf5d825597e4681ca354ef45c2bddab11c1bcd3f0574b1215fe8802e9b7c462`.
-  Explicit `sdd skill update --root` verifies current ownership and replacement
-  compatibility, stages a complete replacement, reports exact no-op state, and
-  rolls back handled interruption. Explicit `sdd skill remove --root` detaches
-  only the verified installation inventory. Traversal, symlink, stale binding,
-  modified or undeclared bytes, concurrent state, and adjacent-repository
-  mutation fail closed. Requirement-named focused tests, the packed offline
-  lifecycle smoke, 220 repository tests, schema generation, build, typecheck,
-  formatting, 27,186 contract checks from `/private/tmp`, and `git diff --check`
-  pass. No quickstart, cross-platform onboarding evidence, human QA, registry,
-  marketplace, or implementation commit is implied.
-- Milestone 11.5 is implemented and verified in the current worktree without a
-  new product Requirement or runtime command. The root quickstart covers the
-  Node.js/npm/Git and private-artifact prerequisites, exact offline local
-  tarball installation, compatible package identity, repository Skill install
-  and explicit `$sdd-yo` invocation, incremental or complete `init` plus first
-  `validate`, stable diagnostic recovery, explicit update and removal, JSON
-  automation, and the boundary between deterministic results and human
-  approval, semantic review, QA, and merge authority. The Requirement-named
-  package smoke binds every documented command spelling to the README, packs
-  the README as the only new product file, installs the exact tarball in a
-  clean local consumer, and executes the equivalent package, Skill lifecycle,
-  wrapper, initialization, first-validation, and direct JSON-automation path.
-  The resulting private `sdd-yo@0.1.0` tarball has SHA-256
-  `377ebadc3ba7e792b74ffce9659251286bb5dc32f25b227faf0dcf9e1bf24c07`,
-  2,111 entries, packed size 1,132,735 bytes, and unpacked size 5,910,256
-  bytes. Traceability remains bound to `REQ-B0B35D6D`, `REQ-A2199BC2`,
-  `REQ-43B4311E`, `REQ-3F19778B`, `REQ-CF3A1070`, `REQ-A0456614`,
-  `REQ-DAF21960`, `REQ-8DC50806`, `REQ-AA165BDE`, `REQ-FFE60B5A`,
-  `REQ-D9CF3A46`, `REQ-97D96950`, `REQ-382BBBD6`, and `REQ-7C848ED0`.
-  All 220 repository tests, package smoke, schema generation, build, typecheck,
-  formatting, 27,375 contract checks from `/private/tmp`, and
-  `git diff --check` pass. No cross-platform onboarding evidence, human QA,
-  registry or marketplace publication, Milestone 11 closeout, or
-  implementation commit is implied.
-- Former proposal-only meanings have the dispositions recorded by completed
-  Milestone 10:
-  later baseline candidates remain nonnormative plan backlog, one unimplemented
-  meaning remains a future candidate, and two redundant meanings are retired.
-  New behavior uses the normal `spec-code`, `spec`, or `code` workflow from a
-  bounded candidate tree rather than a long-lived bootstrap target package.
-- Milestone 10 replaced the Stage 0 verifier with the ordinary
-  `verify:contracts` contract oracle, removed proposal-only Requirement mappings
-  from active inventory and fixture authority, and preserved every contract ID,
-  fixture-family ID, required-case mapping, byte-sensitive historical payload,
-  and retained diagnostic family. It archived the completed bootstrap procedure,
-  removed the target package and active promotion route, and preserved the
-  recorded future candidates as nonnormative active-plan backlog.
+- The optional repository-scoped `sdd-yo` Skill routes the implemented workflow
+  through compatible CLI JSON and preserves human evidence, permission, and
+  Git side-effect boundaries.
+- Private `sdd-yo@0.1.0` local-tarball onboarding now includes stable help and
+  compatibility identity, exact offline package contents, explicit repository
+  Skill installation/update/removal, the root quickstart, diagnostic recovery,
+  and an isolated npm consumer for Yarn Plug'n'Play repositories.
+- The source repository and npm package remain private. No registry,
+  marketplace, provenance, cross-platform onboarding-study, human QA, or
+  whole-project completeness claim is implied by Milestone 11 completion.
+- New product behavior uses a normal bounded `spec-code`, `spec`, or `code`
+  Change. Completed bootstrap history grants no alternate specification-write
+  or ID-reservation route.
 
 Repository-wide work discipline and validation commands remain authoritative in
 [`AGENTS.md`](AGENTS.md). Architecture decisions live under
 [`proposal/architecture/`](proposal/architecture/README.md), not in this active
 plan.
 
-## Milestone 11 — Private installation and first-run onboarding
+## Candidate backlog
 
-Goal: let a developer in a clean external Git repository install exact,
-compatible CLI and Agent Skill bytes from a private local package artifact,
-initialize or select one explicit SDD Project, and complete the first validation
-without cloning the `sdd-yo` source, creating manual symlinks, or depending on
-an accidental global executable.
-
-Milestone 11 produces locally and cross-platform verified private package
-artifacts and an independently reproducible onboarding path. It preserves
-`"private": true` and does not publish to an npm registry or Codex plugin
-marketplace.
-
-Each Milestone 11 behavior leaf generates and checks its own exact IDs
-immediately before use, drafts the smallest complete candidate tree from the
-canonical specification, validates the applicable normal proposal, obtains the
-required human decision, prepares and applies only the exact SpecPatch, and
-implements the Requirement with Requirement-named tests in the same leaf.
-Milestone 11 does not use a permanent target package to stage new behavior and
-does not introduce a batch of unimplemented Requirements ahead of their
-implementation.
-
-- [x] **11.1 — CLI discoverability and compatibility identity.** Use one bounded
-      `spec-code` Change to introduce only the canonical Capability and
-      Requirement set needed for stable top-level and command-specific help, CLI
-      version reporting, and machine-readable package, CLI, JSON-schema, and
-      Skill compatibility identity. Generate fresh IDs immediately before
-      authoring the candidate, preserve the existing version 1 command response
-      contracts, keep help and identity behavior free of project mutation, and
-      add exact Requirement-named CLI and packaged-executable tests. This leaf
-      does not change package contents, install the Skill, add the root
-      quickstart, or claim external-project onboarding readiness.
-- [x] **11.2 — Installable private npm tarball and version binding.** Use one
-      bounded `spec-code` Change for the exact package-content and compatibility
-      Requirements implemented by this leaf. Preserve
-      `"private": true`, make the package metadata and local tarball
-      installation-ready, include the built CLI, package library/schema files,
-      and matching `sdd-yo` Skill payload, and verify exact packed contents from
-      a clean install. Do not publish to any registry. Preserve the Node.js
-      runtime baseline, prohibit install lifecycle mutation, bind every packaged
-      surface to the compatible identity from 11.1, and extend package smoke
-      tests with the exact Requirement IDs introduced by this leaf.
-- [x] **11.3 — Explicit repository-scoped Skill installation and first use.**
-      Use one bounded `spec-code` Change for explicit installation and
-      compatibility checking under `.agents/skills/sdd-yo`. Bind installed Skill
-      bytes to the selected private package artifact, make the wrapper resolve
-      the matching packaged or explicitly selected CLI rather than an accidental
-      global executable, and prove the clean external-project path through
-      explicit project selection or `init` and the first `validate`. Refuse
-      traversal, symlink escape, an incompatible version, an existing
-      unapproved destination, mutation outside the selected repository, and any
-      implicit global Skill installation or unrelated package-manager change.
-- [x] **11.4 — Explicit Skill update, removal, and lifecycle safety.** Use one
-      bounded `spec-code` Change for compatibility-aware update and removal of
-      the selected repository-scoped installation. Require explicit commands,
-      refuse silent overwrite and adjacent-project mutation, remove only bytes
-      owned by the selected compatible installation, and keep ordinary product
-      commands offline. Add Requirement-named interruption, stale-installation,
-      traversal, symlink, overwrite, and scope tests.
-- [x] **11.5 — User-facing quickstart and recovery documentation.** Add the root
-      README only after the documented commands exist. Cover prerequisites,
-      exact local tarball installation, Skill installation and explicit
-      invocation, `init` plus first `validate`, common diagnostics,
-      update/removal, automation JSON usage, and the boundary between
-      deterministic CLI results and human approval/QA. Verify every command
-      against the packed consumer layout.
-- [ ] **11.6 — Clean external-project onboarding evidence.** Exercise the exact
-      private packed artifact and documentation in fresh external incremental
-      and complete-adoption fixtures on every supported platform. Require
-      successful CLI and Skill compatibility checks, deterministic
-      initialization and validation, no source checkout or global executable
-      dependency, no unreported writes, and retained evidence tied to source,
-      package, Skill, platform, and command versions. A local tarball proves
-      private installation readiness; it does not claim registry or marketplace
-      availability.
-
-Done when the clean external-project study can follow the root quickstart using
-only the exact private packed artifact, the installed repository-scoped Skill is
-bound to its compatible CLI, all focused and full repository validation passes,
-and no public release, registry publication, provenance, or marketplace
-availability is claimed.
-
-## Post-Milestone 11 candidate backlog
-
-These candidates remain available for selection after Milestone 11. They are
-not implied work and require a new bounded milestone plus any necessary human
-authorization:
+These candidates are not implied work. Select exactly one bounded milestone and
+obtain any necessary human authorization before implementation:
 
 - baseline the already implemented adoption semantics recorded by completed
-  Milestone 10 through
-  one bounded normal `spec` Change with fresh IDs: incremental adoption,
-  canonical governed scope, explicit governance transition, and accepted
-  existing-behavior baseline;
+  Milestone 10 through one bounded normal `spec` Change with fresh IDs:
+  incremental adoption, canonical governed scope, explicit governance
+  transition, and accepted existing-behavior baseline;
 - baseline the already implemented qualitative synchronization-mode and
-  four-gate semantics recorded by completed Milestone 10 through one or more bounded normal
-  `spec` Changes with fresh IDs;
+  four-gate semantics recorded by completed Milestone 10 through one or more
+  bounded normal `spec` Changes with fresh IDs;
 - baseline the already implemented inactive-object, generic JSONL adapter,
-  semantic-completeness, and per-project isolation semantics recorded by completed Milestone 10
-  through independently reviewable normal `spec` Changes with fresh IDs;
+  semantic-completeness, and per-project isolation semantics recorded by
+  completed Milestone 10 through independently reviewable normal `spec`
+  Changes with fresh IDs;
 - consider repository-local normative authority and external-link quality
-  findings as a new behavior candidate; the completed Milestone 10 inventory found no complete
-  implementation evidence for that former proposal meaning;
-- publish through a private organization registry if distribution needs outgrow
-  local tarballs; this would require a scoped package and an explicit decision to
-  replace `"private": true` with registry-constrained publication metadata;
-- publish the verified package to the public npm registry only after an explicit
-  source-visibility, package-access, release-security, and provenance decision;
-- package and distribute `sdd-yo` as an installable Codex plugin through a local,
-  team, or public marketplace, with its released CLI dependency and compatibility
-  boundary explicit;
-- add alternative distribution channels such as standalone signed executables,
-  Homebrew, Scoop, or an organization-managed installer if onboarding evidence
-  shows that the Node.js/npm prerequisite is a material adoption barrier;
+  findings as a new behavior candidate; completed Milestone 10 found no
+  complete implementation evidence for that former proposal meaning;
+- publish through a private organization registry if distribution needs
+  outgrow local tarballs; this requires a scoped package and an explicit
+  decision to replace `"private": true` with registry-constrained publication
+  metadata;
+- publish to the public npm registry only after an explicit source-visibility,
+  package-access, release-security, and provenance decision;
+- package and distribute `sdd-yo` as an installable Codex plugin through a
+  local, team, or public marketplace, with its released CLI dependency and
+  compatibility boundary explicit;
+- add alternative distribution channels such as standalone signed
+  executables, Homebrew, Scoop, or an organization-managed installer if the
+  Node.js/npm prerequisite becomes a material adoption barrier;
 - add organization-wide Skill deployment or administrative policy integration
-  after repository-scoped installation has been validated in real teams.
+  only through a separately bounded milestone.
 
 ## Deferred scope
 
 - Post-MVP existing-monorepo onboarding and project/evidence-isolation rollout
   study; its isolation, cross-project, and broader monorepo guarantees must not
-  be inferred from the two completed MVP studies.
+  be inferred from completed local onboarding work.
 - Contract-fixture verifier execution on Linux and Windows CI.
 - Hosted workflow service or durable workflow database.
 - Automatic branch, commit, push, merge, approval, or QA actions.
@@ -276,10 +108,7 @@ authorization:
 
 ## Immediate next leaf
 
-The next incomplete leaf is 11.6, clean external-project onboarding evidence.
-It has not started. Exercise the exact private documentation-bearing tarball
-and root quickstart in fresh external incremental and complete-adoption
-fixtures on every supported platform; retain subject-bound source, package,
-Skill, platform, and command-version evidence. Do not infer registry or
-marketplace availability, human approval or QA, whole-project completeness,
-or Milestone 11 closeout from local Milestone 11.5 verification.
+No Milestone 12 or implementation leaf is selected. The next planning action is
+to choose exactly one candidate above, define its bounded objective,
+Requirements, exclusions, and validation, and wait for explicit approval before
+editing product behavior.

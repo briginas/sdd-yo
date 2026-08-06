@@ -20,6 +20,10 @@ remain in [`../IMPLEMENTATION_PLAN.md`](../IMPLEMENTATION_PLAN.md).
 - [`completed/milestone-10-self-bootstrap-retirement.md`](completed/milestone-10-self-bootstrap-retirement.md)
   — completed retirement inventory, disposition tables, contract-oracle
   coverage handoff, execution evidence, exclusions, and closeout result.
+- [`completed/milestone-11-private-installation-and-onboarding.md`](completed/milestone-11-private-installation-and-onboarding.md)
+  — completed private tarball, compatibility identity, repository Skill
+  lifecycle, npm and Yarn Plug'n'Play quickstart, validation evidence, and the
+  explicit withdrawal record for the former cross-platform study leaf.
 
 Completed plans are historical records. Use the current canonical
 [`../spec/README.md`](../spec/README.md), architecture

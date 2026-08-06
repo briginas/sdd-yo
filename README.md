@@ -40,6 +40,41 @@ node ./node_modules/sdd-yo/dist/bin/sdd.js --version --format json
 Require exit code `0`, `status: "ok"`, package and CLI version `0.1.0`, and
 compatible major `1` for both the JSON-schema and Skill protocols.
 
+### Yarn Plug'n'Play repositories
+
+Do not add `sdd-yo` to the Yarn dependency graph or change the repository's
+`nodeLinker`. A Plug'n'Play package may resolve from a zip archive or a global
+cache outside the selected Git root, while the repository Skill deliberately
+requires a physical packaged CLI inside that root. Keep SDD Yo in an ignored,
+isolated npm consumer instead.
+
+Add `.sdd-tooling/` to the selected repository's `.gitignore`, then run these
+commands from the repository root. The nested `consumer` name is intentional:
+`npm init` cannot derive a valid package name directly from `.sdd-tooling`.
+
+```text
+mkdir .sdd-tooling
+mkdir .sdd-tooling/consumer
+cd .sdd-tooling/consumer
+npm init --yes
+npm install --offline --no-audit --no-fund --save-exact <tarball-path>
+cd ../..
+```
+
+Check identity and install the repository Skill from the isolated CLI:
+
+```text
+node ./.sdd-tooling/consumer/node_modules/sdd-yo/dist/bin/sdd.js --version --format json
+node ./.sdd-tooling/consumer/node_modules/sdd-yo/dist/bin/sdd.js skill install --root <repository-root> --format json
+```
+
+The installed binding records the repository-relative isolated CLI path. The
+compatibility-wrapper `init` and `validate` commands below are unchanged. For
+later direct JSON automation or Skill update/removal, replace
+`./node_modules/sdd-yo` in the documented command with
+`./.sdd-tooling/consumer/node_modules/sdd-yo`. Keep `.sdd-tooling/` ignored;
+`.agents/`, `.sdd/`, and `spec/` remain ordinary reviewable project changes.
+
 ## Install and invoke the repository Skill
 
 Install the exact Skill payload from that package into the selected repository:

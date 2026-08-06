@@ -35,6 +35,12 @@ const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
 const documentedQuickstartCommands = [
   "npm install --offline --no-audit --no-fund --save-exact <tarball-path>",
   "node ./node_modules/sdd-yo/dist/bin/sdd.js --version --format json",
+  "mkdir .sdd-tooling",
+  "mkdir .sdd-tooling/consumer",
+  "cd .sdd-tooling/consumer",
+  "npm init --yes",
+  "node ./.sdd-tooling/consumer/node_modules/sdd-yo/dist/bin/sdd.js --version --format json",
+  "node ./.sdd-tooling/consumer/node_modules/sdd-yo/dist/bin/sdd.js skill install --root <repository-root> --format json",
   "node ./node_modules/sdd-yo/dist/bin/sdd.js skill install --root <repository-root> --format json",
   "node ./.agents/skills/sdd-yo/scripts/check-cli-compatibility -- init --root <repository-root> --adoption incremental",
   "node ./.agents/skills/sdd-yo/scripts/check-cli-compatibility -- validate --cwd <repository-root>",
@@ -574,6 +580,130 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-3F19778B REQ-CF3A1070 REQ-A0456
     assert.deepEqual(removalResponse.result.removed_paths, installationResponse.result.installed_paths);
     await assert.rejects(readFile(join(repositorySkillRoot, "installation.json")), /ENOENT/u);
     assert.equal(await readFile(sentinelPath, "utf8"), "outside consumer\n");
+
+    const yarnPnpRoot = join(temporaryRoot, "yarn-pnp-consumer");
+    const isolatedConsumerRoot = join(yarnPnpRoot, ".sdd-tooling/consumer");
+    await mkdir(yarnPnpRoot);
+    await writeFile(join(yarnPnpRoot, ".gitignore"), ".sdd-tooling/\n");
+    await writeFile(join(yarnPnpRoot, ".pnp.cjs"), "module.exports = {};\n");
+    await writeFile(
+      join(yarnPnpRoot, "package.json"),
+      `${JSON.stringify(
+        {
+          name: "sdd-yo-yarn-pnp-consumer",
+          version: "1.0.0",
+          private: true,
+          type: "module",
+          packageManager: "yarn@4.9.2",
+        },
+        null,
+        2,
+      )}\n`,
+    );
+    await writeFile(join(yarnPnpRoot, "yarn.lock"), "# retained Yarn Plug'n'Play baseline\n");
+    const yarnGitInitialization = await runCommand("git", ["init", "--quiet", "--initial-branch", "main"], yarnPnpRoot);
+    assert.equal(yarnGitInitialization.exitCode, 0, yarnGitInitialization.standardError);
+    for (const [key, value] of [
+      ["user.name", "SDD Package Smoke"],
+      ["user.email", "sdd-package-smoke@example.invalid"],
+    ] as const) {
+      const configured = await runCommand("git", ["config", key, value], yarnPnpRoot);
+      assert.equal(configured.exitCode, 0, configured.standardError);
+    }
+    const stagedYarnConsumer = await runCommand(
+      "git",
+      ["add", ".gitignore", ".pnp.cjs", "package.json", "yarn.lock"],
+      yarnPnpRoot,
+    );
+    assert.equal(stagedYarnConsumer.exitCode, 0, stagedYarnConsumer.standardError);
+    const committedYarnConsumer = await runCommand(
+      "git",
+      ["commit", "--quiet", "-m", "initial Yarn PnP consumer"],
+      yarnPnpRoot,
+    );
+    assert.equal(committedYarnConsumer.exitCode, 0, committedYarnConsumer.standardError);
+
+    await mkdir(join(yarnPnpRoot, ".sdd-tooling"));
+    await mkdir(isolatedConsumerRoot);
+    const isolatedInit = await runNpm(["init", "--yes"], isolatedConsumerRoot, installCache);
+    assert.equal(isolatedInit.exitCode, 0, isolatedInit.standardError || isolatedInit.standardOutput);
+    const isolatedInstall = await runNpm(
+      ["install", "--offline", "--no-audit", "--no-fund", "--save-exact", tarballPath],
+      isolatedConsumerRoot,
+      installCache,
+      {
+        npm_config_registry: "http://127.0.0.1:9/",
+        npm_config_update_notifier: "false",
+      },
+    );
+    assert.equal(isolatedInstall.exitCode, 0, isolatedInstall.standardError || isolatedInstall.standardOutput);
+    const isolatedBinTarget = join(isolatedConsumerRoot, "node_modules/sdd-yo/dist/bin/sdd.js");
+    const isolatedIdentity = await runCommand(
+      process.execPath,
+      [isolatedBinTarget, "--version", "--format", "json"],
+      yarnPnpRoot,
+    );
+    assert.equal(isolatedIdentity.exitCode, 0, isolatedIdentity.standardError || isolatedIdentity.standardOutput);
+    assert.deepEqual(JSON.parse(isolatedIdentity.standardOutput), JSON.parse(jsonVersion.standardOutput));
+    const yarnStatusBeforeSkill = await runCommand(
+      "git",
+      ["status", "--porcelain=v1", "--untracked-files=all"],
+      yarnPnpRoot,
+    );
+    assert.deepEqual(yarnStatusBeforeSkill, {
+      exitCode: 0,
+      signal: null,
+      standardOutput: "",
+      standardError: "",
+    });
+    const isolatedSkillInstallation = await runCommand(
+      process.execPath,
+      [isolatedBinTarget, "skill", "install", "--root", yarnPnpRoot, "--format", "json"],
+      yarnPnpRoot,
+    );
+    assert.equal(
+      isolatedSkillInstallation.exitCode,
+      0,
+      isolatedSkillInstallation.standardError || isolatedSkillInstallation.standardOutput,
+    );
+    const isolatedInstallationResponse = JSON.parse(isolatedSkillInstallation.standardOutput) as {
+      readonly status: string;
+      readonly result: { readonly destination: string };
+    };
+    assert.equal(isolatedInstallationResponse.status, "ok");
+    const isolatedSkillRoot = join(yarnPnpRoot, isolatedInstallationResponse.result.destination);
+    const isolatedBinding = JSON.parse(await readFile(join(isolatedSkillRoot, "installation.json"), "utf8")) as {
+      readonly cli: { readonly path: string };
+    };
+    assert.equal(isolatedBinding.cli.path, ".sdd-tooling/consumer/node_modules/sdd-yo/dist/bin/sdd.js");
+    const isolatedWrapper = join(isolatedSkillRoot, "scripts/check-cli-compatibility");
+    const isolatedFirstInit = await runCommand(
+      process.execPath,
+      [isolatedWrapper, "--", "init", "--root", yarnPnpRoot, "--adoption", "incremental"],
+      yarnPnpRoot,
+    );
+    assert.equal(isolatedFirstInit.exitCode, 0, isolatedFirstInit.standardError || isolatedFirstInit.standardOutput);
+    const isolatedFirstValidate = await runCommand(
+      process.execPath,
+      [isolatedWrapper, "--", "validate", "--cwd", yarnPnpRoot],
+      yarnPnpRoot,
+    );
+    assert.equal(
+      isolatedFirstValidate.exitCode,
+      0,
+      isolatedFirstValidate.standardError || isolatedFirstValidate.standardOutput,
+    );
+    const isolatedValidateResponse = JSON.parse(isolatedFirstValidate.standardOutput) as {
+      readonly project_id: string;
+      readonly status: string;
+      readonly result: { readonly valid: boolean; readonly adoption: { readonly mode: string } };
+    };
+    assert.equal(isolatedValidateResponse.status, "ok");
+    assert.equal(isolatedValidateResponse.result.valid, true);
+    assert.equal(isolatedValidateResponse.result.adoption.mode, "incremental");
+    assert.match(isolatedValidateResponse.project_id, /^SDD-[0-9A-F]{8}$/u);
+    assert.equal(await readFile(join(yarnPnpRoot, "yarn.lock"), "utf8"), "# retained Yarn Plug'n'Play baseline\n");
+    assert.equal(await readFile(join(yarnPnpRoot, ".pnp.cjs"), "utf8"), "module.exports = {};\n");
   } finally {
     await rm(temporaryRoot, { recursive: true, force: true });
   }
