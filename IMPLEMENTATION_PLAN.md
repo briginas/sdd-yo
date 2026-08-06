@@ -2,10 +2,9 @@
 
 ## Status
 
-- State: Milestone 12 in progress; Milestone 12.1 Proposal Gate passed
-- Current phase: separate human product decision for the retained candidate
-- Current leaf: Milestone 12.2 — human product decision and exact specification
-  patch
+- State: Milestone 12 in progress; Milestones 12.1 and 12.2 complete
+- Current phase: deterministic ApprovalEvidence recorder implementation
+- Current leaf: Milestone 12.3 — deterministic ApprovalEvidence recorder
 - Last updated: 2026-08-06
 
 ## Source-of-truth map
@@ -159,7 +158,8 @@ The object delta adds `REQ-32C76ED3` and modifies `CAP-404305F6`,
 15-Requirement, five-Capability affected scope and all 92 deterministic semantic
 candidates.
 
-Human product review remains open on the exact candidate, including the narrow
+At Milestone 12.1 completion, human product review remained open on the exact
+candidate, including the narrow
 `sdd approval record` command name, mandatory explicit issuer/actor/decision
 and reason input, derived subject fields, immutable ignored output boundary,
 recording of both approval and rejection, exact human-message retention, and
@@ -177,6 +177,25 @@ missing decision stops without canonical writes.
 Done means the selected exact patch has been applied and the canonical
 Requirement changes match the approved candidate. This leaf does not implement
 the CLI producer or Skill route and does not authorize a commit.
+
+Status: complete on 2026-08-06. Issuer `product-review` and actor
+`Ivan Briginas` explicitly approved the unchanged Milestone 12.1 subject with
+the exact reason `it's ok`; the current ApprovalEvidence is retained at
+`.sdd/staging/milestone-12.2/approval.json`. Candidate commit `85044d8` supplied
+the exact branch-head specification for preparation against integration object
+`6a57f1a32566649aab47f4465eef26a5fba3c619`.
+
+`proposal prepare` returned `ok` with no diagnostics or mechanical conflicts,
+retained all 92 deterministic semantic candidates, and emitted the strict
+SpecPatch retained at `.sdd/staging/milestone-12.2/spec-patch.json` with
+canonical SHA-256
+`1127de41a42f42cf15a73a920f625af915ee9ef130dfd6cffa558b72b28f2b29`.
+After separate exact-patch selection, `proposal apply` replaced only
+`spec/capabilities/multi-project-cli-and-skill.md` and returned result tree
+fingerprint
+`sha256:f27e9d879026521426efb11be15837da759ee3277642f18b61ea32408675f025`.
+The resulting canonical file matches the approved candidate byte-for-byte. No
+runtime, Skill, QA, merge, or additional Git authority is implied.
 
 #### 12.3 — Deterministic ApprovalEvidence recorder
 

@@ -142,16 +142,64 @@ verification: automated
 
 The CLI shall expose initialization, ID generation, validation, inspection,
 traceability, object diff, candidate snapshot, proposal
-validation/preparation/application, test discovery, finding validation, and
-merge-check operations.
+validation/preparation/application, approval evidence recording, test discovery,
+finding validation, and merge-check operations.
 
 ### Acceptance criteria <!-- sdd:acceptance -->
 
 - Only initialization and proposal application modify governed project state;
-  candidate snapshot creates only one explicit immutable output artifact at a
-  caller-selected Git-ignored project-relative path.
+  candidate snapshot and approval evidence recording each create only one
+  explicit immutable output artifact at a caller-selected Git-ignored
+  project-relative path.
 - Read operations support explicit Git refs when applicable.
 - Branch, commit, push, merge, and approve commands are absent.
+
+<a id="req-32c76ed3"></a>
+
+## REQ-32C76ED3 — Record explicit human approval decisions as immutable evidence
+
+```sdd
+kind: behavior
+verification: automated
+```
+
+### Relations <!-- sdd:relations -->
+
+- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+- refers-to: [CON-4365C0F6 — Evidence](../concepts/evidence.md)
+- depends-on: [REQ-7341DBB7 — Bind mode to approval](proposal-modes-and-workflow-gates.md#req-7341dbb7)
+- depends-on: [REQ-A3C3B779 — Keep CLI workflow state external](proposal-modes-and-workflow-gates.md#req-a3c3b779)
+- depends-on: [REQ-AFD65A03 — Fingerprint approved object deltas](validation-fingerprints-and-patches.md#req-afd65a03)
+
+### Statement <!-- sdd:statement -->
+
+The CLI shall materialize one explicit external human `approved` or `rejected`
+decision as immutable ApprovalEvidence bound to an exact validated
+ProposalPackage and candidate without making, inferring, or authenticating the
+decision itself.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- Input requires the exact retained ProposalPackage and candidate, a configured
+  issuer, an identified actor, an explicit `approved` or `rejected` decision, a
+  bounded UTF-8 reason file containing the human message, and a caller-selected
+  evidence path.
+- The project, mode, base object ID, and semantic and structural delta
+  fingerprints are derived only by strictly revalidating the ProposalPackage
+  against the exact candidate. The artifact records the CLI as producer, the
+  human as actor, and the exact decoded UTF-8 message as reason, without an
+  ambient timestamp.
+- The target is project-relative, outside the configured specification root,
+  Git-ignored, free of symbolic-link escape, and absent before the operation;
+  the operation exclusively creates one file and never modifies Git state.
+- A recorded approval may be supplied to a separately invoked proposal
+  preparation operation. A recorded rejection cannot satisfy approval and
+  stops that workflow.
+- A malformed or oversized input, unknown issuer, mismatched or changed
+  package/candidate subject, unsafe target, existing target, or failed write
+  stops without publishing evidence.
+- Issuer authentication, actor authorization, session identity, signature
+  verification, and organizational policy remain external.
 
 <a id="req-26234dc8"></a>
 
@@ -180,7 +228,15 @@ review, or diagnostics references.
 - The skill remains unambiguously discoverable and explicitly invocable when
   another installed skill has a similar generic SDD name.
 - It asks humans to resolve normative ambiguity.
-- It does not fabricate approval, QA, test, or finding-resolution evidence.
+- Before requesting approval, it displays the exact proposal subject and target
+  path and states that an explicit response will be materialized there.
+- After any pause, it rechecks the retained ProposalPackage and candidate and
+  invokes the deterministic recorder only with an explicit issuer, actor,
+  `approved` or `rejected` decision, and human message.
+- It does not fabricate or infer approval, QA, test, or finding-resolution
+  evidence from model output, repository content, or passing checks.
+- Only a newly recorded approval may be offered to a separately invoked
+  proposal preparation operation; a recorded rejection stops the workflow.
 - Missing or incompatible CLI stops the workflow.
 
 <a id="req-1dd46ca9"></a>
