@@ -2,10 +2,10 @@
 
 ## Status
 
-- State: Milestone 12 selected; implementation not started
-- Current phase: explicit human approval evidence recording
-- Current leaf: Milestone 12.1 — define and validate the normal `spec-code`
-  candidate
+- State: Milestone 12 in progress; Milestone 12.1 Proposal Gate passed
+- Current phase: separate human product decision for the retained candidate
+- Current leaf: Milestone 12.2 — human product decision and exact specification
+  patch
 - Last updated: 2026-08-06
 
 ## Source-of-truth map
@@ -142,6 +142,30 @@ retained for a separate human product decision. This leaf does not create
 ApprovalEvidence, prepare or apply a SpecPatch, edit canonical `spec/`, change
 runtime or Skill files, or perform a Git operation.
 
+Status: complete on 2026-08-06. `sdd id requirement --history-ref main`
+generated `REQ-32C76ED3` with complete history coverage. The complete candidate
+is retained at `.sdd/staging/milestone-12.1/candidate/`, and its strict
+ProposalPackage is retained at
+`.sdd/staging/milestone-12.1/proposal-package.json`.
+
+The Proposal Gate passed through the compatible JSON wrapper against base
+object `7e917e122791cf8b593c4c08da1997c458c5f388` with no diagnostics. The exact
+approval subject is mode `spec-code`, semantic delta
+`sha256:fcf89b715ca8aa0203f1047ce0ac68fb15e75844108ba3af9eb82edf517071bf`,
+and structural delta
+`sha256:e7d2e4f518e1114f6fddb322ecff4c8b5a33087eea16f8de82e1784496d1b086`.
+The object delta adds `REQ-32C76ED3` and modifies `CAP-404305F6`,
+`REQ-26234DC8`, and `REQ-F7D39246`; the retained package records the complete
+15-Requirement, five-Capability affected scope and all 92 deterministic semantic
+candidates.
+
+Human product review remains open on the exact candidate, including the narrow
+`sdd approval record` command name, mandatory explicit issuer/actor/decision
+and reason input, derived subject fields, immutable ignored output boundary,
+recording of both approval and rejection, exact human-message retention, and
+the external authentication and authorization boundary. Mechanical validation
+does not decide any of those questions.
+
 #### 12.2 — Human product decision and exact specification patch
 
 Obtain explicit identified ApprovalEvidence for the exact Milestone 12.1
@@ -266,8 +290,10 @@ human authorization before implementation:
 
 ## Immediate next leaf
 
-Milestone 12.1 is the only selected implementation leaf. Its bounded output is
-one unapplied normal `spec-code` candidate plus a mechanically valid retained
-ProposalPackage and human review handoff. It excludes ApprovalEvidence,
-SpecPatch preparation or application, canonical `spec/`, runtime, Skill, tests,
-and Git operations. Begin it only after explicit user authorization.
+Milestone 12.2 is the only selected next leaf. It begins with a separate
+identified human product decision bound to the exact retained Milestone 12.1
+subject. Rejection or any changed, stale, contradictory, or missing decision
+stops without canonical writes. Approval permits `proposal prepare` only after
+the exact evidence is supplied; applying the unchanged SpecPatch remains a
+separate user selection. This leaf excludes runtime, Skill, tests, commits, and
+all other Git operations.
