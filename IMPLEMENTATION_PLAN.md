@@ -4,7 +4,7 @@
 
 - State: active
 - Current phase: Milestone 11 / Private installation and first-run onboarding
-- Current leaf: 11.5 / User-facing quickstart and recovery documentation
+- Current leaf: 11.6 / Clean external-project onboarding evidence
 - Last updated: 2026-08-06
 
 ## Source-of-truth map
@@ -101,6 +101,30 @@ and the optional progressive-disclosure `sdd-yo` Agent Skill.
   formatting, 27,186 contract checks from `/private/tmp`, and `git diff --check`
   pass. No quickstart, cross-platform onboarding evidence, human QA, registry,
   marketplace, or implementation commit is implied.
+- Milestone 11.5 is implemented and verified in the current worktree without a
+  new product Requirement or runtime command. The root quickstart covers the
+  Node.js/npm/Git and private-artifact prerequisites, exact offline local
+  tarball installation, compatible package identity, repository Skill install
+  and explicit `$sdd-yo` invocation, incremental or complete `init` plus first
+  `validate`, stable diagnostic recovery, explicit update and removal, JSON
+  automation, and the boundary between deterministic results and human
+  approval, semantic review, QA, and merge authority. The Requirement-named
+  package smoke binds every documented command spelling to the README, packs
+  the README as the only new product file, installs the exact tarball in a
+  clean local consumer, and executes the equivalent package, Skill lifecycle,
+  wrapper, initialization, first-validation, and direct JSON-automation path.
+  The resulting private `sdd-yo@0.1.0` tarball has SHA-256
+  `377ebadc3ba7e792b74ffce9659251286bb5dc32f25b227faf0dcf9e1bf24c07`,
+  2,111 entries, packed size 1,132,735 bytes, and unpacked size 5,910,256
+  bytes. Traceability remains bound to `REQ-B0B35D6D`, `REQ-A2199BC2`,
+  `REQ-43B4311E`, `REQ-3F19778B`, `REQ-CF3A1070`, `REQ-A0456614`,
+  `REQ-DAF21960`, `REQ-8DC50806`, `REQ-AA165BDE`, `REQ-FFE60B5A`,
+  `REQ-D9CF3A46`, `REQ-97D96950`, `REQ-382BBBD6`, and `REQ-7C848ED0`.
+  All 220 repository tests, package smoke, schema generation, build, typecheck,
+  formatting, 27,375 contract checks from `/private/tmp`, and
+  `git diff --check` pass. No cross-platform onboarding evidence, human QA,
+  registry or marketplace publication, Milestone 11 closeout, or
+  implementation commit is implied.
 - Former proposal-only meanings have the dispositions recorded by completed
   Milestone 10:
   later baseline candidates remain nonnormative plan backlog, one unimplemented
@@ -179,7 +203,7 @@ implementation.
       owned by the selected compatible installation, and keep ordinary product
       commands offline. Add Requirement-named interruption, stale-installation,
       traversal, symlink, overwrite, and scope tests.
-- [ ] **11.5 — User-facing quickstart and recovery documentation.** Add the root
+- [x] **11.5 — User-facing quickstart and recovery documentation.** Add the root
       README only after the documented commands exist. Cover prerequisites,
       exact local tarball installation, Skill installation and explicit
       invocation, `init` plus first `validate`, common diagnostics,
@@ -252,9 +276,10 @@ authorization:
 
 ## Immediate next leaf
 
-The next incomplete leaf is 11.5, user-facing quickstart and recovery
-documentation. It has not started. Document only commands verified through the
-packed consumer layout, keep deterministic CLI results distinct from human
-approval and QA, and do not infer cross-platform onboarding evidence, registry
-publication, marketplace availability, or Milestone 11 closeout from local
-documentation verification.
+The next incomplete leaf is 11.6, clean external-project onboarding evidence.
+It has not started. Exercise the exact private documentation-bearing tarball
+and root quickstart in fresh external incremental and complete-adoption
+fixtures on every supported platform; retain subject-bound source, package,
+Skill, platform, and command-version evidence. Do not infer registry or
+marketplace availability, human approval or QA, whole-project completeness,
+or Milestone 11 closeout from local Milestone 11.5 verification.

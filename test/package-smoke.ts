@@ -32,6 +32,16 @@ type PackResult = {
 };
 
 const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
+const documentedQuickstartCommands = [
+  "npm install --offline --no-audit --no-fund --save-exact <tarball-path>",
+  "node ./node_modules/sdd-yo/dist/bin/sdd.js --version --format json",
+  "node ./node_modules/sdd-yo/dist/bin/sdd.js skill install --root <repository-root> --format json",
+  "node ./.agents/skills/sdd-yo/scripts/check-cli-compatibility -- init --root <repository-root> --adoption incremental",
+  "node ./.agents/skills/sdd-yo/scripts/check-cli-compatibility -- validate --cwd <repository-root>",
+  "node ./node_modules/sdd-yo/dist/bin/sdd.js validate --cwd <repository-root> --format json",
+  "node ./node_modules/sdd-yo/dist/bin/sdd.js skill update --root <repository-root> --format json",
+  "node ./node_modules/sdd-yo/dist/bin/sdd.js skill remove --root <repository-root> --format json",
+] as const;
 const forbiddenLifecycleScripts = [
   "preinstall",
   "install",
@@ -117,7 +127,7 @@ async function expectedPackedProductFiles(): Promise<readonly string[]> {
     (path) => `contracts/v1/schemas/${path}`,
   );
   const skillFiles = (await listFiles(join(repositoryRoot, "skills/sdd-yo"))).map((path) => `skills/sdd-yo/${path}`);
-  return ["package.json", ...generatedFiles, ...schemaFiles, ...skillFiles].sort();
+  return ["README.md", "package.json", ...generatedFiles, ...schemaFiles, ...skillFiles].sort();
 }
 
 async function expectedBundledPackages(): Promise<readonly string[]> {
@@ -160,7 +170,7 @@ function parsePackResult(standardOutput: string): PackResult {
   return result as PackResult;
 }
 
-test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-3F19778B REQ-CF3A1070 REQ-A0456614 REQ-DAF21960 REQ-8DC50806 REQ-AA165BDE REQ-FFE60B5A REQ-D9CF3A46 REQ-97D96950 package builds, manages its repository Skill, and completes first use offline", async () => {
+test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-3F19778B REQ-CF3A1070 REQ-A0456614 REQ-DAF21960 REQ-8DC50806 REQ-AA165BDE REQ-FFE60B5A REQ-D9CF3A46 REQ-97D96950 REQ-382BBBD6 REQ-7C848ED0 package builds, verifies its quickstart, manages its repository Skill, and completes first use offline", async () => {
   const temporaryRoot = await mkdtemp(join(tmpdir(), "sdd-yo-package-smoke-"));
   const buildCache = join(temporaryRoot, "build-cache");
   const installCache = join(temporaryRoot, "install-cache");
@@ -227,6 +237,19 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-3F19778B REQ-CF3A1070 REQ-A0456
     assert.equal(sourceManifest.private, true);
     assert.deepEqual([...sourceManifest.bundleDependencies].sort(), Object.keys(sourceManifest.dependencies).sort());
     for (const hook of forbiddenLifecycleScripts) assert.equal(sourceManifest.scripts[hook], undefined);
+    const quickstart = await readFile(join(repositoryRoot, "README.md"), "utf8");
+    for (const command of documentedQuickstartCommands) assert.ok(quickstart.includes(command), command);
+    for (const diagnostic of [
+      "SDD_CONFIG_NOT_FOUND",
+      "SDD_INIT_TARGET_CONFLICT",
+      "SDD_INIT_ROOT_INVALID",
+      "SDD_INIT_TARGET_UNSAFE",
+      "SDD_GIT_HISTORY_INCOMPLETE",
+      "SDD_GIT_REF_UNRESOLVED",
+    ])
+      assert.ok(quickstart.includes(`\`${diagnostic}\``), diagnostic);
+    assert.match(quickstart, /use `\$sdd-yo`/u);
+    assert.match(quickstart, /do not create or imply human approval, semantic\nreview, QA/u);
 
     const repositoryStatusBeforeInstall = await runCommand(
       "git",
@@ -288,6 +311,10 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-3F19778B REQ-CF3A1070 REQ-A0456
     assert.deepEqual(installedManifest.engines, { node: ">=22.18.0" });
     assert.deepEqual(installedManifest.bundleDependencies, sourceManifest.bundleDependencies);
     for (const hook of forbiddenLifecycleScripts) assert.equal(installedManifest.scripts[hook], undefined);
+    assert.deepEqual(
+      await readFile(join(installedPackageRoot, "README.md")),
+      await readFile(join(repositoryRoot, "README.md")),
+    );
 
     assert.ok((await stat(join(installedPackageRoot, "dist/index.d.ts"))).isFile());
     assert.ok((await stat(join(installedPackageRoot, "dist/schemas/v1/artifacts.generated.d.ts"))).isFile());
@@ -299,6 +326,7 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-3F19778B REQ-CF3A1070 REQ-A0456
     assert.deepEqual(await listFiles(installedSkillRoot), skillFiles);
     for (const path of skillFiles)
       assert.deepEqual(await readFile(join(installedSkillRoot, path)), await readFile(join(sourceSkillRoot, path)));
+    assert.match(await readFile(join(installedSkillRoot, "agents/openai.yaml"), "utf8"), /Use \$sdd-yo/u);
 
     const schemaFiles = await listFiles(join(repositoryRoot, "contracts/v1/schemas"));
     for (const path of schemaFiles)
@@ -507,6 +535,28 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-3F19778B REQ-CF3A1070 REQ-A0456
     assert.equal(firstValidateResponse.command, "validate");
     assert.equal(firstValidateResponse.status, "ok");
     assert.match(firstValidateResponse.project_id, /^SDD-[0-9A-F]{8}$/u);
+
+    const automationValidate = await runCommand(
+      process.execPath,
+      [binTarget, "validate", "--cwd", consumerRoot, "--format", "json"],
+      consumerRoot,
+    );
+    assert.equal(automationValidate.exitCode, 0, automationValidate.standardError || automationValidate.standardOutput);
+    const automationResponse = JSON.parse(automationValidate.standardOutput) as {
+      readonly schema_version: string;
+      readonly command: string;
+      readonly project_id: string;
+      readonly status: string;
+      readonly result: { readonly valid: boolean; readonly adoption: { readonly mode: string } };
+      readonly diagnostics: readonly unknown[];
+    };
+    assert.equal(automationResponse.schema_version, "1.0");
+    assert.equal(automationResponse.command, "validate");
+    assert.equal(automationResponse.project_id, firstValidateResponse.project_id);
+    assert.equal(automationResponse.status, "ok");
+    assert.equal(automationResponse.result.valid, true);
+    assert.equal(automationResponse.result.adoption.mode, "incremental");
+    assert.deepEqual(automationResponse.diagnostics, []);
 
     const skillRemoval = await runCommand(
       process.execPath,

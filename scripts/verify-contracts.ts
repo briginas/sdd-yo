@@ -591,6 +591,7 @@ async function main(): Promise<void> {
   const documentationFiles = [
     ...proposalFiles,
     ...canonicalFiles,
+    path.join(repositoryRoot, "README.md"),
     path.join(repositoryRoot, "IMPLEMENTATION_PLAN.md"),
   ];
   if (await exists(path.join(repositoryRoot, "docs"))) documentationFiles.push(...(await walk(path.join(repositoryRoot, "docs"))));
