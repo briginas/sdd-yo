@@ -1,4 +1,5 @@
 /.sdd/staging/
+*.tgz
 .idea/
 dist/
 node_modules/

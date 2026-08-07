@@ -2,9 +2,9 @@
 
 ## Status
 
-- State: Milestones 0–15 complete; no active milestone
-- Current phase: Awaiting explicit next-milestone selection
-- Current leaf: none
+- State: Milestones 0–15 complete; Milestone 16 active
+- Current phase: Public repository documentation and contribution baseline
+- Current leaf: 16.2 — awaiting license and retained-evidence decisions
 - Last updated: 2026-08-07
 
 ## Source-of-truth map
@@ -47,6 +47,9 @@ and the optional progressive-disclosure `sdd-yo` Agent Skill.
   to `0.2.0`. Its exact governed subject and validation evidence are archived.
 - Milestone 15 is complete; its execution record is archived at
   [`plans/completed/milestone-15-semantic-spec-patch-confirmation.md`](plans/completed/milestone-15-semantic-spec-patch-confirmation.md).
+- Milestone 16 is selected to prepare the existing GitHub repository for public
+  source visibility while preserving private npm-package distribution and the
+  existing product behavior.
 - The deterministic version 1 library, CLI, artifact schemas, proposal and exact
   patch workflow, evidence composition, findings validation, merge readiness,
   enforced governed-scope integration, and explicit approval-gated Skill route
@@ -66,9 +69,33 @@ Repository-wide work discipline and validation commands remain authoritative in
 [`proposal/architecture/`](proposal/architecture/README.md), not in this active
 plan.
 
-## Next milestone
+## Active milestone
 
-No next milestone is selected. The candidate backlog and deferred scope below remain proposals only; selecting one requires explicit human authorization.
+### Milestone 16 — Public GitHub source readiness
+
+Prepare the existing GitHub repository for a deliberate private-to-public
+visibility change without publishing the npm package or changing implemented
+product behavior.
+
+- [x] **16.1 — Exposure audit and immediate safety remediation.** Inspect the
+      tracked tree, reachable Git history, GitHub Actions logs, repository settings,
+      and current dependency advisories. Prevent accidental package-tarball commits
+      and apply only compatible lockfile remediation for confirmed advisories.
+      Retain exact commands and findings in the handoff. Exclude licensing,
+      contributor/community policy, personal-evidence redaction, history rewriting,
+      routine CI expansion, repository visibility/settings changes, commit, push,
+      public npm publication, and marketplace publication.
+- [ ] **16.2 — Public repository documentation and contribution baseline.** Make
+      the source/package visibility distinction explicit, add repository metadata,
+      contributor and security guidance, a human-selected license and conduct
+      policy, and routine pull-request validation. Resolve the intended treatment
+      of identified human evidence and local absolute paths before changing those
+      retained artifacts.
+- [ ] **16.3 — Public transition handoff.** Run the repository validation suite,
+      inspect the final public surface, record the exact visibility consequences and
+      post-transition security/ruleset checklist, and obtain separate authorization
+      for any commit, push, history rewrite, GitHub metadata mutation, or visibility
+      change. Do not publish the npm package or Codex plugin.
 
 ## Candidate backlog
 
@@ -121,5 +148,7 @@ human authorization before implementation:
 
 ## Immediate next leaf
 
-None. Select and define the next milestone through explicit human authorization
-before beginning further work.
+Begin 16.2 only after the human selects a source license and decides whether
+identified human-review evidence and local absolute paths remain intentionally
+public. Keep any history rewrite and remote GitHub mutation separately
+authorized.
