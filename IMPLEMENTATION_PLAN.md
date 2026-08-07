@@ -12,6 +12,8 @@
 - Canonical product behavior: [`spec/README.md`](spec/README.md)
 - Architecture: [`proposal/architecture/README.md`](proposal/architecture/README.md)
 - Plan index and completed history: [`plans/README.md`](plans/README.md)
+- Active public-transition record:
+  [`plans/milestone-16-public-transition-handoff.md`](plans/milestone-16-public-transition-handoff.md)
 - Completed execution records:
   [`plans/completed/milestones-0-9.md`](plans/completed/milestones-0-9.md),
   [`plans/completed/milestone-10-self-bootstrap-retirement.md`](plans/completed/milestone-10-self-bootstrap-retirement.md),
@@ -96,7 +98,10 @@ product behavior.
       inspect the final public surface, record the exact visibility consequences and
       post-transition security/ruleset checklist, and obtain separate authorization
       for any commit, push, history rewrite, GitHub metadata mutation, or visibility
-      change. Do not publish the npm package or Codex plugin.
+      change. The local review record is
+      [`plans/milestone-16-public-transition-handoff.md`](plans/milestone-16-public-transition-handoff.md);
+      its remote-action checklist remains awaiting human authorization. Do not
+      publish the npm package or Codex plugin.
 
 ## Candidate backlog
 
