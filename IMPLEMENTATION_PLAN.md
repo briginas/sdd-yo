@@ -47,7 +47,7 @@ and the optional progressive-disclosure `sdd-yo` Agent Skill.
 - Milestone 12 retained the identified human approval-recording Skill verdict,
   full validation results, and closeout evidence under
   [`plans/completed/milestone-12-explicit-human-approval-evidence-recording.md`](plans/completed/milestone-12-explicit-human-approval-evidence-recording.md).
-- Private `sdd-yo@0.1.0` local-tarball onboarding remains private and offline;
+- Private `sdd-yo@0.1.1` local-tarball onboarding remains private and offline;
   no registry, marketplace, provenance, cross-platform onboarding-study, or
   whole-project completeness claim is implied.
 - New product behavior uses a normal bounded `spec-code`, `spec`, or `code`

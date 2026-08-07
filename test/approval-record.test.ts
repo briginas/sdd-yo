@@ -170,7 +170,7 @@ test("REQ-32C76ED3 REQ-F7D39246 pure ApprovalEvidence construction preserves the
     actor: "Ivan Briginas",
     decision: "approved",
     reason: " exact message \n",
-    producer: { name: "sdd", version: "0.1.0" },
+    producer: { name: "sdd", version: "0.1.1" },
   });
   const bytes = serializeApprovalEvidence(evidence);
   assert.equal(new TextDecoder().decode(bytes), `${JSON.stringify(evidence)}\n`);
@@ -210,7 +210,7 @@ test("REQ-32C76ED3 REQ-F7D39246 records approved and rejected decisions with exa
     });
     const evidence = JSON.parse(await readFile(join(value.root, target), "utf8"));
     assert.equal(evidence.project_id, value.projectId);
-    assert.deepEqual(evidence.producer, { name: "sdd", version: "0.1.0" });
+    assert.deepEqual(evidence.producer, { name: "sdd", version: "0.1.1" });
     assert.equal(evidence.actor, "Ivan Briginas");
     assert.equal(evidence.reason, "I explicitly approve.\nKeep this line.\n");
     assert.equal("created_at" in evidence, false);
