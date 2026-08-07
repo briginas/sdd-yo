@@ -36,6 +36,9 @@ remain in [`../IMPLEMENTATION_PLAN.md`](../IMPLEMENTATION_PLAN.md).
   — completed issuer-policy removal, exact approved specification patch,
   configuration break, private package version update, validation evidence,
   and closeout.
+- [`completed/milestone-15-semantic-spec-patch-confirmation.md`](completed/milestone-15-semantic-spec-patch-confirmation.md)
+  — completed semantic SpecPatch confirmation, human Skill review, validation,
+  and closeout.
 
 Completed plans are historical records. Use the current canonical
 [`../spec/README.md`](../spec/README.md), architecture
