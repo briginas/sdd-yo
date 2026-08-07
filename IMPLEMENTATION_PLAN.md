@@ -2,9 +2,9 @@
 
 ## Status
 
-- State: Milestones 0–16 complete; no active milestone
-- Current phase: Awaiting explicit next-milestone selection
-- Current leaf: none
+- State: Milestones 0–16 complete; Milestone 17 planned
+- Current phase: Public npm CLI distribution
+- Current leaf: 17.1 — Public-release contract and registry preflight
 - Last updated: 2026-08-07
 
 ## Source-of-truth map
@@ -59,9 +59,10 @@ and the optional progressive-disclosure `sdd-yo` Agent Skill.
 - Milestone 12 retained the identified human approval-recording Skill verdict,
   full validation results, and closeout evidence under
   [`plans/completed/milestone-12-explicit-human-approval-evidence-recording.md`](plans/completed/milestone-12-explicit-human-approval-evidence-recording.md).
-- Private `sdd-yo@0.2.0` local-tarball onboarding remains private and offline;
-  no registry, marketplace, provenance, cross-platform onboarding-study, or
-  whole-project completeness claim is implied.
+- Private `sdd-yo@0.2.0` local-tarball onboarding remains the current released
+  behavior; no registry, marketplace, provenance, cross-platform
+  onboarding-study, or whole-project completeness claim is implied until the
+  selected Milestones 17 and 18 satisfy their respective done conditions.
 - New product behavior uses a normal bounded `spec-code`, `spec`, or `code`
   Change. Completed bootstrap history grants no alternate specification-write
   or ID-reservation route.
@@ -73,8 +74,254 @@ plan.
 
 ## Next milestone
 
-No next milestone is selected. The candidate backlog and deferred scope below
-remain proposals only; selecting one requires explicit human authorization.
+### Milestone 17 — Public npm CLI distribution
+
+Publish an exact `sdd-yo` package to the public npm registry so a developer can
+install the deterministic CLI as repository tooling and invoke its `sdd`
+executable through npm without obtaining a private tarball. Preserve the local
+tarball as an offline installation artifact, keep installation lifecycle inert,
+and bind the public package, CLI, library, schemas, and packaged repository
+Skill to one compatibility identity.
+
+The planned first public version is `sdd-yo@0.3.0`. Before that identity becomes
+normative or publishable, leaf 17.1 must confirm that the unscoped package name
+is available to or already controlled by the selected npm publisher. If it is
+not, stop for an explicit naming decision; do not silently scope or rename the
+package.
+
+Milestone 17 changes the currently private distribution contract and therefore
+uses one normal bounded `spec-code` Change. The publication command, Git commit,
+tag or release creation, and any human approval or QA verdict remain separately
+authorized operations.
+
+#### 17.1 — Public-release contract and registry preflight
+
+- Recheck the current official npm publication, trusted-publishing,
+  provenance, access, and package-name rules at execution time.
+- Verify package-name ownership or availability, selected publisher identity,
+  account and organization boundary, required authentication policy, and the
+  supported provenance route without exposing credentials in repository files,
+  logs, fixtures, or model context.
+- Present one complete ID-free semantic model for the `spec-code` Change. It
+  must cover public registry installation, exact-version invocation through
+  npm, preservation of the offline tarball route, release-subject and artifact
+  identity, inert installation, and explicit non-authority for Skill
+  installation, project initialization, Git, approval, QA, or merge effects.
+- Identify the existing `CAP-6AD33965` and its Requirements whose private-only
+  meaning must change, plus any genuinely new release-security Requirements;
+  do not generate IDs, draft a candidate, edit canonical `spec/`, or change
+  package metadata before explicit semantic-model confirmation.
+
+Done when the human has confirmed one unchanged semantic model and every
+publisher, package-name, access, version, and provenance choice needed by the
+candidate is explicit. Registry mutation, package publication, implementation,
+and evidence creation are excluded.
+
+#### 17.2 — Governed public-distribution specification Change
+
+- Materialize only the confirmed candidate, validate it in `spec-code` mode,
+  and present the exact normative delta and affected scope through the normal
+  Proposal Gate.
+- Record any approval or rejection only from an identified human decision,
+  revalidate the exact subject after every pause, and prepare/apply only the
+  separately authorized exact `SpecPatch` on the selected integration base.
+- Stop after canonical application. Do not implement package changes, publish,
+  create a branch or commit, or infer review or QA from deterministic checks.
+
+Done when the exact approved public-distribution Requirements are canonical and
+the resulting specification bytes equal the validated candidate.
+
+#### 17.3 — Public package implementation and release automation
+
+- Update the package manifest for explicit public access and version `0.3.0`,
+  preserving the `sdd` executable, ESM/library exports, Node.js baseline,
+  versioned schemas, bundled production dependencies, and repository Skill
+  payload required by the canonical contract.
+- Support and document exact local installation as development tooling and the
+  cross-platform `npm exec -- sdd ...` invocation; do not require a global
+  executable or rely on ambiguous PATH fallback.
+- Add a least-privilege release workflow that binds one immutable Git subject
+  to one npm artifact and uses the confirmed current trusted-publishing and
+  provenance mechanism. It must not expose a long-lived npm token, run on an
+  unreviewed subject, or make ordinary CI and product commands publish-capable.
+- Extend Requirement-named tests and package smoke coverage for public manifest
+  metadata, exact packed inventory, executable wiring, lifecycle-hook absence,
+  README commands, and unchanged private-tarball installation.
+
+Done when the release implementation is complete and locally verifiable but no
+package has been published.
+
+#### 17.4 — Release rehearsal and exact artifact review
+
+- Build and pack one release candidate from the exact selected Git subject;
+  retain its version, full inventory, sizes, integrity hashes, provenance input,
+  and package-manager output without writing the tarball into tracked source.
+- Exercise clean ordinary npm and isolated Yarn Plug'n'Play consumers, including
+  package identity, `npm exec -- sdd --version --format json`, repository Skill
+  installation, initialization, first validation, and outside-root sentinels.
+- Run an npm publication dry run and the complete repository validation suite.
+  Treat network failure, unavailable authentication, incomplete output, or a
+  changed artifact as failure rather than publication readiness.
+
+Done when one exact release candidate and publication command are reviewable.
+No commit, tag, GitHub release, npm publication, approval, or QA verdict is
+implied.
+
+#### 17.5 — Explicit public npm publication
+
+- After separate authorization, publish only the retained reviewed artifact
+  through the selected least-privilege release route. Refuse a changed Git
+  subject, version, package inventory, integrity hash, access mode, publisher,
+  or provenance configuration.
+- Verify the immutable public registry response, package metadata, dist-tag,
+  integrity and provenance records, and retain the exact publication subject.
+  Do not overwrite or reuse an existing version.
+
+Done when `sdd-yo@0.3.0` is publicly resolvable with the reviewed identity and
+evidence. Publication does not authorize a plugin submission, Git merge, or
+release announcement.
+
+#### 17.6 — Public consumer evidence and closeout
+
+- Install exact `sdd-yo@0.3.0` from the public registry into fresh Linux,
+  macOS, and Windows consumers without a source checkout or private artifact.
+- Verify the CLI, library, declarations, schemas, repository Skill installation
+  and compatibility binding, incremental initialization, and first validation;
+  retain platform, Node/npm, package-integrity, CLI-identity, command, and
+  filesystem-write evidence.
+- Update the public quickstart and recovery guidance to distinguish registry
+  installation from the retained offline-tarball route, then run the complete
+  validation suite and the normal milestone closeout procedure.
+
+Milestone 17 is done only when the public artifact is independently installable
+on every claimed platform, documentation matches the verified commands, and
+the exact execution record is archived. It does not publish or install a Codex
+plugin.
+
+### Planned Milestone 18 — Codex plugin with bundled CLI
+
+After Milestone 17 closes, distribute `sdd-yo` as an installable Codex plugin
+whose Skill invokes an exact CLI bundled in the same installed plugin artifact.
+The user must not install `sdd-yo` into each target repository, copy Skill files,
+or download a CLI on first use. The existing repository-scoped package and Skill
+route remains a supported alternative.
+
+The planned first combined package/plugin version is `0.4.0`. The same
+`sdd-yo@0.4.0` npm artifact will be both the public CLI package and the plugin
+package: it will contain `.codex-plugin/plugin.json`, `skills/sdd-yo`, built
+CLI/library/schema surfaces, and every locked production dependency required by
+the bundled CLI. A marketplace npm source must select one exact version rather
+than a range. The plugin must not add an MCP server merely to invoke local CLI
+behavior.
+
+Official OpenAI plugin behavior and manifest fields are temporally unstable;
+recheck the official plugin documentation before each contract, packaging, and
+submission leaf. Public-directory submission and acceptance remain external,
+separately authorized boundaries.
+
+#### 18.1 — Plugin execution contract and semantic model
+
+- Confirm the exact supported Codex surfaces, plugin manifest and marketplace
+  rules, installed-cache layout assumptions, script execution permissions,
+  Node.js availability, update behavior, and public-submission requirements.
+- Present one complete ID-free semantic model for dual Skill operation:
+  verified repository installation or verified plugin-bundled installation.
+  Plugin mode must resolve only the sibling bundled CLI through a fixed safe
+  path, verify its compatibility identity and owned bytes, require one explicit
+  target project, and never fall back to `PATH`, the network, or a package
+  manager.
+- Preserve all human authority, exact-patch, filesystem-scope, and Git
+  boundaries. Explicitly exclude ChatGPT web repository execution unless the
+  official host contract and retained tests establish it.
+
+Done when the human confirms the complete unchanged model. No IDs, candidate,
+plugin scaffold, package version change, marketplace entry, or publication is
+created in this leaf.
+
+#### 18.2 — Governed plugin-distribution specification Change
+
+- Materialize and validate only the confirmed `spec-code` candidate, using
+  fresh IDs for new plugin-specific Requirements and changing existing
+  repository-only meaning only where the confirmed model requires it.
+- Complete the normal Proposal Gate, identified human decision, exact patch
+  preparation, and separately authorized canonical application.
+- Stop before implementation, Git operations, npm publication, marketplace
+  installation, plugin submission, human QA, or public-directory review.
+
+Done when the exact approved plugin and bundled-CLI behavior is canonical.
+
+#### 18.3 — Deterministic combined plugin package
+
+- Add the required plugin manifest and install-surface metadata while keeping
+  the repository Skill as the single maintained workflow source. Do not fork or
+  reimplement deterministic CLI rules in plugin prompts.
+- Extend the compatibility wrapper with two explicit fail-closed bindings:
+  the existing repository `installation.json` route and the plugin-bundled
+  fixed-path route. Reject ambiguous, missing, symlinked, modified,
+  incompatible, stale, or outside-plugin CLI bytes.
+- Include the manifest, Skill, CLI, schemas, and production dependencies in one
+  exact npm inventory. Package installation and plugin installation must run no
+  lifecycle script and must not initialize a project or mutate `.agents`,
+  `.sdd`, `spec`, Git, or adjacent repositories.
+- Add Requirement-named tests for manifest shape, exact inventories and hashes,
+  both binding modes, precedence/refusal behavior, path escape, interruption,
+  and absence of first-use network or package-manager execution.
+
+Done when one local `sdd-yo@0.4.0` package is simultaneously a verified CLI
+package and a valid locally installable plugin artifact.
+
+#### 18.4 — Local marketplace installation and Skill evaluation
+
+- Install the exact artifact from a local or repository marketplace into a
+  clean Codex environment and confirm that `$sdd-yo` is discoverable without a
+  repository-local Skill or npm dependency.
+- Exercise representative explicit and implicit prompts for onboarding,
+  understanding, proposal review, approval recording, exact patch handoff,
+  verification, diagnostics, and refusal boundaries in fresh conversations.
+- Verify that plugin mode uses only its bundled CLI, works against an explicit
+  external fixture root, records the same version 1 JSON identity, preserves
+  outside-root sentinels, and does not mutate plugin-owned bytes.
+- Retain deterministic eval results separately from an identified human Skill
+  review; automated success does not create that verdict.
+
+Done when local installation and the required human review accept the exact
+plugin subject. No public npm update or public-directory submission is implied.
+
+#### 18.5 — Exact plugin release and public submission
+
+- Rebuild and review the combined `sdd-yo@0.4.0` package from one immutable Git
+  subject, run the complete package, plugin, Skill-eval, and repository
+  validation suites, and separately authorize its npm publication.
+- Publish the exact package, then create or update the plugin marketplace entry
+  to select exactly `sdd-yo@0.4.0` from the public npm registry. Verify that the
+  host downloads it without lifecycle scripts and that installed bytes match
+  the reviewed package integrity.
+- Only after separate submission authorization, submit the exact plugin
+  metadata and package subject to the public plugin directory. Preserve the
+  external review status without inferring acceptance from submission.
+
+Done when the reviewed combined artifact is public and its exact plugin subject
+has been submitted. The milestone remains open while a required external review
+or acceptance decision is pending.
+
+#### 18.6 — Public plugin install evidence and closeout
+
+- Install the accepted public plugin in a fresh supported Codex environment,
+  invoke `$sdd-yo` against a clean external Git repository, and verify bundled
+  CLI identity, incremental initialization, first validation, update behavior,
+  refusal paths, and absence of repository npm or Skill installation state.
+- Update user documentation to distinguish direct npm CLI use,
+  repository-scoped Skill use, and install-once plugin use, including platform
+  and host limitations established by evidence.
+- Run the complete validation suite and archive the exact package, plugin,
+  marketplace, external-review, human-review, and consumer evidence through
+  the normal closeout procedure.
+
+Milestone 18 is done only when another user can install the public plugin and
+use its bundled CLI without per-repository package or Skill installation. It
+does not imply hosted execution, an MCP service, ChatGPT web filesystem access,
+standalone native binaries, organization-wide mandatory deployment, or any
+automatic Git, approval, QA, finding-resolution, or merge authority.
 
 ## Candidate backlog
 
@@ -96,15 +343,8 @@ human authorization before implementation:
 - consider repository-local normative authority and external-link quality
   findings as a new behavior candidate; completed Milestone 10 found no
   complete implementation evidence for that former proposal meaning;
-- publish through a private organization registry if distribution needs
-  outgrow local tarballs; this requires a scoped package and an explicit
-  decision to replace `"private": true` with registry-constrained publication
-  metadata;
-- publish to the public npm registry only after an explicit source-visibility,
-  package-access, release-security, and provenance decision;
-- package and distribute `sdd-yo` as an installable Codex plugin through a
-  local, team, or public marketplace, with its released CLI dependency and
-  compatibility boundary explicit;
+- add a private organization registry only if the selected public registry
+  route later proves insufficient for separately controlled release channels;
 - add alternative distribution channels such as standalone signed
   executables, Homebrew, Scoop, or an organization-managed installer if the
   Node.js/npm prerequisite becomes a material adoption barrier;
@@ -127,5 +367,8 @@ human authorization before implementation:
 
 ## Immediate next leaf
 
-None. Select and define the next milestone through explicit human authorization
-before beginning further work.
+Milestone 17.1 only: verify the public npm identity and release boundary, then
+present the complete ID-free semantic model for explicit confirmation. Do not
+edit canonical specification, package metadata, runtime code, tests, workflows,
+README, or plugin files; do not create IDs, candidates, evidence, branches,
+commits, tags, releases, registry writes, marketplace entries, or submissions.
