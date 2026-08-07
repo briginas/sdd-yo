@@ -2,9 +2,9 @@
 
 ## Status
 
-- State: Milestones 0–14 complete; no active milestone selected
-- Current phase: Awaiting explicit selection of one candidate backlog leaf
-- Current leaf: none
+- State: Milestones 0–14 complete; Milestone 15 active
+- Current phase: Govern the bounded semantic-confirmation behavior change
+- Current leaf: 15.1 — prepare and approve the normal `spec-code` Change
 - Last updated: 2026-08-07
 
 ## Source-of-truth map
@@ -44,6 +44,9 @@ and the optional progressive-disclosure `sdd-yo` Agent Skill.
 - Milestone 14 removed configured evidence issuer membership policy, retained
   issuer text as untrusted provenance, and updated the private package identity
   to `0.2.0`. Its exact governed subject and validation evidence are archived.
+- Milestone 15 is selected to replace technical SpecPatch confirmation output
+  with a short semantic description of the behavior change and its consequence,
+  while preserving the exact deterministic artifact and application boundary.
 - The deterministic version 1 library, CLI, artifact schemas, proposal and exact
   patch workflow, evidence composition, findings validation, merge readiness,
   enforced governed-scope integration, and explicit approval-gated Skill route
@@ -62,6 +65,112 @@ Repository-wide work discipline and validation commands remain authoritative in
 [`AGENTS.md`](AGENTS.md). Architecture decisions live under
 [`proposal/architecture/`](proposal/architecture/README.md), not in this active
 plan.
+
+## Milestone 15 — Semantic SpecPatch confirmation
+
+### Objective
+
+Change the progressive-disclosure Skill so that, before exact SpecPatch
+application, the user sees only a short semantic description of what behavior
+will change and what that change will cause. Apply the same disclosure rule to
+the success response after application.
+
+The exact SpecPatch remains the deterministic object used for validation and
+application. Its patch body, file paths, operations, diff, hashes,
+fingerprints, conflicts, and unchanged scope are not displayed by default;
+they are shown only when the user explicitly asks for technical details.
+
+### Requirement traceability
+
+- `REQ-26234DC8` — extend the progressive-disclosure Skill contract with the
+  semantic SpecPatch confirmation and post-application presentation behavior.
+- `CAP-404305F6` — retain the owning multi-project CLI and Skill integration
+  boundary.
+
+No new Requirement identity is expected unless candidate preparation shows
+that modifying `REQ-26234DC8` would make its meaning ambiguous or overloaded.
+Any such ambiguity stops 15.1 for explicit human resolution.
+
+### Decision comments
+
+- The default confirmation contains one to three short points: the behavior
+  that changes, its user-visible or governance consequence, and a direct
+  question asking whether to apply the prepared change.
+- The summary is derived from the confirmed semantic model and the validated
+  normative base-to-candidate delta. If those inputs do not support one clear
+  summary, the Skill asks for clarification instead of inventing intent.
+- Technical details remain available from the retained SpecPatch on explicit
+  request. Viewing them does not itself authorize application; the user must
+  still separately confirm application.
+- The presentation change does not weaken preparation, revalidation, exact
+  patch identity, base-tree matching, or atomic application. It changes only
+  what the Skill shows by default.
+- Preparation failures and non-`ok` statuses are described concisely in terms
+  of the blocking outcome and required next decision. Raw diagnostics,
+  conflicts, paths, hashes, and fingerprints remain opt-in details.
+- The SpecPatch that introduces the canonical Milestone 15 requirement is
+  governed under the pre-Milestone 15 presentation contract. The new
+  presentation becomes authoritative only after that exact specification
+  patch is applied and the Skill implementation is updated and verified.
+
+### Execution leaves
+
+#### 15.1 — Govern the presentation behavior
+
+- Prepare one bounded normal `spec-code` candidate modifying
+  `REQ-26234DC8`, after the required ID-free semantic-model confirmation.
+- Validate the ProposalPackage, obtain explicit subject-bound human
+  ApprovalEvidence, prepare the exact SpecPatch, and apply it only after a
+  separate explicit selection.
+- Do not treat proposal validation, semantic-model confirmation, approval
+  recording, or preparation as patch-application authorization.
+
+#### 15.2 — Implement progressive disclosure
+
+- Update the main Skill workflow and its branch-preparation reference so the
+  pre-application prompt and successful post-application response use the
+  concise semantic presentation by default.
+- Preserve exact compatible CLI JSON and SpecPatch artifacts internally; do
+  not change CLI commands, versioned schemas, deterministic result objects, or
+  public TypeScript interfaces.
+- Add the explicit technical-details route without making it an application
+  confirmation or allowing partial, edited, fuzzy, forced, or stale patches.
+- Refresh the Skill payload manifest for every changed packaged Skill file.
+
+#### 15.3 — Verify the user-facing boundary
+
+- Add Requirement-named static checks that the default confirmation and
+  success response do not expose patch content, paths, operations, diffs,
+  hashes, fingerprints, conflicts, or unchanged-scope lists.
+- Add a successful preparation eval proving that the user receives only the
+  short behavior-and-consequence summary before the application question.
+- Add an explicit-details eval proving that technical data is available only
+  on request and that viewing it does not authorize application.
+- Cover concise blocked and review-required presentation without weakening the
+  deterministic stop conditions.
+- Retain an identified human Skill-review verdict for the manual acceptance of
+  `REQ-26234DC8`.
+
+#### 15.4 — Validate and close out
+
+- Run focused Skill and Skill-eval tests, then `npm test`,
+  `npm run test:package`, `npm run check:schemas`, `npm run build`,
+  `npm run typecheck`, `npm run format:check`,
+  `npm run verify:contracts`, and `git diff --check`.
+- After every gate and the identified human verdict pass, archive the exact
+  Milestone 15 execution record, update `plans/README.md`, and compact this
+  active plan.
+
+### Exclusions
+
+- No CLI, JSON schema, artifact-version, configuration, or package-version
+  change.
+- No automatic interpretation of arbitrary patch bytes as product intent.
+- No weakening of exact-patch preparation or application safety.
+- No implied branch, commit, merge, push, publication, installation, approval,
+  QA, review, or finding-resolution authority.
+- No Milestone 15 implementation work before the 15.1 normative Change is
+  approved and applied.
 
 ## Candidate backlog
 
@@ -114,6 +223,8 @@ human authorization before implementation:
 
 ## Immediate next leaf
 
-Execute 14.1 only through the normal bounded `spec-code` workflow. Proposal
-validation does not imply human ApprovalEvidence, patch application, later
-implementation, QA, review, or Git authorization.
+Execute 15.1 only: confirm the ID-free semantic model, then prepare the bounded
+normal `spec-code` candidate for `REQ-26234DC8`. Do not begin Skill edits,
+tests, or eval changes before the exact normative SpecPatch is separately
+approved and applied. Proposal validation does not imply ApprovalEvidence,
+patch application, later implementation, QA, review, or Git authorization.
