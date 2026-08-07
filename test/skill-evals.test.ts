@@ -490,6 +490,47 @@ test("REQ-26234DC8 approval-recording human review template is schema-valid and 
   assert.equal(template.overall_verdict, "not_reviewed");
 });
 
+test("REQ-26234DC8 retains the identified approval-recording human pass verdict", async () => {
+  const suite = await loadSuite();
+  const schema = JSON.parse(
+    await readFile(join(repositoryRoot, "evals/skill/approval-review-result.schema.json"), "utf8"),
+  ) as object;
+  const result = JSON.parse(
+    await readFile(join(repositoryRoot, "evals/skill/approval-review-result.json"), "utf8"),
+  ) as {
+    readonly skill_revision: string;
+    readonly reviewer: { readonly identity: string; readonly role: string };
+    readonly scenario_results: readonly {
+      readonly scenario_id: string;
+      readonly verdict: string;
+      readonly transcript: { readonly path: string; readonly sha256: string };
+      readonly findings: readonly string[];
+    }[];
+    readonly overall_verdict: string;
+  };
+  const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
+  assert.equal(validate(result), true, JSON.stringify(validate.errors));
+  assert.equal(result.skill_revision, "92a43ca");
+  assert.deepEqual(result.reviewer, { identity: "Ivan Briginas", role: "human Skill reviewer" });
+  assert.deepEqual(
+    result.scenario_results.map(({ scenario_id }) => scenario_id),
+    suite.scenarios
+      .filter(({ route }) => route === "approval-recording")
+      .map(({ id }) => id)
+      .toSorted(),
+  );
+  assert.ok(result.scenario_results.every(({ verdict, findings }) => verdict === "pass" && findings.length === 0));
+  assert.equal(result.overall_verdict, "pass");
+
+  const transcriptPaths = new Set(result.scenario_results.map(({ transcript }) => transcript.path));
+  assert.deepEqual([...transcriptPaths], ["transcripts/ivan-briginas-approval-verdict.md"]);
+  const transcript = await readFile(join(repositoryRoot, "evals/skill", [...transcriptPaths][0] ?? ""));
+  const fingerprint = `sha256:${createHash("sha256").update(transcript).digest("hex")}`;
+  assert.ok(result.scenario_results.every(({ transcript: binding }) => binding.sha256 === fingerprint));
+  assert.match(transcript.toString("utf8"), /Ivan Briginas/u);
+  assert.match(transcript.toString("utf8"), /запустил скил и проверил его\. всё работает\./u);
+});
+
 test("REQ-1DD46CA9 changed-adapter human review template is schema-valid and explicitly not reviewed", async () => {
   const schema = JSON.parse(
     await readFile(join(repositoryRoot, "evals/skill/changed-adapter-review-result.schema.json"), "utf8"),

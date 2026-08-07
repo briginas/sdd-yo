@@ -24,6 +24,10 @@ remain in [`../IMPLEMENTATION_PLAN.md`](../IMPLEMENTATION_PLAN.md).
   — completed private tarball, compatibility identity, repository Skill
   lifecycle, npm and Yarn Plug'n'Play quickstart, validation evidence, and the
   explicit withdrawal record for the former cross-platform study leaf.
+- [`completed/milestone-12-explicit-human-approval-evidence-recording.md`](completed/milestone-12-explicit-human-approval-evidence-recording.md)
+  — completed explicit approval/rejection recording, approval-gated Skill
+  orchestration, identified human Skill review, full validation, and closeout
+  evidence.
 
 Completed plans are historical records. Use the current canonical
 [`../spec/README.md`](../spec/README.md), architecture
