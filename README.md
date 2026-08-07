@@ -1,12 +1,20 @@
 # SDD Yo
 
-SDD Yo is a repository-native specification governance system. Its private
-`sdd-yo` npm package provides the deterministic `sdd` CLI, versioned JSON
-protocols, and an optional repository-scoped `sdd-yo` Agent Skill.
+SDD Yo is a repository-native specification governance system with a
+deterministic `sdd` CLI, versioned JSON protocols, and an optional
+repository-scoped `sdd-yo` Agent Skill.
 
-The package is currently private. This quickstart installs one exact local
-tarball; it does not use or publish to an npm registry or a Codex plugin
-marketplace.
+The source is licensed for public collaboration under Apache-2.0. Source
+visibility and package distribution are separate: the `sdd-yo` npm package is
+still private, and this quickstart installs one exact local tarball without
+using or publishing to an npm registry or Codex plugin marketplace.
+
+## Project status
+
+SDD Yo is pre-1.0. The deterministic version 1 library, CLI, artifact schemas,
+proposal and exact-patch workflow, evidence composition, merge readiness, and
+repository-scoped Skill route are implemented and tested. The private package
+version is `0.2.0`; no public npm or marketplace release is implied.
 
 ## Prerequisites
 
@@ -186,3 +194,19 @@ pushes, merges, approvals, or QA decisions implicitly.
 For implemented behavior and detailed command contracts, see the
 [`spec/`](spec/README.md) and
 [`proposal/architecture/`](proposal/architecture/README.md) maps.
+
+## Development and contribution
+
+Use Node.js `22.18.0` or newer and install the locked dependencies with
+`npm ci`. The complete local validation sequence and repository work
+discipline are documented in [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+Issues and pull requests are welcome. Follow the
+[`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md), and report suspected
+vulnerabilities privately according to [`SECURITY.md`](SECURITY.md).
+
+## License
+
+Licensed under the [Apache License 2.0](LICENSE).
+
+Copyright 2026 Ivan Briginas.

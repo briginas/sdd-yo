@@ -3,8 +3,8 @@
 ## Status
 
 - State: Milestones 0–15 complete; Milestone 16 active
-- Current phase: Public repository documentation and contribution baseline
-- Current leaf: 16.2 — awaiting license and retained-evidence decisions
+- Current phase: Public transition handoff
+- Current leaf: 16.3 — final public-surface and GitHub transition review
 - Last updated: 2026-08-07
 
 ## Source-of-truth map
@@ -85,12 +85,13 @@ product behavior.
       contributor/community policy, personal-evidence redaction, history rewriting,
       routine CI expansion, repository visibility/settings changes, commit, push,
       public npm publication, and marketplace publication.
-- [ ] **16.2 — Public repository documentation and contribution baseline.** Make
+- [x] **16.2 — Public repository documentation and contribution baseline.** Make
       the source/package visibility distinction explicit, add repository metadata,
       contributor and security guidance, a human-selected license and conduct
       policy, and routine pull-request validation. Resolve the intended treatment
       of identified human evidence and local absolute paths before changing those
-      retained artifacts.
+      retained artifacts. Package-inventory verification remains traced through
+      `REQ-B0B35D6D` and `REQ-43B4311E`; no runtime behavior changes.
 - [ ] **16.3 — Public transition handoff.** Run the repository validation suite,
       inspect the final public surface, record the exact visibility consequences and
       post-transition security/ruleset checklist, and obtain separate authorization
@@ -148,7 +149,8 @@ human authorization before implementation:
 
 ## Immediate next leaf
 
-Begin 16.2 only after the human selects a source license and decides whether
-identified human-review evidence and local absolute paths remain intentionally
-public. Keep any history rewrite and remote GitHub mutation separately
-authorized.
+Complete 16.3 without remote mutation: inspect the final public surface, retain
+the visibility consequences and post-transition security/ruleset checklist,
+and obtain separate authorization before any commit, push, GitHub metadata
+change, or private-to-public visibility change. Keep npm and marketplace
+publication excluded.

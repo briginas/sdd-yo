@@ -133,7 +133,7 @@ async function expectedPackedProductFiles(): Promise<readonly string[]> {
     (path) => `contracts/v1/schemas/${path}`,
   );
   const skillFiles = (await listFiles(join(repositoryRoot, "skills/sdd-yo"))).map((path) => `skills/sdd-yo/${path}`);
-  return ["README.md", "package.json", ...generatedFiles, ...schemaFiles, ...skillFiles].sort();
+  return ["LICENSE", "README.md", "package.json", ...generatedFiles, ...schemaFiles, ...skillFiles].sort();
 }
 
 async function expectedBundledPackages(): Promise<readonly string[]> {
@@ -229,7 +229,12 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-3F19778B REQ-CF3A1070 REQ-A0456
     const sourceManifest = JSON.parse(await readFile(join(repositoryRoot, "package.json"), "utf8")) as {
       readonly name: string;
       readonly version: string;
+      readonly description: string;
       readonly private: boolean;
+      readonly license: string;
+      readonly repository: Readonly<{ type: string; url: string }>;
+      readonly bugs: Readonly<{ url: string }>;
+      readonly homepage: string;
       readonly type: string;
       readonly exports: Readonly<Record<string, unknown>>;
       readonly types: string;
@@ -240,7 +245,18 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-3F19778B REQ-CF3A1070 REQ-A0456
       readonly dependencies: Readonly<Record<string, string>>;
       readonly bundleDependencies: readonly string[];
     };
+    assert.equal(
+      sourceManifest.description,
+      "Repository-native specification governance with a deterministic CLI and optional Agent Skill.",
+    );
     assert.equal(sourceManifest.private, true);
+    assert.equal(sourceManifest.license, "Apache-2.0");
+    assert.deepEqual(sourceManifest.repository, {
+      type: "git",
+      url: "git+https://github.com/briginas/sdd-yo.git",
+    });
+    assert.deepEqual(sourceManifest.bugs, { url: "https://github.com/briginas/sdd-yo/issues" });
+    assert.equal(sourceManifest.homepage, "https://github.com/briginas/sdd-yo#readme");
     assert.deepEqual([...sourceManifest.bundleDependencies].sort(), Object.keys(sourceManifest.dependencies).sort());
     for (const hook of forbiddenLifecycleScripts) assert.equal(sourceManifest.scripts[hook], undefined);
     const quickstart = await readFile(join(repositoryRoot, "README.md"), "utf8");
@@ -296,7 +312,12 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-3F19778B REQ-CF3A1070 REQ-A0456
     const installedManifest = JSON.parse(await readFile(join(installedPackageRoot, "package.json"), "utf8")) as {
       readonly name: string;
       readonly version: string;
+      readonly description: string;
       readonly private: boolean;
+      readonly license: string;
+      readonly repository: Readonly<{ type: string; url: string }>;
+      readonly bugs: Readonly<{ url: string }>;
+      readonly homepage: string;
       readonly type: string;
       readonly exports: Readonly<Record<string, unknown>>;
       readonly types: string;
@@ -308,7 +329,12 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-3F19778B REQ-CF3A1070 REQ-A0456
     };
     assert.equal(installedManifest.name, sourceManifest.name);
     assert.equal(installedManifest.version, sourceManifest.version);
+    assert.equal(installedManifest.description, sourceManifest.description);
     assert.equal(installedManifest.private, true);
+    assert.equal(installedManifest.license, sourceManifest.license);
+    assert.deepEqual(installedManifest.repository, sourceManifest.repository);
+    assert.deepEqual(installedManifest.bugs, sourceManifest.bugs);
+    assert.equal(installedManifest.homepage, sourceManifest.homepage);
     assert.equal(installedManifest.type, sourceManifest.type);
     assert.deepEqual(installedManifest.exports, sourceManifest.exports);
     assert.equal(installedManifest.types, sourceManifest.types);
@@ -320,6 +346,10 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-3F19778B REQ-CF3A1070 REQ-A0456
     assert.deepEqual(
       await readFile(join(installedPackageRoot, "README.md")),
       await readFile(join(repositoryRoot, "README.md")),
+    );
+    assert.deepEqual(
+      await readFile(join(installedPackageRoot, "LICENSE")),
+      await readFile(join(repositoryRoot, "LICENSE")),
     );
 
     assert.ok((await stat(join(installedPackageRoot, "dist/index.d.ts"))).isFile());

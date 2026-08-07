@@ -1,7 +1,24 @@
 {
   "name": "sdd-yo",
   "version": "0.2.0",
+  "description": "Repository-native specification governance with a deterministic CLI and optional Agent Skill.",
   "private": true,
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/briginas/sdd-yo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/briginas/sdd-yo/issues"
+  },
+  "homepage": "https://github.com/briginas/sdd-yo#readme",
+  "keywords": [
+    "specification",
+    "governance",
+    "cli",
+    "sdd",
+    "agent-skill"
+  ],
   "type": "module",
   "exports": {
     ".": {
