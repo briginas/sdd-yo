@@ -50,8 +50,7 @@ If the semantic model and validated delta do not support one clear description,
 ask for clarification rather than inventing intent. The default presentation
 does not expose patch content, paths, operations, diffs, hashes, fingerprints,
 conflicts, diagnostics, or unchanged-scope lists. On explicit request, present
-the retained technical details and state that viewing them does not authorize
-application.
+the retained technical details. Viewing them does not authorize application.
 
 Do not rewrite a ConflictReport candidate as a Finding or claim that
 preparation completed semantic review. Never offer a patch copied from prose,

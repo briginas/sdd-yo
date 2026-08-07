@@ -4,7 +4,7 @@
 
 - State: Milestones 0–14 complete; Milestone 15 active
 - Current phase: Govern the bounded semantic-confirmation behavior change
-- Current leaf: 15.3 — verify the user-facing boundary
+- Current leaf: 15.4 — validate and close out
 - Last updated: 2026-08-07
 
 ## Source-of-truth map
@@ -159,6 +159,11 @@ summaries by default; their payload-manifest hashes were refreshed.
 - Retain an identified human Skill-review verdict for the manual acceptance of
   `REQ-26234DC8`.
 
+Completed 2026-08-07. Requirement-named static checks and three manual-eval
+scenarios cover default confirmation, explicit details, and `review_required`;
+Ivan Briginas recorded a passing human Skill-review verdict under
+`evals/skill/transcripts/ivan-briginas-semantic-patch-verdict.md`.
+
 #### 15.4 — Validate and close out
 
 - Run focused Skill and Skill-eval tests, then `npm test`,
@@ -231,7 +236,7 @@ human authorization before implementation:
 
 ## Immediate next leaf
 
-Execute 15.3 only: add Requirement-named static and scenario-based coverage for
-the default semantic presentation, explicit technical-details route, and concise
-non-`ok` preparation boundary. Do not record the separate human Skill-review
-verdict or begin closeout work.
+Execute 15.4 only: run the full required validation suite, then archive the
+Milestone 15 execution record, update the completed-plan index, and compact the
+active plan. Do not start a new milestone or perform push, merge, publication,
+or release work.

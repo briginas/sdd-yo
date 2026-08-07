@@ -488,6 +488,23 @@ test("REQ-3BF12AAD REQ-7AFE9904 exact application route validates selected patch
   assert.match(invalid.stderr, /invalid proposal apply result/u);
 });
 
+test("REQ-26234DC8 semantic SpecPatch presentation defaults to behavior and consequence", async () => {
+  const skill = await readFile(join(skillRoot, "SKILL.md"), "utf8");
+  const preparation = await readFile(join(skillRoot, "references/branch-preparation.md"), "utf8");
+
+  assert.match(skill, /one to three\s+short points describing the behavior that changes/u);
+  assert.match(
+    skill,
+    /Do not show patch content, paths, operations, diffs, hashes,\s+fingerprints, conflicts, or unchanged scope by default/u,
+  );
+  assert.match(skill, /Technical details\s+are available only on explicit request and do not authorize application/u);
+  assert.match(skill, /non-`ok` preparation or null patch.*required next decision concisely/su);
+  assert.match(preparation, /presenting it by default as follows/u);
+  assert.match(preparation, /Viewing them does not authorize\s+application/u);
+  assert.match(preparation, /On success, report only the concise behavior-and-consequence\s+result by default/u);
+  assert.doesNotMatch(preparation, /Before any write, show the exact SpecPatch/u);
+});
+
 test("REQ-12E19D70 REQ-F7CEE6D0 verification route accepts only compatible TestIndex JSON", async () => {
   const cli = await fakeCli();
   const verification = await readFile(join(skillRoot, "references/verification.md"), "utf8");
