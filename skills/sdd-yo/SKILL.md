@@ -117,12 +117,20 @@ semantic-model confirmation or authoring approval.
    explicit refs, and current ApprovalEvidence, run the wrapper's
    `proposal prepare` operation. A newly recorded approval qualifies as current
    input only after the recorder's exact compatible response; rejection stops.
-5. Present the exact ConflictReport status. Offer a SpecPatch only when the
-   unchanged compatible response has `status: ok` and a non-null exact patch.
-6. Apply that patch only after the user explicitly selects it, using the
-   wrapper's `proposal apply` operation. Never substitute, edit, combine, fuzz,
-   or force a patch, and report only the returned applied paths and result
-   fingerprint.
+5. For an `ok` preparation with a non-null exact patch, present one to three
+   short points describing the behavior that changes and its user-visible or
+   governance consequence, then ask whether to apply that prepared change.
+   Derive this summary only from the confirmed semantic model and validated
+   normative delta; if they do not support one clear description, ask for
+   clarification. Do not show patch content, paths, operations, diffs, hashes,
+   fingerprints, conflicts, or unchanged scope by default. Technical details
+   are available only on explicit request and do not authorize application.
+6. For a non-`ok` preparation or null patch, state the blocking outcome and
+   required next decision concisely; technical diagnostics remain opt-in.
+7. Apply an unchanged retained patch only after the user explicitly selects it,
+   using the wrapper's `proposal apply` operation. Never substitute, edit,
+   combine, fuzz, or force a patch. On success, present only the concise
+   behavior-and-consequence result by default; technical details remain opt-in.
 
 Stop on `blocked`, `review_required`, a null patch, malformed or incompatible
 JSON, changed inputs, or stale evidence. Preserve user work and begin any retry

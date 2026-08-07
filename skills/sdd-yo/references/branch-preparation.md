@@ -32,14 +32,26 @@ node scripts/check-cli-compatibility -- proposal prepare --package <path> --cand
 `--config <path>` may replace `--cwd <directory>`. Never add `--format` or
 `--output`.
 
-Present the exact status, diagnostics, ConflictReport refs, mechanical
-conflicts, semantic candidates, and input fingerprint. Preserve the CLI's
-distinction:
+Retain the exact status, diagnostics, ConflictReport, and SpecPatch internally.
+Preserve the CLI's distinction, while presenting it by default as follows:
 
-- `ok` with a non-null SpecPatch permits an application offer;
-- `review_required` or a null patch requires human resolution and recomputation;
-- `blocked` requires replacement or regenerated explicit inputs;
-- `error` is a technical failure, not a gate conclusion.
+- for `ok` with a non-null SpecPatch, derive one to three short points from the
+  confirmed semantic model and validated normative base-to-candidate delta;
+  state the behavior that changes and its user-visible or governance
+  consequence, then ask whether to apply the prepared change;
+- for `review_required` or a null patch, state that review or recomputation is
+  required and name the next decision concisely;
+- for `blocked`, state the blocking outcome and required replacement or
+  regeneration decision concisely;
+- for `error`, state that preparation could not complete and name the bounded
+  corrective decision without treating it as a gate conclusion.
+
+If the semantic model and validated delta do not support one clear description,
+ask for clarification rather than inventing intent. The default presentation
+does not expose patch content, paths, operations, diffs, hashes, fingerprints,
+conflicts, diagnostics, or unchanged-scope lists. On explicit request, present
+the retained technical details and state that viewing them does not authorize
+application.
 
 Do not rewrite a ConflictReport candidate as a Finding or claim that
 preparation completed semantic review. Never offer a patch copied from prose,
@@ -48,10 +60,13 @@ human output, an earlier response, or a response whose current status is not
 
 ## Explicit application stop
 
-Before any write, show the exact SpecPatch project, base and result tree
-fingerprints, and path-sorted create, replace, and delete operations. Ask the
-user to select this exact patch for application. Preparation approval alone is
-not patch-application authorization.
+Before any write, present only the prepared semantic behavior-and-consequence
+summary. Ask the user to select this exact patch for application without
+displaying its technical details by default. Preparation approval and viewing
+technical details do not authorize application.
+If the user explicitly asks for technical details, present the retained exact
+SpecPatch project, base and result tree fingerprints, and path-sorted create,
+replace, and delete operations, then repeat the separate application question.
 
 Only after that explicit selection, invoke the unchanged retained patch file:
 
@@ -60,9 +75,9 @@ node scripts/check-cli-compatibility -- proposal apply --patch <path> [--worktre
 ```
 
 Do not edit, combine, partially apply, fuzz, force, or retry the patch against
-changed inputs. On success, report only the exact `applied_paths` and
-`result_tree_fingerprint` returned by compatible JSON. On any other status,
-preserve user work and stop.
+changed inputs. On success, report only the concise behavior-and-consequence
+result by default. Give the exact `applied_paths` and `result_tree_fingerprint`
+only on explicit request. On any other status, preserve user work and stop.
 
 Application creates no authority for a branch, commit, push, ApprovalEvidence,
 test execution, QA decision, verification result, or merge-readiness check.

@@ -4,7 +4,7 @@
 
 - State: Milestones 0–14 complete; Milestone 15 active
 - Current phase: Govern the bounded semantic-confirmation behavior change
-- Current leaf: 15.2 — implement progressive disclosure
+- Current leaf: 15.3 — verify the user-facing boundary
 - Last updated: 2026-08-07
 
 ## Source-of-truth map
@@ -141,6 +141,10 @@ and patch artifacts are under ignored `.sdd/staging/milestone-15.1/`.
   confirmation or allowing partial, edited, fuzzy, forced, or stale patches.
 - Refresh the Skill payload manifest for every changed packaged Skill file.
 
+Completed 2026-08-07. The packaged Skill and branch-preparation reference now
+retain exact artifacts internally but present semantic behavior-and-consequence
+summaries by default; their payload-manifest hashes were refreshed.
+
 #### 15.3 — Verify the user-facing boundary
 
 - Add Requirement-named static checks that the default confirmation and
@@ -227,7 +231,7 @@ human authorization before implementation:
 
 ## Immediate next leaf
 
-Execute 15.2 only: update the packaged Skill's default pre-application and
-successful post-application presentation to satisfy `REQ-26234DC8`. Preserve
-the exact CLI artifacts and safety boundaries; do not begin eval or human-review
-work before the implementation slice is complete.
+Execute 15.3 only: add Requirement-named static and scenario-based coverage for
+the default semantic presentation, explicit technical-details route, and concise
+non-`ok` preparation boundary. Do not record the separate human Skill-review
+verdict or begin closeout work.
