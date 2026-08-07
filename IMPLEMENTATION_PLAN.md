@@ -18,7 +18,8 @@
   [`plans/completed/milestone-11-private-installation-and-onboarding.md`](plans/completed/milestone-11-private-installation-and-onboarding.md),
   [`plans/completed/milestone-12-explicit-human-approval-evidence-recording.md`](plans/completed/milestone-12-explicit-human-approval-evidence-recording.md),
   [`plans/completed/milestone-13-pre-id-semantic-model-confirmation.md`](plans/completed/milestone-13-pre-id-semantic-model-confirmation.md),
-  and [`plans/completed/milestone-14-remove-configured-evidence-issuer-allowlists.md`](plans/completed/milestone-14-remove-configured-evidence-issuer-allowlists.md)
+  [`plans/completed/milestone-14-remove-configured-evidence-issuer-allowlists.md`](plans/completed/milestone-14-remove-configured-evidence-issuer-allowlists.md),
+  and [`plans/completed/milestone-15-semantic-spec-patch-confirmation.md`](plans/completed/milestone-15-semantic-spec-patch-confirmation.md)
 - Historical bootstrap procedure:
   [`plans/completed/self-bootstrap-procedure.md`](plans/completed/self-bootstrap-procedure.md)
 
@@ -36,7 +37,7 @@ and the optional progressive-disclosure `sdd-yo` Agent Skill.
 
 ## Current state
 
-- Milestones 0–14 and the incremental self-bootstrap MVP are complete. Their
+- Milestones 0–15 and the incremental self-bootstrap MVP are complete. Their
   exact execution records are indexed under [`plans/completed/`](plans/README.md).
 - Milestone 13 added the explicit ID-free semantic-model checkpoint before
   new specification identities for `spec` and `spec-code`, while preserving
@@ -120,7 +121,5 @@ human authorization before implementation:
 
 ## Immediate next leaf
 
-Execute 15.4 only: run the full required validation suite, then archive the
-Milestone 15 execution record, update the completed-plan index, and compact the
-active plan. Do not start a new milestone or perform push, merge, publication,
-or release work.
+None. Select and define the next milestone through explicit human authorization
+before beginning further work.
