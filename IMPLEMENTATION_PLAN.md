@@ -4,7 +4,7 @@
 
 - State: Milestones 0–14 complete; Milestone 15 active
 - Current phase: Govern the bounded semantic-confirmation behavior change
-- Current leaf: 15.1 — prepare and approve the normal `spec-code` Change
+- Current leaf: 15.2 — implement progressive disclosure
 - Last updated: 2026-08-07
 
 ## Source-of-truth map
@@ -125,6 +125,10 @@ Any such ambiguity stops 15.1 for explicit human resolution.
 - Do not treat proposal validation, semantic-model confirmation, approval
   recording, or preparation as patch-application authorization.
 
+Completed 2026-08-07. The approved exact SpecPatch modified only
+`REQ-26234DC8`; retained ProposalPackage, ApprovalEvidence, preparation result,
+and patch artifacts are under ignored `.sdd/staging/milestone-15.1/`.
+
 #### 15.2 — Implement progressive disclosure
 
 - Update the main Skill workflow and its branch-preparation reference so the
@@ -223,8 +227,7 @@ human authorization before implementation:
 
 ## Immediate next leaf
 
-Execute 15.1 only: confirm the ID-free semantic model, then prepare the bounded
-normal `spec-code` candidate for `REQ-26234DC8`. Do not begin Skill edits,
-tests, or eval changes before the exact normative SpecPatch is separately
-approved and applied. Proposal validation does not imply ApprovalEvidence,
-patch application, later implementation, QA, review, or Git authorization.
+Execute 15.2 only: update the packaged Skill's default pre-application and
+successful post-application presentation to satisfy `REQ-26234DC8`. Preserve
+the exact CLI artifacts and safety boundaries; do not begin eval or human-review
+work before the implementation slice is complete.

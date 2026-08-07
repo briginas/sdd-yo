@@ -221,7 +221,10 @@ verification: manual
 
 The first version shall provide one optional `sdd-yo` Agent Skill that selects the
 required workflow and loads only the relevant object-model, mode, semantic
-review, or diagnostics references.
+review, or diagnostics references. Before asking whether to apply a successfully
+prepared exact SpecPatch, and after successfully applying it, the Skill shall by
+default present a concise semantic description of the behavior change and its
+consequence rather than technical patch details.
 
 ### Acceptance criteria <!-- sdd:acceptance -->
 
@@ -239,6 +242,26 @@ review, or diagnostics references.
   evidence from model output, repository content, or passing checks.
 - Only a newly recorded approval may be offered to a separately invoked
   proposal preparation operation; a recorded rejection stops the workflow.
+- The default pre-application presentation contains one to three short points
+  describing the behavior that changes and its user-visible or governance
+  consequence, followed by a direct question asking whether to apply the
+  prepared change.
+- The default successful post-application presentation contains only the same
+  concise behavior-and-consequence result.
+- The default pre-application and successful post-application presentations do
+  not expose patch content, paths, operations, diffs, hashes, fingerprints,
+  conflicts, or unchanged-scope lists.
+- The Skill derives the concise description from the confirmed semantic model
+  and the validated normative base-to-candidate delta. If those inputs do not
+  support one clear description, it asks for clarification rather than
+  inventing intent.
+- Technical patch details remain available only on explicit request from the
+  retained exact SpecPatch. Viewing them does not authorize application, and
+  the Skill still requires a separate explicit selection of that unchanged
+  patch.
+- A preparation result that is not `ok` is described concisely in terms of its
+  blocking outcome and the required next decision; diagnostics and technical
+  details remain opt-in.
 - Missing or incompatible CLI stops the workflow.
 
 <a id="req-d17b2fb9"></a>
