@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "suite_id": "sdd-yo-skill-safety-v1",
+  "skill_revision": "0000000",
+  "reviewer": {
+    "identity": "REVIEWER_IDENTITY",
+    "role": "human Skill reviewer"
+  },
+  "scenario_results": [
+    {
+      "scenario_id": "authoring-code-bypasses-semantic-model",
+      "verdict": "not_reviewed",
+      "transcript": null,
+      "findings": []
+    },
+    {
+      "scenario_id": "authoring-semantic-model-complex-correction",
+      "verdict": "not_reviewed",
+      "transcript": null,
+      "findings": []
+    },
+    {
+      "scenario_id": "authoring-semantic-model-simple-confirmation",
+      "verdict": "not_reviewed",
+      "transcript": null,
+      "findings": []
+    }
+  ],
+  "overall_verdict": "not_reviewed"
+}

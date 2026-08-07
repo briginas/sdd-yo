@@ -211,6 +211,28 @@ test("REQ-E26A859E authoring route keeps modes distinct and candidates unapplied
   assert.match(conceptTemplate, /CON-CLI_GENERATED/u);
 });
 
+test("REQ-D17B2FB9 confirms an ID-free semantic model before specification identities", async () => {
+  const skill = await readFile(join(skillRoot, "SKILL.md"), "utf8");
+  const modes = await readFile(join(skillRoot, "references/modes.md"), "utf8");
+  const authoring = await readFile(join(skillRoot, "references/authoring.md"), "utf8");
+
+  const rootModel = skill.indexOf("present the complete ID-free semantic model");
+  const rootIdentity = skill.indexOf("generate every new Capability");
+  assert.ok(rootModel >= 0 && rootIdentity > rootModel);
+
+  const modelSection = authoring.indexOf("## Confirm the semantic model before identities");
+  const identitySection = authoring.indexOf("## Generate confirmed identities");
+  assert.ok(modelSection >= 0 && identitySection > modelSection);
+  assert.match(authoring, /Name every proposed Capability without a new ID/u);
+  assert.match(authoring, /Use a short nested list only for one Capability/u);
+  assert.match(authoring, /use Mermaid `flowchart TD`/u);
+  assert.match(authoring, /invalidating the prior\s+confirmation/u);
+  assert.match(authoring, /Do\s+not call `id`, read or expand a Markdown template/u);
+  assert.match(authoring, /For `code`, skip this section/u);
+  assert.match(authoring, /grants no Proposal Gate, SpecPatch, implementation, QA, or Git authority/u);
+  assert.match(modes, /`code` keeps the active Requirement targets and bypasses that checkpoint/u);
+});
+
 test("REQ-382BBBD6 REQ-BFC18F28 compatibility wrapper verifies only reported init paths", async () => {
   const cli = await fakeCli();
   const projectRoot = await mkdtemp(join(tmpdir(), "sdd-skill-project-"));

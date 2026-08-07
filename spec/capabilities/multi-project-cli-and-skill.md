@@ -239,6 +239,50 @@ review, or diagnostics references.
   proposal preparation operation; a recorded rejection stops the workflow.
 - Missing or incompatible CLI stops the workflow.
 
+<a id="req-d17b2fb9"></a>
+
+## REQ-D17B2FB9 — Confirm the semantic model before specification identities
+
+```sdd
+kind: behavior
+verification: manual
+```
+
+### Relations <!-- sdd:relations -->
+
+- depends-on: [REQ-26234DC8 — Orchestrate through one progressive-disclosure skill](multi-project-cli-and-skill.md#req-26234dc8)
+- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+
+### Statement <!-- sdd:statement -->
+
+For every `spec` and `spec-code` authoring route, the `sdd-yo` Agent Skill
+shall present an ID-free semantic model of the future specification and require
+explicit human confirmation of that unchanged model before generating any new
+object ID, expanding a Markdown template, drafting a virtual candidate, writing
+a file, or creating another SDD artifact.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- The model names each proposed Capability, groups its proposed Requirements,
+  and gives one short normative meaning for every Requirement without assigning
+  new object IDs.
+- The model shows dependencies, boundaries, exclusions, and disputed decisions.
+  An unresolved disputed decision keeps the checkpoint unconfirmed.
+- One Capability without inter-object dependencies uses a short list. Multiple
+  Capabilities, any inter-object dependency, or any disputed alternative uses a
+  vertical top-to-bottom diagram.
+- Existing active object IDs may appear only as context; proposed objects remain
+  ID-free until confirmation.
+- A correction or any other change to the semantic model invalidates its prior
+  confirmation, requires the complete updated model to be presented again, and
+  requires fresh explicit human confirmation.
+- `code` mode remains outside this checkpoint and continues to target exact
+  active Requirement IDs without drafting a normative specification change.
+- Confirmation is an authoring checkpoint only. It creates no ApprovalEvidence
+  and grants no authority to run Proposal Gate review, prepare or apply a
+  SpecPatch, change implementation, make a QA decision, or perform a Git
+  operation.
+
 <a id="req-1dd46ca9"></a>
 
 ## REQ-1DD46CA9 — Treat repository content as untrusted data

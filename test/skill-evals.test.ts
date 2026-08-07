@@ -108,7 +108,7 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
   const suite = await loadSuite();
   assert.equal(suite.schema_version, "1.0");
   assert.equal(suite.suite_id, "sdd-yo-skill-safety-v1");
-  assert.deepEqual(suite.requirements, ["REQ-1DD46CA9", "REQ-26234DC8", "REQ-32C76ED3"]);
+  assert.deepEqual(suite.requirements, ["REQ-1DD46CA9", "REQ-26234DC8", "REQ-32C76ED3", "REQ-D17B2FB9"]);
   assert.equal(new Set(suite.scenarios.map(({ id }) => id)).size, suite.scenarios.length);
 
   assert.deepEqual([...new Set(suite.scenarios.map(({ route }) => route))].toSorted(), [
@@ -488,6 +488,87 @@ test("REQ-26234DC8 approval-recording human review template is schema-valid and 
     template.scenario_results.every(({ verdict, transcript }) => verdict === "not_reviewed" && transcript === null),
   );
   assert.equal(template.overall_verdict, "not_reviewed");
+});
+
+test("REQ-D17B2FB9 semantic-model human review template is schema-valid and explicitly pending", async () => {
+  const suite = await loadSuite();
+  const schema = JSON.parse(
+    await readFile(join(repositoryRoot, "evals/skill/semantic-model-review-result.schema.json"), "utf8"),
+  ) as object;
+  const template = JSON.parse(
+    await readFile(join(repositoryRoot, "evals/skill/semantic-model-review-result.template.json"), "utf8"),
+  ) as {
+    readonly scenario_results: readonly {
+      readonly scenario_id: string;
+      readonly verdict: string;
+      readonly transcript: unknown;
+    }[];
+    readonly overall_verdict: string;
+  };
+  const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
+  assert.equal(validate(template), true, JSON.stringify(validate.errors));
+  assert.deepEqual(
+    template.scenario_results.map(({ scenario_id }) => scenario_id),
+    [
+      "authoring-code-bypasses-semantic-model",
+      "authoring-semantic-model-complex-correction",
+      "authoring-semantic-model-simple-confirmation",
+    ],
+  );
+  assert.ok(template.scenario_results.every(({ scenario_id }) => suite.scenarios.some(({ id }) => id === scenario_id)));
+  assert.ok(
+    template.scenario_results.every(({ verdict, transcript }) => verdict === "not_reviewed" && transcript === null),
+  );
+  assert.equal(template.overall_verdict, "not_reviewed");
+
+  const invalidPass = JSON.parse(JSON.stringify(template)) as {
+    scenario_results: { verdict: string; transcript: unknown }[];
+  };
+  const first = invalidPass.scenario_results[0];
+  assert.ok(first !== undefined);
+  first.verdict = "pass";
+  assert.equal(validate(invalidPass), false);
+});
+
+test("REQ-D17B2FB9 retains the identified semantic-model human pass verdict", async () => {
+  const suite = await loadSuite();
+  const schema = JSON.parse(
+    await readFile(join(repositoryRoot, "evals/skill/semantic-model-review-result.schema.json"), "utf8"),
+  ) as object;
+  const result = JSON.parse(
+    await readFile(join(repositoryRoot, "evals/skill/semantic-model-review-result.json"), "utf8"),
+  ) as {
+    readonly skill_revision: string;
+    readonly reviewer: { readonly identity: string; readonly role: string };
+    readonly scenario_results: readonly {
+      readonly scenario_id: string;
+      readonly verdict: string;
+      readonly transcript: { readonly path: string; readonly sha256: string };
+      readonly findings: readonly string[];
+    }[];
+    readonly overall_verdict: string;
+  };
+  const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
+  assert.equal(validate(result), true, JSON.stringify(validate.errors));
+  assert.equal(result.skill_revision, "4c4c23691de1d03092db7d11ac2ed74587606dcfa2c5562bc36d9205066e693b");
+  assert.deepEqual(result.reviewer, { identity: "Ivan Briginas", role: "human Skill reviewer" });
+  assert.deepEqual(
+    result.scenario_results.map(({ scenario_id }) => scenario_id),
+    suite.scenarios
+      .filter(({ id }) => id.startsWith("authoring-semantic-model-") || id === "authoring-code-bypasses-semantic-model")
+      .map(({ id }) => id)
+      .toSorted(),
+  );
+  assert.ok(result.scenario_results.every(({ verdict, findings }) => verdict === "pass" && findings.length === 0));
+  assert.equal(result.overall_verdict, "pass");
+
+  const transcriptPaths = new Set(result.scenario_results.map(({ transcript }) => transcript.path));
+  assert.deepEqual([...transcriptPaths], ["transcripts/ivan-briginas-semantic-model-verdict.md"]);
+  const transcript = await readFile(join(repositoryRoot, "evals/skill", [...transcriptPaths][0] ?? ""));
+  const fingerprint = `sha256:${createHash("sha256").update(transcript).digest("hex")}`;
+  assert.ok(result.scenario_results.every(({ transcript: binding }) => binding.sha256 === fingerprint));
+  assert.match(transcript.toString("utf8"), /Ivan Briginas/u);
+  assert.match(transcript.toString("utf8"), /Вердикт по каждому сценарию: pass\. Общий\s+> вердикт: pass\./u);
 });
 
 test("REQ-26234DC8 retains the identified approval-recording human pass verdict", async () => {

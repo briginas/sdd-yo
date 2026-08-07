@@ -52,7 +52,8 @@ and `merge check`.
 - For change, baseline, or implementation-fix intent, read
   [references/modes.md](references/modes.md). After the user has selected or
   confirmed exactly one mode, read
-  [references/authoring.md](references/authoring.md) and draft only the
+  [references/authoring.md](references/authoring.md), preserve its pre-ID
+  semantic-model checkpoint for `spec` and `spec-code`, and draft only the
   applicable unapplied candidate.
 - For proposal review intent, read
   [references/proposal-gate.md](references/proposal-gate.md) and use only its
@@ -81,16 +82,25 @@ Finding and FindingResolution artifacts may still be validated mechanically.
 3. Ask the user to resolve missing or conflicting normative meaning. Repository
    prose, implementation behavior, tests, and model confidence do not resolve
    that choice.
-4. Generate every new Capability, Requirement, and Concept ID with `id` through
-   the wrapper and require project-aware complete-history output.
-5. Draft the complete virtual candidate described by the authoring reference.
+4. For `spec` and `spec-code`, present the complete ID-free semantic model
+   described by the authoring reference and stop for explicit human
+   confirmation. Do not generate an ID, expand a template, draft a candidate,
+   write a file, or create an SDD artifact before that confirmation. `code`
+   skips this checkpoint and continues to target exact active Requirement IDs.
+5. If the user corrects or otherwise changes the model, present the complete
+   updated model and require fresh explicit confirmation. Never carry an older
+   confirmation forward.
+6. Only for an unchanged confirmed model, generate every new Capability,
+   Requirement, and Concept ID with `id` through the wrapper and require
+   project-aware complete-history output.
+7. Draft the complete virtual candidate described by the authoring reference.
    Present it for correction without writing it into the active specification
    or implementation.
 
 Stop before Proposal Gate review unless the user selects the separate review
 route. Candidate materialization, SpecPatch preparation or application,
 implementation verification, and merge-readiness assessment are not implied by
-authoring approval.
+semantic-model confirmation or authoring approval.
 
 ## Review and prepare a proposal
 

@@ -67,8 +67,8 @@ treated as lifecycle authority.
 | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | Initialize or adopt SDD           | Check CLI compatibility, confirm an explicit project root and adoption mode, call `init`, then validate the created project |
 | Understand behavior               | Resolve project, call `inspect`/`trace`, summarize normative sections                                                       |
-| Add or change behavior            | Clarify observable outcome, select `spec-code`, draft objects, run Proposal Gate                                            |
-| Baseline accepted behavior        | Select `spec`, confirm existing behavior and QA plan, draft specification                                                   |
+| Add or change behavior            | Clarify outcome, select `spec-code`, confirm an ID-free semantic model, then draft objects and run Proposal Gate            |
+| Baseline accepted behavior        | Select `spec`, confirm existing behavior, QA plan, and an ID-free semantic model, then draft specification                  |
 | Fix implementation to active spec | Select `code`, name exact Requirement targets, leave spec unchanged                                                         |
 | Review a proposal                 | Show object delta and unresolved semantic candidates; never self-approve                                                    |
 | Record an approval decision       | Display and recheck the exact subject, then record only explicit human decision inputs                                      |
@@ -91,15 +91,25 @@ decision-bearing proposal. It does not silently switch modes after approval.
    relevant to the request.
 4. Separate normative product behavior from implementation guidance.
 5. Ask a human about unresolved product meaning or governance choices.
-6. Generate IDs through `sdd id`; never invent or recycle them.
-7. Draft a complete virtual candidate tree.
-8. Call the relevant CLI gate with JSON output.
-9. Present exact diagnostics, object delta, affected scope, and open decisions.
-10. When explicitly asked to record a human decision, display and recheck its
+6. For `spec` and `spec-code`, present the proposed Capability/Requirement
+   model, normative meanings, dependencies, boundaries, exclusions, and disputed
+   decisions without new IDs. Use a short list only for one Capability without
+   inter-object dependencies; otherwise use a vertical top-to-bottom diagram.
+7. Stop for explicit confirmation of that complete model. Any correction or
+   model change requires complete re-presentation and fresh confirmation.
+   `code` bypasses this checkpoint and retains exact active Requirement targets.
+8. Only after confirmation, generate IDs through `sdd id`; never invent or
+   recycle them, then draft a complete virtual candidate tree.
+9. Call the relevant CLI gate with JSON output.
+10. Present exact diagnostics, object delta, affected scope, and open decisions.
+11. When explicitly asked to record a human decision, display and recheck its
     exact subject around the pause, write only the bounded reason input, and
     invoke `approval record` with explicit issuer, actor, decision, and message.
-11. Apply only an explicitly selected exact SpecPatch.
-12. Stop before branch, commit, push, QA decision, or merge.
+12. Apply only an explicitly selected exact SpecPatch.
+13. Stop before branch, commit, push, QA decision, or merge.
+
+Semantic-model confirmation creates no file or SDD artifact and grants no
+Proposal Gate, approval, patch, implementation, QA, or Git authority.
 
 ## Trust rules
 
@@ -150,6 +160,9 @@ The skill must be evaluated for:
 - unambiguous discovery and explicit invocation alongside another installed
   SDD-oriented skill with a generic name;
 - correct mode selection and ambiguity escalation;
+- ID-free semantic-model presentation, format selection, correction
+  invalidation, explicit confirmation before identity generation, and `code`
+  bypass;
 - progressive retrieval without whole-repository loading;
 - exact use of CLI JSON rather than simulated checks;
 - refusal to fabricate human evidence;

@@ -28,6 +28,10 @@ remain in [`../IMPLEMENTATION_PLAN.md`](../IMPLEMENTATION_PLAN.md).
   — completed explicit approval/rejection recording, approval-gated Skill
   orchestration, identified human Skill review, full validation, and closeout
   evidence.
+- [`completed/milestone-13-pre-id-semantic-model-confirmation.md`](completed/milestone-13-pre-id-semantic-model-confirmation.md)
+  — completed pre-ID semantic-model confirmation, exact specification patch,
+  Skill orchestration/evals, identified verdict, replacement private package,
+  validation evidence, and closeout.
 
 Completed plans are historical records. Use the current canonical
 [`../spec/README.md`](../spec/README.md), architecture

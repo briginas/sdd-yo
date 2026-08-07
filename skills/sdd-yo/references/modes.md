@@ -39,6 +39,8 @@ change requires a new explicit confirmation.
 ## Handoff to authoring
 
 Record the selected mode, observable outcome, relevant active object IDs, and
-remaining non-normative implementation notes. Then load `authoring.md`. Do not
-run proposal validation, present object deltas or semantic candidates, seek or
-create approval, or prepare a patch in this route.
+remaining non-normative implementation notes. Then load `authoring.md`.
+`spec-code` and `spec` first require its ID-free semantic-model confirmation;
+`code` keeps the active Requirement targets and bypasses that checkpoint. Do
+not run proposal validation, present object deltas or semantic candidates, seek
+or create approval, or prepare a patch in this route.

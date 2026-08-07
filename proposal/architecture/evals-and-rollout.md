@@ -171,6 +171,13 @@ Use scripted scenarios and human review to measure:
   SDD-oriented skill with a generic name;
 - correct mode selection;
 - clarification on normative ambiguity;
+- short-list presentation for a simple ID-free semantic model and vertical
+  top-to-bottom presentation for cross-object dependencies or disputed
+  alternatives;
+- fresh explicit confirmation after every semantic-model correction, with no
+  `id`, template expansion, candidate, file, or SDD artifact before confirmation;
+- `code`-mode bypass and separation of semantic-model confirmation from Proposal
+  Gate, ApprovalEvidence, SpecPatch, implementation, QA, and Git authority;
 - progressive disclosure and context size;
 - exact CLI JSON use;
 - refusal to invent IDs, approval decisions, QA, test results, or resolutions;

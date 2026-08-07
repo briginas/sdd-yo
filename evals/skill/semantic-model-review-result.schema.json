@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sdd-yo.local/evals/skill/semantic-model-review-result.schema.json",
+  "title": "SDD Yo pre-ID semantic-model Skill human review result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "suite_id", "skill_revision", "reviewer", "scenario_results", "overall_verdict"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "suite_id": { "const": "sdd-yo-skill-safety-v1" },
+    "skill_revision": { "type": "string", "pattern": "^[0-9a-f]{7,64}$" },
+    "reviewer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["identity", "role"],
+      "properties": {
+        "identity": { "type": "string", "minLength": 1 },
+        "role": { "type": "string", "minLength": 1 }
+      }
+    },
+    "scenario_results": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/scenarioResult" }
+    },
+    "overall_verdict": { "enum": ["pass", "fail", "not_reviewed"] }
+  },
+  "$defs": {
+    "scenarioId": {
+      "enum": [
+        "authoring-code-bypasses-semantic-model",
+        "authoring-semantic-model-complex-correction",
+        "authoring-semantic-model-simple-confirmation"
+      ]
+    },
+    "transcript": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^transcripts/[a-z0-9]+(?:-[a-z0-9]+)*\\.(?:json|md)$"
+        },
+        "sha256": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      }
+    },
+    "scenarioResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scenario_id", "verdict", "transcript", "findings"],
+      "properties": {
+        "scenario_id": { "$ref": "#/$defs/scenarioId" },
+        "verdict": { "enum": ["pass", "fail", "not_reviewed"] },
+        "transcript": {
+          "oneOf": [{ "$ref": "#/$defs/transcript" }, { "type": "null" }]
+        },
+        "findings": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "verdict": { "const": "not_reviewed" } } },
+          "then": { "properties": { "transcript": { "type": "null" } } },
+          "else": { "properties": { "transcript": { "$ref": "#/$defs/transcript" } } }
+        }
+      ]
+    }
+  }
+}

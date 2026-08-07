@@ -2,7 +2,7 @@
 
 ## Status
 
-- State: Milestones 0–12 complete; no next milestone selected
+- State: Milestones 0–13 complete; no next milestone selected
 - Current phase: candidate selection
 - Current leaf: None selected
 - Last updated: 2026-08-07
@@ -16,8 +16,8 @@
   [`plans/completed/milestones-0-9.md`](plans/completed/milestones-0-9.md),
   [`plans/completed/milestone-10-self-bootstrap-retirement.md`](plans/completed/milestone-10-self-bootstrap-retirement.md),
   [`plans/completed/milestone-11-private-installation-and-onboarding.md`](plans/completed/milestone-11-private-installation-and-onboarding.md),
-  and
-  [`plans/completed/milestone-12-explicit-human-approval-evidence-recording.md`](plans/completed/milestone-12-explicit-human-approval-evidence-recording.md)
+  [`plans/completed/milestone-12-explicit-human-approval-evidence-recording.md`](plans/completed/milestone-12-explicit-human-approval-evidence-recording.md),
+  and [`plans/completed/milestone-13-pre-id-semantic-model-confirmation.md`](plans/completed/milestone-13-pre-id-semantic-model-confirmation.md)
 - Historical bootstrap procedure:
   [`plans/completed/self-bootstrap-procedure.md`](plans/completed/self-bootstrap-procedure.md)
 
@@ -35,8 +35,11 @@ and the optional progressive-disclosure `sdd-yo` Agent Skill.
 
 ## Current state
 
-- Milestones 0–12 and the incremental self-bootstrap MVP are complete. Their
+- Milestones 0–13 and the incremental self-bootstrap MVP are complete. Their
   exact execution records are indexed under [`plans/completed/`](plans/README.md).
+- Milestone 13 added the explicit ID-free semantic-model checkpoint before
+  new specification identities for `spec` and `spec-code`, while preserving
+  the `code` bypass and downstream authority boundaries.
 - The deterministic version 1 library, CLI, artifact schemas, proposal and exact
   patch workflow, evidence composition, findings validation, merge readiness,
   enforced governed-scope integration, and explicit approval-gated Skill route

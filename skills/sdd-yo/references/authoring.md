@@ -14,9 +14,37 @@ mode for an existing, validated SDD Project.
    definition, identity, states, and permanent relations from explanatory
    purpose, rationale, examples, and implementation guidance.
 
-## Generate identities
+## Confirm the semantic model before identities
 
-Generate all new object IDs before drafting and only through the compatibility
+For `spec-code` and `spec`, present one complete human-readable model of the
+future specification before generating any new object identity:
+
+1. Name every proposed Capability without a new ID. Under each Capability, name
+   its proposed Requirements and give one short normative meaning for each.
+2. Show dependencies, boundaries, exclusions, and disputed decisions. An
+   unresolved disputed decision keeps the checkpoint unconfirmed.
+3. Use a short nested list only for one Capability without inter-object
+   dependencies or disputed alternatives. Otherwise use a vertical top-to-bottom
+   diagram; use Mermaid `flowchart TD` when the host renders Mermaid and a
+   vertical text diagram otherwise.
+4. Existing active object IDs may appear only as context. Do not assign an ID to
+   any proposed Capability, Requirement, or Concept in this model.
+5. Ask for explicit confirmation of the complete displayed model and stop. Do
+   not call `id`, read or expand a Markdown template, draft or materialize a
+   candidate, write a file, or create any SDD artifact before confirmation.
+6. Treat every correction or other model change as invalidating the prior
+   confirmation. Present the complete updated model and require fresh explicit
+   confirmation before continuing.
+
+This confirmation is an authoring checkpoint only. It is not ApprovalEvidence
+and grants no Proposal Gate, SpecPatch, implementation, QA, or Git authority.
+For `code`, skip this section and proceed with the exact active Requirement IDs
+selected in `modes.md` without drafting a normative specification change.
+
+## Generate confirmed identities
+
+Only after explicit confirmation of the unchanged `spec-code` or `spec` model,
+generate all new object IDs before drafting and only through the compatibility
 wrapper with the selected project:
 
 ```text
@@ -29,7 +57,7 @@ node scripts/check-cli-compatibility -- id concept --count <n> --cwd <directory>
 only when the unchanged version 1 response has `status: ok`, the selected
 project ID, unique correctly prefixed candidates, and `history.status:
 complete` with a resolved ref. Never invent, recycle, repair, or use a
-projectless unchecked ID.
+projectless unchecked ID. `code` generates no specification object IDs.
 
 ## Draft by mode
 
