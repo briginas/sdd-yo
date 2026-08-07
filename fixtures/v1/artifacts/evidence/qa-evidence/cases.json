@@ -36,9 +36,6 @@
           "affected_scope_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
         }
       }
-    ],
-    "allowed_issuers": [
-      "qa"
     ]
   },
   "cases": [

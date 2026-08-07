@@ -286,7 +286,6 @@ export async function runMergeGate(input: {
     integration_ref: integrationRef,
     config_fingerprint: prepared.report.config_fingerprint,
     current_adapter_fingerprints: input.current_adapter_fingerprints,
-    allowed_issuers: new Set(input.project.configuration.evidence.allowed_issuers),
     base_graph: currentBaseGraph,
     head_graph: currentHeadGraph,
     code_targets: packageValue.code_targets.map((target) => target.requirement_id),
@@ -333,7 +332,6 @@ export async function runMergeGate(input: {
     }
     governanceAssessment = assessGovernanceEvidence({
       project_id: input.project.configuration.project_id,
-      allowed_issuers: new Set(input.project.configuration.evidence.allowed_issuers),
       config_fingerprint: prepared.report.config_fingerprint,
       project_scope_fingerprint: scopeFingerprint,
       from_adoption_mode: input.adoption_transition.from,

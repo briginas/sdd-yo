@@ -197,7 +197,7 @@ unreadable configuration.
 
 <a id="req-220945c2"></a>
 
-## REQ-220945C2 — Require current authorized human decisions
+## REQ-220945C2 — Require current human decisions
 
 ```sdd
 kind: constraint
@@ -211,11 +211,12 @@ verification: manual
 ### Statement <!-- sdd:statement -->
 
 Merge Gate shall require current approval, QA, governance, and finding
-resolution evidence applicable to the Change and configured policy.
+resolution evidence applicable to the Change.
 
 ### Acceptance criteria <!-- sdd:acceptance -->
 
-- The CLI validates issuer names and subject fingerprints.
+- The CLI validates issuer syntax and subject fingerprints without treating
+  issuer text as authentication or authorization.
 - Authentication and organizational authorization of actors remain external.
 - Contradictory evidence prevents `PASS`.
 

@@ -166,7 +166,6 @@ function assess(
     findings: input.findings ?? [],
     resolutions: input.resolutions ?? [],
     human_reviews: input.human_reviews ?? [],
-    allowed_issuers: new Set(["architecture-review"]),
     model_analysis_performed: input.model_analysis_performed ?? true,
   });
 }

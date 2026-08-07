@@ -104,11 +104,6 @@ async function fixture(): Promise<Fixture> {
   assert.equal((await execute(["init", "--format", "json"], root)).exitCode, 0);
   await writeFile(join(root, "spec/README.md"), indexSource);
   await writeFile(join(root, "spec/capabilities/delivery.md"), capabilitySource);
-  const configPath = join(root, ".sdd/config.yaml");
-  await writeFile(
-    configPath,
-    (await readFile(configPath, "utf8")).replace("allowed_issuers: []", 'allowed_issuers: ["product-review"]'),
-  );
   await writeFile(join(root, ".gitignore"), "/.sdd/staging/\n");
   await mkdir(join(root, ".sdd/staging"), { recursive: true });
   await writeFile(join(root, ".sdd/staging/reason.txt"), "I explicitly approve.\nKeep this line.\n");
@@ -165,12 +160,11 @@ test("REQ-32C76ED3 REQ-F7D39246 pure ApprovalEvidence construction preserves the
   const evidence = createApprovalEvidence({
     projectId: value.projectId,
     package: value.packageValue,
-    allowedIssuers: new Set(["product-review"]),
     issuer: "product-review",
     actor: "Ivan Briginas",
     decision: "approved",
     reason: " exact message \n",
-    producer: { name: "sdd", version: "0.1.1" },
+    producer: { name: "sdd", version: "0.2.0" },
   });
   const bytes = serializeApprovalEvidence(evidence);
   assert.equal(new TextDecoder().decode(bytes), `${JSON.stringify(evidence)}\n`);
@@ -210,14 +204,14 @@ test("REQ-32C76ED3 REQ-F7D39246 records approved and rejected decisions with exa
     });
     const evidence = JSON.parse(await readFile(join(value.root, target), "utf8"));
     assert.equal(evidence.project_id, value.projectId);
-    assert.deepEqual(evidence.producer, { name: "sdd", version: "0.1.1" });
+    assert.deepEqual(evidence.producer, { name: "sdd", version: "0.2.0" });
     assert.equal(evidence.actor, "Ivan Briginas");
     assert.equal(evidence.reason, "I explicitly approve.\nKeep this line.\n");
     assert.equal("created_at" in evidence, false);
   }
 });
 
-test("REQ-32C76ED3 REQ-7341DBB7 REQ-AFD65A03 blocks package candidate drift, project mismatch, and unknown issuers", async () => {
+test("REQ-32C76ED3 REQ-7341DBB7 REQ-AFD65A03 blocks drift and mismatch while accepting issuer provenance", async () => {
   const drift = await fixture();
   await writeFile(
     join(drift.candidate, "spec/capabilities/delivery.md"),
@@ -244,8 +238,9 @@ test("REQ-32C76ED3 REQ-7341DBB7 REQ-AFD65A03 blocks package candidate drift, pro
     ),
     issuer.root,
   );
-  assert.equal(unknown.exitCode, 1);
-  assert.equal(unknown.value.diagnostics[0].code, "SDD_APPROVAL_ISSUER_UNCONFIGURED");
+  assert.equal(unknown.exitCode, 0, JSON.stringify(unknown.value));
+  const recorded = JSON.parse(await readFile(join(issuer.root, ".sdd/staging/approval.json"), "utf8"));
+  assert.equal(recorded.issuer, "repository-self-review");
 });
 
 test("REQ-32C76ED3 rejects malformed and oversized inputs without evidence", async () => {

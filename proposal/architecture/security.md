@@ -108,15 +108,16 @@ ID, path, status, and size and computes Requirement mappings itself.
 
 ### Evidence forgery or privilege confusion
 
-The CLI validates artifact schemas, configured issuer names, allowed decision
-types, and exact subjects. It does not claim issuer authentication. The
-invoking organization verifies signatures or authenticated provenance and
-actor authorization before passing evidence as trusted input.
+The CLI validates artifact schemas, issuer syntax, allowed decision types, and
+exact subjects. Issuer text is untrusted provenance and does not authenticate
+or authorize an actor. The invoking organization verifies signatures or
+authenticated provenance and actor authorization before passing evidence as
+trusted input.
 
-Contradictory evidence prevents `PASS`. A repository file cannot declare
-itself an authorized issuer merely by adding its own name to an artifact.
-Changes to issuer or adapter trust configuration produce a structural
-trust-review finding and invalidate dependent evidence.
+Contradictory evidence prevents `PASS`. A repository file cannot authenticate
+or authorize an actor merely by naming an issuer in an artifact. Changes to
+adapter trust configuration produce a structural trust-review finding and
+invalidate dependent evidence.
 
 ### Model overreach and data exfiltration
 
@@ -162,7 +163,7 @@ keeps those immutable values outside assessed Git refs, materializes exact
 bytes only into an ignored project-local staging root for CLI validation, and
 exports deterministic reports before cleanup. The external store is not
 trusted merely because it retained a file: every import still requires the
-selected project, configured issuer, exact subject, bounded regular-file, and
+selected project, valid issuer syntax, exact subject, bounded regular-file, and
 path-containment checks. Ref movement invalidates dependent evidence rather
 than authorizing ref rollback or artifact rewriting.
 

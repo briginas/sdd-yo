@@ -198,8 +198,7 @@
         "git.default_target_ref",
         "ids.suffix_length",
         "ids.alphabet",
-        "tests.adapters",
-        "evidence.allowed_issuers"
+        "tests.adapters"
       ],
       "optional_provenance_profile": "none",
       "ordering_profile": "deterministic-json",
@@ -1936,7 +1935,7 @@
         "current-evidence-control",
         "replayed-evidence-new-subject",
         "evidence-wrong-project-context",
-        "evidence-unconfigured-issuer",
+        "evidence-untrusted-issuer-provenance",
         "evidence-artifact-role-confusion",
         "contradictory-cross-issuer-evidence",
         "prompt-injection-spec-requirement",

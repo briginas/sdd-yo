@@ -24,8 +24,8 @@ if (command === "--version") {
       project_id: null,
       status: "ok",
       result: {
-        package: { name: "sdd-yo", version: "0.1.1" },
-        cli: { name: "sdd", version: "0.1.1" },
+        package: { name: "sdd-yo", version: "0.2.0" },
+        cli: { name: "sdd", version: "0.2.0" },
         json_schema: { version: "1.0", compatible_major: 1 },
         skill: { name: "sdd-yo", protocol_version: "1.0", compatible_major: 1 },
       },

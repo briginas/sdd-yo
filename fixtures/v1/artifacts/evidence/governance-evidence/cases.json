@@ -37,9 +37,6 @@
           "to_adoption_mode": "incremental"
         }
       }
-    ],
-    "allowed_issuers": [
-      "governance"
     ]
   },
   "cases": [

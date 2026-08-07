@@ -39,7 +39,7 @@
       "files": [
         {
           "path": "project-a/.sdd/config.yaml",
-          "content": "schema_version: 1\nproject_id: SDD-A1000001\nspec:\n  root: spec\n  entrypoint: spec/README.md\nadoption:\n  mode: incremental\ngit:\n  default_target_ref: main\nids:\n  suffix_length: 8\n  alphabet: hex-uppercase\ntests:\n  adapters: []\nevidence:\n  allowed_issuers: []\n"
+          "content": "schema_version: 1\nproject_id: SDD-A1000001\nspec:\n  root: spec\n  entrypoint: spec/README.md\nadoption:\n  mode: incremental\ngit:\n  default_target_ref: main\nids:\n  suffix_length: 8\n  alphabet: hex-uppercase\ntests:\n  adapters: []\n"
         },
         {
           "path": "project-a/spec/README.md",
@@ -63,7 +63,7 @@
         },
         {
           "path": "project-b/.sdd/config.yaml",
-          "content": "schema_version: 1\nproject_id: SDD-B1000001\nspec:\n  root: spec\n  entrypoint: spec/README.md\nadoption:\n  mode: incremental\ngit:\n  default_target_ref: main\nids:\n  suffix_length: 8\n  alphabet: hex-uppercase\ntests:\n  adapters: []\nevidence:\n  allowed_issuers:\n    - project-b-qa\n"
+          "content": "schema_version: 1\nproject_id: SDD-B1000001\nspec:\n  root: spec\n  entrypoint: spec/README.md\nadoption:\n  mode: incremental\ngit:\n  default_target_ref: main\nids:\n  suffix_length: 8\n  alphabet: hex-uppercase\ntests:\n  adapters: []\n"
         },
         {
           "path": "project-b/spec/README.md",
@@ -84,11 +84,11 @@
       "files": [
         {
           "path": ".sdd/config.yaml",
-          "content": "schema_version: 1\nproject_id: SDD-C1000001\nspec:\n  root: spec\n  entrypoint: spec/README.md\nadoption:\n  mode: incremental\ngit:\n  default_target_ref: main\nids:\n  suffix_length: 8\n  alphabet: hex-uppercase\ntests:\n  adapters:\n    - id: unit\n      type: command\n      protocol: jsonl-v1\n      discover:\n        argv: [\"node\", \"tools/discover-v2.mjs\"]\n      timeout_ms: 120000\n      max_output_bytes: 16777216\nevidence:\n  allowed_issuers: []\n"
+          "content": "schema_version: 1\nproject_id: SDD-C1000001\nspec:\n  root: spec\n  entrypoint: spec/README.md\nadoption:\n  mode: incremental\ngit:\n  default_target_ref: main\nids:\n  suffix_length: 8\n  alphabet: hex-uppercase\ntests:\n  adapters:\n    - id: unit\n      type: command\n      protocol: jsonl-v1\n      discover:\n        argv: [\"node\", \"tools/discover-v2.mjs\"]\n      timeout_ms: 120000\n      max_output_bytes: 16777216\n"
         },
         {
           "path": "review-input/base-config.yaml",
-          "content": "schema_version: 1\nproject_id: SDD-C1000001\nspec:\n  root: spec\n  entrypoint: spec/README.md\nadoption:\n  mode: incremental\ngit:\n  default_target_ref: main\nids:\n  suffix_length: 8\n  alphabet: hex-uppercase\ntests:\n  adapters:\n    - id: unit\n      type: command\n      protocol: jsonl-v1\n      discover:\n        argv: [\"node\", \"tools/discover-v1.mjs\"]\n      timeout_ms: 120000\n      max_output_bytes: 16777216\nevidence:\n  allowed_issuers: []\n"
+          "content": "schema_version: 1\nproject_id: SDD-C1000001\nspec:\n  root: spec\n  entrypoint: spec/README.md\nadoption:\n  mode: incremental\ngit:\n  default_target_ref: main\nids:\n  suffix_length: 8\n  alphabet: hex-uppercase\ntests:\n  adapters:\n    - id: unit\n      type: command\n      protocol: jsonl-v1\n      discover:\n        argv: [\"node\", \"tools/discover-v1.mjs\"]\n      timeout_ms: 120000\n      max_output_bytes: 16777216\n"
         },
         {
           "path": "spec/README.md",

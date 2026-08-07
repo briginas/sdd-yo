@@ -247,7 +247,7 @@ Performs mechanical three-way analysis and emits a ConflictReport plus an exact
 or CandidateTreeManifest supplied again and revalidated against the package
 candidate-tree and object-delta fingerprints; `H` is `--branch-head`; and `M`
 is `--integration-ref`. It reads refs and candidate state but does not write
-them. ApprovalEvidence must name the exact project, configured issuer, approved
+them. ApprovalEvidence must name the exact project, issuer provenance, approved
 mode, base object ID, and semantic and structural delta fingerprints. Missing
 approval or reviewable preparation drift withholds SpecPatch and returns
 `review_required`; stale, negative, contradictory, or definite blocker state

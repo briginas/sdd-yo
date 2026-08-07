@@ -243,7 +243,7 @@ again exited 0 and produced byte-identical 1,139-byte JSON responses. An
 additional self-contained run from the SDD Yo root with explicit
 `--cwd /Users/dev.briginas/dev/yo` produced the same ProposalPackage subject.
 Strict project-scoped import and approval assessment returned `current` with no
-issues for the exact project, configured issuer, `spec` mode, base commit, and
+issues for the exact project, issuer provenance, `spec` mode, base commit, and
 semantic and structural delta fingerprints.
 
 This decision approves only the baseline specification of existing behavior.
@@ -312,7 +312,7 @@ from the configured `local-qa` issuer is recorded as
 - affected scope:
   `sha256:0ba8c31e9565ae587084aaeefa776e9ba955eecd1e32ef39e6f6978d2b4ed4bc`.
 
-Strict artifact import and evidence assessment accepted the configured issuer,
+Strict artifact import and evidence assessment accepted the issuer provenance,
 actor, decision, exact project and subjects, the Capability decision, and the
 empty manual-Requirement list. Combined with the retained 7.1g evidence, the
 assessment satisfied test coverage and execution for all five automated

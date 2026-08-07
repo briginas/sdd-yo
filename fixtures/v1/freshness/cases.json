@@ -53,7 +53,7 @@
       "spec": "Requires current approval for an approved non-empty semantic delta and current baseline QA.",
       "code": "Requires empty semantic and structural specification deltas and current target Requirement fingerprints."
     },
-    "authentication_boundary": "The CLI validates configured issuer names and subject fingerprints. Actor authentication and organizational authorization remain external and are not inferred by this oracle.",
+    "authentication_boundary": "The CLI validates issuer syntax and subject fingerprints. Issuer text is untrusted provenance; actor authentication and organizational authorization remain external and are not inferred by this oracle.",
     "schema_fixture_boundary": "Cases assume artifacts already passed their JSON Schema. Unknown fields, malformed values, wrong projects, wrong artifact types, and missing schema fields remain in fixtures/v1/artifacts/cases.json."
   },
   "cases": [

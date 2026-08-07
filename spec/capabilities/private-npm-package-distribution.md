@@ -36,7 +36,7 @@ publication, a source checkout, or manual dependency wiring.
 ### Acceptance criteria <!-- sdd:acceptance -->
 
 - The source and packed manifests retain package name `sdd-yo`, package version
-  `0.1.1`, `"private": true`, ESM module type, the `sdd` executable mapping,
+  `0.2.0`, `"private": true`, ESM module type, the `sdd` executable mapping,
   library export and declaration mappings, and Node.js engine baseline
   `>=22.18.0`.
 - `npm pack` creates exactly one local tarball and performs no npm registry

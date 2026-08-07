@@ -38,9 +38,6 @@
           "structural_delta_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
         }
       }
-    ],
-    "allowed_issuers": [
-      "product-review"
     ]
   },
   "cases": [

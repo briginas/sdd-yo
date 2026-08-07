@@ -47,7 +47,7 @@ adoption: { mode: incremental }
 git: { default_target_ref: main }
 ids: { suffix_length: 8, alphabet: hex-uppercase }
 tests:
-${configAdapters}evidence: { allowed_issuers: [] }
+${configAdapters}
 `,
   );
   await executeFile("git", ["init", "--quiet"], { cwd: root });

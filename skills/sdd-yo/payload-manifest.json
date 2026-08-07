@@ -3,7 +3,7 @@
   "artifact_type": "sdd_yo_skill_payload_manifest",
   "package": {
     "name": "sdd-yo",
-    "version": "0.1.1"
+    "version": "0.2.0"
   },
   "skill": {
     "name": "sdd-yo",
@@ -21,7 +21,7 @@
     },
     {
       "path": "references/approval.md",
-      "sha256": "sha256:c35f2702aa1b126a85a4a34ab5de854e5f914dddc36a533223b326e3021561dd"
+      "sha256": "sha256:715345a15590d54225999d8860d00a94791eed475450dd332f93c58faa9917de"
     },
     {
       "path": "references/authoring.md",

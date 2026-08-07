@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
 import { dirname, join, relative, resolve, sep } from "node:path";
 
+import { parseHistoricalProjectLocator } from "../config/parse-historical-project.ts";
+import type { HistoricalProjectLocator } from "../config/parse-historical-project.ts";
 import { parseProjectConfiguration } from "../config/parse-config.ts";
 import type { ProjectConfiguration, ResolvedProject } from "../config/types.ts";
 import type { Fingerprint, GitObjectId, ProjectId, ProjectPath } from "../contracts/identifiers.ts";
@@ -148,6 +150,18 @@ function sameProjectConfiguration(left: ProjectConfiguration, right: ProjectConf
   );
 }
 
+function sameHistoricalProject(
+  historical: HistoricalProjectLocator | undefined,
+  current: ProjectConfiguration,
+): historical is HistoricalProjectLocator {
+  return (
+    historical !== undefined &&
+    historical.projectId === current.project_id &&
+    historical.specRoot === current.spec.root &&
+    historical.entrypoint === current.spec.entrypoint
+  );
+}
+
 function repositoryProjectPrefix(configPath: ProjectPath): string {
   const value = dirname(dirname(configPath));
   return value === "." ? "" : value;
@@ -169,15 +183,14 @@ export async function loadBaseSpecificationTree(
   const configs = entries.filter(
     (entry) => entry.kind === "file" && (entry.path === ".sdd/config.yaml" || entry.path.endsWith("/.sdd/config.yaml")),
   );
-  const matches: { config: ProjectConfiguration; prefix: string }[] = [];
+  const matches: { specRoot: ProjectPath; prefix: string }[] = [];
   for (const entry of configs) {
-    const parsed = parseProjectConfiguration(await reader.readBlob(entry.objectId), entry.path);
-    if (!parsed.ok) continue;
-    if (parsed.value.project_id === selected.configuration.project_id) {
-      matches.push({ config: parsed.value, prefix: repositoryProjectPrefix(entry.path) });
+    const parsed = parseHistoricalProjectLocator(await reader.readBlob(entry.objectId));
+    if (sameHistoricalProject(parsed, selected.configuration)) {
+      matches.push({ specRoot: parsed.specRoot, prefix: repositoryProjectPrefix(entry.path) });
     }
   }
-  if (matches.length !== 1 || !sameProjectConfiguration(matches[0]!.config, selected.configuration)) {
+  if (matches.length !== 1) {
     throw new ProposalInputError(
       "SDD_PROPOSAL_BASE_PROJECT_MISMATCH",
       "The selected base does not contain the same SDD Project configuration.",
@@ -185,7 +198,7 @@ export async function loadBaseSpecificationTree(
     );
   }
   const match = matches[0]!;
-  const root = repositoryPath(match.prefix, match.config.spec.root);
+  const root = repositoryPath(match.prefix, match.specRoot);
   const files: SpecificationTreeFile[] = [];
   for (const entry of entries) {
     if (entry.path !== root && !entry.path.startsWith(`${root}/`)) continue;
@@ -202,7 +215,7 @@ export async function loadBaseSpecificationTree(
     const bytes = await reader.readBlob(entry.objectId);
     files.push({ path: local, sha256: hash(bytes), content_utf8: decodeUtf8(bytes) });
   }
-  return buildSpecificationTree(files, match.config);
+  return buildSpecificationTree(files, selected.configuration);
 }
 
 async function walkDirectory(

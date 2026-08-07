@@ -271,7 +271,7 @@ declared current refs and apply normal freshness checks.
 7. emit a new exact SpecPatch whose before hashes match files in `M`.
 
 The Branch Preparation Gate composes mechanical preparation with explicit
-ApprovalEvidence. Approval binds the exact project, configured issuer, mode,
+ApprovalEvidence. Approval binds the exact project, issuer provenance, mode,
 base object ID, and canonical semantic and structural object-delta
 fingerprints. Independent integration additions do not invalidate approval.
 

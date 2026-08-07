@@ -32,6 +32,10 @@ remain in [`../IMPLEMENTATION_PLAN.md`](../IMPLEMENTATION_PLAN.md).
   — completed pre-ID semantic-model confirmation, exact specification patch,
   Skill orchestration/evals, identified verdict, replacement private package,
   validation evidence, and closeout.
+- [`completed/milestone-14-remove-configured-evidence-issuer-allowlists.md`](completed/milestone-14-remove-configured-evidence-issuer-allowlists.md)
+  — completed issuer-policy removal, exact approved specification patch,
+  configuration break, private package version update, validation evidence,
+  and closeout.
 
 Completed plans are historical records. Use the current canonical
 [`../spec/README.md`](../spec/README.md), architecture

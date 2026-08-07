@@ -237,7 +237,6 @@ function assess(
     current_adapter_fingerprints: overrides.current_adapter_fingerprints ?? {
       unit: value.input.adapterFingerprint,
     },
-    allowed_issuers: new Set(["ci", "qa"]),
     graph: value.graph,
     scope: value.scope,
     test_index: value.index,
@@ -363,7 +362,6 @@ function assessApproval(evidence: readonly ApprovalEvidence[]) {
   const input = values();
   return assessApprovalEvidence({
     project_id: input.projectId,
-    allowed_issuers: new Set(["product-review"]),
     mode: "spec-code",
     base_ref: input.integrationRef,
     semantic_delta_fingerprint: input.adapterFingerprint,
@@ -394,7 +392,6 @@ function assessGovernance(evidence: readonly GovernanceEvidence[]) {
   const input = values();
   return assessGovernanceEvidence({
     project_id: input.projectId,
-    allowed_issuers: new Set(["governance"]),
     config_fingerprint: input.configFingerprint,
     project_scope_fingerprint: input.scopeFingerprint,
     from_adoption_mode: "incremental",
@@ -483,7 +480,10 @@ test("REQ-7341DBB7 REQ-AFD65A03 REQ-E85A06C3 assesses exact current ApprovalEvid
   );
   assert.equal(assessApproval([{ ...current, decision: "rejected" }]).state, "negative");
   assert.equal(assessApproval([current, { ...current, decision: "rejected" }]).state, "contradictory");
-  assert.equal(assessApproval([{ ...current, issuer: "unknown" }]).state, "stale");
+  assert.deepEqual(assessApproval([{ ...current, issuer: "repository-self-review" }]), {
+    state: "current",
+    issues: [],
+  });
 });
 
 test("REQ-E85A06C3 REQ-220945C2 assesses exact governance transitions and decisions", () => {

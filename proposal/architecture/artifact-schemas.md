@@ -270,10 +270,10 @@ Every operation is validated before any write. The final tree must equal
 }
 ```
 
-The CLI validates schema, configured issuer name, decision, mode, and subject.
-Issuer authentication, signature verification, actor authorization, and
-organizational policy remain external. Negative and contradictory decisions
-prevent `PASS`.
+The CLI validates schema, issuer syntax, decision, mode, and subject. Issuer
+text is untrusted provenance. Authentication, signature verification, actor
+authorization, and organizational policy remain external. Negative and
+contradictory decisions prevent `PASS`.
 
 ## TestIndex
 
@@ -368,7 +368,7 @@ explicit artifact byte, array-item, string-byte, and nesting-depth limits.
 File imports resolve real paths, accept only regular files inside the selected
 project, and reject symlink escape.
 
-Evidence assessment accepts only configured issuer names and exact current
+Evidence assessment accepts only valid issuer syntax and exact current
 subjects. Test execution binds project, head, configuration, and the canonical
 TestIndex fingerprint. QA binds project, head, integration ref, and the
 affected-scope fingerprint. The TestIndex itself must match the project, head,

@@ -29,8 +29,8 @@ if (command === "--version") {
   const identity = {
     schema_version: "1.0", command: "version", project_id: null, status: "ok",
     result: {
-      package: { name: "sdd-yo", version: mode === "identity-version-mismatch" ? "9.0.0" : "0.1.1" },
-      cli: { name: "sdd", version: mode === "identity-version-mismatch" ? "9.0.0" : "0.1.1" },
+      package: { name: "sdd-yo", version: mode === "identity-version-mismatch" ? "9.0.0" : "0.2.0" },
+      cli: { name: "sdd", version: mode === "identity-version-mismatch" ? "9.0.0" : "0.2.0" },
       json_schema: { version: mode === "identity-incompatible" ? "2.0" : "1.0", compatible_major: mode === "identity-incompatible" ? 2 : 1 },
       skill: { name: "sdd-yo", protocol_version: "1.0", compatible_major: 1 },
     }, diagnostics: [],

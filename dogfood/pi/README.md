@@ -456,7 +456,7 @@ again exited 0 and produced byte-identical 1,079-byte JSON responses. They
 retained the exact `SDD-B6FCE07B` project, `spec` mode, base commit
 `8ce561aacd3ea0c7a098b923dad07faec3a0db09`, and semantic and structural delta
 fingerprints recorded in 7.2e. Strict project-scoped import and approval
-assessment returned `current` with no issues for the configured issuer and the
+assessment returned `current` with no issues for the issuer provenance and the
 exact project, mode, base commit, and delta subjects.
 
 This decision approves only the baseline specification of existing behavior. It

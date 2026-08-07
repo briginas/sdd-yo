@@ -32,7 +32,6 @@ function requiredBoundedText(value: unknown, field: "issuer" | "actor" | "reason
 export function createApprovalEvidence(input: {
   readonly projectId: ProjectId;
   readonly package: ProposalPackage;
-  readonly allowedIssuers: ReadonlySet<string>;
   readonly issuer: unknown;
   readonly actor: unknown;
   readonly decision: unknown;
@@ -42,11 +41,6 @@ export function createApprovalEvidence(input: {
   requiredBoundedText(input.issuer, "issuer");
   requiredBoundedText(input.actor, "actor");
   requiredBoundedText(input.reason, "reason");
-  if (!input.allowedIssuers.has(input.issuer))
-    throw new ApprovalEvidenceRecordError(
-      "SDD_APPROVAL_ISSUER_UNCONFIGURED",
-      "The approval issuer is not configured for the selected project.",
-    );
   if (input.decision !== "approved" && input.decision !== "rejected")
     throw new ApprovalEvidenceRecordError(
       "SDD_APPROVAL_DECISION_INVALID",

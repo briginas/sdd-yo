@@ -168,7 +168,7 @@ The system shall deliver one item.
 - Delivery is recorded.
 `;
 
-async function repository(empty = false) {
+async function repository(empty = false, archivalExtra = false) {
   const root = await mkdtemp(join(tmpdir(), "sdd-prepare-"));
   await executeFile("git", ["init", "--quiet", "--initial-branch", "main"], { cwd: root });
   await executeFile("git", ["config", "user.name", "SDD Test"], { cwd: root });
@@ -191,9 +191,14 @@ async function repository(empty = false) {
     await writeFile(join(root, "spec/README.md"), indexSource);
     await writeFile(join(root, "spec/capabilities/delivery.md"), capabilitySource);
   }
+  const activeConfig = await readFile(join(root, ".sdd/config.yaml"), "utf8");
+  if (archivalExtra) {
+    await writeFile(join(root, ".sdd/config.yaml"), `${activeConfig}retired_policy:\n  value: archival-only\n`);
+  }
   await executeFile("git", ["add", ".sdd/config.yaml", "spec"], { cwd: root });
   await executeFile("git", ["commit", "--quiet", "-m", "base"], { cwd: root });
   const base = (await executeFile("git", ["rev-parse", "HEAD"], { cwd: root })).stdout.trim() as GitObjectId;
+  if (archivalExtra) await writeFile(join(root, ".sdd/config.yaml"), activeConfig);
   const selected = await resolveProject(nodeFileSystem, { kind: "nearest", start_directory: root });
   assert.equal(selected.ok, true);
   if (!selected.ok) throw new Error("Project resolution failed.");
@@ -208,8 +213,8 @@ async function candidateFrom(root: string): Promise<string> {
   return candidate;
 }
 
-test("package-bound preparation is deterministic, read-only, detects stale packages and branch drift", async () => {
-  const fixture = await repository();
+test("REQ-0361538D package-bound preparation locates an archival base and detects drift", async () => {
+  const fixture = await repository(false, true);
   const candidate = await candidateFrom(fixture.root);
   const candidateFile = join(candidate, "spec/capabilities/delivery.md");
   await writeFile(
@@ -380,10 +385,7 @@ test("REQ-AFD65A03 REQ-A8739118 package-added active identity in integration is 
     gitReader: fixture.reader,
     project: {
       ...fixture.project,
-      configuration: {
-        ...fixture.project.configuration,
-        evidence: { allowed_issuers: ["product-review"] },
-      },
+      configuration: fixture.project.configuration,
     },
     package: packageValue,
     candidatePath: candidate,
@@ -430,11 +432,6 @@ async function cliPreparationFixture() {
   });
   const packagePath = join(fixture.root, "proposal-package.json");
   await writeFile(packagePath, JSON.stringify(packageValue));
-  const configPath = join(fixture.root, ".sdd/config.yaml");
-  await writeFile(
-    configPath,
-    (await readFile(configPath, "utf8")).replace("allowed_issuers: []", "allowed_issuers: [product-review]"),
-  );
   const approvalValue = {
     schema_version: "1.0",
     artifact_type: "approval_evidence",

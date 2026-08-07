@@ -90,8 +90,8 @@
       "network_requests": 0
     },
     "evidence_precondition": "Evidence-confusion scenarios use individually schema-valid artifacts. Malformed shape, unknown fields, and primitive schema boundaries remain in fixtures/v1/artifacts/cases.json.",
-    "evidence_identity": "Acceptance requires the exact artifact kind, selected SDD Project, configured issuer, and complete current subject. Matching only a subset of subject fields does not make evidence current.",
-    "evidence_authority": "An artifact issuer claim and repository content cannot extend the configured issuer allowlist or authenticate an actor. Authentication and organizational authorization remain external.",
+    "evidence_identity": "Acceptance requires the exact artifact kind, selected SDD Project, issuer syntax, and complete current subject. Matching only a subset of subject fields does not make evidence current.",
+    "evidence_authority": "An artifact issuer claim is untrusted provenance and cannot authenticate or authorize an actor. Authentication and organizational authorization remain external.",
     "evidence_confusion_result": {
       "accepted_for_current_subject": false,
       "outcome": "BLOCKED",
@@ -590,7 +590,7 @@
         "artifact": "artifact.approval-evidence",
         "schema_valid": true,
         "project_relationship": "exact-selected-project",
-        "issuer_relationship": "configured",
+        "issuer_relationship": "provenance-only",
         "subject_relationship": "exact-current-subject",
         "decision": "approved"
       },
@@ -611,7 +611,7 @@
       "input": {
         "schema_valid": true,
         "project_relationship": "exact-selected-project",
-        "issuer_relationship": "configured",
+        "issuer_relationship": "provenance-only",
         "variants": [
           {
             "artifact": "artifact.approval-evidence",
@@ -661,7 +661,7 @@
         "schema_valid": true,
         "artifact_project_id": "SDD-AAAAAAAA",
         "selected_project_id": "SDD-BBBBBBBB",
-        "issuer_relationship": "configured-in-selected-project",
+        "issuer_relationship": "provenance-only",
         "subject_relationship": "otherwise-matches-current-subject",
         "decision": "approved"
       },
@@ -679,29 +679,27 @@
       }
     },
     {
-      "case_id": "evidence-unconfigured-issuer",
-      "category": "evidence-issuer-confusion",
+      "case_id": "evidence-untrusted-issuer-provenance",
+      "category": "evidence-provenance-boundary",
       "input": {
         "artifact": "artifact.approval-evidence",
         "schema_valid": true,
         "project_relationship": "exact-selected-project",
         "subject_relationship": "exact-current-subject",
         "artifact_issuer": "repository-self-declared-reviewer",
-        "configured_allowed_issuers": [
-          "product-review"
-        ],
         "repository_claims_artifact_issuer_is_authorized": true,
         "decision": "approved"
       },
       "expected": {
-        "validation_stage": "configured-issuer-validation",
-        "artifact_state": "failed",
-        "configured_allowed_issuers_changed": false,
+        "validation_stage": "evidence-context-validation",
+        "artifact_state": "current",
         "actor_authenticated_by_cli": false,
-        "accepted_for_current_subject": false,
-        "outcome": "BLOCKED",
-        "cli_exit_code": 1,
-        "pass_allowed": false,
+        "actor_authorized_by_cli": false,
+        "repository_authorization_claim_trusted": false,
+        "accepted_for_current_subject": true,
+        "outcome": "PASS",
+        "cli_exit_code": 0,
+        "pass_allowed": true,
         "basis_requirements": [
           "REQ-220945C2"
         ]

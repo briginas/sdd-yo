@@ -53,8 +53,6 @@ tests:
     max_xml_depth: 64
     max_suite_count: 100000
     max_test_count: 100000
-evidence:
-  allowed_issuers: []
 `;
 }
 

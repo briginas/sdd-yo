@@ -52,12 +52,6 @@ tests:
     max_xml_depth: 64
     max_suite_count: 100000
     max_test_count: 100000
-
-evidence:
-  allowed_issuers:
-    - local-human
-    - github-review
-    - ci
 ```
 
 `git.default_target_ref` is a convenience default only. Strict gate artifacts
@@ -80,12 +74,19 @@ JUnit import is bound to exactly one configured JUnit adapter selected with
   applying them.
 - Config changes contribute to a config fingerprint.
 
+Active and candidate configurations use this strict parser. Readers of
+reachable Git history instead extract only the archival version 1 project
+locator: schema version, project ID, specification root, and entrypoint. This
+keeps ID reservation and proposal-base comparison available after a manual
+configuration migration without interpreting retired historical fields as
+current configuration or migrating any bytes.
+
 ## Trust-sensitive changes
 
 Changes to adapter type, command, protocol, environment allowlist, report path,
-evidence issuer, spec root, or entrypoint produce a structural and trust
-finding. An external permission system authorizes command execution; config
-text alone never grants authority.
+spec root, or entrypoint produce a structural and trust finding. An external
+permission system authorizes command execution; config text alone never grants
+authority.
 
 ## Monorepos
 

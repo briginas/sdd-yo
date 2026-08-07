@@ -34,6 +34,8 @@ nearest `.sdd/config.yaml` found upward from the working directory.
 
 - One Git repository may contain multiple SDD Projects.
 - Paths in one config resolve relative to that project's configured scope.
+- Version 1 configuration contains no evidence issuer authorization policy;
+  unsupported configuration fields are rejected.
 - Failure to resolve exactly one project is reported explicitly.
 
 <a id="req-7c848ed0"></a>
@@ -180,10 +182,10 @@ decision itself.
 
 ### Acceptance criteria <!-- sdd:acceptance -->
 
-- Input requires the exact retained ProposalPackage and candidate, a configured
-  issuer, an identified actor, an explicit `approved` or `rejected` decision, a
-  bounded UTF-8 reason file containing the human message, and a caller-selected
-  evidence path.
+- Input requires the exact retained ProposalPackage and candidate, a bounded
+  non-empty issuer, an identified actor, an explicit `approved` or `rejected`
+  decision, a bounded UTF-8 reason file containing the human message, and a
+  caller-selected evidence path.
 - The project, mode, base object ID, and semantic and structural delta
   fingerprints are derived only by strictly revalidating the ProposalPackage
   against the exact candidate. The artifact records the CLI as producer, the
@@ -195,7 +197,7 @@ decision itself.
 - A recorded approval may be supplied to a separately invoked proposal
   preparation operation. A recorded rejection cannot satisfy approval and
   stops that workflow.
-- A malformed or oversized input, unknown issuer, mismatched or changed
+- A malformed or oversized input, invalid issuer, mismatched or changed
   package/candidate subject, unsafe target, existing target, or failed write
   stops without publishing evidence.
 - Issuer authentication, actor authorization, session identity, signature

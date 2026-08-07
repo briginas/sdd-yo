@@ -8,8 +8,10 @@ sdd:
 
 ## Definition <!-- sdd:definition -->
 
-Evidence is a temporary, schema-validated assertion from an allowed external
-issuer about approval, test execution, QA, finding resolution, or governance.
+Evidence is a temporary, schema-validated assertion from an external issuer
+about approval, test execution, QA, finding resolution, or governance. The
+issuer value is untrusted provenance and does not authenticate or authorize an
+actor.
 
 ## Identity <!-- sdd:identity -->
 

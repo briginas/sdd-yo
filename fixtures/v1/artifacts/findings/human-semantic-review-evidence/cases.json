@@ -27,9 +27,6 @@
           "candidate_input_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
         }
       }
-    ],
-    "allowed_issuers": [
-      "semantic-review"
     ]
   },
   "cases": [

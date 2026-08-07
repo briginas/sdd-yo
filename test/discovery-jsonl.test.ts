@@ -58,8 +58,6 @@ ids:
   alphabet: hex-uppercase
 tests:
   adapters: []
-evidence:
-  allowed_issuers: []
 `),
   );
   assert.equal(parsed.ok, true);
@@ -232,7 +230,6 @@ tests:
     - id: INVALID
       type: junit
       discover: { reports: [report.xml] }
-evidence: { allowed_issuers: [] }
 `);
   const result = parseProjectConfiguration(source);
   assert.equal(result.ok, false);

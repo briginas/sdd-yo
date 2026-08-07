@@ -62,9 +62,6 @@ export type ProjectConfiguration = {
     readonly adapters: readonly TestAdapter[];
     readonly import_limits: TestImportLimits;
   };
-  readonly evidence: {
-    readonly allowed_issuers: readonly string[];
-  };
 };
 
 export type ResolvedProject = {

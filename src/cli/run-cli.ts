@@ -2413,7 +2413,6 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
         const evidence = createApprovalEvidence({
           projectId: project.configuration.project_id,
           package: revalidated.package,
-          allowedIssuers: new Set(project.configuration.evidence.allowed_issuers),
           issuer: invocation.issuer,
           actor: invocation.actor,
           decision: invocation.decision,
@@ -2444,8 +2443,7 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
         const blocked =
           revalidationCode !== undefined ||
           (error instanceof ProposalValidationError && !error.technical) ||
-          (error instanceof ProposalInputError && !error.technical) ||
-          (error instanceof ApprovalEvidenceRecordError && error.code === "SDD_APPROVAL_ISSUER_UNCONFIGURED");
+          (error instanceof ProposalInputError && !error.technical);
         const code =
           revalidationCode ??
           (error instanceof ApprovalEvidenceRecordError || error instanceof ProposalInputError
@@ -2465,7 +2463,7 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
           code,
           error instanceof Error ? error.message : "ApprovalEvidence could not be recorded.",
           blocked
-            ? "Restore the exact package, candidate, configured issuer, and human decision inputs."
+            ? "Restore the exact package, candidate, issuer, and human decision inputs."
             : "Correct the bounded inputs or safe ignored target and run the command again.",
         );
         emit(
@@ -2505,7 +2503,6 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
           findings,
           resolutions,
           human_reviews: [],
-          allowed_issuers: new Set(project.configuration.evidence.allowed_issuers),
           model_analysis_performed: true,
         });
         const projectMismatch = manifest.project_id !== project.configuration.project_id;
@@ -2523,7 +2520,7 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
             cliDiagnostic(
               issue.code,
               "A finding or resolution condition is not current and valid.",
-              "Correct the cited manifest, Finding, configured issuer, or resolution evidence.",
+              "Correct the cited manifest, Finding, issuer, or resolution evidence.",
             ),
           ),
         ];

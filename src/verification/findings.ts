@@ -589,7 +589,6 @@ export function assessFindings(input: {
   readonly findings: readonly Finding[];
   readonly resolutions: readonly FindingResolution[];
   readonly human_reviews: readonly HumanSemanticReviewEvidence[];
-  readonly allowed_issuers: ReadonlySet<string>;
   readonly model_analysis_performed: boolean;
 }): FindingAssessment {
   const issues: FindingAssessmentIssue[] = [];
@@ -623,15 +622,7 @@ export function assessFindings(input: {
     const matching: FindingResolution[] = [];
     let staleResolution = false;
     for (const resolution of input.resolutions.filter((item) => item.finding_id === findingId)) {
-      if (!input.allowed_issuers.has(resolution.issuer)) {
-        staleResolution = true;
-        issues.push({
-          code: "SDD_FINDING_RESOLUTION_ISSUER_UNCONFIGURED",
-          disposition: "BLOCKED",
-          finding_id: findingId,
-          issuer: resolution.issuer,
-        });
-      } else if (
+      if (
         resolution.project_id !== input.manifest.project_id ||
         resolution.input_fingerprint !== finding.input_fingerprint
       ) {
@@ -683,7 +674,6 @@ export function assessFindings(input: {
   let staleReview = false;
   for (const review of input.human_reviews) {
     if (
-      !input.allowed_issuers.has(review.issuer) ||
       review.project_id !== input.manifest.project_id ||
       review.candidate_input_fingerprint !== input.manifest.input_fingerprint
     ) {

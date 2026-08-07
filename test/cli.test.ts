@@ -551,7 +551,7 @@ test("REQ-7D93D64A maps blocking validation and technical failures to nonzero ex
   await mkdir(join(root, "spec"));
   await writeFile(
     join(root, ".sdd/config.yaml"),
-    "schema_version: 1\nproject_id: SDD-A1000001\nspec:\n  root: spec\n  entrypoint: spec/README.md\nadoption:\n  mode: incremental\ngit:\n  default_target_ref: main\nids:\n  suffix_length: 8\n  alphabet: hex-uppercase\ntests:\n  adapters: []\nevidence:\n  allowed_issuers: []\n",
+    "schema_version: 1\nproject_id: SDD-A1000001\nspec:\n  root: spec\n  entrypoint: spec/README.md\nadoption:\n  mode: incremental\ngit:\n  default_target_ref: main\nids:\n  suffix_length: 8\n  alphabet: hex-uppercase\ntests:\n  adapters: []\n",
   );
   await writeFile(
     join(root, "spec/README.md"),

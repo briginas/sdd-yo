@@ -12,7 +12,7 @@ marketplace.
 
 - Node.js `22.18.0` or newer and npm.
 - One existing Git repository and its absolute root path.
-- One exact private `sdd-yo-0.1.1.tgz` artifact obtained through your approved
+- One exact private `sdd-yo-0.2.0.tgz` artifact obtained through your approved
   private distribution channel.
 - A choice of adoption mode: `incremental` governs only the specification scope
   you add, while `complete` declares complete adoption of the repository.
@@ -37,7 +37,7 @@ Check the installed package, CLI, JSON-schema, and Skill protocol identity:
 node ./node_modules/sdd-yo/dist/bin/sdd.js --version --format json
 ```
 
-Require exit code `0`, `status: "ok"`, package and CLI version `0.1.1`, and
+Require exit code `0`, `status: "ok"`, package and CLI version `0.2.0`, and
 compatible major `1` for both the JSON-schema and Skill protocols.
 
 ### Yarn Plug'n'Play repositories

@@ -188,7 +188,7 @@ function parseValue(value: unknown, location: ProjectPath | undefined): Configur
   if (!isRecord(value)) return failure(invalidField("configuration", location));
   const topLevelError = exactKeys(
     value,
-    ["schema_version", "project_id", "spec", "adoption", "git", "ids", "tests", "evidence"],
+    ["schema_version", "project_id", "spec", "adoption", "git", "ids", "tests"],
     "configuration",
     location,
   );
@@ -268,19 +268,6 @@ function parseValue(value: unknown, location: ProjectPath | undefined): Configur
       : parseImportLimits(value.tests.import_limits, location);
   if (!importLimits.ok) return importLimits;
 
-  if (!isRecord(value.evidence)) return failure(invalidField("evidence", location));
-  const evidenceError = exactKeys(value.evidence, ["allowed_issuers"], "evidence", location);
-  if (evidenceError !== undefined) return failure(evidenceError);
-  if (
-    !Array.isArray(value.evidence.allowed_issuers) ||
-    !value.evidence.allowed_issuers.every(
-      (issuer) => typeof issuer === "string" && issuer.length > 0 && !issuer.includes("\0"),
-    ) ||
-    new Set(value.evidence.allowed_issuers).size !== value.evidence.allowed_issuers.length
-  ) {
-    return failure(invalidField("evidence.allowed_issuers", location));
-  }
-
   return {
     ok: true,
     value: {
@@ -291,7 +278,6 @@ function parseValue(value: unknown, location: ProjectPath | undefined): Configur
       git: { default_target_ref: value.git.default_target_ref },
       ids: { suffix_length: 8, alphabet: "hex-uppercase" },
       tests: { adapters, import_limits: importLimits.value },
-      evidence: { allowed_issuers: value.evidence.allowed_issuers },
     },
     diagnostics: [],
   };

@@ -164,7 +164,7 @@ Roles describe responsibility, not accounts stored by SDD Yo:
 - the **integrator** performs the external merge after consuming the report.
 
 One person may hold multiple roles when organizational policy allows it. The
-CLI validates evidence subjects and configured issuer names but does not
+CLI validates evidence subjects and issuer syntax but does not
 authenticate identities or decide whether separation of duties is sufficient.
 
 ## Non-goals

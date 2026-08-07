@@ -402,7 +402,6 @@ export async function prepareApprovedProposal(input: {
   const prepared = await prepareProposal(input);
   const approval = assessApprovalEvidence({
     project_id: input.project.configuration.project_id,
-    allowed_issuers: new Set(input.project.configuration.evidence.allowed_issuers),
     mode: packageValue.mode,
     base_ref: packageValue.base.git_ref,
     semantic_delta_fingerprint: packageValue.object_delta.semantic_fingerprint,

@@ -38,9 +38,6 @@
           "waiver_eligible": true
         }
       }
-    ],
-    "allowed_issuers": [
-      "architecture-review"
     ]
   },
   "cases": [

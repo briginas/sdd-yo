@@ -77,6 +77,7 @@ describe("REQ-0361538D project configuration", () => {
         "SDD_CONFIG_UNSUPPORTED_SCHEMA_VERSION",
       ],
       [validSource() + "unexpected: true\n", "SDD_CONFIG_UNKNOWN_FIELD"],
+      [validSource() + `evidence:\n  ${["allowed", "issuers"].join("_")}: []\n`, "SDD_CONFIG_UNKNOWN_FIELD"],
     ] as const;
 
     for (const [source, expectedCode] of cases) {
@@ -179,8 +180,6 @@ ids:
   alphabet: hex-uppercase
 tests:
   adapters: []
-evidence:
-  allowed_issuers: []
 `;
 }
 

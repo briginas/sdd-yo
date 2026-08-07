@@ -23,8 +23,6 @@ ids:
   alphabet: hex-uppercase
 tests:
   adapters: []
-evidence:
-  allowed_issuers: []
 `;
 }
 
@@ -121,6 +119,20 @@ test("REQ-2C8E8085 REQ-8B656FC5 indexes active and reserved typed IDs across pro
   assert.deepEqual([...history.activeObjectIds], []);
   assert.deepEqual([...history.reservedObjectIds], [capabilityIdValue]);
   assert.deepEqual([...history.reservedProjectIds].toSorted(), ["SDD-A1000001", "SDD-B2000002"]);
+});
+
+test("REQ-2C8E8085 indexes version 1 history through its project locator only", async () => {
+  const projectIdValue: unknown = "SDD-A1000001";
+  const tipValue: unknown = "tip";
+  assert.ok(isProjectId(projectIdValue));
+  assert.ok(isGitObjectId(tipValue));
+  const historicalConfig = `${config(projectIdValue)}retired_policy:\n  value: archival-only\n`;
+  const reader = fakeReader({
+    tip: { ".sdd/config.yaml": historicalConfig, "spec/README.md": index() },
+  });
+  const history = await buildCanonicalHistoryIndex(reader, tipValue, projectIdValue);
+  assert.equal(history.status, "complete");
+  assert.deepEqual([...history.reservedProjectIds], [projectIdValue]);
 });
 
 test("REQ-8B656FC5 preserves incomplete status and rejects untrustworthy reachable graphs", async () => {

@@ -542,7 +542,6 @@ export type HumanDecisionEvidenceIssue = {
     | "SDD_EVIDENCE_GOVERNANCE_CONTRADICTORY"
     | "SDD_EVIDENCE_GOVERNANCE_MISSING"
     | "SDD_EVIDENCE_GOVERNANCE_REJECTED"
-    | "SDD_EVIDENCE_ISSUER_UNCONFIGURED"
     | "SDD_EVIDENCE_SUBJECT_STALE";
   readonly disposition: "BLOCKED" | "REVIEW_REQUIRED";
   readonly artifact_type: "approval_evidence" | "governance_evidence";
@@ -604,7 +603,6 @@ function finishHumanDecisionAssessment(
 
 export function assessApprovalEvidence(input: {
   readonly project_id: ProjectId;
-  readonly allowed_issuers: ReadonlySet<string>;
   readonly mode: ApprovalEvidence["mode"];
   readonly base_ref: GitObjectId;
   readonly semantic_delta_fingerprint: Fingerprint;
@@ -614,15 +612,6 @@ export function assessApprovalEvidence(input: {
   const issues: HumanDecisionEvidenceIssue[] = [];
   const decisions = new Set<ApprovalEvidence["decision"]>();
   for (const evidence of input.evidence) {
-    if (!input.allowed_issuers.has(evidence.issuer)) {
-      issues.push({
-        code: "SDD_EVIDENCE_ISSUER_UNCONFIGURED",
-        disposition: "BLOCKED",
-        artifact_type: evidence.artifact_type,
-        issuer: evidence.issuer,
-      });
-      continue;
-    }
     if (
       evidence.project_id !== input.project_id ||
       evidence.mode !== input.mode ||
@@ -645,7 +634,6 @@ export function assessApprovalEvidence(input: {
 
 export function assessGovernanceEvidence(input: {
   readonly project_id: ProjectId;
-  readonly allowed_issuers: ReadonlySet<string>;
   readonly config_fingerprint: Fingerprint;
   readonly project_scope_fingerprint: Fingerprint;
   readonly from_adoption_mode: GovernanceEvidence["subject"]["from_adoption_mode"];
@@ -655,15 +643,6 @@ export function assessGovernanceEvidence(input: {
   const issues: HumanDecisionEvidenceIssue[] = [];
   const decisions = new Set<GovernanceEvidence["decision"]>();
   for (const evidence of input.evidence) {
-    if (!input.allowed_issuers.has(evidence.issuer)) {
-      issues.push({
-        code: "SDD_EVIDENCE_ISSUER_UNCONFIGURED",
-        disposition: "BLOCKED",
-        artifact_type: evidence.artifact_type,
-        issuer: evidence.issuer,
-      });
-      continue;
-    }
     if (
       evidence.project_id !== input.project_id ||
       evidence.subject.config_fingerprint !== input.config_fingerprint ||
@@ -691,7 +670,6 @@ export type EvidenceCheck<Id extends string> = {
 
 export type VerificationEvidenceIssue = {
   readonly code:
-    | "SDD_EVIDENCE_ISSUER_UNCONFIGURED"
     | "SDD_EVIDENCE_MANUAL_CONTRADICTORY"
     | "SDD_EVIDENCE_MANUAL_FAILED"
     | "SDD_EVIDENCE_MANUAL_MISSING"
@@ -745,7 +723,6 @@ export function assessVerificationEvidence(input: {
   readonly integration_ref: GitObjectId;
   readonly config_fingerprint: Fingerprint;
   readonly current_adapter_fingerprints: Readonly<Record<string, Fingerprint>>;
-  readonly allowed_issuers: ReadonlySet<string>;
   readonly graph: ValidatedSpecificationGraph;
   readonly scope: AffectedScope;
   readonly test_index: TestIndex;
@@ -783,15 +760,6 @@ export function assessVerificationEvidence(input: {
   const resultStatuses = new Map<string, Set<TestExecutionStatus>>();
   const resultOccurrences = new Map<string, number>();
   for (const evidence of input.test_execution_evidence) {
-    if (!input.allowed_issuers.has(evidence.issuer)) {
-      addIssue({
-        code: "SDD_EVIDENCE_ISSUER_UNCONFIGURED",
-        disposition: "BLOCKED",
-        artifact_type: evidence.artifact_type,
-        issuer: evidence.issuer,
-      });
-      continue;
-    }
     if (
       !indexCurrent ||
       evidence.project_id !== input.project_id ||
@@ -830,15 +798,6 @@ export function assessVerificationEvidence(input: {
 
   const acceptedQa: QaEvidence[] = [];
   for (const evidence of input.qa_evidence) {
-    if (!input.allowed_issuers.has(evidence.issuer)) {
-      addIssue({
-        code: "SDD_EVIDENCE_ISSUER_UNCONFIGURED",
-        disposition: "BLOCKED",
-        artifact_type: evidence.artifact_type,
-        issuer: evidence.issuer,
-      });
-      continue;
-    }
     if (
       evidence.project_id !== input.project_id ||
       evidence.subject.head_ref !== input.head_ref ||

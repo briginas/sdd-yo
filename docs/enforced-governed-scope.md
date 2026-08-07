@@ -6,11 +6,12 @@ Capabilities governed by the selected SDD Project. In `incremental` adoption,
 a `PASS` is `PASS (governed scope only)`, not a claim that the complete
 repository is specified or verified.
 
-SDD Yo validates structure, configured issuer names, exact subjects,
-fingerprints, evidence freshness, and deterministic gate status. The invoking
-organization remains responsible for authenticating issuers, authorizing
-actors, sandboxing adapter processes, protecting credentials and hosts, and
-deciding whether its separation of duties is sufficient.
+SDD Yo validates structure, issuer syntax, exact subjects, fingerprints,
+evidence freshness, and deterministic gate status. Issuer text is untrusted
+provenance. The invoking organization remains responsible for authenticating
+issuers, authorizing actors, sandboxing adapter processes, protecting
+credentials and hosts, and deciding whether its separation of duties is
+sufficient.
 
 ## Authorization record
 
@@ -19,26 +20,24 @@ organization-controlled system outside the Git refs being assessed:
 
 - selected `project_id`, configuration path, integration ref, and adoption
   mode;
-- each evidence kind, its configured issuer name, the external system that
+- each evidence kind, its issuer naming convention, the external system that
   authenticates that issuer, and the actors or service identities authorized
   to produce it;
 - each test adapter command, executable or image identity, protocol, permitted
   environment, credentials, filesystem scope, network policy, timeout, and
   resource limits;
 - who may change the specification root, project scope, integration ref,
-  allowed issuers, evidence policy, adapter configuration, limits, or optional
-  model policy;
+  evidence policy, adapter configuration, limits, or optional model policy;
 - who may enable, disable, or bypass the required external check;
 - incident contacts, retained-report location, rollback authority, and the
   conditions for re-enabling enforcement;
 - the owner's explicit acceptance of this authorization, execution, incident,
   and rollback policy.
 
-Repository configuration may name an issuer or adapter, but cannot authorize
-it. A change to an issuer, evidence policy, adapter, project boundary,
-integration ref, materially expanded limit, or optional model policy requires
-fresh external trust review. Evidence bound to the previous configuration is
-not reused.
+Repository configuration may name an adapter, but cannot authorize it. A
+change to evidence policy, adapter, project boundary, integration ref,
+materially expanded limit, or optional model policy requires fresh external
+trust review. Evidence bound to the previous configuration is not reused.
 
 ## Enforcement contract
 

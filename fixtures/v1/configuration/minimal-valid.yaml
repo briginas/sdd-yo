@@ -12,5 +12,3 @@ ids:
   alphabet: hex-uppercase
 tests:
   adapters: []
-evidence:
-  allowed_issuers: []

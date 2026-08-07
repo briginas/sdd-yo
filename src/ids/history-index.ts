@@ -1,6 +1,6 @@
 import { dirname, join, relative } from "node:path/posix";
 
-import { parseProjectConfiguration } from "../config/parse-config.ts";
+import { parseHistoricalProjectLocator } from "../config/parse-historical-project.ts";
 import type { ObjectId, ProjectId, ProjectPath } from "../contracts/identifiers.ts";
 import { isProjectPath } from "../contracts/identifiers.ts";
 import { validateSpecificationGraph } from "../graph/validate-graph.ts";
@@ -40,14 +40,14 @@ async function projectsAt(reader: GitReader, entries: readonly GitTreeEntry[]): 
   const projects: VersionedProject[] = [];
   for (const entry of entries.filter(configPath)) {
     const bytes = await reader.readBlob(entry.objectId);
-    const parsed = parseProjectConfiguration(bytes, entry.path);
-    if (!parsed.ok) throw new HistoryIndexError("A reachable project configuration is invalid.");
+    const parsed = parseHistoricalProjectLocator(bytes);
+    if (parsed === undefined) throw new HistoryIndexError("A reachable project configuration is invalid.");
     const prefixValue = dirname(dirname(entry.path));
     projects.push({
-      projectId: parsed.value.project_id,
+      projectId: parsed.projectId,
       projectPrefix: prefixValue === "." ? "" : prefixValue,
-      specRoot: parsed.value.spec.root,
-      entrypoint: parsed.value.spec.entrypoint,
+      specRoot: parsed.specRoot,
+      entrypoint: parsed.entrypoint,
     });
   }
   return projects;

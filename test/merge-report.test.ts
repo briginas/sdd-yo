@@ -104,14 +104,6 @@ async function fixture() {
     writeStandardError: () => {},
     writeOutputFile: () => {},
   });
-  const configPath = join(root, ".sdd/config.yaml");
-  await writeFile(
-    configPath,
-    (await readFile(configPath, "utf8")).replace(
-      "allowed_issuers: []",
-      "allowed_issuers: [ci, qa, review, governance]",
-    ),
-  );
   await writeFile(join(root, "spec/README.md"), indexSource);
   await writeFile(join(root, "spec/capabilities/delivery.md"), capabilitySource);
   await executeFile("git", ["add", ".sdd/config.yaml", "spec"], { cwd: root });
@@ -591,12 +583,11 @@ test("REQ-41EDF9A3 REQ-220945C2 REQ-82256D82 REQ-44068C1A REQ-7FCCF943 merge che
     value.root,
   );
   assert.equal(review.exitCode, 2, review.output);
-  const unconfigured = await executeCli(
+  const alternateIssuer = await executeCli(
     baseArgs.map((argument) => (argument === "evidence/qa.json" ? "evidence/qa-unconfigured.json" : argument)),
     value.root,
   );
-  assert.equal(unconfigured.exitCode, 1, unconfigured.output);
-  assert.match(unconfigured.output, /SDD_EVIDENCE_ISSUER_UNCONFIGURED/u);
+  assert.equal(alternateIssuer.exitCode, 0, alternateIssuer.output);
   const technical = await executeCli(["merge", "check", "--format", "json"], value.root);
   assert.equal(technical.exitCode, 3, technical.output);
   assert.equal(

@@ -78,7 +78,6 @@ export function buildVerificationReport(input: {
   readonly integration_ref: GitObjectId;
   readonly config_fingerprint: Fingerprint;
   readonly current_adapter_fingerprints: Readonly<Record<string, Fingerprint>>;
-  readonly allowed_issuers: ReadonlySet<string>;
   readonly base_graph: ValidatedSpecificationGraph;
   readonly head_graph: ValidatedSpecificationGraph;
   readonly code_targets?: readonly RequirementId[];
@@ -119,7 +118,6 @@ export function buildVerificationReport(input: {
     integration_ref: input.integration_ref,
     config_fingerprint: input.config_fingerprint,
     current_adapter_fingerprints: input.current_adapter_fingerprints,
-    allowed_issuers: input.allowed_issuers,
     graph: input.head_graph,
     scope,
     test_index: testIndex,
@@ -137,7 +135,6 @@ export function buildVerificationReport(input: {
       findings: input.semantic_review.findings,
       resolutions: input.semantic_review.resolutions,
       human_reviews: input.semantic_review.human_reviews,
-      allowed_issuers: input.allowed_issuers,
       model_analysis_performed: input.semantic_review.model_analysis_performed,
     });
     findings = assessed.findings;
