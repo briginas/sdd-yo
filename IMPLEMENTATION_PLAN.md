@@ -2,9 +2,9 @@
 
 ## Status
 
-- State: Milestones 0–15 complete; Milestone 16 active
-- Current phase: Public transition handoff
-- Current leaf: 16.3 — final public-surface and GitHub transition review
+- State: Milestones 0–16 complete; no active milestone
+- Current phase: Awaiting explicit next-milestone selection
+- Current leaf: none
 - Last updated: 2026-08-07
 
 ## Source-of-truth map
@@ -12,8 +12,6 @@
 - Canonical product behavior: [`spec/README.md`](spec/README.md)
 - Architecture: [`proposal/architecture/README.md`](proposal/architecture/README.md)
 - Plan index and completed history: [`plans/README.md`](plans/README.md)
-- Active public-transition record:
-  [`plans/milestone-16-public-transition-handoff.md`](plans/milestone-16-public-transition-handoff.md)
 - Completed execution records:
   [`plans/completed/milestones-0-9.md`](plans/completed/milestones-0-9.md),
   [`plans/completed/milestone-10-self-bootstrap-retirement.md`](plans/completed/milestone-10-self-bootstrap-retirement.md),
@@ -21,7 +19,8 @@
   [`plans/completed/milestone-12-explicit-human-approval-evidence-recording.md`](plans/completed/milestone-12-explicit-human-approval-evidence-recording.md),
   [`plans/completed/milestone-13-pre-id-semantic-model-confirmation.md`](plans/completed/milestone-13-pre-id-semantic-model-confirmation.md),
   [`plans/completed/milestone-14-remove-configured-evidence-issuer-allowlists.md`](plans/completed/milestone-14-remove-configured-evidence-issuer-allowlists.md),
-  and [`plans/completed/milestone-15-semantic-spec-patch-confirmation.md`](plans/completed/milestone-15-semantic-spec-patch-confirmation.md)
+  [`plans/completed/milestone-15-semantic-spec-patch-confirmation.md`](plans/completed/milestone-15-semantic-spec-patch-confirmation.md),
+  and [`plans/completed/milestone-16-public-github-source-readiness.md`](plans/completed/milestone-16-public-github-source-readiness.md)
 - Historical bootstrap procedure:
   [`plans/completed/self-bootstrap-procedure.md`](plans/completed/self-bootstrap-procedure.md)
 
@@ -49,9 +48,10 @@ and the optional progressive-disclosure `sdd-yo` Agent Skill.
   to `0.2.0`. Its exact governed subject and validation evidence are archived.
 - Milestone 15 is complete; its execution record is archived at
   [`plans/completed/milestone-15-semantic-spec-patch-confirmation.md`](plans/completed/milestone-15-semantic-spec-patch-confirmation.md).
-- Milestone 16 is selected to prepare the existing GitHub repository for public
-  source visibility while preserving private npm-package distribution and the
-  existing product behavior.
+- Milestone 16 is complete. The GitHub source repository is public while the
+  `sdd-yo@0.2.0` npm package and Codex plugin remain unpublished; its exact
+  record is archived at
+  [`plans/completed/milestone-16-public-github-source-readiness.md`](plans/completed/milestone-16-public-github-source-readiness.md).
 - The deterministic version 1 library, CLI, artifact schemas, proposal and exact
   patch workflow, evidence composition, findings validation, merge readiness,
   enforced governed-scope integration, and explicit approval-gated Skill route
@@ -71,37 +71,10 @@ Repository-wide work discipline and validation commands remain authoritative in
 [`proposal/architecture/`](proposal/architecture/README.md), not in this active
 plan.
 
-## Active milestone
+## Next milestone
 
-### Milestone 16 — Public GitHub source readiness
-
-Prepare the existing GitHub repository for a deliberate private-to-public
-visibility change without publishing the npm package or changing implemented
-product behavior.
-
-- [x] **16.1 — Exposure audit and immediate safety remediation.** Inspect the
-      tracked tree, reachable Git history, GitHub Actions logs, repository settings,
-      and current dependency advisories. Prevent accidental package-tarball commits
-      and apply only compatible lockfile remediation for confirmed advisories.
-      Retain exact commands and findings in the handoff. Exclude licensing,
-      contributor/community policy, personal-evidence redaction, history rewriting,
-      routine CI expansion, repository visibility/settings changes, commit, push,
-      public npm publication, and marketplace publication.
-- [x] **16.2 — Public repository documentation and contribution baseline.** Make
-      the source/package visibility distinction explicit, add repository metadata,
-      contributor and security guidance, a human-selected license and conduct
-      policy, and routine pull-request validation. Resolve the intended treatment
-      of identified human evidence and local absolute paths before changing those
-      retained artifacts. Package-inventory verification remains traced through
-      `REQ-B0B35D6D` and `REQ-43B4311E`; no runtime behavior changes.
-- [ ] **16.3 — Public transition handoff.** Run the repository validation suite,
-      inspect the final public surface, record the exact visibility consequences and
-      post-transition security/ruleset checklist, and obtain separate authorization
-      for any commit, push, history rewrite, GitHub metadata mutation, or visibility
-      change. The local review record is
-      [`plans/milestone-16-public-transition-handoff.md`](plans/milestone-16-public-transition-handoff.md);
-      its remote-action checklist remains awaiting human authorization. Do not
-      publish the npm package or Codex plugin.
+No next milestone is selected. The candidate backlog and deferred scope below
+remain proposals only; selecting one requires explicit human authorization.
 
 ## Candidate backlog
 
@@ -154,8 +127,5 @@ human authorization before implementation:
 
 ## Immediate next leaf
 
-Complete 16.3 without remote mutation: inspect the final public surface, retain
-the visibility consequences and post-transition security/ruleset checklist,
-and obtain separate authorization before any commit, push, GitHub metadata
-change, or private-to-public visibility change. Keep npm and marketplace
-publication excluded.
+None. Select and define the next milestone through explicit human authorization
+before beginning further work.

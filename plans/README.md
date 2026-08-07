@@ -39,6 +39,9 @@ remain in [`../IMPLEMENTATION_PLAN.md`](../IMPLEMENTATION_PLAN.md).
 - [`completed/milestone-15-semantic-spec-patch-confirmation.md`](completed/milestone-15-semantic-spec-patch-confirmation.md)
   — completed semantic SpecPatch confirmation, human Skill review, validation,
   and closeout.
+- [`completed/milestone-16-public-github-source-readiness.md`](completed/milestone-16-public-github-source-readiness.md)
+  — completed public-source transition, private package-distribution boundary,
+  public repository baseline, security-control decisions, and closeout.
 
 Completed plans are historical records. Use the current canonical
 [`../spec/README.md`](../spec/README.md), architecture
