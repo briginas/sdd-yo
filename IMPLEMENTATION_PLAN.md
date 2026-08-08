@@ -4,7 +4,7 @@
 
 - State: Milestones 0–16 complete; Milestone 17 active
 - Current phase: Public npm CLI distribution
-- Current leaf: 17.5e — Failed-attempt recovery decision
+- Current leaf: 17.6 — Public consumer evidence and closeout
 - Last updated: 2026-08-08
 
 ## Source-of-truth map
@@ -366,6 +366,85 @@ Done when the permitted recovery route and its required fresh review are
 explicit. No GitHub, npm, credential, publication, approval, QA, or repository
 mutation is implied.
 
+**Completed 2026-08-08.** The package and version remained absent from npm;
+the failed Release and tag were replaced only after the human explicitly chose
+the recovery route. The corrected `main` subject
+`1a6eeeb54341077fbd3be8451918afe0915fd3ab` passed the complete local suite and
+reproduced the reviewed artifact SHA-256, inventory digest, and 2,125-entry
+count. The replacement `v0.3.0` Release started run `31274039503`, but it
+stopped at `npm publish` with `EOTP`: the short-lived read/write granular token
+did not bypass npm 2FA. npm still returned 404 for `sdd-yo@0.3.0`; no package
+was published. The protected environment secret and the token were removed.
+
+#### 17.5f — Bootstrap authentication correction decision
+
+- Recheck the current npm authentication rules for direct CI publication and
+  the first-publication limitation on npm trusted publishing. Present one
+  concise choice: a fresh seven-day read/write granular token with bypass 2FA
+  enabled and immediate post-attempt revocation, or a separately designed
+  staged-publication route that preserves human npm approval.
+- Record the exact chosen route and the required fresh Release/tag review
+  before any workflow edit, credential or secret creation, release mutation,
+  workflow rerun, or registry action. Do not infer a bypass-2FA authorization
+  from the prior least-privilege token.
+
+Done when one credential and publication authority model is explicitly chosen.
+No token, secret, release/tag change, workflow rerun, npm write, approval, QA,
+or repository code change is implied.
+
+**Completed 2026-08-08.** The human chose the direct-publication route: one
+fresh seven-day granular token with read/write access to all packages and
+bypass 2FA enabled, exposed only as the protected `release` environment secret
+for one reviewed retry and removed immediately afterwards. Creating that token
+and secret, rerunning the failed Release workflow, and publishing remain
+separately authorized operations.
+
+#### 17.5g — One-time direct-publication credential preparation
+
+- Create only the selected one-time granular token: read/write access to all
+  packages, bypass 2FA enabled, no organization access or IP ranges, and a
+  seven-day expiry. Bind it only as `NPM_BOOTSTRAP_TOKEN` in the protected
+  `release` environment, without exposing its value.
+- Recheck the npm package absence, `v0.3.0` subject, environment protection,
+  and secret name. Present the exact retained failed-run retry boundary for
+  separate human authorization.
+
+Done when the credential is present, bounded, and reviewable without revealing
+its value. Do not rerun the workflow, publish, alter the Release/tag, or make a
+QA decision.
+
+**Completed 2026-08-08.** npm continued to return 404 for `sdd-yo@0.3.0`; the
+remote `main` and `v0.3.0` commit both resolved to
+`1a6eeeb54341077fbd3be8451918afe0915fd3ab`. One unused seven-day granular
+token was created with read/write access to all packages, bypass 2FA enabled,
+and no organization access; its value was not retained. Only the
+`NPM_BOOTSTRAP_TOKEN` name was confirmed in the protected `release`
+environment.
+
+#### 17.5h — One-time direct-publication retry
+
+- After separate authorization, rerun only failed Release workflow run
+  `31274039503` for `v0.3.0` at
+  `1a6eeeb54341077fbd3be8451918afe0915fd3ab`; do not create, replace, edit, or
+  delete a Release/tag and do not rerun the earlier failed run.
+- Require fresh human approval of the protected `release` environment. Verify
+  the public package, version, integrity, provenance, and dist-tag after a
+  successful job; immediately remove the one-time token and environment secret
+  afterwards. Stop on any failure before a registry write.
+
+Done when the exact reviewed package is publicly resolvable and the one-time
+credential material is absent. No plugin publication, merge, QA verdict, or
+release announcement is implied.
+
+**Completed 2026-08-08.** The human reran only `31274039503` and approved the
+protected environment again. Attempt 2 completed successfully on
+`1a6eeeb54341077fbd3be8451918afe0915fd3ab`. Public npm metadata now resolves
+`sdd-yo@0.3.0` as `latest`, with the reviewed SHA-512 integrity,
+`f6f0d84b87a9e2d8fc8e71778c379bf9a637ec1c` shasum, and a SLSA provenance
+attestation. The npm token list and the `release` environment secret list were
+both rechecked empty. No plugin publication, merge, QA verdict, or release
+announcement occurred.
+
 #### 17.6 — Public consumer evidence and closeout
 
 - Install exact `sdd-yo@0.3.0` from the public registry into fresh Linux,
@@ -552,7 +631,7 @@ human authorization before implementation:
 
 ## Immediate next leaf
 
-Milestone 17.5e only: recheck the failed-attempt state and present the allowed
-recovery model for a fresh immutable `sdd-yo@0.3.0` publication subject. Do not
-modify a release or tag, create a credential or secret, rerun the workflow, or
-publish.
+Milestone 17.6 only: collect public consumer evidence for `sdd-yo@0.3.0` on
+fresh Linux, macOS, and Windows consumers, update public recovery guidance,
+then perform the normal milestone closeout procedure. Do not publish a plugin,
+merge, or announce the release.
