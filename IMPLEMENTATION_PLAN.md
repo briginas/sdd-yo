@@ -4,7 +4,7 @@
 
 - State: Milestones 0–16 complete; Milestone 17 active
 - Current phase: Public npm CLI distribution
-- Current leaf: 17.4 — Release rehearsal and exact artifact review
+- Current leaf: 17.5 — Explicit public npm publication
 - Last updated: 2026-08-08
 
 ## Source-of-truth map
@@ -65,6 +65,12 @@ and the optional progressive-disclosure `sdd-yo` Agent Skill.
   unpublished; no registry, marketplace, cross-platform onboarding-study, or
   whole-project completeness claim is implied until the selected Milestones 17
   and 18 satisfy their respective done conditions.
+- Leaf 17.4 retained one exact release candidate from immutable Git subject
+  `da3365ae58051facf9eb520b2b2db5116697c8a2`, exercised the ordinary npm and
+  isolated Yarn Plug'n'Play consumer routes, completed the npm publication dry
+  run, and passed the full repository validation suite. The package remains
+  unpublished and no authentication, publication-readiness, approval, or QA
+  claim was made.
 - New product behavior uses a normal bounded `spec-code`, `spec`, or `code`
   Change. Completed bootstrap history grants no alternate specification-write
   or ID-reservation route.
@@ -207,6 +213,24 @@ commit, push, or plugin change occurred.
 Done when one exact release candidate and publication command are reviewable.
 No commit, tag, GitHub release, npm publication, approval, or QA verdict is
 implied.
+
+**Completed 2026-08-08.** The retained candidate was built from exact Git
+subject `da3365ae58051facf9eb520b2b2db5116697c8a2` as
+`sdd-yo-0.3.0.tgz` with 2,125 entries, packed size 1,145,468 bytes, unpacked
+size 5,964,868 bytes, SHA-256
+`65a7f9f95684085ad54af828e32e5cb64bad2a9f1f3e1ce7769841cf04d4fae8`,
+and npm integrity
+`sha512-kr+RaJzHXEmtPEu/Dz+1zebmSkX6m+aAoBrda9Cu4M8erYquPhswcGhLaG6dWssy2ImE6Jo2IaRgNYuRzUjHCg==`.
+The clean offline npm consumer reported the exact compatibility identity
+through `npm exec`; package smoke passed the isolated Yarn Plug'n'Play Skill
+installation, initialization, first validation, and outside-root checks. The
+npm publication dry run and complete repository validation suite passed. Exact
+command output, full inventory, artifact, hashes, provenance input, validation
+context, and the non-publishing command remain under ignored
+`.sdd/staging/milestone-17.4/`. The dry run did not exercise GitHub Actions OIDC
+authentication and makes no publication-readiness claim. No registry write,
+publication, branch, commit, tag, push, GitHub release, approval, QA verdict,
+plugin artifact, or marketplace action occurred.
 
 #### 17.5 — Explicit public npm publication
 
@@ -408,10 +432,9 @@ human authorization before implementation:
 
 ## Immediate next leaf
 
-Milestone 17.4 only: build and retain one exact release candidate from a
-separately selected immutable Git subject, record its inventory, sizes,
-integrity hashes, provenance input, and package-manager output, then exercise
-the clean npm and isolated Yarn Plug'n'Play consumers and run the npm
-publication dry run plus the complete repository validation suite. Do not
-publish, create a branch, commit, tag, GitHub release, approval or QA verdict,
-registry write, marketplace entry, plugin artifact, or submission.
+Milestone 17.5 only: after separate explicit authorization, publish only the
+retained reviewed `sdd-yo@0.3.0` artifact through the protected trusted-publisher
+route, refuse any subject, identity, inventory, integrity, access, publisher,
+or provenance drift, and verify the immutable registry response. Do not infer
+plugin submission, Git integration, approval, QA, or release-announcement
+authority.
