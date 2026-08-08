@@ -140,7 +140,7 @@ explicit installation state in the selected consumer project.
 
 <a id="req-abffeaf2"></a>
 
-## REQ-ABFFEAF2 — Publish only from an immutable trusted release subject
+## REQ-ABFFEAF2 — Publish only from an immutable protected release subject
 
 ```sdd
 kind: constraint
@@ -150,27 +150,92 @@ verification: automated
 ### Relations <!-- sdd:relations -->
 
 - depends-on: [REQ-B0B35D6D — Produce installable public and offline package artifacts](private-npm-package-distribution.md#req-b0b35d6d)
+- depends-on: [REQ-9CE36B68 — Constrain and retire the first-publication bootstrap credential](private-npm-package-distribution.md#req-9ce36b68)
 
 ### Statement <!-- sdd:statement -->
 
-Public publication shall run only from one immutable release Git subject through
-the configured GitHub Actions trusted publisher for `briginas/sdd-yo`, using
-the `publish.yml` workflow, protected `release` environment, and OIDC; ordinary
-CI and local commands shall not be publish-capable and no long-lived npm token
-shall be required by the workflow.
+Public publication shall run only from one immutable release Git subject
+through the `publish.yml` workflow and protected `release` environment.
+Except for the one first-publication bootstrap permitted by
+REQ-9CE36B68, the workflow shall authenticate npm only through the configured
+GitHub Actions trusted publisher for `briginas/sdd-yo` using OIDC; ordinary CI
+and local commands shall not be publish-capable, and normal releases shall not
+accept a stored npm write credential.
 
 ### Acceptance criteria <!-- sdd:acceptance -->
 
 - The release workflow is separate from ordinary CI, requires an immutable
   release subject, and has only the repository-read and OIDC permissions needed
   to publish.
-- The workflow runs on a GitHub-hosted runner and authenticates npm through its
-  configured trusted publisher rather than a stored npm write token.
+- The workflow runs on a GitHub-hosted runner through the protected `release`
+  environment and binds the release tag, Git subject, package identity, packed
+  inventory, integrity hash, public access, and provenance configuration.
+- When the public `sdd-yo` package already exists or the selected version is not
+  the first public `0.3.0` version, the workflow authenticates npm only through
+  the configured trusted publisher and refuses token authentication.
 - The workflow configuration binds the `briginas/sdd-yo` repository,
   `publish.yml` filename, and protected `release` environment to the public
   package release route.
 - Local developer commands and ordinary CI cannot publish a package merely by
   running build, test, package-smoke, or validation commands.
+
+<a id="req-9ce36b68"></a>
+
+## REQ-9CE36B68 — Constrain and retire the first-publication bootstrap credential
+
+```sdd
+kind: constraint
+verification: manual
+```
+
+### Relations <!-- sdd:relations -->
+
+- depends-on: [REQ-B0B35D6D — Produce installable public and offline package artifacts](private-npm-package-distribution.md#req-b0b35d6d)
+
+### Statement <!-- sdd:statement -->
+
+Only when the public npm registry proves that the unscoped `sdd-yo` package
+does not yet exist and npm therefore provides no package settings in which to
+configure its trusted publisher, the exact first `sdd-yo@0.3.0` release may use
+one temporary granular npm credential inside the protected `publish.yml`
+workflow. That credential shall be bounded to the first reviewed publication
+attempt, kept secret, retired after the attempt, and replaced by the configured
+trusted-publisher OIDC route before any later release.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- Immediately before authorizing the bootstrap attempt, retained registry
+  evidence shows that neither the public `sdd-yo` package nor version `0.3.0`
+  exists and that no package settings are available for preconfiguring its
+  trusted publisher.
+- The bootstrap uses a newly created granular npm credential with the shortest
+  practical expiration and minimum registry permissions available for creating
+  the previously nonexistent package. If npm cannot scope the credential to a
+  nonexistent package, broader package-write scope is accepted only for this
+  one protected attempt.
+- The credential exists only as a secret of the protected GitHub `release`
+  environment. Repository files, Git objects, workflow output, fixtures,
+  retained evidence, package contents, and model context contain neither its
+  value nor a recoverable derivative.
+- The bootstrap workflow accepts the credential only for exact package identity
+  `sdd-yo@0.3.0` after verifying the immutable release subject, exact tag,
+  reviewed inventory and integrity hash, public access, and provenance
+  configuration. Any mismatch stops before registry mutation.
+- The first publication runs on a GitHub-hosted runner and emits npm provenance
+  linking the published artifact to the public `briginas/sdd-yo` repository,
+  exact release subject, and `publish.yml` workflow.
+- After every bootstrap attempt, successful or failed, the npm credential is
+  revoked and the GitHub environment secret is removed before the attempt is
+  considered complete. A retry requires a new credential and a fresh exact
+  release review.
+- After a successful first publication, the identified publisher configures
+  the npm trusted publisher for GitHub owner `briginas`, repository `sdd-yo`,
+  workflow `publish.yml`, environment `release`, and action `npm publish`
+  before any later release is authorized.
+- Retained evidence records the identified publisher, package-absence
+  preflight, exact workflow run and release subject, non-secret credential
+  scope and expiration, revocation, GitHub secret removal, and resulting
+  trusted-publisher configuration. It never records the credential value.
 
 <a id="req-0163273a"></a>
 
@@ -184,24 +249,33 @@ verification: automated
 ### Relations <!-- sdd:relations -->
 
 - depends-on: [REQ-B0B35D6D — Produce installable public and offline package artifacts](private-npm-package-distribution.md#req-b0b35d6d)
-- depends-on: [REQ-ABFFEAF2 — Publish only from an immutable trusted release subject](private-npm-package-distribution.md#req-abffeaf2)
+- depends-on: [REQ-ABFFEAF2 — Publish only from an immutable protected release subject](private-npm-package-distribution.md#req-abffeaf2)
+- depends-on: [REQ-9CE36B68 — Constrain and retire the first-publication bootstrap credential](private-npm-package-distribution.md#req-9ce36b68)
 
 ### Statement <!-- sdd:statement -->
 
 Each public `sdd-yo` package release shall expose a registry identity, integrity
-record, and provenance attestation that bind its immutable versioned artifact to
-the authorized release workflow and public source repository.
+record, and provenance attestation that bind its immutable versioned artifact
+to the authorized release workflow and public source repository. Evidence for
+the first-publication bootstrap shall additionally establish the bounded
+authentication exception, credential retirement, and resulting
+trusted-publisher configuration without exposing the credential.
 
 ### Acceptance criteria <!-- sdd:acceptance -->
 
 - The public registry package name is `sdd-yo`, its first public version is
   `0.3.0`, and its access is public.
-- The release records the exact immutable Git subject, package inventory,
-  package integrity hash, and npm registry response for review before public
-  publication is authorized.
+- Before publication authorization, the release records the exact immutable Git
+  subject, package inventory, package integrity hash, package access,
+  authentication mode, provenance configuration, and reviewed registry state.
 - The published package exposes npm integrity metadata and provenance that link
   it to the configured GitHub Actions release workflow and the public
   `briginas/sdd-yo` repository.
+- Evidence for the `0.3.0` bootstrap records package absence before
+  publication, the exact protected workflow run, the registry response,
+  credential revocation, GitHub secret removal, and subsequent trusted-publisher
+  configuration without retaining the credential value.
 - A release refuses a package version that already exists or whose selected Git
-  subject, package identity, inventory, integrity hash, access mode, publisher,
-  or provenance configuration differs from the reviewed release subject.
+  subject, package identity, inventory, integrity hash, access mode,
+  authentication mode, publisher, or provenance configuration differs from the
+  reviewed release subject.
