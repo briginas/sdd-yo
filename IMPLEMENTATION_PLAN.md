@@ -4,7 +4,7 @@
 
 - State: Milestones 0–16 complete; Milestone 17 active
 - Current phase: Public npm CLI distribution
-- Current leaf: 17.5 — Explicit public npm publication
+- Current leaf: 17.5a — Bootstrap-protected publication workflow correction
 - Last updated: 2026-08-08
 
 ## Source-of-truth map
@@ -232,7 +232,34 @@ authentication and makes no publication-readiness claim. No registry write,
 publication, branch, commit, tag, push, GitHub release, approval, QA verdict,
 plugin artifact, or marketplace action occurred.
 
-#### 17.5 — Explicit public npm publication
+#### 17.5a — Bootstrap-protected publication workflow correction
+
+- Implement the governed one-time bootstrap exception from
+  `REQ-ABFFEAF2`, `REQ-9CE36B68`, and `REQ-0163273A`: restrict
+  `publish.yml` to a protected, immutable `sdd-yo@0.3.0` first-publication
+  attempt; reject an existing package or version before mutation; use a
+  GitHub `release` environment bootstrap secret only in the final publication
+  step; and require the reviewed package bytes and inventory.
+- Keep ordinary CI and local commands non-publish-capable. Do not create a
+  token or secret, tag, GitHub Release, registry write, approval, or QA verdict.
+
+Done when the workflow and Requirement-named tests implement the corrected
+route and the complete local validation suite passes. An immutable Git subject
+and fresh rehearsal remain the next leaf.
+
+#### 17.5b — Corrected-route release rehearsal and exact artifact review
+
+- From the separately committed immutable release subject, build and retain a
+  fresh exact candidate, then run the ordinary npm and isolated Yarn Plug'n'Play
+  consumer routes, npm publication dry run, and complete repository validation.
+- Confirm that the corrected workflow's reviewed artifact constants equal the
+  fresh candidate. Do not create a bootstrap token or secret, tag, release,
+  registry write, approval, or QA verdict.
+
+Done when one exact immutable candidate makes the bootstrap publication
+command reviewable. Publication remains separately authorized.
+
+#### 17.5c — Explicit public npm publication
 
 - After separate authorization, publish only the retained reviewed artifact
   through the selected least-privilege release route. Refuse a changed Git

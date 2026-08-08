@@ -12,6 +12,12 @@ jobs:
     name: Publish exact release artifact
     runs-on: ubuntu-latest
     environment: release
+    env:
+      PACKAGE_NAME: sdd-yo
+      PACKAGE_VERSION: 0.3.0
+      EXPECTED_ARTIFACT_SHA256: 65a7f9f95684085ad54af828e32e5cb64bad2a9f1f3e1ce7769841cf04d4fae8
+      EXPECTED_INVENTORY_SHA256: 6341e4d5024509bb54bcdb255b2458ebbff314ba9d6480c529dc46a02a1f2838
+      EXPECTED_INVENTORY_ENTRY_COUNT: "2125"
     permissions:
       contents: read
       id-token: write
@@ -24,12 +30,19 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Set up Node.js and npm trusted publishing
+      - name: Set up Node.js and npm bootstrap publishing
         uses: actions/setup-node@v7
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
+
+      - name: Require npm provenance support
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm --version
+          node --input-type=module --eval 'const [major, minor] = process.argv[1].split(".").map(Number); if (major < 11 || (major === 11 && minor < 5)) process.exitCode = 1' "$(npm --version)"
 
       - name: Verify the release subject and package identity
         shell: bash
@@ -43,8 +56,30 @@ jobs:
           test "$(git rev-parse "$RELEASE_TAG^{commit}")" = "$RELEASE_SHA"
           test "$RELEASE_TAG" = "v$(node --input-type=module --eval 'import manifest from "./package.json" with { type: "json" }; process.stdout.write(manifest.version)')"
           test "$(node --input-type=module --eval 'import manifest from "./package.json" with { type: "json" }; process.stdout.write(manifest.name)')" = "sdd-yo"
+          test "$(node --input-type=module --eval 'import manifest from "./package.json" with { type: "json" }; process.stdout.write(manifest.version)')" = "$PACKAGE_VERSION"
           test "$(node --input-type=module --eval 'import manifest from "./package.json" with { type: "json" }; process.stdout.write(String(manifest.private))')" = "false"
           test "$(node --input-type=module --eval 'import manifest from "./package.json" with { type: "json" }; process.stdout.write(manifest.publishConfig?.access ?? "")')" = "public"
+
+      - name: Require the exact first-publication registry state
+        shell: bash
+        run: |
+          set -euo pipefail
+          if npm view "$PACKAGE_NAME" version --json >"$RUNNER_TEMP/npm-package.json" 2>"$RUNNER_TEMP/npm-package.err"; then
+            echo "bootstrap publication is forbidden because $PACKAGE_NAME already exists" >&2
+            exit 1
+          fi
+          if ! grep -q "E404" "$RUNNER_TEMP/npm-package.err"; then
+            cat "$RUNNER_TEMP/npm-package.err" >&2
+            exit 1
+          fi
+          if npm view "$PACKAGE_NAME@$PACKAGE_VERSION" version --json >"$RUNNER_TEMP/npm-version.json" 2>"$RUNNER_TEMP/npm-version.err"; then
+            echo "bootstrap publication is forbidden because $PACKAGE_NAME@$PACKAGE_VERSION already exists" >&2
+            exit 1
+          fi
+          if ! grep -q "E404" "$RUNNER_TEMP/npm-version.err"; then
+            cat "$RUNNER_TEMP/npm-version.err" >&2
+            exit 1
+          fi
 
       - name: Install locked dependencies
         run: npm ci
@@ -78,5 +113,19 @@ jobs:
           mkdir "$RUNNER_TEMP/sdd-yo-release"
           npm pack --json --pack-destination "$RUNNER_TEMP/sdd-yo-release"
 
-      - name: Publish through npm trusted publishing
-        run: npm publish "$RUNNER_TEMP/sdd-yo-release/sdd-yo-0.3.0.tgz" --access public --provenance
+      - name: Verify reviewed artifact bytes and inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifact="$RUNNER_TEMP/sdd-yo-release/$PACKAGE_NAME-$PACKAGE_VERSION.tgz"
+          test "$(sha256sum "$artifact" | awk '{print $1}')" = "$EXPECTED_ARTIFACT_SHA256"
+          test "$(tar -tzf "$artifact" | LC_ALL=C sort | sha256sum | awk '{print $1}')" = "$EXPECTED_INVENTORY_SHA256"
+          test "$(tar -tzf "$artifact" | wc -l | tr -d ' ')" = "$EXPECTED_INVENTORY_ENTRY_COUNT"
+
+      - name: Publish the one bootstrap artifact
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_BOOTSTRAP_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$NODE_AUTH_TOKEN"
+          npm publish "$RUNNER_TEMP/sdd-yo-release/$PACKAGE_NAME-$PACKAGE_VERSION.tgz" --access public --provenance
