@@ -116,7 +116,8 @@ Requirement ID in its normalized name.
 
 1. local source execution during contract and scaffold work;
 2. packed npm artifact tested in temporary projects;
-3. npm-distributed CLI for existing-project dogfood;
+3. public unscoped `sdd-yo` package with the `sdd` executable, plus the retained
+   exact offline tarball route;
 4. optional standalone binaries only after installation friction is measured.
 
 Standalone packaging must not change fingerprints, schemas, exit codes, or
@@ -124,7 +125,6 @@ path behavior.
 
 ## Deferred implementation choices
 
-- exact npm package scope and public package name;
 - Git executable versus embedded library;
 - exact Markdown/YAML/XML/schema libraries;
 - standalone binary packager;

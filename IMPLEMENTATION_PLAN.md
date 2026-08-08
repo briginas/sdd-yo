@@ -4,7 +4,7 @@
 
 - State: Milestones 0–16 complete; Milestone 17 active
 - Current phase: Public npm CLI distribution
-- Current leaf: 17.2 — Governed public-distribution specification Change
+- Current leaf: 17.4 — Release rehearsal and exact artifact review
 - Last updated: 2026-08-08
 
 ## Source-of-truth map
@@ -59,10 +59,12 @@ and the optional progressive-disclosure `sdd-yo` Agent Skill.
 - Milestone 12 retained the identified human approval-recording Skill verdict,
   full validation results, and closeout evidence under
   [`plans/completed/milestone-12-explicit-human-approval-evidence-recording.md`](plans/completed/milestone-12-explicit-human-approval-evidence-recording.md).
-- Private `sdd-yo@0.2.0` local-tarball onboarding remains the current released
-  behavior; no registry, marketplace, provenance, cross-platform
-  onboarding-study, or whole-project completeness claim is implied until the
-  selected Milestones 17 and 18 satisfy their respective done conditions.
+- The `sdd-yo@0.3.0` public package metadata, exact compatibility identity,
+  retained offline-tarball route, documentation, and protected trusted-publisher
+  workflow are implemented and locally verified. The package remains
+  unpublished; no registry, marketplace, cross-platform onboarding-study, or
+  whole-project completeness claim is implied until the selected Milestones 17
+  and 18 satisfy their respective done conditions.
 - New product behavior uses a normal bounded `spec-code`, `spec`, or `code`
   Change. Completed bootstrap history grants no alternate specification-write
   or ID-reservation route.
@@ -146,6 +148,14 @@ metadata, registry state, or evidence artifact was created.
 Done when the exact approved public-distribution Requirements are canonical and
 the resulting specification bytes equal the validated candidate.
 
+**Completed 2026-08-08.** Identified human `ivan-briginas`, through issuer
+`product-review`, approved the exact `spec-code` subject based on
+`565bc151afaad7459ed6fce202e42c730ea2a7a0`. The retained ProposalPackage,
+ApprovalEvidence, conflict report, and SpecPatch remain under ignored
+`.sdd/staging/milestone-17.2/`; the exact patch was applied and the canonical
+bytes were recorded in `a116471a5d8a7ea09fe46fa5f5a3e76ad44711d0`. No
+package implementation or publication occurred in that leaf.
+
 #### 17.3 — Public package implementation and release automation
 
 - Update the package manifest for explicit public access and version `0.3.0`,
@@ -165,6 +175,22 @@ the resulting specification bytes equal the validated candidate.
 
 Done when the release implementation is complete and locally verifiable but no
 package has been published.
+
+**Completed 2026-08-08.** The manifest and lockfile now identify the explicit
+public `sdd-yo@0.3.0` package, while the CLI and packaged Skill expose the same
+compatibility identity and the offline tarball route remains inert and exact.
+The README documents exact development installation and
+`npm exec --package=sdd-yo@0.3.0 -- sdd ...` without a global executable. The
+new `publish.yml` runs only for a published release through the protected
+`release` environment, binds the release tag, commit, package identity, and
+exact tarball, grants only repository read and OIDC permissions, and publishes
+with public access and provenance without an npm token. Requirement-named tests
+cover the public manifest, workflow, identity, packed inventory, Skill binding,
+inert lifecycle, commands, and retained offline installation. The complete
+repository validation suite passed; the ignored 17.2 candidate was temporarily
+externalized during root-project checks and restored unchanged afterward. No
+registry request, publication, tag, release, approval, QA decision, branch,
+commit, push, or plugin change occurred.
 
 #### 17.4 — Release rehearsal and exact artifact review
 
@@ -382,8 +408,10 @@ human authorization before implementation:
 
 ## Immediate next leaf
 
-Milestone 17.1 only: verify the public npm identity and release boundary, then
-present the complete ID-free semantic model for explicit confirmation. Do not
-edit canonical specification, package metadata, runtime code, tests, workflows,
-README, or plugin files; do not create IDs, candidates, evidence, branches,
-commits, tags, releases, registry writes, marketplace entries, or submissions.
+Milestone 17.4 only: build and retain one exact release candidate from a
+separately selected immutable Git subject, record its inventory, sizes,
+integrity hashes, provenance input, and package-manager output, then exercise
+the clean npm and isolated Yarn Plug'n'Play consumers and run the npm
+publication dry run plus the complete repository validation suite. Do not
+publish, create a branch, commit, tag, GitHub release, approval or QA verdict,
+registry write, marketplace entry, plugin artifact, or submission.

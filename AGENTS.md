@@ -53,8 +53,8 @@ the full specification when a small Capability or Requirement set is enough.
 - Optional Agent Skill: `sdd-yo`, a progressive-disclosure orchestrator over
   compatible deterministic CLI JSON; it does not replace CLI authority or human
   evidence.
-- Distribution state: version `0.2.0` remains a private package; Milestone 11
-  validates local tarball installation without registry publication.
+- Distribution state: version `0.3.0` is configured as a public npm package but
+  remains unpublished; the exact local tarball installation route is retained.
 
 Exact dependency versions are selected and locked during the scaffold
 milestone. Do not add a runtime dependency without explaining why a platform

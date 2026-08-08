@@ -1,8 +1,12 @@
 {
   "name": "sdd-yo",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Repository-native specification governance with a deterministic CLI and optional Agent Skill.",
-  "private": true,
+  "private": false,
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "license": "Apache-2.0",
   "repository": {
     "type": "git",

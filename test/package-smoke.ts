@@ -33,6 +33,8 @@ type PackResult = {
 
 const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
 const documentedQuickstartCommands = [
+  "npm install --save-dev --save-exact sdd-yo@0.3.0",
+  "npm exec --package=sdd-yo@0.3.0 -- sdd --version --format json",
   "npm install --offline --no-audit --no-fund --save-exact <tarball-path>",
   "node ./node_modules/sdd-yo/dist/bin/sdd.js --version --format json",
   "mkdir .sdd-tooling",
@@ -176,7 +178,7 @@ function parsePackResult(standardOutput: string): PackResult {
   return result as PackResult;
 }
 
-test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-3F19778B REQ-CF3A1070 REQ-A0456614 REQ-DAF21960 REQ-8DC50806 REQ-AA165BDE REQ-FFE60B5A REQ-D9CF3A46 REQ-97D96950 REQ-382BBBD6 REQ-7C848ED0 package builds, verifies its quickstart, manages its repository Skill, and completes first use offline", async () => {
+test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-0163273A REQ-3F19778B REQ-CF3A1070 REQ-A0456614 REQ-DAF21960 REQ-8DC50806 REQ-AA165BDE REQ-FFE60B5A REQ-D9CF3A46 REQ-97D96950 REQ-382BBBD6 REQ-7C848ED0 package builds, verifies its public and offline quickstart, manages its repository Skill, and completes first use offline", async () => {
   const temporaryRoot = await mkdtemp(join(tmpdir(), "sdd-yo-package-smoke-"));
   const buildCache = join(temporaryRoot, "build-cache");
   const installCache = join(temporaryRoot, "install-cache");
@@ -231,6 +233,7 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-3F19778B REQ-CF3A1070 REQ-A0456
       readonly version: string;
       readonly description: string;
       readonly private: boolean;
+      readonly publishConfig: Readonly<{ access: string; provenance: boolean }>;
       readonly license: string;
       readonly repository: Readonly<{ type: string; url: string }>;
       readonly bugs: Readonly<{ url: string }>;
@@ -249,7 +252,10 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-3F19778B REQ-CF3A1070 REQ-A0456
       sourceManifest.description,
       "Repository-native specification governance with a deterministic CLI and optional Agent Skill.",
     );
-    assert.equal(sourceManifest.private, true);
+    assert.equal(sourceManifest.name, "sdd-yo");
+    assert.equal(sourceManifest.version, "0.3.0");
+    assert.equal(sourceManifest.private, false);
+    assert.deepEqual(sourceManifest.publishConfig, { access: "public", provenance: true });
     assert.equal(sourceManifest.license, "Apache-2.0");
     assert.deepEqual(sourceManifest.repository, {
       type: "git",
@@ -314,6 +320,7 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-3F19778B REQ-CF3A1070 REQ-A0456
       readonly version: string;
       readonly description: string;
       readonly private: boolean;
+      readonly publishConfig: Readonly<{ access: string; provenance: boolean }>;
       readonly license: string;
       readonly repository: Readonly<{ type: string; url: string }>;
       readonly bugs: Readonly<{ url: string }>;
@@ -330,7 +337,8 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-3F19778B REQ-CF3A1070 REQ-A0456
     assert.equal(installedManifest.name, sourceManifest.name);
     assert.equal(installedManifest.version, sourceManifest.version);
     assert.equal(installedManifest.description, sourceManifest.description);
-    assert.equal(installedManifest.private, true);
+    assert.equal(installedManifest.private, false);
+    assert.deepEqual(installedManifest.publishConfig, sourceManifest.publishConfig);
     assert.equal(installedManifest.license, sourceManifest.license);
     assert.deepEqual(installedManifest.repository, sourceManifest.repository);
     assert.deepEqual(installedManifest.bugs, sourceManifest.bugs);

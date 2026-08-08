@@ -4,24 +4,25 @@ SDD Yo is a repository-native specification governance system with a
 deterministic `sdd` CLI, versioned JSON protocols, and an optional
 repository-scoped `sdd-yo` Agent Skill.
 
-The source is licensed for public collaboration under Apache-2.0. Source
-visibility and package distribution are separate: the `sdd-yo` npm package is
-still private, and this quickstart installs one exact local tarball without
-using or publishing to an npm registry or Codex plugin marketplace.
+The source is licensed for public collaboration under Apache-2.0. The
+`sdd-yo@0.3.0` package is configured for public npm distribution and retains an
+exact local tarball route for offline use. Installing either package artifact
+does not install or publish a Codex plugin.
 
 ## Project status
 
 SDD Yo is pre-1.0. The deterministic version 1 library, CLI, artifact schemas,
 proposal and exact-patch workflow, evidence composition, merge readiness, and
-repository-scoped Skill route are implemented and tested. The private package
-version is `0.2.0`; no public npm or marketplace release is implied.
+repository-scoped Skill route are implemented and tested. The package version
+is `0.3.0`; repository configuration alone does not imply that this version has
+already been published to npm or to a plugin marketplace.
 
 ## Prerequisites
 
 - Node.js `22.18.0` or newer and npm.
 - One existing Git repository and its absolute root path.
-- One exact private `sdd-yo-0.2.0.tgz` artifact obtained through your approved
-  private distribution channel.
+- Registry access for the public route, or one exact `sdd-yo-0.3.0.tgz`
+  artifact obtained through your approved offline distribution channel.
 - A choice of adoption mode: `incremental` governs only the specification scope
   you add, while `complete` declares complete adoption of the repository.
 
@@ -29,10 +30,30 @@ The commands below use `<repository-root>` and `<tarball-path>` as placeholders.
 Replace them with absolute paths and run the commands from the selected
 repository root. Do not rely on a global `sdd` executable or a global Skill.
 
-## Install the exact local package
+## Install the exact public package
+
+Install the package as exact development tooling in the selected repository:
+
+```text
+npm install --save-dev --save-exact sdd-yo@0.3.0
+```
+
+Invoke the exact public package without requiring a global executable or PATH
+fallback:
+
+```text
+npm exec --package=sdd-yo@0.3.0 -- sdd --version --format json
+```
+
+Require exit code `0`, `status: "ok"`, package and CLI version `0.3.0`, and
+compatible major `1` for both the JSON-schema and Skill protocols. Continue
+with the repository Skill commands below only after the package is installed
+in the selected repository.
+
+## Install the exact offline package
 
 Install only the selected tarball. `--offline` prevents registry fallback, and
-`--save-exact` records the exact private package version in the selected
+`--save-exact` records the exact offline package version in the selected
 repository's npm state.
 
 ```text
@@ -45,7 +66,7 @@ Check the installed package, CLI, JSON-schema, and Skill protocol identity:
 node ./node_modules/sdd-yo/dist/bin/sdd.js --version --format json
 ```
 
-Require exit code `0`, `status: "ok"`, package and CLI version `0.2.0`, and
+Require exit code `0`, `status: "ok"`, package and CLI version `0.3.0`, and
 compatible major `1` for both the JSON-schema and Skill protocols.
 
 ### Yarn Plug'n'Play repositories
@@ -137,10 +158,10 @@ internal failure. A warning is not proof of a guarantee it says is unavailable.
 
 ## Update or remove the Skill
 
-To update, first install the newly selected exact private tarball with the same
-offline `npm install` command above. Then explicitly replace the owned
-repository Skill installation, or receive an `unchanged` result when its bytes
-and binding are already exact:
+To update, first install the newly selected exact public package or offline
+tarball with the corresponding exact command above. Then explicitly replace
+the owned repository Skill installation, or receive an `unchanged` result when
+its bytes and binding are already exact:
 
 ```text
 node ./node_modules/sdd-yo/dist/bin/sdd.js skill update --root <repository-root> --format json

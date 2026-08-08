@@ -1,0 +1,82 @@
+name: Publish npm package
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Publish exact release artifact
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Check out the immutable release subject
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Node.js and npm trusted publishing
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Verify the release subject and package identity
+        shell: bash
+        env:
+          RELEASE_SHA: ${{ github.sha }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "briginas/sdd-yo"
+          test "$GITHUB_REF" = "refs/tags/$RELEASE_TAG"
+          test "$(git rev-parse "$RELEASE_TAG^{commit}")" = "$RELEASE_SHA"
+          test "$RELEASE_TAG" = "v$(node --input-type=module --eval 'import manifest from "./package.json" with { type: "json" }; process.stdout.write(manifest.version)')"
+          test "$(node --input-type=module --eval 'import manifest from "./package.json" with { type: "json" }; process.stdout.write(manifest.name)')" = "sdd-yo"
+          test "$(node --input-type=module --eval 'import manifest from "./package.json" with { type: "json" }; process.stdout.write(String(manifest.private))')" = "false"
+          test "$(node --input-type=module --eval 'import manifest from "./package.json" with { type: "json" }; process.stdout.write(manifest.publishConfig?.access ?? "")')" = "public"
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Run product and security tests
+        run: npm test
+
+      - name: Verify package
+        run: npm run test:package
+
+      - name: Check schemas
+        run: npm run check:schemas
+
+      - name: Build
+        run: npm run build
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Verify contracts
+        run: npm run verify:contracts
+
+      - name: Require an unchanged release worktree
+        run: git diff --exit-code --check && git diff --exit-code
+
+      - name: Pack the exact release artifact
+        run: |
+          mkdir "$RUNNER_TEMP/sdd-yo-release"
+          npm pack --json --pack-destination "$RUNNER_TEMP/sdd-yo-release"
+
+      - name: Publish through npm trusted publishing
+        run: npm publish "$RUNNER_TEMP/sdd-yo-release/sdd-yo-0.3.0.tgz" --access public --provenance

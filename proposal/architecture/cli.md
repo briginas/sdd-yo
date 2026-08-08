@@ -80,7 +80,7 @@ sdd skill update --root <repository-root>
 sdd skill remove --root <repository-root>
 ```
 
-Installs the verified Skill payload from the executing private package at
+Installs the verified Skill payload from the executing exact package at
 `.agents/skills/sdd-yo` in one explicitly selected Git repository root. It can
 run before SDD Project initialization, does not use `--cwd` or `--config`, and
 refuses an existing destination, symlink traversal, incompatible payload, or a

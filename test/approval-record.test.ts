@@ -204,7 +204,7 @@ test("REQ-32C76ED3 REQ-F7D39246 records approved and rejected decisions with exa
     });
     const evidence = JSON.parse(await readFile(join(value.root, target), "utf8"));
     assert.equal(evidence.project_id, value.projectId);
-    assert.deepEqual(evidence.producer, { name: "sdd", version: "0.2.0" });
+    assert.deepEqual(evidence.producer, { name: "sdd", version: "0.3.0" });
     assert.equal(evidence.actor, "Ivan Briginas");
     assert.equal(evidence.reason, "I explicitly approve.\nKeep this line.\n");
     assert.equal("created_at" in evidence, false);
