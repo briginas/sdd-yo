@@ -2,10 +2,10 @@
 
 ## Status
 
-- State: Milestones 0–16 complete; Milestone 17 planned
+- State: Milestones 0–16 complete; Milestone 17 active
 - Current phase: Public npm CLI distribution
-- Current leaf: 17.1 — Public-release contract and registry preflight
-- Last updated: 2026-08-07
+- Current leaf: 17.2 — Governed public-distribution specification Change
+- Last updated: 2026-08-08
 
 ## Source-of-truth map
 
@@ -66,6 +66,13 @@ and the optional progressive-disclosure `sdd-yo` Agent Skill.
 - New product behavior uses a normal bounded `spec-code`, `spec`, or `code`
   Change. Completed bootstrap history grants no alternate specification-write
   or ID-reservation route.
+- Leaf 17.1 is complete. The human confirmed the unchanged ID-free public
+  distribution model and the preflight choices: the personal npm publisher is
+  `briginas`; the unscoped `sdd-yo` name is available; the first public version
+  is `0.3.0`; and publication will use a GitHub Actions trusted publisher for
+  `briginas/sdd-yo` through `publish.yml` with a protected `release`
+  environment, OIDC, and provenance. No registry mutation or repository
+  product change occurred in that leaf.
 
 Repository-wide work discipline and validation commands remain authoritative in
 [`AGENTS.md`](AGENTS.md). Architecture decisions live under
@@ -116,6 +123,14 @@ Done when the human has confirmed one unchanged semantic model and every
 publisher, package-name, access, version, and provenance choice needed by the
 candidate is explicit. Registry mutation, package publication, implementation,
 and evidence creation are excluded.
+
+**Completed 2026-08-08.** The confirmed model changes the private-only meaning
+of `REQ-B0B35D6D`, `REQ-A2199BC2`, and `REQ-43B4311E` under `CAP-6AD33965` and
+requires new public-release security Requirements. It preserves the offline
+tarball route, exact compatibility identity, inert installation, and all human,
+Skill-installation, project-initialization, Git, approval, QA, and merge
+authority boundaries. No candidate, ID, canonical specification, package
+metadata, registry state, or evidence artifact was created.
 
 #### 17.2 — Governed public-distribution specification Change
 
