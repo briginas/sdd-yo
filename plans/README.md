@@ -42,6 +42,9 @@ remain in [`../IMPLEMENTATION_PLAN.md`](../IMPLEMENTATION_PLAN.md).
 - [`completed/milestone-16-public-github-source-readiness.md`](completed/milestone-16-public-github-source-readiness.md)
   — completed public-source transition, private package-distribution boundary,
   public repository baseline, security-control decisions, and closeout.
+- [`completed/milestone-17-public-npm-cli-distribution.md`](completed/milestone-17-public-npm-cli-distribution.md)
+  — completed public npm CLI publication, bootstrap recovery, macOS consumer
+  evidence, explicit Linux/Windows deferral, and closeout.
 
 Completed plans are historical records. Use the current canonical
 [`../spec/README.md`](../spec/README.md), architecture

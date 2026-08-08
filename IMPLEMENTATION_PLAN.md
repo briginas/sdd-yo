@@ -2,9 +2,9 @@
 
 ## Status
 
-- State: Milestones 0–16 complete; Milestone 17 active
-- Current phase: Public npm CLI distribution
-- Current leaf: 17.6 — Public consumer evidence and closeout
+- State: Milestones 0–17 complete; Milestone 18 active
+- Current phase: Codex plugin with bundled CLI
+- Current leaf: 18.1 — Plugin execution contract and semantic model
 - Last updated: 2026-08-08
 
 ## Source-of-truth map
@@ -20,7 +20,8 @@
   [`plans/completed/milestone-13-pre-id-semantic-model-confirmation.md`](plans/completed/milestone-13-pre-id-semantic-model-confirmation.md),
   [`plans/completed/milestone-14-remove-configured-evidence-issuer-allowlists.md`](plans/completed/milestone-14-remove-configured-evidence-issuer-allowlists.md),
   [`plans/completed/milestone-15-semantic-spec-patch-confirmation.md`](plans/completed/milestone-15-semantic-spec-patch-confirmation.md),
-  and [`plans/completed/milestone-16-public-github-source-readiness.md`](plans/completed/milestone-16-public-github-source-readiness.md)
+  [`plans/completed/milestone-16-public-github-source-readiness.md`](plans/completed/milestone-16-public-github-source-readiness.md),
+  and [`plans/completed/milestone-17-public-npm-cli-distribution.md`](plans/completed/milestone-17-public-npm-cli-distribution.md)
 - Historical bootstrap procedure:
   [`plans/completed/self-bootstrap-procedure.md`](plans/completed/self-bootstrap-procedure.md)
 
@@ -48,9 +49,7 @@ and the optional progressive-disclosure `sdd-yo` Agent Skill.
   to `0.2.0`. Its exact governed subject and validation evidence are archived.
 - Milestone 15 is complete; its execution record is archived at
   [`plans/completed/milestone-15-semantic-spec-patch-confirmation.md`](plans/completed/milestone-15-semantic-spec-patch-confirmation.md).
-- Milestone 16 is complete. The GitHub source repository is public while the
-  `sdd-yo@0.2.0` npm package and Codex plugin remain unpublished; its exact
-  record is archived at
+- Milestone 16 is complete; its exact execution record is archived at
   [`plans/completed/milestone-16-public-github-source-readiness.md`](plans/completed/milestone-16-public-github-source-readiness.md).
 - The deterministic version 1 library, CLI, artifact schemas, proposal and exact
   patch workflow, evidence composition, findings validation, merge readiness,
@@ -59,44 +58,9 @@ and the optional progressive-disclosure `sdd-yo` Agent Skill.
 - Milestone 12 retained the identified human approval-recording Skill verdict,
   full validation results, and closeout evidence under
   [`plans/completed/milestone-12-explicit-human-approval-evidence-recording.md`](plans/completed/milestone-12-explicit-human-approval-evidence-recording.md).
-- The `sdd-yo@0.3.0` public package metadata, exact compatibility identity,
-  retained offline-tarball route, documentation, and protected trusted-publisher
-  workflow are implemented and locally verified. The package remains
-  unpublished; no registry, marketplace, cross-platform onboarding-study, or
-  whole-project completeness claim is implied until the selected Milestones 17
-  and 18 satisfy their respective done conditions.
-- Leaf 17.4 retained one exact release candidate from immutable Git subject
-  `da3365ae58051facf9eb520b2b2db5116697c8a2`, exercised the ordinary npm and
-  isolated Yarn Plug'n'Play consumer routes, completed the npm publication dry
-  run, and passed the full repository validation suite. The package remains
-  unpublished and no authentication, publication-readiness, approval, or QA
-  claim was made.
-- Leaf 17.5a corrected the one-time bootstrap publication route in commit
-  `2efbe7652507409a9c023d8715054986364fde05`: `publish.yml` now binds the
-  first `sdd-yo@0.3.0` attempt to reviewed artifact and inventory constants,
-  refuses an existing package or version before mutation, and exposes the
-  protected release-environment bootstrap secret only to the final publication
-  step. The Requirement-named tests and complete local validation suite passed;
-  no token or secret, tag, GitHub Release, registry write, approval, or QA
-  verdict was created.
-- Leaf 17.5b retained a fresh exact release candidate from immutable Git
-  subject `5380db3eccdf0967ad05987991d7f654ef32a4f5`, confirmed that its
-  SHA-256, inventory digest, and entry count equal the corrected workflow's
-  reviewed constants, exercised the ordinary npm and isolated Yarn
-  Plug'n'Play consumer routes, and passed the publication dry run and complete
-  repository validation suite. The package remains unpublished; no bootstrap
-  credential or secret, tag, GitHub Release, registry write, approval, or QA
-  verdict was created.
 - New product behavior uses a normal bounded `spec-code`, `spec`, or `code`
   Change. Completed bootstrap history grants no alternate specification-write
   or ID-reservation route.
-- Leaf 17.1 is complete. The human confirmed the unchanged ID-free public
-  distribution model and the preflight choices: the personal npm publisher is
-  `briginas`; the unscoped `sdd-yo` name is available; the first public version
-  is `0.3.0`; and publication will use a GitHub Actions trusted publisher for
-  `briginas/sdd-yo` through `publish.yml` with a protected `release`
-  environment, OIDC, and provenance. No registry mutation or repository
-  product change occurred in that leaf.
 
 Repository-wide work discipline and validation commands remain authoritative in
 [`AGENTS.md`](AGENTS.md). Architecture decisions live under
@@ -105,366 +69,9 @@ plan.
 
 ## Next milestone
 
-### Milestone 17 — Public npm CLI distribution
+### Milestone 18 — Codex plugin with bundled CLI
 
-Publish an exact `sdd-yo` package to the public npm registry so a developer can
-install the deterministic CLI as repository tooling and invoke its `sdd`
-executable through npm without obtaining a private tarball. Preserve the local
-tarball as an offline installation artifact, keep installation lifecycle inert,
-and bind the public package, CLI, library, schemas, and packaged repository
-Skill to one compatibility identity.
-
-The planned first public version is `sdd-yo@0.3.0`. Before that identity becomes
-normative or publishable, leaf 17.1 must confirm that the unscoped package name
-is available to or already controlled by the selected npm publisher. If it is
-not, stop for an explicit naming decision; do not silently scope or rename the
-package.
-
-Milestone 17 changes the currently private distribution contract and therefore
-uses one normal bounded `spec-code` Change. The publication command, Git commit,
-tag or release creation, and any human approval or QA verdict remain separately
-authorized operations.
-
-#### 17.1 — Public-release contract and registry preflight
-
-- Recheck the current official npm publication, trusted-publishing,
-  provenance, access, and package-name rules at execution time.
-- Verify package-name ownership or availability, selected publisher identity,
-  account and organization boundary, required authentication policy, and the
-  supported provenance route without exposing credentials in repository files,
-  logs, fixtures, or model context.
-- Present one complete ID-free semantic model for the `spec-code` Change. It
-  must cover public registry installation, exact-version invocation through
-  npm, preservation of the offline tarball route, release-subject and artifact
-  identity, inert installation, and explicit non-authority for Skill
-  installation, project initialization, Git, approval, QA, or merge effects.
-- Identify the existing `CAP-6AD33965` and its Requirements whose private-only
-  meaning must change, plus any genuinely new release-security Requirements;
-  do not generate IDs, draft a candidate, edit canonical `spec/`, or change
-  package metadata before explicit semantic-model confirmation.
-
-Done when the human has confirmed one unchanged semantic model and every
-publisher, package-name, access, version, and provenance choice needed by the
-candidate is explicit. Registry mutation, package publication, implementation,
-and evidence creation are excluded.
-
-**Completed 2026-08-08.** The confirmed model changes the private-only meaning
-of `REQ-B0B35D6D`, `REQ-A2199BC2`, and `REQ-43B4311E` under `CAP-6AD33965` and
-requires new public-release security Requirements. It preserves the offline
-tarball route, exact compatibility identity, inert installation, and all human,
-Skill-installation, project-initialization, Git, approval, QA, and merge
-authority boundaries. No candidate, ID, canonical specification, package
-metadata, registry state, or evidence artifact was created.
-
-#### 17.2 — Governed public-distribution specification Change
-
-- Materialize only the confirmed candidate, validate it in `spec-code` mode,
-  and present the exact normative delta and affected scope through the normal
-  Proposal Gate.
-- Record any approval or rejection only from an identified human decision,
-  revalidate the exact subject after every pause, and prepare/apply only the
-  separately authorized exact `SpecPatch` on the selected integration base.
-- Stop after canonical application. Do not implement package changes, publish,
-  create a branch or commit, or infer review or QA from deterministic checks.
-
-Done when the exact approved public-distribution Requirements are canonical and
-the resulting specification bytes equal the validated candidate.
-
-**Completed 2026-08-08.** Identified human `ivan-briginas`, through issuer
-`product-review`, approved the exact `spec-code` subject based on
-`565bc151afaad7459ed6fce202e42c730ea2a7a0`. The retained ProposalPackage,
-ApprovalEvidence, conflict report, and SpecPatch remain under ignored
-`.sdd/staging/milestone-17.2/`; the exact patch was applied and the canonical
-bytes were recorded in `a116471a5d8a7ea09fe46fa5f5a3e76ad44711d0`. No
-package implementation or publication occurred in that leaf.
-
-#### 17.3 — Public package implementation and release automation
-
-- Update the package manifest for explicit public access and version `0.3.0`,
-  preserving the `sdd` executable, ESM/library exports, Node.js baseline,
-  versioned schemas, bundled production dependencies, and repository Skill
-  payload required by the canonical contract.
-- Support and document exact local installation as development tooling and the
-  cross-platform `npm exec -- sdd ...` invocation; do not require a global
-  executable or rely on ambiguous PATH fallback.
-- Add a least-privilege release workflow that binds one immutable Git subject
-  to one npm artifact and uses the confirmed current trusted-publishing and
-  provenance mechanism. It must not expose a long-lived npm token, run on an
-  unreviewed subject, or make ordinary CI and product commands publish-capable.
-- Extend Requirement-named tests and package smoke coverage for public manifest
-  metadata, exact packed inventory, executable wiring, lifecycle-hook absence,
-  README commands, and unchanged private-tarball installation.
-
-Done when the release implementation is complete and locally verifiable but no
-package has been published.
-
-**Completed 2026-08-08.** The manifest and lockfile now identify the explicit
-public `sdd-yo@0.3.0` package, while the CLI and packaged Skill expose the same
-compatibility identity and the offline tarball route remains inert and exact.
-The README documents exact development installation and
-`npm exec --package=sdd-yo@0.3.0 -- sdd ...` without a global executable. The
-new `publish.yml` runs only for a published release through the protected
-`release` environment, binds the release tag, commit, package identity, and
-exact tarball, grants only repository read and OIDC permissions, and publishes
-with public access and provenance without an npm token. Requirement-named tests
-cover the public manifest, workflow, identity, packed inventory, Skill binding,
-inert lifecycle, commands, and retained offline installation. The complete
-repository validation suite passed; the ignored 17.2 candidate was temporarily
-externalized during root-project checks and restored unchanged afterward. No
-registry request, publication, tag, release, approval, QA decision, branch,
-commit, push, or plugin change occurred.
-
-#### 17.4 — Release rehearsal and exact artifact review
-
-- Build and pack one release candidate from the exact selected Git subject;
-  retain its version, full inventory, sizes, integrity hashes, provenance input,
-  and package-manager output without writing the tarball into tracked source.
-- Exercise clean ordinary npm and isolated Yarn Plug'n'Play consumers, including
-  package identity, `npm exec -- sdd --version --format json`, repository Skill
-  installation, initialization, first validation, and outside-root sentinels.
-- Run an npm publication dry run and the complete repository validation suite.
-  Treat network failure, unavailable authentication, incomplete output, or a
-  changed artifact as failure rather than publication readiness.
-
-Done when one exact release candidate and publication command are reviewable.
-No commit, tag, GitHub release, npm publication, approval, or QA verdict is
-implied.
-
-**Completed 2026-08-08.** The retained candidate was built from exact Git
-subject `da3365ae58051facf9eb520b2b2db5116697c8a2` as
-`sdd-yo-0.3.0.tgz` with 2,125 entries, packed size 1,145,468 bytes, unpacked
-size 5,964,868 bytes, SHA-256
-`65a7f9f95684085ad54af828e32e5cb64bad2a9f1f3e1ce7769841cf04d4fae8`,
-and npm integrity
-`sha512-kr+RaJzHXEmtPEu/Dz+1zebmSkX6m+aAoBrda9Cu4M8erYquPhswcGhLaG6dWssy2ImE6Jo2IaRgNYuRzUjHCg==`.
-The clean offline npm consumer reported the exact compatibility identity
-through `npm exec`; package smoke passed the isolated Yarn Plug'n'Play Skill
-installation, initialization, first validation, and outside-root checks. The
-npm publication dry run and complete repository validation suite passed. Exact
-command output, full inventory, artifact, hashes, provenance input, validation
-context, and the non-publishing command remain under ignored
-`.sdd/staging/milestone-17.4/`. The dry run did not exercise GitHub Actions OIDC
-authentication and makes no publication-readiness claim. No registry write,
-publication, branch, commit, tag, push, GitHub release, approval, QA verdict,
-plugin artifact, or marketplace action occurred.
-
-#### 17.5a — Bootstrap-protected publication workflow correction
-
-- Implement the governed one-time bootstrap exception from
-  `REQ-ABFFEAF2`, `REQ-9CE36B68`, and `REQ-0163273A`: restrict
-  `publish.yml` to a protected, immutable `sdd-yo@0.3.0` first-publication
-  attempt; reject an existing package or version before mutation; use a
-  GitHub `release` environment bootstrap secret only in the final publication
-  step; and require the reviewed package bytes and inventory.
-- Keep ordinary CI and local commands non-publish-capable. Do not create a
-  token or secret, tag, GitHub Release, registry write, approval, or QA verdict.
-
-Done when the workflow and Requirement-named tests implement the corrected
-route and the complete local validation suite passes. An immutable Git subject
-and fresh rehearsal remain the next leaf.
-
-**Completed 2026-08-08.** `REQ-ABFFEAF2`, `REQ-9CE36B68`, and
-`REQ-0163273A` are covered by the corrected workflow test. The complete local
-suite passed: `npm test` (236 checks), `npm run test:package`,
-`npm run check:schemas`, `npm run build`, `npm run typecheck`,
-`npm run format:check`, and `npm run verify:contracts` (28,038 checks). No
-external release action occurred.
-
-#### 17.5b — Corrected-route release rehearsal and exact artifact review
-
-- From the separately committed immutable release subject, build and retain a
-  fresh exact candidate, then run the ordinary npm and isolated Yarn Plug'n'Play
-  consumer routes, npm publication dry run, and complete repository validation.
-- Confirm that the corrected workflow's reviewed artifact constants equal the
-  fresh candidate. Do not create a bootstrap token or secret, tag, release,
-  registry write, approval, or QA verdict.
-
-Done when one exact immutable candidate makes the bootstrap publication
-command reviewable. Publication remains separately authorized.
-
-**Completed 2026-08-08.** The retained candidate from exact Git subject
-`5380db3eccdf0967ad05987991d7f654ef32a4f5` is
-`sdd-yo-0.3.0.tgz` with 2,125 entries, packed size 1,145,468 bytes, unpacked
-size 5,964,868 bytes, SHA-256
-`65a7f9f95684085ad54af828e32e5cb64bad2a9f1f3e1ce7769841cf04d4fae8`,
-inventory SHA-256
-`6341e4d5024509bb54bcdb255b2458ebbff314ba9d6480c529dc46a02a1f2838`,
-and npm integrity
-`sha512-kr+RaJzHXEmtPEu/Dz+1zebmSkX6m+aAoBrda9Cu4M8erYquPhswcGhLaG6dWssy2ImE6Jo2IaRgNYuRzUjHCg==`.
-The workflow constants equal that candidate; the ordinary npm and isolated
-Yarn Plug'n'Play consumer routes passed through package smoke, as did
-`npm publish --dry-run --access public --provenance`, `npm test` (236 checks),
-`npm run test:package`, `npm run check:schemas`, `npm run build`,
-`npm run typecheck`, `npm run format:check`, and `npm run verify:contracts`
-(28,054 checks). Exact candidate bytes, inventory, command outputs, and
-validation context remain under ignored `.sdd/staging/milestone-17.5b/attempt-2/`.
-The dry run did not authenticate through GitHub Actions or create any external
-release state; publication remains separately authorized.
-
-#### 17.5c — Explicit public npm publication
-
-- After separate authorization, publish only the retained reviewed artifact
-  through the selected least-privilege release route. Refuse a changed Git
-  subject, version, package inventory, integrity hash, access mode, publisher,
-  or provenance configuration.
-- Verify the immutable public registry response, package metadata, dist-tag,
-  integrity and provenance records, and retain the exact publication subject.
-  Do not overwrite or reuse an existing version.
-
-Done when `sdd-yo@0.3.0` is publicly resolvable with the reviewed identity and
-evidence. Publication does not authorize a plugin submission, Git merge, or
-release announcement.
-
-**Attempted 2026-08-08; incomplete.** The protected `v0.3.0` GitHub Release
-targeted reviewed subject `5380db3eccdf0967ad05987991d7f654ef32a4f5`, but
-workflow run `31272878913` stopped before `npm publish`: the detached checkout
-had no local `main` reference, so the required root validation tests received
-`SDD_GIT_REF_UNRESOLVED` and exited 3. No registry write occurred. The
-one-time npm credential and protected environment secret were removed after
-the failed attempt. Do not rerun this release or reuse that credential; a
-fresh reviewed route remains separately authorized after the correction.
-
-#### 17.5d — Detached release-checkout correction
-
-- Restore the workflow-only local `main` reference from the same immutable
-  release SHA after checkout, and fail closed unless it resolves to exactly
-  that SHA. The workflow must not alter a remote branch, tag, release, or
-  package artifact.
-- Extend the Requirement-named public-release test for the reference binding
-  and reproduce the detached-one-commit validation failure locally.
-- Run the complete repository validation suite. Do not create a token or
-  secret, modify or delete `v0.3.0`, rerun the failed workflow, publish to the
-  registry, or create a new release.
-
-Done when the release workflow's validation context is deterministically bound
-to its immutable subject and all local checks pass. A new release review and
-bootstrap attempt remain separately authorized.
-
-**Completed 2026-08-08.** The workflow now restores only its local `main`
-reference from `github.sha` and fails closed unless it resolves to that same
-immutable release subject. The Requirement-named workflow contract test and a
-disposable one-commit detached checkout reproduced the prior
-`SDD_GIT_REF_UNRESOLVED` failure before the local reference and successful
-validation after it. `npm test` (236 checks), `npm run test:package`,
-`npm run check:schemas`, `npm run build`, `npm run typecheck`,
-`npm run format:check`, `npm run verify:contracts` (28,104 checks), and
-`git diff --check` passed. No credential, secret, tag, release, workflow rerun,
-or registry action occurred.
-
-#### 17.5e — Failed-attempt recovery decision
-
-- Recheck npm package absence, the failed Release and tag subject, and current
-  GitHub/npm recovery rules. Present one concise recovery model that identifies
-  whether and how a new immutable subject can be created for the unchanged
-  `sdd-yo@0.3.0` first-publication contract.
-- Obtain an explicit human decision before deleting, replacing, or creating
-  any release or tag, creating a new credential or secret, or reattempting
-  publication. Do not infer that decision from the failed attempt or the
-  correction.
-
-Done when the permitted recovery route and its required fresh review are
-explicit. No GitHub, npm, credential, publication, approval, QA, or repository
-mutation is implied.
-
-**Completed 2026-08-08.** The package and version remained absent from npm;
-the failed Release and tag were replaced only after the human explicitly chose
-the recovery route. The corrected `main` subject
-`1a6eeeb54341077fbd3be8451918afe0915fd3ab` passed the complete local suite and
-reproduced the reviewed artifact SHA-256, inventory digest, and 2,125-entry
-count. The replacement `v0.3.0` Release started run `31274039503`, but it
-stopped at `npm publish` with `EOTP`: the short-lived read/write granular token
-did not bypass npm 2FA. npm still returned 404 for `sdd-yo@0.3.0`; no package
-was published. The protected environment secret and the token were removed.
-
-#### 17.5f — Bootstrap authentication correction decision
-
-- Recheck the current npm authentication rules for direct CI publication and
-  the first-publication limitation on npm trusted publishing. Present one
-  concise choice: a fresh seven-day read/write granular token with bypass 2FA
-  enabled and immediate post-attempt revocation, or a separately designed
-  staged-publication route that preserves human npm approval.
-- Record the exact chosen route and the required fresh Release/tag review
-  before any workflow edit, credential or secret creation, release mutation,
-  workflow rerun, or registry action. Do not infer a bypass-2FA authorization
-  from the prior least-privilege token.
-
-Done when one credential and publication authority model is explicitly chosen.
-No token, secret, release/tag change, workflow rerun, npm write, approval, QA,
-or repository code change is implied.
-
-**Completed 2026-08-08.** The human chose the direct-publication route: one
-fresh seven-day granular token with read/write access to all packages and
-bypass 2FA enabled, exposed only as the protected `release` environment secret
-for one reviewed retry and removed immediately afterwards. Creating that token
-and secret, rerunning the failed Release workflow, and publishing remain
-separately authorized operations.
-
-#### 17.5g — One-time direct-publication credential preparation
-
-- Create only the selected one-time granular token: read/write access to all
-  packages, bypass 2FA enabled, no organization access or IP ranges, and a
-  seven-day expiry. Bind it only as `NPM_BOOTSTRAP_TOKEN` in the protected
-  `release` environment, without exposing its value.
-- Recheck the npm package absence, `v0.3.0` subject, environment protection,
-  and secret name. Present the exact retained failed-run retry boundary for
-  separate human authorization.
-
-Done when the credential is present, bounded, and reviewable without revealing
-its value. Do not rerun the workflow, publish, alter the Release/tag, or make a
-QA decision.
-
-**Completed 2026-08-08.** npm continued to return 404 for `sdd-yo@0.3.0`; the
-remote `main` and `v0.3.0` commit both resolved to
-`1a6eeeb54341077fbd3be8451918afe0915fd3ab`. One unused seven-day granular
-token was created with read/write access to all packages, bypass 2FA enabled,
-and no organization access; its value was not retained. Only the
-`NPM_BOOTSTRAP_TOKEN` name was confirmed in the protected `release`
-environment.
-
-#### 17.5h — One-time direct-publication retry
-
-- After separate authorization, rerun only failed Release workflow run
-  `31274039503` for `v0.3.0` at
-  `1a6eeeb54341077fbd3be8451918afe0915fd3ab`; do not create, replace, edit, or
-  delete a Release/tag and do not rerun the earlier failed run.
-- Require fresh human approval of the protected `release` environment. Verify
-  the public package, version, integrity, provenance, and dist-tag after a
-  successful job; immediately remove the one-time token and environment secret
-  afterwards. Stop on any failure before a registry write.
-
-Done when the exact reviewed package is publicly resolvable and the one-time
-credential material is absent. No plugin publication, merge, QA verdict, or
-release announcement is implied.
-
-**Completed 2026-08-08.** The human reran only `31274039503` and approved the
-protected environment again. Attempt 2 completed successfully on
-`1a6eeeb54341077fbd3be8451918afe0915fd3ab`. Public npm metadata now resolves
-`sdd-yo@0.3.0` as `latest`, with the reviewed SHA-512 integrity,
-`f6f0d84b87a9e2d8fc8e71778c379bf9a637ec1c` shasum, and a SLSA provenance
-attestation. The npm token list and the `release` environment secret list were
-both rechecked empty. No plugin publication, merge, QA verdict, or release
-announcement occurred.
-
-#### 17.6 — Public consumer evidence and closeout
-
-- Install exact `sdd-yo@0.3.0` from the public registry into fresh Linux,
-  macOS, and Windows consumers without a source checkout or private artifact.
-- Verify the CLI, library, declarations, schemas, repository Skill installation
-  and compatibility binding, incremental initialization, and first validation;
-  retain platform, Node/npm, package-integrity, CLI-identity, command, and
-  filesystem-write evidence.
-- Update the public quickstart and recovery guidance to distinguish registry
-  installation from the retained offline-tarball route, then run the complete
-  validation suite and the normal milestone closeout procedure.
-
-Milestone 17 is done only when the public artifact is independently installable
-on every claimed platform, documentation matches the verified commands, and
-the exact execution record is archived. It does not publish or install a Codex
-plugin.
-
-### Planned Milestone 18 — Codex plugin with bundled CLI
-
-After Milestone 17 closes, distribute `sdd-yo` as an installable Codex plugin
+Distribute `sdd-yo` as an installable Codex plugin
 whose Skill invokes an exact CLI bundled in the same installed plugin artifact.
 The user must not install `sdd-yo` into each target repository, copy Skill files,
 or download a CLI on first use. The existing repository-scoped package and Skill
@@ -631,7 +238,7 @@ human authorization before implementation:
 
 ## Immediate next leaf
 
-Milestone 17.6 only: collect public consumer evidence for `sdd-yo@0.3.0` on
-fresh Linux, macOS, and Windows consumers, update public recovery guidance,
-then perform the normal milestone closeout procedure. Do not publish a plugin,
-merge, or announce the release.
+Milestone 18.1 only: recheck the official Codex plugin host and marketplace
+contract, then present one complete ID-free plugin execution model for human
+confirmation. Do not create IDs, a candidate, plugin scaffold, package-version
+change, marketplace entry, publication, Git operation, approval, or QA verdict.

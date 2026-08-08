@@ -26,6 +26,10 @@ already been published to npm or to a plugin marketplace.
 - A choice of adoption mode: `incremental` governs only the specification scope
   you add, while `complete` declares complete adoption of the repository.
 
+The public-registry route has independent consumer evidence on macOS only.
+Linux and Windows consumer compatibility is deferred and is not claimed by this
+release guidance.
+
 The commands below use `<repository-root>` and `<tarball-path>` as placeholders.
 Replace them with absolute paths and run the commands from the selected
 repository root. Do not rely on a global `sdd` executable or a global Skill.
