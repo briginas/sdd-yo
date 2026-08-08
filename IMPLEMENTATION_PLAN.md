@@ -4,7 +4,7 @@
 
 - State: Milestones 0–16 complete; Milestone 17 active
 - Current phase: Public npm CLI distribution
-- Current leaf: 17.5a — Bootstrap-protected publication workflow correction
+- Current leaf: 17.5b — Corrected-route release rehearsal and exact artifact review
 - Last updated: 2026-08-08
 
 ## Source-of-truth map
@@ -71,6 +71,14 @@ and the optional progressive-disclosure `sdd-yo` Agent Skill.
   run, and passed the full repository validation suite. The package remains
   unpublished and no authentication, publication-readiness, approval, or QA
   claim was made.
+- Leaf 17.5a corrected the one-time bootstrap publication route in commit
+  `2efbe7652507409a9c023d8715054986364fde05`: `publish.yml` now binds the
+  first `sdd-yo@0.3.0` attempt to reviewed artifact and inventory constants,
+  refuses an existing package or version before mutation, and exposes the
+  protected release-environment bootstrap secret only to the final publication
+  step. The Requirement-named tests and complete local validation suite passed;
+  no token or secret, tag, GitHub Release, registry write, approval, or QA
+  verdict was created.
 - New product behavior uses a normal bounded `spec-code`, `spec`, or `code`
   Change. Completed bootstrap history grants no alternate specification-write
   or ID-reservation route.
@@ -246,6 +254,13 @@ plugin artifact, or marketplace action occurred.
 Done when the workflow and Requirement-named tests implement the corrected
 route and the complete local validation suite passes. An immutable Git subject
 and fresh rehearsal remain the next leaf.
+
+**Completed 2026-08-08.** `REQ-ABFFEAF2`, `REQ-9CE36B68`, and
+`REQ-0163273A` are covered by the corrected workflow test. The complete local
+suite passed: `npm test` (236 checks), `npm run test:package`,
+`npm run check:schemas`, `npm run build`, `npm run typecheck`,
+`npm run format:check`, and `npm run verify:contracts` (28,038 checks). No
+external release action occurred.
 
 #### 17.5b — Corrected-route release rehearsal and exact artifact review
 
@@ -459,9 +474,10 @@ human authorization before implementation:
 
 ## Immediate next leaf
 
-Milestone 17.5 only: after separate explicit authorization, publish only the
-retained reviewed `sdd-yo@0.3.0` artifact through the protected trusted-publisher
-route, refuse any subject, identity, inventory, integrity, access, publisher,
-or provenance drift, and verify the immutable registry response. Do not infer
-plugin submission, Git integration, approval, QA, or release-announcement
-authority.
+Milestone 17.5b only: from a separately committed immutable release subject,
+build and retain a fresh exact `sdd-yo@0.3.0` candidate; run the ordinary npm
+and isolated Yarn Plug'n'Play consumer routes, npm publication dry run, and the
+complete repository validation suite; and confirm the corrected workflow's
+reviewed artifact constants equal that candidate. Do not create a bootstrap
+token or secret, tag, GitHub Release, registry write, approval, QA verdict,
+plugin submission, or release announcement.
