@@ -4,7 +4,7 @@
 
 - State: Milestones 0–16 complete; Milestone 17 active
 - Current phase: Public npm CLI distribution
-- Current leaf: 17.5c — Explicit public npm publication
+- Current leaf: 17.5e — Failed-attempt recovery decision
 - Last updated: 2026-08-08
 
 ## Source-of-truth map
@@ -315,6 +315,57 @@ Done when `sdd-yo@0.3.0` is publicly resolvable with the reviewed identity and
 evidence. Publication does not authorize a plugin submission, Git merge, or
 release announcement.
 
+**Attempted 2026-08-08; incomplete.** The protected `v0.3.0` GitHub Release
+targeted reviewed subject `5380db3eccdf0967ad05987991d7f654ef32a4f5`, but
+workflow run `31272878913` stopped before `npm publish`: the detached checkout
+had no local `main` reference, so the required root validation tests received
+`SDD_GIT_REF_UNRESOLVED` and exited 3. No registry write occurred. The
+one-time npm credential and protected environment secret were removed after
+the failed attempt. Do not rerun this release or reuse that credential; a
+fresh reviewed route remains separately authorized after the correction.
+
+#### 17.5d — Detached release-checkout correction
+
+- Restore the workflow-only local `main` reference from the same immutable
+  release SHA after checkout, and fail closed unless it resolves to exactly
+  that SHA. The workflow must not alter a remote branch, tag, release, or
+  package artifact.
+- Extend the Requirement-named public-release test for the reference binding
+  and reproduce the detached-one-commit validation failure locally.
+- Run the complete repository validation suite. Do not create a token or
+  secret, modify or delete `v0.3.0`, rerun the failed workflow, publish to the
+  registry, or create a new release.
+
+Done when the release workflow's validation context is deterministically bound
+to its immutable subject and all local checks pass. A new release review and
+bootstrap attempt remain separately authorized.
+
+**Completed 2026-08-08.** The workflow now restores only its local `main`
+reference from `github.sha` and fails closed unless it resolves to that same
+immutable release subject. The Requirement-named workflow contract test and a
+disposable one-commit detached checkout reproduced the prior
+`SDD_GIT_REF_UNRESOLVED` failure before the local reference and successful
+validation after it. `npm test` (236 checks), `npm run test:package`,
+`npm run check:schemas`, `npm run build`, `npm run typecheck`,
+`npm run format:check`, `npm run verify:contracts` (28,104 checks), and
+`git diff --check` passed. No credential, secret, tag, release, workflow rerun,
+or registry action occurred.
+
+#### 17.5e — Failed-attempt recovery decision
+
+- Recheck npm package absence, the failed Release and tag subject, and current
+  GitHub/npm recovery rules. Present one concise recovery model that identifies
+  whether and how a new immutable subject can be created for the unchanged
+  `sdd-yo@0.3.0` first-publication contract.
+- Obtain an explicit human decision before deleting, replacing, or creating
+  any release or tag, creating a new credential or secret, or reattempting
+  publication. Do not infer that decision from the failed attempt or the
+  correction.
+
+Done when the permitted recovery route and its required fresh review are
+explicit. No GitHub, npm, credential, publication, approval, QA, or repository
+mutation is implied.
+
 #### 17.6 — Public consumer evidence and closeout
 
 - Install exact `sdd-yo@0.3.0` from the public registry into fresh Linux,
@@ -501,9 +552,7 @@ human authorization before implementation:
 
 ## Immediate next leaf
 
-Milestone 17.5c only: after separate authorization, publish the retained
-reviewed `sdd-yo@0.3.0` artifact through the protected least-privilege release
-route, then verify the immutable public registry response, package metadata,
-dist-tag, integrity, provenance, and retained release subject. Do not reuse or
-overwrite an existing version, and do not infer authorization from this
-rehearsal.
+Milestone 17.5e only: recheck the failed-attempt state and present the allowed
+recovery model for a fresh immutable `sdd-yo@0.3.0` publication subject. Do not
+modify a release or tag, create a credential or secret, rerun the workflow, or
+publish.

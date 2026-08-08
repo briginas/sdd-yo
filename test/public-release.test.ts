@@ -19,6 +19,9 @@ test("REQ-ABFFEAF2 REQ-9CE36B68 REQ-0163273A permits only the exact protected bo
   assert.match(workflow, /ref: \$\{\{ github\.sha \}\}/u);
   assert.match(workflow, /fetch-depth: 0/u);
   assert.match(workflow, /persist-credentials: false/u);
+  assert.match(workflow, /Restore the integration reference at the release subject/u);
+  assert.match(workflow, /git update-ref refs\/heads\/main "\$RELEASE_SHA"/u);
+  assert.match(workflow, /git rev-parse "main\^\{commit\}"/u);
   assert.match(workflow, /uses: actions\/setup-node@v7/u);
   assert.match(workflow, /node-version: 24/u);
   assert.match(workflow, /registry-url: https:\/\/registry\.npmjs\.org/u);
