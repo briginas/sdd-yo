@@ -1,8 +1,13 @@
 # SDD Yo
 
-SDD Yo is a repository-native specification governance system with a
-deterministic `sdd` CLI, versioned JSON protocols, and an optional
-repository-scoped `sdd-yo` Agent Skill.
+SDD Yo helps people and AI agents understand a software project through a
+clear, connected specification. The specification is a graph: it shows what
+the project does and how its parts relate. This makes it easier to find
+information and quickly see the whole picture.
+
+You can add SDD Yo to an existing project and build the specification step by
+step. Every change to the specification or code carries its own context, so
+several changes can be developed at the same time without confusion.
 
 Version `0.3.0` is public on npm and requires Node.js `22.18.0` or newer. The
 project is pre-1.0, and installing the package does not install or publish a
