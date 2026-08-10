@@ -200,9 +200,7 @@ CLI artifact, even if its conclusion happens to be correct.
 
 Maintain schemas, golden Markdown, adapter fixtures, and gate truth tables. No
 claim of production readiness follows from fixture coverage. The completed
-self-bootstrap procedure is retained only as a
-[historical execution record](../../plans/completed/self-bootstrap-procedure.md)
-and grants no active workflow authority.
+self-bootstrap procedure is retired and grants no active workflow authority.
 
 Exit: all parser, graph, fingerprint, artifact, and security fixture suites pass
 on supported platforms.

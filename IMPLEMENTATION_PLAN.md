@@ -11,13 +11,9 @@
 - Implemented product behavior: [`spec/README.md`](spec/README.md)
 - Architecture and implementation boundaries:
   [`proposal/architecture/README.md`](proposal/architecture/README.md)
-- Completed execution records and closeout procedure:
+- Execution-planning and closeout procedure:
   [`plans/README.md`](plans/README.md)
 - Repository work discipline and validation: [`AGENTS.md`](AGENTS.md)
-
-Load completed plans only for historical rationale, exact boundaries,
-Requirement traceability, decisions, exclusions, or evidence. Current
-specification, architecture, implementation, and evidence outrank history.
 
 ## Product baseline
 
@@ -141,9 +137,9 @@ acceptance is pending.
   paths, and absence of repository-local npm or Skill state.
 - Document direct npm CLI, repository-scoped Skill, and install-once plugin
   routes, including evidence-backed platform and host limitations.
-- Run the full validation suite and archive the exact package, plugin,
-  marketplace, external-review, human-review, and consumer evidence using the
-  normal closeout procedure.
+- Run the full validation suite and update the canonical distribution
+  documentation with evidence-backed routes, supported environments, and
+  limitations before applying the normal closeout procedure.
 
 Milestone 18 is done when another user can install the public plugin and use
 its bundled CLI without per-repository package or Skill installation. This does

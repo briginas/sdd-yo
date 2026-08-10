@@ -395,11 +395,9 @@ bounded tree query over `.sdd/config.yaml` paths inside the enclosing repository
 it does not follow symlinks or read outside the repository.
 
 The completed repository self-bootstrap used a temporary pre-canonical
-reservation procedure preserved in the
-[historical execution record](../../plans/completed/self-bootstrap-procedure.md).
-That history explains already-canonical introductions but grants no active ID
-reservation. New candidate objects use freshly generated IDs and become subject
-to normal historical non-reuse after canonical introduction.
+reservation procedure that is now retired. It grants no active ID reservation.
+New candidate objects use freshly generated IDs and become subject to normal
+historical non-reuse after canonical introduction.
 
 Git-backed command responses report one history status:
 
