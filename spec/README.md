@@ -24,6 +24,7 @@ verification conditions are satisfied.
 - [CAP-6AD33965 — Public npm package distribution](capabilities/public-npm-package-distribution.md)
 - [CAP-45C2C93F — Repository-scoped Agent Skill installation](capabilities/repository-scoped-agent-skill-installation.md)
 - [CAP-6C317966 — Repository-scoped Agent Skill lifecycle](capabilities/repository-scoped-agent-skill-lifecycle.md)
+- [CAP-F6FE3755 — macOS user-scoped Agent Skill installation and lifecycle](capabilities/macos-user-scoped-agent-skill-installation-and-lifecycle.md)
 
 ## Domain concepts <!-- sdd:concepts -->
 

@@ -38,6 +38,8 @@ developer explicitly selects one existing Git repository root.
 - `sdd skill install --root <repository-root>` requires an explicit root and
   does not infer a repository from the process working directory, an SDD
   configuration, or a global installation location.
+- Repository scope remains selected only by `--root`; `--scope user` selects a
+  separate lifecycle and is mutually exclusive with the repository root.
 - The selected root is an existing Git repository root, and the destination is
   exactly `<repository-root>/.agents/skills/sdd-yo`.
 - The installer reads the Skill payload from the same package as the executing
@@ -76,6 +78,8 @@ the selected repository.
 
 - Without `--cli`, the wrapper resolves the repository-relative CLI path from
   its installation binding manifest and never searches `PATH` for `sdd`.
+- The repository wrapper never falls back to a user-scoped Skill or private
+  user CLI store, and the user wrapper never adopts this repository binding.
 - With `--cli <path>`, the wrapper uses only that explicit path and does not
   fall back to the bound or global executable when it is missing or invalid.
 - Before forwarding a product command, the wrapper reads
@@ -121,6 +125,9 @@ global or package-manager mutation.
 - Any existing `.agents/skills/sdd-yo` entry, including a file, directory, or
   symbolic link, is rejected without changing its bytes; update and removal
   remain separate explicit lifecycle operations.
+- A user-scoped installation is neither an existing repository destination nor
+  overwrite authority for one; repository and user lifecycle targets remain
+  independent.
 - A missing, incomplete, byte-modified, or compatibility-mismatched packaged
   Skill payload is rejected before destination publication.
 - On every refusal, no partial Skill destination remains and sentinels inside

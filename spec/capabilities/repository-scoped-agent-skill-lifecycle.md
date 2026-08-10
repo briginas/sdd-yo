@@ -38,6 +38,9 @@ applicable ownership and compatibility checks.
 
 - `sdd skill update --root <repository-root>` requires an explicit existing Git
   repository root and selects only `.agents/skills/sdd-yo` beneath that root.
+- Repository update never selects, repairs, or replaces a user-scoped Skill or
+  private CLI store; `--scope user` is a separate mutually exclusive command
+  authority.
 - The updater verifies the existing installation binding, its declared payload
   fingerprint, exact file inventory, and every declared file fingerprint before
   treating the installation as owned; an older package version is eligible only
@@ -78,6 +81,8 @@ root and every removed byte belongs to the verified compatible installation.
 
 - `sdd skill remove --root <repository-root>` requires an explicit existing Git
   repository root and selects only `.agents/skills/sdd-yo` beneath that root.
+- Repository removal never selects or removes a user-scoped Skill or private
+  CLI store; user removal requires its separate explicit scope.
 - Before removal, the command verifies the installation binding, compatibility,
   exact declared inventory, payload fingerprint, and every regular file byte;
   missing, modified, symbolic-link, or undeclared entries cause refusal without
@@ -134,3 +139,6 @@ shall not use lifecycle authority outside the explicitly selected repository.
   manifests or lockfiles, or create Git, approval, QA, or marketplace effects.
 - Ordinary product commands remain offline and never trigger Skill installation,
   update, removal, or lifecycle recovery implicitly.
+- Repository lifecycle authority and user lifecycle authority are disjoint;
+  neither binding, destination, or successful operation supplies ownership or
+  fallback authority for the other.

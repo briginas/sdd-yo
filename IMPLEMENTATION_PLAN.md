@@ -2,8 +2,8 @@
 
 ## Status
 
-- Active: Milestone 18.1 — User-scoped installation semantic contract and candidate
-- Complete: Milestones 0–17 and public/offline wording alignment
+- Active: Milestone 18.3 — User-scoped CLI store and lifecycle implementation
+- Complete: Milestones 0–17, Milestones 18.1–18.2, and public/offline wording alignment
 - Last updated: 2026-08-10
 
 ## Authority and navigation
@@ -67,7 +67,7 @@ after the governed specification Change establishes the final targets.
 - The existing repository-scoped package and Skill lifecycle remains supported
   unless a separately approved normative Change says otherwise.
 
-### 18.1 — User-scoped installation semantic contract and candidate (active)
+### 18.1 — User-scoped installation semantic contract and candidate (complete)
 
 - Inspect only the current installation, lifecycle, package-distribution,
   compatibility, and Skill-orchestration Requirements needed for this Change.
@@ -87,7 +87,16 @@ creates no canonical specification change, approval evidence, exact patch,
 runtime implementation, installation, package-version change, publication,
 QA verdict, or Git operation.
 
-### 18.2 — Governed user-scoped installation specification Change
+Completed with the unchanged human-confirmed `spec-code` model, history-checked
+`CAP-F6FE3755` and seven Requirement identities, and the valid retained
+`.sdd/staging/milestone-18.1/candidate` against base
+`5c8ee07daf28811d6fd21745888cdd601dc73ac0`. Its candidate tree fingerprint is
+`sha256:bcacb621894564ca54e7d8e6e3b22b33f7ac3ccae30045f20c777e4b39be0460`.
+
+### 18.2 — Governed user-scoped installation specification Change (complete)
+
+- Use only the retained 18.1 candidate, exact base, and recomputed current
+  ProposalPackage; do not reconstruct or silently revise its confirmed model.
 
 - Run the normal Proposal Gate for only the retained 18.1 candidate and exact
   base, and present deterministic delta, affected scope, diagnostics, and open
@@ -105,7 +114,13 @@ canonical and valid. Stop before implementation, package identity changes,
 installation, publication, human QA, or Git operations unless each is
 separately requested.
 
-### 18.3 — User-scoped CLI store and lifecycle implementation
+Completed from the retained 18.1 candidate after an identified human approval,
+an unchanged exact SpecPatch, and successful canonical graph validation. The
+applied canonical specification exactly matches the retained candidate tree;
+runtime implementation, installation, publication, QA, and release work remain
+unperformed.
+
+### 18.3 — User-scoped CLI store and lifecycle implementation (active)
 
 - Add explicit user-scope selection without weakening the existing required
   repository-root selection or treating the process cwd as authority.

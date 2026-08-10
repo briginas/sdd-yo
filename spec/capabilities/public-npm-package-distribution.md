@@ -50,6 +50,10 @@ dependency wiring.
   all locked runtime dependencies needed for its supported installation route,
   and every regular file in the repository's `skills/sdd-yo` payload with
   identical bytes.
+- Each artifact also contains every exact package and Skill byte required by
+  the explicit macOS user-scoped installation route; the lifecycle command
+  copies only from the same package as the executing CLI and does not fetch a
+  second artifact.
 - The packed inventory is checked exactly and contains no product source,
   tests, development-only tooling, repository configuration, proposal
   candidate, workflow evidence, or unrelated file.
@@ -95,6 +99,9 @@ compatibility identity.
   corresponding packed source payload, and the packaged compatibility wrapper accepts the
   installed `sdd` executable's version 1 JSON for an explicitly selected
   project.
+- A user-scoped installation binds the copied private package and user Skill to
+  the same compatibility identity and exact packed bytes; it does not create a
+  new compatibility source or weaken the public and offline artifact checks.
 - The accepted Skill protocol version and compatible major match
   `result.skill.protocol_version` and `result.skill.compatible_major`.
 - Package verification fails on a missing or extra packed file, a changed Skill
