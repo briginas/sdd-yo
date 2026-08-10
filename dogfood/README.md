@@ -92,9 +92,7 @@ Verification or Merge gates. Therefore `OBS-YO-004`, `OBS-YO-005`, and
 `yo`-specific. A later fix may rely on the concrete `yo` reproduction, but it
 must not claim two-project confirmation.
 
-## Bounded follow-up work
-
-Milestone 7.4 owns fixes, one independently verified leaf at a time:
+## Resolved follow-up work
 
 1. Clarify and test a baseline evidence-retention topology that preserves the
    current Git subjects required by Approval, QA, Verification, and Merge
@@ -112,11 +110,6 @@ Milestone 7.4 owns fixes, one independently verified leaf at a time:
 5. Tighten the existing-project eval record so future studies capture total
    time to first Capability, a repository-wide traceability denominator,
    semantic-candidate review quality, and role-comprehension time.
-
-The first follow-up is a contract-clarification leaf. It must resolve the
-supported retention topology before implementation changes; no current
-Requirement or architecture document defines an unambiguous recovery that can
-be safely inferred from the blocked dogfood run.
 
 ### 7.4a resolution — External retention with project-local staging
 

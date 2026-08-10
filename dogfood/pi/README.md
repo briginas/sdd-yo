@@ -20,10 +20,9 @@
 The repository is an npm workspace containing several packages, but this study
 treats the complete repository as one SDD Project because its packages share
 one Git history, root configuration, dependency lock, and root test workflow.
-That choice does not satisfy the deferred existing-monorepo study or the
-architecture's three-repository MVP criterion, which still require two
-independently configured SDD Projects and explicit project and evidence
-isolation.
+That choice does not satisfy the deferred existing-monorepo study, which still
+requires two independently configured SDD Projects and explicit project and
+evidence isolation.
 
 The user selected this study boundary on 2026-08-02. This planning decision is
 not permission to mutate `pi`, ApprovalEvidence, QAEvidence, a gate result, or
@@ -86,17 +85,11 @@ importable normalized names. If either producer cannot supply adequate JUnit,
 the result is an explicit adapter decision; it does not authorize framework
 logic in SDD Yo or guessed traceability.
 
-The future project configuration may allow these local issuer names:
-
-- `local-product-review` for an actual Spec Approver decision;
-- `local-test-run` for current full-suite TestExecutionEvidence;
-- `local-qa` for an actual QA decision over the governed Capability.
-
-The allowlist will not authenticate an actor or create evidence. Approval, test
-execution evidence, QA evidence, and later gate inputs must bind the exact `pi`
-project, commits, configuration, TestIndex, and proposal subjects. No live model
-provider, credential, network request, paid request, release action, or e2e test
-requiring external services belongs to this baseline.
+Approval, test execution evidence, QA evidence, and later gate inputs must bind
+the exact `pi` project, commits, configuration, TestIndex, and proposal
+subjects. No live model provider, credential, network request, paid request,
+release action, or e2e test requiring external services belongs to this
+baseline.
 
 ## Initialization result
 
@@ -266,8 +259,9 @@ Node.js 22.22.3 produced the six-test focused Editor JUnit report with its
 built-in reporter and a test-name pattern selecting the two mapped surfaces.
 Two generations at the same path imported with identical normalized names and
 `test_ref` values, retained the nested Editor suite hierarchy, and emitted no
-diagnostic. Future configuration uses separate required JUnit adapters named
-`vitest` and `node-test`, with distinct project-relative report paths.
+diagnostic. The later project configuration used separate required JUnit
+adapters named `vitest` and `node-test`, with distinct project-relative report
+paths.
 
 An initial direct Vitest invocation assumed a root-hoisted
 `node_modules/vitest/dist/cli.js` and failed because this lockfile layout keeps
@@ -439,8 +433,8 @@ Requirements. `code_targets` and deterministic `semantic_candidates` are
 empty, as expected for this baseline package.
 
 The successful validation used stdout only and modified neither `pi` nor its
-Git state. Mechanical validity does not establish that the described existing
-behavior is accepted; that separate human decision is the next bounded leaf.
+Git state. Mechanical validity did not establish that the described existing
+behavior was accepted; the separate human decision is recorded below.
 
 ## External specification approval result
 
@@ -513,7 +507,6 @@ Verification or Merge Gate result, permission to merge, or approval of later
 ## Cross-study handoff
 
 Milestone 7.2 is complete, and its results are classified in the completed
-cross-study synthesis at [`../README.md`](../README.md). The next bounded work
-is Milestone 7.4a, the baseline evidence-retention contract clarification. The
-existing-monorepo and project-isolation study remains deferred and is not
-implied by this single-project workspace.
+cross-study synthesis at [`../README.md`](../README.md). The existing-monorepo
+and project-isolation study remains deferred and is not implied by this
+single-project workspace.

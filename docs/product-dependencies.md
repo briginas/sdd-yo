@@ -45,8 +45,8 @@ plus `package-lock.json` make the transitive resolution reproducible.
 
 ## No-package selections
 
-- CLI argument parsing uses `node:util` `parseArgs`; it already provides strict,
-  typed option parsing for the planned CLI surface.
+- CLI argument parsing uses `node:util` `parseArgs`; it provides the strict,
+  typed option parsing used by the CLI.
 - Git access uses the Git executable behind an injected adapter and
   `node:child_process` direct spawning with argv arrays and `shell: false`.
   This preserves native Git behavior without an embedded implementation.
@@ -57,8 +57,7 @@ plus `package-lock.json` make the transitive resolution reproducible.
   demonstrates that built-ins cannot enforce the contract safely.
 
 The direct-spawn probe passes shell metacharacters as one literal argv value.
-Repository tests do not invoke Git because availability and repository state
-belong to the later injected-adapter integration tests.
+Git integration tests use temporary repositories through the injected adapter.
 
 ## Rejected or deferred alternatives
 
@@ -74,9 +73,9 @@ belong to the later injected-adapter integration tests.
 - `fast-xml-parser` was rejected for this boundary. A materialized object tree
   is less suitable than `saxes` events for fail-fast `DOCTYPE` rejection and
   caller-enforced depth and element-count limits.
-- A Git library and CLI framework were rejected until built-ins prove
-  insufficient. XML/JUnit semantics remain deferred, but its parser choice is
-  now locked; the spike implements no importer behavior.
+- A Git library and CLI framework were rejected because the platform and
+  injected Git adapter provide the required behavior. The JUnit importer uses
+  the locked `saxes` parser.
 - `ajv-cli`, package bundlers, standalone binary tools, property-test
   libraries, and model/provider SDKs remain unselected until a bounded first
   use demonstrates need.

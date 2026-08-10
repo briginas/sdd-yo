@@ -210,7 +210,7 @@ Enable `init`, `id`, `validate`, `inspect`, `trace`, `diff`, import-only test
 discovery, and report generation. Do not use `PASS` to protect merges.
 
 Exit: deterministic results and diagnostic usefulness are confirmed on the
-three onboarding repositories.
+completed existing-project studies.
 
 ### Stage 2 — Proposal and exact patch
 
@@ -251,9 +251,8 @@ authorization, adapter execution, incident response, and rollback policy.
   an existing fingerprint or status.
 - Fingerprint algorithm or canonicalization changes require a new fingerprint
   version and cannot silently invalidate historical evidence.
-- The exact CLI and package name remain provisional until implementation
-  planning; persisted schema names and object ID forms require deliberate
-  compatibility review before release.
+- Persisted schema names and object ID forms require deliberate compatibility
+  review before release.
 
 ## MVP completion checklist
 

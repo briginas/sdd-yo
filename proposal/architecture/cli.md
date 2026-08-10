@@ -2,7 +2,7 @@
 
 ## Executable and global behavior
 
-The provisional executable is `sdd`. All commands accept:
+The executable is `sdd`. All commands accept:
 
 ```text
 --config <path>       Select an exact .sdd/config.yaml.

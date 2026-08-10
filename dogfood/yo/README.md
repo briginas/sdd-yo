@@ -116,14 +116,6 @@ required suite hierarchy and stable test identity. A failure of that check
 does not permit guessed mappings: it requires an explicit clarification of the
 adapter or rename plan.
 
-The future project configuration will allow these local evidence issuer names:
-
-- `local-product-review` for ApprovalEvidence supplied by the actual Spec
-  Approver;
-- `local-test-run` for TestExecutionEvidence derived from the authorized full
-  suite run;
-- `local-qa` for QAEvidence supplied by the actual QA tester.
-
 Issuer authentication, actor authorization, and artifact creation remain
 external human workflow responsibilities. The first approval must bind
 `spec` mode, the resolved base commit, and the exact semantic and structural
@@ -404,10 +396,8 @@ made normal project discovery see a second current SDD Project with the same
 as `7.1i-baseline-candidate.tar`, while the gate used a temporary extracted
 directory that was removed from the project after assessment. This preserves
 reproducibility and a valid project worktree, but requires a manual extraction
-step that the version 1 candidate input and report manifest do not describe.
-Treat this as a provisional recurring artifact-retention and reproducibility
-problem for the later dogfood studies; no discovery or candidate contract was
-changed in 7.1i.
+step that the version 1 candidate input and report manifest do not describe. No
+discovery or candidate contract was changed in 7.1i.
 
 ## Initialization result
 
@@ -445,8 +435,7 @@ During setup, an operator first attempted `sdd validate --project <path>`.
 The CLI rejected the unsupported option with
 `SDD_CONFIG_CLI_ARGUMENT_INVALID`, but its remediation only said to correct the
 arguments. The documented selector is `--cwd`; the diagnostic did not name the
-unknown option or the supported project selectors. Classify this as a
-provisional recurring usability observation pending the other dogfood studies.
+unknown option or the supported project selectors.
 
 ### OBS-YO-002 — Initialization output requires host formatting
 
@@ -471,8 +460,7 @@ For `yo`, classify formatting as an expected post-init host-integration step,
 not a reason to change the project's formatter or ignore SDD files. Formatting
 must happen before decision-bearing proposal, approval, or exact-patch
 artifacts are created because their tree or file hashes would otherwise become
-stale. Keep the missing onboarding guidance as a provisional documentation
-observation for comparison with later dogfood projects.
+stale.
 
 ### OBS-YO-003 — Node JUnit mixes suites and root testcases
 

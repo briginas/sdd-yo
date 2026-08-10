@@ -14,10 +14,10 @@ Distribution      npm package first
 Architecture      modular monolith with a provider-neutral core library
 ```
 
-Exact compiler, test runner, formatter, schema, Markdown, YAML, XML, and Git
-library versions are selected and locked during the scaffold milestone. A
-dependency is not part of the product contract unless a Requirement explicitly
-makes it observable.
+Exact compiler, test runner, formatter, schema, Markdown, YAML, and XML library
+versions are locked in the package manifest and lockfile. A dependency is not
+part of the product contract unless a Requirement explicitly makes it
+observable.
 
 ## Why this preserves language independence
 
@@ -49,9 +49,8 @@ published schema files
   Versioned JSON Schemas and JSONL protocol definitions.
 ```
 
-These may initially ship from one npm package and one repository. Separate
-published packages require demonstrated consumer need, not speculative
-modularity.
+These ship from one npm package and one repository. Separate published packages
+require demonstrated consumer need, not speculative modularity.
 
 ## Compiler and runtime policy
 
@@ -98,7 +97,7 @@ scratch merely to avoid a dependency.
 
 ## Testing stack
 
-The scaffold must support:
+The test suite supports:
 
 - unit tests for pure canonicalization and graph operations;
 - fixture/golden tests for schemas and Markdown;
@@ -107,7 +106,7 @@ The scaffold must support:
 - integration tests using temporary Git repositories and filesystems;
 - process tests for JSONL adapters, timeouts, and output limits;
 - cross-platform CI;
-- later, packaged CLI smoke tests.
+- packaged CLI smoke tests.
 
 Every test or ancestor suite verifying an active Requirement contains the exact
 Requirement ID in its normalized name.
@@ -125,8 +124,6 @@ path behavior.
 
 ## Deferred implementation choices
 
-- Git executable versus embedded library;
-- exact Markdown/YAML/XML/schema libraries;
 - standalone binary packager;
 - optional model provider integration;
 - hosting or CI-provider integrations.
