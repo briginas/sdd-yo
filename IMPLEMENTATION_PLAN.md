@@ -3,8 +3,8 @@
 ## Status
 
 - Active: Milestone 18.1 — Plugin execution contract and semantic model
-- Complete: Milestones 0–17
-- Last updated: 2026-08-08
+- Complete: Milestones 0–17 and pre-Milestone 18 public/offline wording alignment
+- Last updated: 2026-08-10
 
 ## Authority and navigation
 

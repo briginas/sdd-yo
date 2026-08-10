@@ -25,7 +25,7 @@ verification: automated
 
 - depends-on: [REQ-3F19778B — Install the packaged Skill in one selected repository](repository-scoped-agent-skill-installation.md#req-3f19778b)
 - depends-on: [REQ-CF3A1070 — Bind first Skill use to a compatible packaged CLI](repository-scoped-agent-skill-installation.md#req-cf3a1070)
-- depends-on: [REQ-A2199BC2 — Bind every packaged surface to the compatibility identity](private-npm-package-distribution.md#req-a2199bc2)
+- depends-on: [REQ-A2199BC2 — Bind every public and offline packaged surface to the compatibility identity](public-npm-package-distribution.md#req-a2199bc2)
 
 ### Statement <!-- sdd:statement -->
 

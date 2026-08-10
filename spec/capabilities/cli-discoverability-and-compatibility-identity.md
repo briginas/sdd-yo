@@ -60,7 +60,7 @@ verification: automated
 
 ### Statement <!-- sdd:statement -->
 
-The `sdd` executable shall report the exact private package version from which
+The `sdd` executable shall report the exact `sdd-yo` package version from which
 that executable was built without selecting or mutating an SDD Project.
 
 ### Acceptance criteria <!-- sdd:acceptance -->
@@ -93,7 +93,7 @@ verification: automated
 ### Statement <!-- sdd:statement -->
 
 The `sdd` executable shall expose one deterministic versioned JSON identity
-that binds its private package, CLI, JSON-schema protocol, and supported
+that binds its `sdd-yo` package, CLI, JSON-schema protocol, and supported
 `sdd-yo` Skill protocol without selecting or mutating an SDD Project.
 
 ### Acceptance criteria <!-- sdd:acceptance -->

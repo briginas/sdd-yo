@@ -72,7 +72,7 @@ verification: automated
 ### Relations <!-- sdd:relations -->
 
 - depends-on: [REQ-97D96950 — Expose machine-readable compatibility identity](cli-discoverability-and-compatibility-identity.md#req-97d96950)
-- depends-on: [REQ-B0B35D6D — Produce an installable private tarball](private-npm-package-distribution.md#req-b0b35d6d)
+- depends-on: [REQ-B0B35D6D — Produce installable public and offline package artifacts](public-npm-package-distribution.md#req-b0b35d6d)
 
 ### Statement <!-- sdd:statement -->
 
@@ -112,7 +112,7 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- depends-on: [REQ-B0B35D6D — Produce an installable private tarball](private-npm-package-distribution.md#req-b0b35d6d)
+- depends-on: [REQ-B0B35D6D — Produce installable public and offline package artifacts](public-npm-package-distribution.md#req-b0b35d6d)
 
 ### Statement <!-- sdd:statement -->
 
@@ -149,8 +149,8 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- depends-on: [REQ-B0B35D6D — Produce installable public and offline package artifacts](private-npm-package-distribution.md#req-b0b35d6d)
-- depends-on: [REQ-9CE36B68 — Constrain and retire the first-publication bootstrap credential](private-npm-package-distribution.md#req-9ce36b68)
+- depends-on: [REQ-B0B35D6D — Produce installable public and offline package artifacts](public-npm-package-distribution.md#req-b0b35d6d)
+- depends-on: [REQ-9CE36B68 — Constrain and retire the first-publication bootstrap credential](public-npm-package-distribution.md#req-9ce36b68)
 
 ### Statement <!-- sdd:statement -->
 
@@ -190,7 +190,7 @@ verification: manual
 
 ### Relations <!-- sdd:relations -->
 
-- depends-on: [REQ-B0B35D6D — Produce installable public and offline package artifacts](private-npm-package-distribution.md#req-b0b35d6d)
+- depends-on: [REQ-B0B35D6D — Produce installable public and offline package artifacts](public-npm-package-distribution.md#req-b0b35d6d)
 
 ### Statement <!-- sdd:statement -->
 
@@ -248,9 +248,9 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- depends-on: [REQ-B0B35D6D — Produce installable public and offline package artifacts](private-npm-package-distribution.md#req-b0b35d6d)
-- depends-on: [REQ-ABFFEAF2 — Publish only from an immutable protected release subject](private-npm-package-distribution.md#req-abffeaf2)
-- depends-on: [REQ-9CE36B68 — Constrain and retire the first-publication bootstrap credential](private-npm-package-distribution.md#req-9ce36b68)
+- depends-on: [REQ-B0B35D6D — Produce installable public and offline package artifacts](public-npm-package-distribution.md#req-b0b35d6d)
+- depends-on: [REQ-ABFFEAF2 — Publish only from an immutable protected release subject](public-npm-package-distribution.md#req-abffeaf2)
+- depends-on: [REQ-9CE36B68 — Constrain and retire the first-publication bootstrap credential](public-npm-package-distribution.md#req-9ce36b68)
 
 ### Statement <!-- sdd:statement -->
 

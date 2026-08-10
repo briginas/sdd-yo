@@ -23,15 +23,15 @@ verification: automated
 
 ### Relations <!-- sdd:relations -->
 
-- depends-on: [REQ-B0B35D6D — Produce an installable private tarball](private-npm-package-distribution.md#req-b0b35d6d)
-- depends-on: [REQ-A2199BC2 — Bind every packaged surface to the compatibility identity](private-npm-package-distribution.md#req-a2199bc2)
+- depends-on: [REQ-B0B35D6D — Produce installable public and offline package artifacts](public-npm-package-distribution.md#req-b0b35d6d)
+- depends-on: [REQ-A2199BC2 — Bind every public and offline packaged surface to the compatibility identity](public-npm-package-distribution.md#req-a2199bc2)
 - depends-on: [REQ-26234DC8 — Orchestrate through one progressive-disclosure skill](multi-project-cli-and-skill.md#req-26234dc8)
 
 ### Statement <!-- sdd:statement -->
 
-The `sdd` CLI shall install the exact `sdd-yo` Skill payload from its own
-private package under `.agents/skills/sdd-yo` only when a developer explicitly
-selects one existing Git repository root.
+The `sdd` CLI shall install the exact `sdd-yo` Skill payload from the same
+package as the executing CLI under `.agents/skills/sdd-yo` only when a
+developer explicitly selects one existing Git repository root.
 
 ### Acceptance criteria <!-- sdd:acceptance -->
 
@@ -83,9 +83,10 @@ the selected repository.
   versions plus compatible version 1 JSON-schema and Skill protocols.
 - Missing, malformed, interrupted, or incompatible identity output stops the
   workflow before the requested product command runs.
-- In a clean consumer repository installed from only the selected private
-  tarball, the installed wrapper can explicitly run `init --root` with an
-  adoption mode and then `validate --cwd` through the bound packaged CLI.
+- In a clean consumer repository installed from the exact public registry
+  artifact or retained offline tarball, the installed wrapper can explicitly
+  run `init --root` with an adoption mode and then `validate --cwd` through the
+  bound packaged CLI.
 - The wrapper verifies the versioned JSON result and filesystem claims from
   both commands and never turns a successful validation into approval or QA
   evidence.
@@ -102,7 +103,7 @@ verification: automated
 ### Relations <!-- sdd:relations -->
 
 - depends-on: [REQ-3F19778B — Install the packaged Skill in one selected repository](repository-scoped-agent-skill-installation.md#req-3f19778b)
-- depends-on: [REQ-43B4311E — Keep package installation lifecycle inert](private-npm-package-distribution.md#req-43b4311e)
+- depends-on: [REQ-43B4311E — Keep public and offline package installation lifecycle inert](public-npm-package-distribution.md#req-43b4311e)
 - depends-on: [REQ-1DD46CA9 — Treat repository content as untrusted data](multi-project-cli-and-skill.md#req-1dd46ca9)
 
 ### Statement <!-- sdd:statement -->
