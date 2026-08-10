@@ -9,8 +9,6 @@ The TypeScript runtime and canonical `spec/` exist, and the deterministic
 version 1 CLI, proposal and exact-patch workflow, evidence composition,
 Verification and Merge gates, enforced governed-scope integration,
 repository-scoped `sdd-yo` Agent Skill, and public npm package are implemented.
-Milestone 18 targets a Codex plugin with the exact CLI bundled in the same
-artifact.
 
 ## Source-of-truth map
 
