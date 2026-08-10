@@ -394,8 +394,6 @@ only for that resolved object ID. Repository-wide project-ID uniqueness is a
 bounded tree query over `.sdd/config.yaml` paths inside the enclosing repository;
 it does not follow symlinks or read outside the repository.
 
-The completed repository self-bootstrap used a temporary pre-canonical
-reservation procedure that is now retired. It grants no active ID reservation.
 New candidate objects use freshly generated IDs and become subject to normal
 historical non-reuse after canonical introduction.
 

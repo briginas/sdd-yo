@@ -5,13 +5,12 @@
 This repository develops SDD Yo: a repository-native specification governance
 system with a deterministic CLI and an optional Agent Skill.
 
-The repository has completed Milestones 0–17: its incremental self-bootstrap
-authority is retired, the TypeScript runtime and canonical `spec/` exist, and
-the deterministic version 1 CLI, proposal and exact-patch workflow, evidence
-composition, Verification and Merge gates, enforced governed-scope
-integration, repository-scoped `sdd-yo` Agent Skill, and public npm package are
-implemented. Milestone 18 targets a Codex plugin with the exact CLI bundled in
-the same artifact.
+The TypeScript runtime and canonical `spec/` exist, and the deterministic
+version 1 CLI, proposal and exact-patch workflow, evidence composition,
+Verification and Merge gates, enforced governed-scope integration,
+repository-scoped `sdd-yo` Agent Skill, and public npm package are implemented.
+Milestone 18 targets a Codex plugin with the exact CLI bundled in the same
+artifact.
 
 ## Source-of-truth map
 
@@ -21,9 +20,7 @@ Read these in order before planning or editing:
    and candidate backlog.
 2. `spec/README.md` — canonical implemented product behavior.
 3. `proposal/architecture/README.md` — implementation contracts and boundaries.
-4. `plans/README.md` — completed-plan index; load historical
-   plans only when the current task needs their rationale, exact boundary,
-   traceability, or evidence pointers.
+4. `plans/README.md` — execution-planning and milestone-closeout procedure.
 5. `contracts/v1/inventory.json` — versioned contract and fixture inventory when
    working on schemas, wire contracts, or fixture-oracle coverage.
 
@@ -37,8 +34,7 @@ the full specification when a small Capability or Requirement set is enough.
 - New behavior uses the applicable normal `spec-code`, `spec`, or `code`
   workflow from a bounded candidate tree.
 - Existing canonical Requirement meaning changes only through the applicable
-  normal workflow; completed bootstrap history grants no alternate mutation or
-  ID-reservation path.
+  normal workflow; no alternate mutation or ID-reservation path exists.
 - Architecture documents explain implementation choices. They do not override
   a product Requirement.
 

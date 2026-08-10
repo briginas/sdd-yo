@@ -26,8 +26,7 @@ The version 1 library, CLI, schemas, proposal and exact-patch workflow, evidence
 composition, findings validation, merge readiness, governed-scope integration,
 and approval-gated repository Skill route are implemented and verified. New
 behavior must use a bounded normal `spec-code`, `spec`, or `code` Change;
-completed bootstrap work grants no alternate specification-write or
-ID-reservation route.
+no alternate specification-write or ID-reservation route exists.
 
 ## Milestone 18 — Codex plugin with bundled CLI
 
