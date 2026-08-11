@@ -9,10 +9,10 @@ You can add SDD Yo to an existing project and build the specification step by
 step. Every change to the specification or code carries its own context, so
 several changes can be developed at the same time without confusion.
 
-Version `0.5.0` requires Node.js `22.18.0` or newer. Public availability is
-established only by the npm registry, not by source or README state. The
-project is pre-1.0, and installing the package does not install or publish a
-Codex plugin.
+Exact version `0.5.0` is public on npm and requires Node.js `22.18.0` or newer.
+Public availability is established only by the npm registry, not by source or
+README state. The project is pre-1.0, and installing the package does not
+install or publish a Codex plugin.
 
 ## Quick start
 
