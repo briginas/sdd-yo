@@ -48,10 +48,12 @@ records the selected package identity, repository-relative packaged CLI path,
 protocol versions, and payload fingerprint; it is repository state, not a
 packed source file.
 
-An installed compatibility wrapper resolves only that bound CLI unless the
-caller supplies one explicit absolute `--cli` path. It preflights exact
-machine-readable compatibility identity before every product command and never
-searches `PATH` for an accidental global `sdd` executable.
+A repository-installed compatibility wrapper resolves only that bound CLI
+unless the caller supplies one explicit absolute `--cli` path. A user-installed
+wrapper rejects `--cli`, verifies its complete owned Skill and private package
+inventories, and resolves only the canonical absolute private CLI path. Both
+preflight exact machine-readable compatibility identity before every product
+command and never search `PATH` for an accidental global `sdd` executable.
 
 Explicit `sdd skill update --root <repository-root>` and
 `sdd skill remove --root <repository-root>` own the later repository lifecycle.

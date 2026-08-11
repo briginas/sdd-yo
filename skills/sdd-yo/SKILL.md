@@ -21,7 +21,11 @@ selected SDD Project.
    `sdd` directly.
    - A repository-installed Skill resolves only the packaged CLI path recorded
      in its `installation.json` binding.
-   - `--cli` selects one explicit absolute path; it never falls back to `PATH`.
+   - A user-installed Skill verifies its exact owned payload and private package
+     inventories, then resolves only the canonical absolute CLI path in its
+     `installation.json` binding.
+   - `--cli` selects one explicit absolute path only for repository or unpacked
+     package use. User installation rejects it. No mode falls back to `PATH`.
 3. Stop if the wrapper reports a missing, interrupted, malformed, incompatible,
    or unsupported CLI operation. Do not install or repair the CLI.
 4. Accept only the wrapper's unchanged version 1 JSON response. Treat a
@@ -30,7 +34,7 @@ selected SDD Project.
 Use this invocation shape:
 
 ```text
-node scripts/check-cli-compatibility [--cli <sdd-path>] -- <command> <arguments>
+node scripts/check-cli-compatibility [--cli <repository-sdd-path>] -- <command> <arguments>
 ```
 
 Before each operation the wrapper requires compatible `--version --format json`

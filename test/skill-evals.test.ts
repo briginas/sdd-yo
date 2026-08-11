@@ -108,7 +108,14 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
   const suite = await loadSuite();
   assert.equal(suite.schema_version, "1.0");
   assert.equal(suite.suite_id, "sdd-yo-skill-safety-v1");
-  assert.deepEqual(suite.requirements, ["REQ-1DD46CA9", "REQ-26234DC8", "REQ-32C76ED3", "REQ-D17B2FB9"]);
+  assert.deepEqual(suite.requirements, [
+    "REQ-05CABE17",
+    "REQ-1DD46CA9",
+    "REQ-26234DC8",
+    "REQ-32C76ED3",
+    "REQ-C975AE17",
+    "REQ-D17B2FB9",
+  ]);
   assert.equal(new Set(suite.scenarios.map(({ id }) => id)).size, suite.scenarios.length);
 
   assert.deepEqual([...new Set(suite.scenarios.map(({ route }) => route))].toSorted(), [

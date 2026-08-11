@@ -2,8 +2,8 @@
 
 ## Status
 
-- Active: Milestone 18.4 — User Skill binding and compatible execution
-- Complete: Milestones 0–17, Milestones 18.1–18.3, and public/offline wording alignment
+- Active: Milestone 18.5 — Distribution contract, package evidence, and documentation
+- Complete: Milestones 0–17, Milestones 18.1–18.4, and public/offline wording alignment
 - Last updated: 2026-08-11
 
 ## Authority and navigation
@@ -147,7 +147,7 @@ independent update and removal. Requirement-named tests cover successful and
 unchanged lifecycle, unsafe or modified bytes, concurrent changes,
 interruptions, repository-scope isolation, and preservation of adjacent files.
 
-### 18.4 — User Skill binding and compatible execution (active)
+### 18.4 — User Skill binding and compatible execution (complete)
 
 - Define and emit the owned user installation binding with exact package, CLI,
   JSON-schema, Skill-protocol, inventory, fingerprint, and canonical CLI path
@@ -167,7 +167,15 @@ Done when a verified user Skill can invoke its exact private CLI against two
 separately selected fixture repositories while incompatible, ambiguous, or
 unsafe bindings fail before any product command executes.
 
-### 18.5 — Distribution contract, package evidence, and documentation
+Completed with one scope-discriminated installed binding, exact owned Skill and
+private package inventory verification, canonical absolute CLI resolution,
+identity preflight, explicit project selection and result-project matching.
+User mode rejects `--cli`, moved or modified stores, missing selectors, and
+missing private bytes without PATH, repository CLI, network, or first-use
+repair fallback. Requirement-named wrapper tests and the retained Skill eval
+corpus cover two separately selected projects and repository-mode compatibility.
+
+### 18.5 — Distribution contract, package evidence, and documentation (active)
 
 - Update CLI help, machine-readable results, schemas, diagnostics, fixtures,
   architecture, and public documentation for the exact user lifecycle while

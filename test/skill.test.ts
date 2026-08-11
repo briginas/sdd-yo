@@ -1,17 +1,19 @@
 import assert from "node:assert/strict";
-import { chmod, mkdtemp, readFile, readdir, writeFile } from "node:fs/promises";
+import { chmod, cp, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import test from "node:test";
 
+import { createNodeUserSkillInstaller } from "../src/platform/node-user-skill-installer.ts";
+
 const executeFile = promisify(execFile);
 const repositoryRoot = resolve(import.meta.dirname, "..");
 const skillRoot = join(repositoryRoot, "skills/sdd-yo");
 const checker = join(skillRoot, "scripts/check-cli-compatibility");
 
-async function fakeCli(): Promise<string> {
+async function fakeCli(version = "0.2.0"): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), "sdd-skill-cli-"));
   const executable = join(root, "sdd");
   await writeFile(
@@ -21,6 +23,10 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 const args = process.argv.slice(2);
 const command = args[0];
+const selectedCwdIndex = args.indexOf("--cwd");
+const selectedProjectId = selectedCwdIndex !== -1 && args[selectedCwdIndex + 1]?.endsWith("project-b")
+  ? "SDD-B1000001"
+  : "SDD-A1000001";
 const operation = ["approval", "proposal", "tests", "findings", "merge"].includes(command)
   ? \`\${command}.\${args[1] ?? ""}\`
   : command;
@@ -29,8 +35,8 @@ if (command === "--version") {
   const identity = {
     schema_version: "1.0", command: "version", project_id: null, status: "ok",
     result: {
-      package: { name: "sdd-yo", version: mode === "identity-version-mismatch" ? "9.0.0" : "0.2.0" },
-      cli: { name: "sdd", version: mode === "identity-version-mismatch" ? "9.0.0" : "0.2.0" },
+      package: { name: "sdd-yo", version: mode === "identity-version-mismatch" ? "9.0.0" : "${version}" },
+      cli: { name: "sdd", version: mode === "identity-version-mismatch" ? "9.0.0" : "${version}" },
       json_schema: { version: mode === "identity-incompatible" ? "2.0" : "1.0", compatible_major: mode === "identity-incompatible" ? 2 : 1 },
       skill: { name: "sdd-yo", protocol_version: "1.0", compatible_major: 1 },
     }, diagnostics: [],
@@ -136,7 +142,7 @@ else {
   const status = operation === "merge.check"
     ? result.status === "BLOCKED" ? "blocked" : result.status === "REVIEW_REQUIRED" ? "review_required" : "ok"
     : mode === "review-required" ? "review_required" : "ok";
-  process.stdout.write(JSON.stringify({ schema_version, command: operation, project_id: "SDD-A1000001", status, result, diagnostics: [] }));
+  process.stdout.write(JSON.stringify({ schema_version, command: operation, project_id: selectedProjectId, status, result, diagnostics: [] }));
   if (status === "blocked") process.exitCode = 1;
   else if (status === "review_required") process.exitCode = 2;
 }
@@ -294,6 +300,83 @@ test("REQ-CF3A1070 compatibility wrapper preflights the explicit CLI identity an
   assert.equal(unbound.code, 3);
   assert.match(unbound.stderr, /installation binding is missing/u);
   assert.equal(unbound.stdout, "");
+});
+
+test("REQ-C975AE17 REQ-05CABE17 user wrapper invokes only its verified private CLI", async () => {
+  const root = await mkdtemp(join(tmpdir(), "sdd-user-wrapper-"));
+  try {
+    const home = join(root, "home");
+    const applicationSupport = join(home, "Library", "Application Support");
+    const packageRoot = join(root, "package");
+    const privateCli = join(packageRoot, "dist", "bin", "sdd.js");
+    await mkdir(applicationSupport, { recursive: true });
+    await mkdir(join(packageRoot, "dist", "bin"), { recursive: true });
+    await cp(skillRoot, join(packageRoot, "skills", "sdd-yo"), { recursive: true });
+    await cp(await fakeCli("0.3.0"), privateCli);
+    await chmod(privateCli, 0o755);
+    const compatibility = {
+      package: { name: "sdd-yo", version: "0.3.0" },
+      cli: { name: "sdd", version: "0.3.0" },
+      json_schema: { version: "1.0", compatible_major: 1 },
+      skill: { name: "sdd-yo", protocol_version: "1.0", compatible_major: 1 },
+    } as const;
+    const installed = await createNodeUserSkillInstaller().install({
+      packageRoot,
+      cliPath: privateCli,
+      compatibility,
+      roots: { home, applicationSupport, platform: "darwin" },
+    });
+    const installedChecker = join(installed.skill_destination, "scripts", "check-cli-compatibility");
+    const projectA = join(root, "project-a");
+    const projectB = join(root, "project-b");
+    await mkdir(join(projectA, ".sdd"), { recursive: true });
+    await mkdir(join(projectB, ".sdd"), { recursive: true });
+    await writeFile(join(projectA, ".sdd", "config.yaml"), "project_id: SDD-A1000001\n");
+    await writeFile(join(projectB, ".sdd", "config.yaml"), "project_id: SDD-B1000001\n");
+    for (const project of [projectA, projectB]) {
+      const result = await executeFile(process.execPath, [installedChecker, "--", "validate", "--cwd", project], {
+        env: { ...process.env, HOME: home, PATH: "" },
+      });
+      assert.equal((JSON.parse(result.stdout) as { command: string }).command, "validate");
+    }
+    await assert.rejects(
+      executeFile(
+        process.execPath,
+        [installedChecker, "--cli", privateCli, "--", "validate", "--cwd", repositoryRoot],
+        {
+          env: { ...process.env, HOME: home, PATH: "" },
+        },
+      ),
+      (error: unknown) => (error as { stderr?: string }).stderr?.includes("--cli is unavailable") === true,
+    );
+    await assert.rejects(
+      executeFile(process.execPath, [installedChecker, "--", "validate"], {
+        env: { ...process.env, HOME: home, PATH: "" },
+      }),
+      (error: unknown) => (error as { stderr?: string }).stderr?.includes("explicit --cwd or --config") === true,
+    );
+    const movedSkill = join(root, "moved-skill");
+    await cp(installed.skill_destination, movedSkill, { recursive: true });
+    await assert.rejects(
+      executeFile(
+        process.execPath,
+        [join(movedSkill, "scripts", "check-cli-compatibility"), "--", "validate", "--cwd", projectA],
+        { env: { ...process.env, HOME: home, PATH: "" } },
+      ),
+      (error: unknown) => (error as { stderr?: string }).stderr?.includes("moved from its canonical path") === true,
+    );
+    const installedCli = join(installed.cli_destination, "dist", "bin", "sdd.js");
+    await rm(installedCli);
+    await assert.rejects(
+      executeFile(process.execPath, [installedChecker, "--", "validate", "--cwd", projectA], {
+        env: { ...process.env, HOME: home, PATH: "" },
+      }),
+      (error: unknown) => (error as { stderr?: string }).stderr?.includes("inventory is stale or modified") === true,
+    );
+    await assert.rejects(readFile(installedCli), /ENOENT/u);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test("REQ-2C8E8085 compatibility wrapper accepts only project-aware authoring IDs", async () => {
