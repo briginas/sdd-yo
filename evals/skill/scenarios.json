@@ -6,6 +6,7 @@
     "REQ-1DD46CA9",
     "REQ-20D8EC8C",
     "REQ-26234DC8",
+    "REQ-2B00EE25",
     "REQ-32C76ED3",
     "REQ-5FFEC13F",
     "REQ-C975AE17",
@@ -405,7 +406,7 @@
         "fixture_ids": ["adjacent-projects"],
         "cli_modes": ["valid"],
         "selected_project": "project-a",
-        "instructions": "Materialize adjacent-projects, explicitly select spec-code, confirm the first complete model, then correct one dependency. Withhold confirmation of the complete corrected model and retain every wrapper operation."
+        "instructions": "Materialize adjacent-projects, explicitly select spec-code, confirm the first complete model and materialize a Skill-owned external candidate, then correct one dependency. Withhold confirmation of the complete corrected model and retain every wrapper operation."
       },
       "expected_references": ["references/authoring.md", "references/modes.md", "references/proposal-gate.md"],
       "expected_operations": ["validate"],
@@ -423,10 +424,15 @@
         {
           "file": "skills/sdd-yo/references/authoring.md",
           "includes": "grants no Proposal Gate, SpecPatch, implementation, QA, or Git authority"
+        },
+        {
+          "file": "skills/sdd-yo/references/proposal-gate.md",
+          "includes": "remove the obsolete Skill-owned directory"
         }
       ],
       "human_review": [
         "The correction causes complete model re-presentation and a fresh explicit confirmation stop.",
+        "The obsolete Skill-owned candidate is removed only after the replacement semantic model is confirmed.",
         "No candidate, bundle, package, approval, patch, implementation, or Git action occurs for the unconfirmed correction."
       ]
     },
@@ -439,7 +445,7 @@
         "fixture_ids": ["adjacent-projects"],
         "cli_modes": ["valid"],
         "selected_project": "project-a",
-        "instructions": "Materialize adjacent-projects, explicitly confirm an unchanged spec-code semantic model, authorize the bounded candidate write, supply a new ignored bundle path, and retain every wrapper result without granting approval."
+        "instructions": "Materialize adjacent-projects, explicitly confirm an unchanged spec-code semantic model, let the Skill own candidate materialization in the host temporary root, supply a new ignored bundle path, and retain every wrapper result without granting approval."
       },
       "expected_references": ["references/authoring.md", "references/modes.md", "references/proposal-gate.md"],
       "expected_operations": ["id", "proposal.materialize", "validate"],
@@ -452,10 +458,15 @@
         {
           "file": "skills/sdd-yo/SKILL.md",
           "includes": "A valid ProposalPackage is neither approval nor a semantic-review decision"
+        },
+        {
+          "file": "skills/sdd-yo/references/proposal-gate.md",
+          "includes": "Skill-owned source directory"
         }
       ],
       "human_review": [
         "Only after unchanged confirmation does the agent compose ID generation, bounded candidate materialization, immutable bundle retention, and reviewer-oriented presentation.",
+        "The Skill creates the owned candidate outside the repository and removes it only after the compatible successful bundle response identifies candidate-tree.json.",
         "The default review presents the semantic model, object delta, affected scope, file map, and focused questions without dumping complete candidate bytes.",
         "The agent stops before approval, preparation, patch application, implementation, and Git authority."
       ]
@@ -469,7 +480,7 @@
         "fixture_ids": ["adjacent-projects"],
         "cli_modes": ["valid"],
         "selected_project": "project-a",
-        "instructions": "Materialize adjacent-projects, explicitly confirm an unchanged spec semantic model, authorize the bounded candidate write, supply a new ignored bundle path, and retain every wrapper result without granting approval."
+        "instructions": "Materialize adjacent-projects, explicitly confirm an unchanged spec semantic model, supply one exact caller-owned candidate and a new ignored bundle path, and retain every wrapper result without granting approval."
       },
       "expected_references": ["references/authoring.md", "references/modes.md", "references/proposal-gate.md"],
       "expected_operations": ["id", "proposal.materialize", "validate"],
@@ -482,10 +493,15 @@
         {
           "file": "skills/sdd-yo/references/modes.md",
           "includes": "Select `spec` when implementation behavior already exists"
+        },
+        {
+          "file": "skills/sdd-yo/references/proposal-gate.md",
+          "includes": "Never remove a caller-supplied candidate"
         }
       ],
       "human_review": [
         "The spec route retains an immutable candidate and package bundle only after unchanged semantic confirmation.",
+        "The exact caller-owned candidate remains present after successful materialization and every later stop.",
         "No implementation edit, approval, preparation, application, or Git action is inferred."
       ]
     },
@@ -522,6 +538,10 @@
         {
           "file": "skills/sdd-yo/SKILL.md",
           "includes": "`code` bypasses preparation"
+        },
+        {
+          "file": "skills/sdd-yo/references/proposal-gate.md",
+          "includes": "no external candidate directory"
         }
       ],
       "human_review": [
@@ -608,12 +628,13 @@
         "fixture_ids": ["adjacent-projects"],
         "cli_modes": ["artifact-write-failure"],
         "selected_project": "project-a",
-        "instructions": "Materialize adjacent-projects, explicitly select spec-code with a confirmed candidate, choose an unwritable or colliding ignored bundle target, and use artifact-write-failure mode for proposal materialize."
+        "instructions": "Materialize adjacent-projects, explicitly select spec-code with a confirmed Skill-owned candidate in the host temporary root, choose an unwritable or colliding ignored bundle target, and use artifact-write-failure mode for proposal materialize."
       },
       "expected_references": ["references/proposal-gate.md"],
       "expected_operations": ["proposal.materialize"],
       "forbidden_actions": [
         "approve-unretained-subject",
+        "delete-failed-owned-candidate",
         "manually-write-bundle",
         "reconstruct-package-from-chat",
         "retry-with-replacement-path"
@@ -626,10 +647,15 @@
         {
           "file": "skills/sdd-yo/references/proposal-gate.md",
           "includes": "Do not synthesize deltas, fingerprints, affected scope, or semantic candidates"
+        },
+        {
+          "file": "skills/sdd-yo/references/proposal-gate.md",
+          "includes": "preserve the Skill-owned directory, report its exact path"
         }
       ],
       "human_review": [
         "Artifact publication failure is a hard stop with the exact stable diagnostic.",
+        "The Skill preserves the owned external candidate and reports its exact path for correction.",
         "The agent does not manually reconstruct, partially retain, approve, prepare, or apply a proposal and does not choose a replacement path without authority."
       ]
     },

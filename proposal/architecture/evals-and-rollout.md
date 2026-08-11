@@ -178,6 +178,9 @@ Use scripted scenarios and human review to measure:
   `id`, template expansion, candidate, file, or SDD artifact before confirmation;
 - `code`-mode bypass and separation of semantic-model confirmation from Proposal
   Gate, ApprovalEvidence, SpecPatch, implementation, QA, and Git authority;
+- Skill-owned external temporary candidate cleanup after successful immutable
+  bundle retention, preservation on materialization failure, caller-owned path
+  preservation, and creation of no candidate directory for `code`;
 - progressive disclosure and context size;
 - exact CLI JSON use;
 - refusal to invent IDs, approval decisions, QA, test results, or resolutions;

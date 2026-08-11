@@ -118,7 +118,11 @@ stdout, then exported byte-for-byte to durable storage before optional staging
 cleanup.
 
 An authored candidate directory is transient input to `proposal materialize`
-only in `spec-code` and `spec` modes. The command converts it into the fixed
+only in `spec-code` and `spec` modes. A Skill-owned source candidate is created
+outside the selected repository through the host temporary-directory boundary;
+it is removed after successful bundle publication and preserved with its exact
+path on failure. A caller-owned candidate remains caller-owned and is never
+removed by the Skill. The command converts either source into the fixed
 `candidate-tree.json` bundle member; downstream commands never accept a
 candidate directory, a raw CandidateTreeManifest, or an archive. The embedded
 member contains only configured specification-tree files and never embeds a

@@ -284,6 +284,50 @@ decisions without reimplementing product rules.
   conversational context, derive deterministic artifact content, or retain a
   hidden workflow database.
 
+<a id="req-2b00ee25"></a>
+
+## REQ-2B00EE25 — Use an external temporary authored candidate
+
+```sdd
+kind: behavior
+verification: manual
+```
+
+### Relations <!-- sdd:relations -->
+
+- depends-on: [REQ-26234DC8 — Orchestrate through one progressive-disclosure skill](multi-project-cli-and-skill.md#req-26234dc8)
+- depends-on: [REQ-20D8EC8C — Materialize one immutable proposal bundle](proposal-modes-and-workflow-gates.md#req-20d8ec8c)
+- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+
+### Statement <!-- sdd:statement -->
+
+For `spec-code` and `spec`, when the `sdd-yo` Agent Skill materializes its own
+authored candidate for Proposal Gate review, it shall use a fresh external
+temporary directory and remove that owned source candidate after its complete
+immutable proposal bundle is retained successfully.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- The Skill creates the candidate outside the selected Git repository through
+  a secure host temporary-directory primitive, using `/private/tmp` on macOS
+  and the host temporary root on other supported systems.
+- The temporary candidate contains the selected project's matching
+  `.sdd/config.yaml` and complete `spec/**` tree, and its exact path is supplied
+  only as the authored `--candidate` input to `proposal materialize`.
+- The Skill records whether it created the candidate. It never automatically
+  removes a caller-supplied candidate or another path that it does not own.
+- After an unchanged compatible `status: ok` response identifies the retained
+  bundle's fixed `candidate-tree.json`, the Skill removes its owned source
+  candidate while retaining the project-relative bundle and every downstream
+  workflow artifact.
+- A blocked, error, malformed, incompatible, or interrupted materialization
+  preserves the owned candidate for correction, reports its exact location,
+  and stops before approval or another downstream gate.
+- Explicit cancellation or confirmation of a replacement semantic model
+  removes an obsolete owned candidate. Cleanup failure reports the remaining
+  exact path without invalidating an already retained proposal bundle.
+- `code` mode creates no authored candidate or external candidate directory.
+
 <a id="req-d17b2fb9"></a>
 
 ## REQ-D17B2FB9 — Confirm the semantic model before specification identities

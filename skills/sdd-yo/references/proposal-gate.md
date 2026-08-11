@@ -10,13 +10,47 @@ Require the selected SDD Project plus:
 - exactly one confirmed mode: `spec-code`, `spec`, or `code`;
 - an explicit base Git ref;
 - one new caller-selected ignored bundle path;
-- a complete authored candidate directory for `spec-code` or `spec`;
+- a complete authored candidate for `spec-code` or `spec`, either supplied as
+  an exact caller-owned directory or materialized by the Skill from the
+  confirmed complete virtual candidate;
 - one or more active Requirement IDs and no authored candidate for `code`.
 
 The earlier authoring preview is not CLI input and is not a ProposalPackage.
 Do not synthesize deltas, fingerprints, affected scope, or semantic candidates
-from prose. If the exact candidate has not been materialized by the authorized
-workflow, stop and request that input.
+from prose. If the exact candidate has not been supplied and the confirmed
+virtual candidate is unavailable, stop and request that input.
+
+## External temporary candidate lifecycle
+
+For `spec-code` and `spec`, when the Skill materializes the candidate itself:
+
+1. Create one fresh directory with a secure host temporary-directory primitive.
+   On macOS use a randomized directory below `/private/tmp`; on another
+   supported host use its system temporary root. Never create the owned source
+   candidate inside the selected repository.
+2. Record the exact directory and that the Skill owns it in the active
+   workflow. This ownership marker is conversational orchestration state, not a
+   file, artifact, or hidden workflow database.
+3. Copy the selected project's exact `.sdd/config.yaml` and complete current
+   `spec/**` tree into that directory, then apply only the confirmed authored
+   changes. Reject a symbolic-link or path escape. Supply the exact directory
+   only as `--candidate`; the bundle and every retained artifact remain new,
+   ignored, project-relative paths.
+4. After the unchanged wrapper response is compatible and `status: ok`, and it
+   identifies the fixed `<bundle>/candidate-tree.json` member, remove the
+   Skill-owned source directory. The retained bundle becomes the only candidate
+   input for every downstream operation.
+5. On `blocked`, `error`, malformed, incompatible, or interrupted
+   materialization, preserve the Skill-owned directory, report its exact path,
+   and stop before approval or any downstream gate.
+6. When the user explicitly cancels this candidate or confirms a replacement
+   semantic model, remove the obsolete Skill-owned directory. If cleanup fails,
+   report its exact remaining path. A cleanup failure after successful bundle
+   publication does not invalidate that retained bundle.
+
+Never remove a caller-supplied candidate or any directory whose Skill ownership
+is not established by this active workflow. `code` mode creates no authored
+candidate and no external candidate directory.
 
 ## Deterministic validation
 

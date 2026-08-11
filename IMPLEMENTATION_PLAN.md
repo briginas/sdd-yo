@@ -3,7 +3,7 @@
 ## Status
 
 - Active: none — no milestone is selected
-- Complete: Milestones 0–20 and public `sdd-yo@0.5.0`
+- Complete: Milestones 0–21 and public `sdd-yo@0.5.0`
 - Last updated: 2026-08-11
 
 ## Authority and navigation
@@ -26,10 +26,13 @@ The version 1 library, CLI, schemas, proposal and exact-patch workflow, evidence
 composition, findings validation, merge readiness, governed-scope integration,
 repository-scoped Skill route, and macOS user-scoped Skill with a bound private
 CLI are implemented and verified. Normal `spec-code` and `spec` Changes retain
-one candidate-and-package bundle, while `code` retains one package-only bundle
-and performs no specification-patch ceremony. Proposal validation, approval
-recording, preparation, and merge checks consume the exact retained bundle;
-superseded `0.4.x` handoff routes are absent.
+one candidate-and-package bundle. A Skill-owned authored candidate is created
+outside the repository through the host temporary boundary and removed after
+successful bundle retention; failures preserve it, caller-owned candidates are
+not removed, and `code` creates no candidate directory. `code` retains one
+package-only bundle and performs no specification-patch ceremony. Proposal
+validation, approval recording, preparation, and merge checks consume the exact
+retained bundle; superseded `0.4.x` handoff routes are absent.
 
 Exact `sdd-yo@0.5.0` is public on npm from annotated tag `v0.5.0`. Its registry
 tarball matches the retained reviewed artifact with SHA-256

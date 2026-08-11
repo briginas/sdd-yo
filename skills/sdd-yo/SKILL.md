@@ -109,9 +109,12 @@ semantic-model confirmation or authoring approval.
 ## Review and prepare a proposal
 
 1. For `spec-code` or `spec`, require the complete authored candidate, selected
-   base and one new ignored bundle path. For `code`, require the selected base,
+   base and one new ignored bundle path. If the Skill owns candidate
+   materialization, follow the external temporary lifecycle in
+   `references/proposal-gate.md`; preserve caller ownership when an exact
+   candidate directory was supplied. For `code`, require the selected base,
    exact active Requirement targets and a new ignored bundle path, with no
-   authored candidate.
+   authored candidate or candidate directory.
 2. Run `proposal materialize` through the wrapper and present its exact object
    delta, affected scope, diagnostics, and deterministic semantic candidates.
    A valid ProposalPackage is neither approval nor a semantic-review decision.

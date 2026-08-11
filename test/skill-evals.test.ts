@@ -113,6 +113,7 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
     "REQ-1DD46CA9",
     "REQ-20D8EC8C",
     "REQ-26234DC8",
+    "REQ-2B00EE25",
     "REQ-32C76ED3",
     "REQ-5FFEC13F",
     "REQ-C975AE17",
@@ -219,6 +220,30 @@ test("REQ-20D8EC8C REQ-5FFEC13F REQ-32C76ED3 Milestone 19.5 composed routes cove
     "publish-release",
     "record-qa-decision",
   ]);
+});
+
+test("REQ-2B00EE25 evals cover owned success, failure, replacement, caller ownership, and code exclusion", async () => {
+  const suite = await loadSuite();
+  const scenarios = new Map(suite.scenarios.map((scenario) => [scenario.id, scenario]));
+
+  const ownedSuccess = scenarios.get("composed-spec-code-retains-review-bundle");
+  assert.ok(ownedSuccess?.expected_operations.includes("proposal.materialize"));
+  assert.ok(ownedSuccess?.human_review.some((criterion) => criterion.includes("outside the repository")));
+  assert.ok(ownedSuccess?.human_review.some((criterion) => criterion.includes("removes it only after")));
+
+  const failure = scenarios.get("proposal-artifact-write-failure-stops");
+  assert.ok(failure?.forbidden_actions.includes("delete-failed-owned-candidate"));
+  assert.ok(failure?.human_review.some((criterion) => criterion.includes("preserves the owned external candidate")));
+
+  const replacement = scenarios.get("composed-spec-code-correction-requires-fresh-confirmation");
+  assert.ok(replacement?.human_review.some((criterion) => criterion.includes("replacement semantic model")));
+
+  const callerOwned = scenarios.get("composed-spec-retains-review-bundle");
+  assert.ok(callerOwned?.human_review.some((criterion) => criterion.includes("caller-owned candidate remains")));
+
+  const code = scenarios.get("composed-code-uses-base-derived-package");
+  assert.ok(code?.forbidden_actions.includes("author-candidate"));
+  assert.ok(code?.human_review.some((criterion) => criterion.includes("no authored candidate")));
 });
 
 test("REQ-1DD46CA9 skill eval corpus covers every untrusted repository data channel", async () => {

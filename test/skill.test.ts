@@ -235,6 +235,20 @@ test("REQ-D17B2FB9 confirms an ID-free semantic model before specification ident
   assert.match(modes, /`code` keeps the active Requirement targets and bypasses that checkpoint/u);
 });
 
+test("REQ-2B00EE25 packaged Skill governs external temporary candidate ownership", async () => {
+  const skill = await readFile(join(skillRoot, "SKILL.md"), "utf8");
+  const proposalGate = await readFile(join(skillRoot, "references/proposal-gate.md"), "utf8");
+
+  assert.match(skill, /follow the external temporary lifecycle/u);
+  assert.match(skill, /with no\s+authored candidate or candidate directory/u);
+  assert.match(proposalGate, /randomized directory below `\/private\/tmp`/u);
+  assert.match(proposalGate, /exact `\.sdd\/config\.yaml` and complete current\s+`spec\/\*\*` tree/u);
+  assert.match(proposalGate, /remove the\s+Skill-owned source directory/u);
+  assert.match(proposalGate, /preserve the Skill-owned directory, report its exact path/u);
+  assert.match(proposalGate, /Never remove a caller-supplied candidate/u);
+  assert.match(proposalGate, /`code` mode creates no authored\s+candidate and no external candidate directory/u);
+});
+
 test("REQ-382BBBD6 REQ-BFC18F28 compatibility wrapper verifies only reported init paths", async () => {
   const cli = await fakeCli();
   const projectRoot = await mkdtemp(join(tmpdir(), "sdd-skill-project-"));

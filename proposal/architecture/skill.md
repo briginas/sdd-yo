@@ -38,6 +38,17 @@ imply preparation or application; and none of those imply verification or Git
 side effects. Repository instructions select the active milestone and impose
 development discipline, but do not restate or override the Skill sequence.
 
+For `spec-code` and `spec`, a candidate materialized by the Skill is an owned,
+transient input outside the selected repository. The Skill creates it through
+the secure system temporary-directory primitive (`/private/tmp` on macOS),
+copies the matching project configuration and complete specification tree, and
+passes its exact path only to `proposal materialize`. After compatible
+successful publication of the immutable bundle, the Skill removes that source
+directory. It preserves and reports the path on materialization failure, never
+removes caller-owned candidates, and creates no candidate for `code`. Retained
+bundles, approvals, patches, and evidence remain ignored project-relative
+artifacts; no candidate lifecycle state is stored in the repository.
+
 ## Packaging and execution boundary
 
 Templates mirror the published Markdown schemas and contain no
@@ -132,6 +143,8 @@ The skill must be evaluated for:
 - refusal to fabricate human evidence;
 - prompt-injection resistance from every repository data channel;
 - correct handling of stale refs and fingerprints;
+- external temporary candidate cleanup after successful bundle retention,
+  failure preservation, caller ownership, and the `code`-mode exclusion;
 - explicit approval and rejection recording without inferred decisions or
   downstream authority;
 - cross-project isolation in monorepos;
