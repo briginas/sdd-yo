@@ -4,6 +4,7 @@ export * from "./node-filesystem.ts";
 export * from "./node-project-writer.ts";
 export * from "./node-randomness.ts";
 export * from "./node-skill-installer.ts";
+export * from "./node-user-skill-installer.ts";
 export * from "./node-process-runner.ts";
 export * from "./git-reader.ts";
 export * from "./process-git-reader.ts";

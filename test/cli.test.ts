@@ -173,6 +173,67 @@ test("REQ-AA165BDE Skill lifecycle commands reject traversal before invoking an 
   }
 });
 
+test("REQ-778099C0 REQ-50351033 user scope is explicit and remains separate from repository selection", async () => {
+  let userInstalls = 0;
+  const standardOutput: string[] = [];
+  const run = async (argv: readonly string[]) =>
+    runCli({
+      argv,
+      workingDirectory: process.cwd(),
+      fileSystem: nodeFileSystem,
+      projectWriter: nodeProjectWriter,
+      randomness: nodeRandomness,
+      processRunner: nodeProcessRunner,
+      packageRoot: process.cwd(),
+      cliPath: join(process.cwd(), "dist/bin/sdd.js"),
+      userSkillRoots: {
+        home: "/private/tmp/test-home",
+        applicationSupport: "/private/tmp/test-home/Library/Application Support",
+        platform: "darwin",
+      },
+      userSkillInstaller: {
+        install: async (input) => {
+          userInstalls += 1;
+          return {
+            scope: "user",
+            skill_destination: join(input.roots.home, ".agents/skills/sdd-yo"),
+            cli_destination: join(input.roots.applicationSupport, "sdd-yo/cli/0.3.0"),
+            owned_paths: [],
+            package_fingerprint: `sha256:${"0".repeat(64)}`,
+            payload_fingerprint: `sha256:${"1".repeat(64)}`,
+            compatibility: input.compatibility,
+          };
+        },
+        update: async () => {
+          throw new Error("unexpected update");
+        },
+        remove: async () => {
+          throw new Error("unexpected removal");
+        },
+      },
+      writeStandardOutput: (message) => standardOutput.push(message),
+      writeStandardError: () => undefined,
+      writeOutputFile: () => {
+        throw new Error("unexpected output file");
+      },
+    });
+
+  assert.equal(await run(["skill", "install", "--scope", "user", "--format", "json"]), 0);
+  assert.equal(userInstalls, 1);
+  for (const selector of [
+    ["--root", "."],
+    ["--cwd", "."],
+    ["--config", ".sdd/config.yaml"],
+  ]) {
+    standardOutput.length = 0;
+    assert.equal(await run(["skill", "install", "--scope", "user", ...selector, "--format", "json"]), 3);
+    assert.equal(userInstalls, 1);
+  }
+  standardOutput.length = 0;
+  assert.equal(await run(["skill", "install", "--format", "json"]), 3);
+  assert.equal(userInstalls, 1);
+});
+
 test("REQ-2C8E8085 projectless id rejects invalid counts and history claims", async () => {
   const root = await mkdtemp(join(tmpdir(), "sdd-cli-id-invalid-"));
   for (const count of ["0", "257", "1.5", "01"]) {

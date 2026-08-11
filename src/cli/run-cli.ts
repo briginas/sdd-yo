@@ -23,6 +23,11 @@ import {
   type SkillInstaller,
   type SkillRemovalResult,
   type SkillUpdateResult,
+  type UserSkillInstallationResult,
+  type UserSkillInstaller,
+  type UserSkillRemovalResult,
+  type UserSkillRoots,
+  type UserSkillUpdateResult,
 } from "../skill-install/index.ts";
 import { discoverProcessGitReader, GitReadError } from "../platform/process-git-reader.ts";
 import { initializeProject } from "../init/initialize-project.ts";
@@ -161,6 +166,8 @@ export type CliRuntime = {
   readonly randomness: Randomness;
   readonly processRunner: ProcessRunner;
   readonly skillInstaller?: SkillInstaller;
+  readonly userSkillInstaller?: UserSkillInstaller;
+  readonly userSkillRoots?: UserSkillRoots;
   readonly packageRoot?: string;
   readonly cliPath?: string;
   readonly adapterEnvironment?: Readonly<Record<string, string>>;
@@ -178,6 +185,7 @@ type Invocation = {
   readonly outputPath?: ProjectPath;
   readonly includeExplanatory: boolean;
   readonly root?: string;
+  readonly skillScope?: "repository" | "user";
   readonly specPath?: ProjectPath;
   readonly adoption?: "incremental" | "complete";
   readonly idKind?: IdKind;
@@ -314,6 +322,9 @@ export type CliResponse =
   | CliResponseEnvelope<"skill.install", "ok", SkillInstallationResult>
   | CliResponseEnvelope<"skill.update", "ok", SkillUpdateResult>
   | CliResponseEnvelope<"skill.remove", "ok", SkillRemovalResult>
+  | CliResponseEnvelope<"skill.install", "ok", UserSkillInstallationResult>
+  | CliResponseEnvelope<"skill.update", "ok", UserSkillUpdateResult>
+  | CliResponseEnvelope<"skill.remove", "ok", UserSkillRemovalResult>
   | CliResponseEnvelope<"id", "ok", IdResult>
   | CliResponseEnvelope<"validate", "ok", ValidateResult>
   | CliResponseEnvelope<"validate", "blocked", InvalidValidateResult>
@@ -401,6 +412,7 @@ function parseInvocation(
   let outputPath: ProjectPath | undefined;
   let includeExplanatory = false;
   let root: string | undefined;
+  let skillScope: "repository" | "user" = "repository";
   let specPath: ProjectPath | undefined;
   let adoption: "incremental" | "complete" | undefined;
   let idKind: IdKind | undefined;
@@ -465,6 +477,7 @@ function parseInvocation(
       argument === "--cwd" ||
       argument === "--output" ||
       argument === "--root" ||
+      argument === "--scope" ||
       argument === "--spec-path" ||
       argument === "--adoption" ||
       argument === "--count" ||
@@ -688,6 +701,20 @@ function parseInvocation(
             ),
           };
         format = value;
+      } else if (argument === "--scope") {
+        if (
+          (command !== "skill.install" && command !== "skill.update" && command !== "skill.remove") ||
+          (value !== "user" && value !== "repository")
+        )
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+              "--scope applies only to Skill lifecycle commands and must be user or repository.",
+              "Use --scope user for the macOS user installation or omit it for a repository installation.",
+            ),
+          };
+        skillScope = value;
       } else if (argument === "--config") configPath = value;
       else if (argument === "--cwd") cwd = value;
       else if (argument === "--root") {
@@ -878,7 +905,8 @@ function parseInvocation(
     };
   if (
     (command === "skill.install" || command === "skill.update" || command === "skill.remove") &&
-    (root === undefined ||
+    ((skillScope === "repository" && root === undefined) ||
+      (skillScope === "user" && root !== undefined) ||
       configPath !== undefined ||
       cwd !== undefined ||
       outputPath !== undefined ||
@@ -890,8 +918,12 @@ function parseInvocation(
       ok: false,
       diagnostic: cliDiagnostic(
         "SDD_CONFIG_CLI_ARGUMENT_INVALID",
-        `${command.replace(".", " ")} requires only an explicit repository root.`,
-        `Use sdd ${command.replace(".", " ")} --root <repository-root> with optional output formatting.`,
+        skillScope === "user"
+          ? `${command.replace(".", " ")} --scope user does not accept a repository selector.`
+          : `${command.replace(".", " ")} requires only an explicit repository root.`,
+        skillScope === "user"
+          ? `Use sdd ${command.replace(".", " ")} --scope user with optional output formatting.`
+          : `Use sdd ${command.replace(".", " ")} --root <repository-root> with optional output formatting.`,
       ),
     };
   if (
@@ -1338,6 +1370,7 @@ function parseInvocation(
       ...(outputPath === undefined ? {} : { outputPath }),
       includeExplanatory,
       ...(root === undefined ? {} : { root }),
+      ...(command.startsWith("skill.") ? { skillScope } : {}),
       ...(specPath === undefined ? {} : { specPath }),
       ...(adoption === undefined ? {} : { adoption }),
       ...(idKind === undefined ? {} : { idKind }),
@@ -1636,23 +1669,50 @@ function humanView(value: CliResponse): string {
     const result = value.result as InitResult;
     lines.push(...result.created_paths.map((path) => `created: ${path}`));
   } else if (value.command === "skill.install" && value.status === "ok") {
-    const result = value.result as SkillInstallationResult;
-    lines.push(
-      `destination: ${result.destination}`,
-      `payload: ${result.payload_fingerprint}`,
-      ...result.installed_paths.map((path) => `installed: ${path}`),
-    );
+    const result = value.result as SkillInstallationResult | UserSkillInstallationResult;
+    if ("scope" in result)
+      lines.push(
+        `scope: ${result.scope}`,
+        `skill destination: ${result.skill_destination}`,
+        `CLI destination: ${result.cli_destination}`,
+        `package: ${result.package_fingerprint}`,
+        `payload: ${result.payload_fingerprint}`,
+        ...result.owned_paths.map((path) => `installed: ${path}`),
+      );
+    else
+      lines.push(
+        `destination: ${result.destination}`,
+        `payload: ${result.payload_fingerprint}`,
+        ...result.installed_paths.map((path) => `installed: ${path}`),
+      );
   } else if (value.command === "skill.update" && value.status === "ok") {
-    const result = value.result as SkillUpdateResult;
-    lines.push(
-      `outcome: ${result.outcome}`,
-      `destination: ${result.destination}`,
-      `payload: ${result.payload_fingerprint}`,
-      ...result.owned_paths.map((path) => `owned: ${path}`),
-    );
+    const result = value.result as SkillUpdateResult | UserSkillUpdateResult;
+    lines.push(`outcome: ${result.outcome}`);
+    if ("scope" in result)
+      lines.push(
+        `scope: ${result.scope}`,
+        `skill destination: ${result.skill_destination}`,
+        `CLI destination: ${result.cli_destination}`,
+        `package: ${result.package_fingerprint}`,
+        `payload: ${result.payload_fingerprint}`,
+        ...result.owned_paths.map((path) => `owned: ${path}`),
+      );
+    else
+      lines.push(
+        `destination: ${result.destination}`,
+        `payload: ${result.payload_fingerprint}`,
+        ...result.owned_paths.map((path) => `owned: ${path}`),
+      );
   } else if (value.command === "skill.remove" && value.status === "ok") {
-    const result = value.result as SkillRemovalResult;
-    lines.push(`destination: ${result.destination}`, ...result.removed_paths.map((path) => `removed: ${path}`));
+    const result = value.result as SkillRemovalResult | UserSkillRemovalResult;
+    if ("scope" in result)
+      lines.push(
+        `scope: ${result.scope}`,
+        `skill destination: ${result.skill_destination}`,
+        `CLI destination: ${result.cli_destination}`,
+        ...result.removed_paths.map((path) => `removed: ${path}`),
+      );
+    else lines.push(`destination: ${result.destination}`, ...result.removed_paths.map((path) => `removed: ${path}`));
   } else if (value.command === "id" && value.status === "ok") {
     const result = value.result as IdResult;
     lines.push(...result.candidates, `history: ${result.history.status}`);
@@ -2043,28 +2103,50 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
       invocation.command === "skill.update" ||
       invocation.command === "skill.remove"
     ) {
-      if (
-        invocation.root === undefined ||
-        runtime.skillInstaller === undefined ||
-        runtime.packageRoot === undefined ||
-        runtime.cliPath === undefined
-      )
+      if (runtime.packageRoot === undefined || runtime.cliPath === undefined)
         throw new SkillInstallationError(
           "SDD_SKILL_INSTALL_UNAVAILABLE",
           "This sdd executable cannot locate its packaged Skill installation surface.",
         );
-      const input = {
-        repositoryRoot: resolve(runtime.workingDirectory, invocation.root),
-        packageRoot: runtime.packageRoot,
-        cliPath: runtime.cliPath,
-        compatibility: loadCliCompatibilityIdentity(),
-      };
+      const compatibility = loadCliCompatibilityIdentity();
       const result =
-        invocation.command === "skill.install"
-          ? await runtime.skillInstaller.install(input)
-          : invocation.command === "skill.update"
-            ? await runtime.skillInstaller.update(input)
-            : await runtime.skillInstaller.remove(input);
+        invocation.skillScope === "user"
+          ? await (async () => {
+              if (runtime.userSkillInstaller === undefined || runtime.userSkillRoots === undefined)
+                throw new SkillInstallationError(
+                  "SDD_USER_SKILL_INSTALL_UNAVAILABLE",
+                  "This sdd executable cannot locate its macOS user Skill lifecycle surface.",
+                );
+              const input = {
+                packageRoot: runtime.packageRoot!,
+                cliPath: runtime.cliPath!,
+                compatibility,
+                roots: runtime.userSkillRoots,
+              };
+              return invocation.command === "skill.install"
+                ? await runtime.userSkillInstaller.install(input)
+                : invocation.command === "skill.update"
+                  ? await runtime.userSkillInstaller.update(input)
+                  : await runtime.userSkillInstaller.remove(input);
+            })()
+          : await (async () => {
+              if (invocation.root === undefined || runtime.skillInstaller === undefined)
+                throw new SkillInstallationError(
+                  "SDD_SKILL_INSTALL_UNAVAILABLE",
+                  "This sdd executable cannot locate its repository Skill lifecycle surface.",
+                );
+              const input = {
+                repositoryRoot: resolve(runtime.workingDirectory, invocation.root),
+                packageRoot: runtime.packageRoot!,
+                cliPath: runtime.cliPath!,
+                compatibility,
+              };
+              return invocation.command === "skill.install"
+                ? await runtime.skillInstaller.install(input)
+                : invocation.command === "skill.update"
+                  ? await runtime.skillInstaller.update(input)
+                  : await runtime.skillInstaller.remove(input);
+            })();
       emit(runtime, invocation.format, response(invocation.command, null, "ok", result, []));
       return VALID_EXIT_CODE;
     }

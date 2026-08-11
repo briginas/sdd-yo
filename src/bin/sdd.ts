@@ -6,7 +6,10 @@ import { nodeProjectWriter } from "../platform/node-project-writer.js";
 import { nodeRandomness } from "../platform/node-randomness.js";
 import { nodeProcessRunner } from "../platform/node-process-runner.js";
 import { nodeSkillInstaller } from "../platform/node-skill-installer.js";
+import { nodeUserSkillInstaller } from "../platform/node-user-skill-installer.js";
 import { writeFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const cliPath = fileURLToPath(import.meta.url);
@@ -20,6 +23,12 @@ process.exitCode = await runCli({
   randomness: nodeRandomness,
   processRunner: nodeProcessRunner,
   skillInstaller: nodeSkillInstaller,
+  userSkillInstaller: nodeUserSkillInstaller,
+  userSkillRoots: {
+    home: homedir(),
+    applicationSupport: join(homedir(), "Library", "Application Support"),
+    platform: process.platform,
+  },
   packageRoot,
   cliPath,
   adapterEnvironment: Object.fromEntries(

@@ -61,6 +61,17 @@ a complete replacement; removal first detaches only the verified destination.
 Stale, modified, undeclared, symbolic-link, or cross-repository content is not
 treated as lifecycle authority.
 
+On macOS, explicit `sdd skill install|update|remove --scope user` selects a
+separate injected user lifecycle boundary. It owns only
+`~/.agents/skills/sdd-yo` and the exact version directory below
+`~/Library/Application Support/sdd-yo/cli/`. The installed binding records the
+canonical private `dist/bin/sdd.js`, complete package and Skill inventories,
+their fingerprints, and the compatibility identity. Publication uses private
+sibling staging, verifies ownership again before replacement or detachment,
+and retains only verifiable recovery state across handled interruption. This
+path never selects or mutates a repository and never creates a global
+executable or PATH entry.
+
 ## Intent routing
 
 | User intent                       | Skill behavior                                                                                                              |

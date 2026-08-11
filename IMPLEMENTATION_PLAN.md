@@ -2,9 +2,9 @@
 
 ## Status
 
-- Active: Milestone 18.3 — User-scoped CLI store and lifecycle implementation
-- Complete: Milestones 0–17, Milestones 18.1–18.2, and public/offline wording alignment
-- Last updated: 2026-08-10
+- Active: Milestone 18.4 — User Skill binding and compatible execution
+- Complete: Milestones 0–17, Milestones 18.1–18.3, and public/offline wording alignment
+- Last updated: 2026-08-11
 
 ## Authority and navigation
 
@@ -120,7 +120,7 @@ applied canonical specification exactly matches the retained candidate tree;
 runtime implementation, installation, publication, QA, and release work remain
 unperformed.
 
-### 18.3 — User-scoped CLI store and lifecycle implementation (active)
+### 18.3 — User-scoped CLI store and lifecycle implementation (complete)
 
 - Add explicit user-scope selection without weakening the existing required
   repository-root selection or treating the process cwd as authority.
@@ -140,7 +140,14 @@ Done when focused tests prove the macOS user-level store lifecycle is
 deterministic, fail-closed, independently injectable, and leaves repository,
 Git, approval, QA, and adjacent user data unchanged.
 
-### 18.4 — User Skill binding and compatible execution
+Completed with explicit `--scope user` CLI selection, injected macOS user
+roots, exact package and Skill inventories, strict owned bindings, atomic
+versioned CLI and Skill publication, collision refusal, verified recovery, and
+independent update and removal. Requirement-named tests cover successful and
+unchanged lifecycle, unsafe or modified bytes, concurrent changes,
+interruptions, repository-scope isolation, and preservation of adjacent files.
+
+### 18.4 — User Skill binding and compatible execution (active)
 
 - Define and emit the owned user installation binding with exact package, CLI,
   JSON-schema, Skill-protocol, inventory, fingerprint, and canonical CLI path
