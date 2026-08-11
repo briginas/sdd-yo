@@ -11,9 +11,29 @@ Verification and Merge gates, enforced governed-scope integration,
 repository-scoped and macOS user-scoped `sdd-yo` Agent Skill routes, and public
 npm package are implemented.
 
-## Source-of-truth map
+## Skill-first workflow
 
-Read these in order before planning or editing:
+For any request covered by the available compatible `sdd-yo` Skill, load that
+Skill before repository workflow documentation. Let the Skill select the intent
+route and progressively disclose its required references. Then read only the
+repository source-of-truth slice needed for the selected route and current
+milestone.
+
+The Skill owns the agent-facing operating sequence. This file owns
+repository-specific development discipline, validation, traceability, and Git
+boundaries. Canonical product authority remains in `spec/`, and deterministic
+workflow authority remains in the compatible CLI. Keep authoring, Proposal Gate
+review, approval recording, branch preparation or exact patch application, and
+verification as separate routes; selecting one does not authorize another.
+
+If the Skill or its CLI compatibility preflight is unavailable, interrupted,
+malformed, or incompatible, stop the covered workflow instead of reproducing
+or repairing it from repository prose.
+
+## Repository source-of-truth map
+
+After Skill routing when applicable, read these in order before planning or
+editing:
 
 1. `IMPLEMENTATION_PLAN.md` — active milestone, immediate leaf, deferred work,
    and candidate backlog.

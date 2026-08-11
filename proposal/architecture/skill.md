@@ -1,6 +1,6 @@
 # Agent Skill
 
-## Role
+## Workflow ownership
 
 SDD Yo ships one optional progressive-disclosure skill named `sdd-yo`. It helps a
 coding agent understand intent, retrieve the smallest relevant specification
@@ -11,33 +11,37 @@ The CLI is the authority for parsing, identity, graph validation, fingerprints,
 patches, traceability, and gates. The skill is an orchestrator and authoring
 guide, not a second implementation.
 
-## Skill package
+The packaged [Skill entrypoint](../../skills/sdd-yo/SKILL.md) is the single
+agent-facing workflow. It selects an intent route and loads only the applicable
+reference:
 
-```text
-sdd-yo/
-  SKILL.md
-  references/
-    object-model.md
-    onboarding.md
-    modes.md
-    authoring.md
-    proposal-gate.md
-    approval.md
-    branch-preparation.md
-    verification.md
-    diagnostics.md
-  templates/
-    capability.md
-    concept.md
-    proposal-request.json
-  scripts/
-    check-cli-compatibility
-  payload-manifest.json
-```
+- project creation or adoption: [onboarding](../../skills/sdd-yo/references/onboarding.md);
+- active behavior and object relationships:
+  [object model](../../skills/sdd-yo/references/object-model.md);
+- change mode and virtual candidate drafting:
+  [modes](../../skills/sdd-yo/references/modes.md) and
+  [authoring](../../skills/sdd-yo/references/authoring.md);
+- deterministic Proposal Gate review:
+  [proposal review](../../skills/sdd-yo/references/proposal-gate.md);
+- explicit human decision recording:
+  [approval](../../skills/sdd-yo/references/approval.md);
+- approved proposal preparation or exact patch application:
+  [branch preparation](../../skills/sdd-yo/references/branch-preparation.md);
+- test discovery, evidence validation, and merge readiness:
+  [verification](../../skills/sdd-yo/references/verification.md);
+- stable failure interpretation:
+  [diagnostics](../../skills/sdd-yo/references/diagnostics.md).
 
-`SKILL.md` stays short and routes by user intent. References are loaded only
-when required. Templates mirror the published Markdown and JSON schemas and
-contain no project-specific IDs.
+These are separate routes with separate inputs and stops. Authoring does not
+imply Proposal Gate review; review does not imply approval; approval does not
+imply preparation or application; and none of those imply verification or Git
+side effects. Repository instructions select the active milestone and impose
+development discipline, but do not restate or override the Skill sequence.
+
+## Packaging and execution boundary
+
+Templates mirror the published Markdown schemas and contain no
+project-specific IDs.
 
 The packed payload manifest binds every regular Skill file to exact SHA-256
 bytes and the package/Skill compatibility identity. Explicit
@@ -81,59 +85,6 @@ lifecycle operation reconciles only matching private recovery state; ordinary
 product commands never repair it. Before forwarding a product command, the
 user wrapper requires an explicit project selector and checks the returned
 project identity against that selection.
-
-## Intent routing
-
-| User intent                       | Skill behavior                                                                                                              |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Initialize or adopt SDD           | Check CLI compatibility, confirm an explicit project root and adoption mode, call `init`, then validate the created project |
-| Understand behavior               | Resolve project, call `inspect`/`trace`, summarize normative sections                                                       |
-| Add or change behavior            | Clarify outcome, select `spec-code`, confirm an ID-free semantic model, then draft objects and run Proposal Gate            |
-| Baseline accepted behavior        | Select `spec`, confirm existing behavior, QA plan, and an ID-free semantic model, then draft specification                  |
-| Fix implementation to active spec | Select `code`, name exact Requirement targets, leave spec unchanged                                                         |
-| Review a proposal                 | Show object delta and unresolved semantic candidates; never self-approve                                                    |
-| Record an approval decision       | Display and recheck the exact subject, then record only explicit human decision inputs                                      |
-| Prepare a branch                  | Validate approval subject, call prepare, offer exact patch application                                                      |
-| Verify implementation             | Discover tests, compute affected scope, request missing QA/evidence                                                         |
-| Check merge readiness             | Gather explicit artifacts, call `merge check`, explain status                                                               |
-| Diagnose                          | Use stable diagnostic codes and load only matching diagnostics reference                                                    |
-
-If intent could select more than one mode, the skill asks before producing a
-decision-bearing proposal. It does not silently switch modes after approval.
-
-## Required operating sequence
-
-1. Check compatible CLI/schema versions, then resolve an existing SDD Project
-   or confirm an explicit initialization root and adoption mode.
-2. For initialization, call `sdd init`, verify its JSON response and created
-   paths, surface the host-formatter handoff, and validate the resulting empty
-   project before authoring any object.
-3. For an existing project, read `spec/README.md`, then inspect only objects
-   relevant to the request.
-4. Separate normative product behavior from implementation guidance.
-5. Ask a human about unresolved product meaning or governance choices.
-6. For `spec` and `spec-code`, present the proposed Capability/Requirement
-   model, normative meanings, dependencies, boundaries, exclusions, and disputed
-   decisions without new IDs. Use a short list only for one Capability without
-   inter-object dependencies; otherwise use a vertical top-to-bottom diagram.
-7. Stop for explicit confirmation of that complete model. Any correction or
-   model change requires complete re-presentation and fresh confirmation.
-   `code` bypasses this checkpoint and retains exact active Requirement targets.
-8. Only after confirmation, generate IDs through `sdd id`; never invent or
-   recycle them, then draft a complete virtual candidate tree.
-9. Materialize the exact retained proposal bundle through the CLI, then
-   revalidate that bundle with JSON output.
-10. Present exact diagnostics, object delta, affected scope, and open decisions.
-11. When explicitly asked to record a human decision, display the exact
-    revalidated subject before the pause, write only the bounded reason input,
-    and invoke `approval record` once afterward with explicit issuer, actor,
-    decision, and message. Accept only a returned subject equal to the display;
-    do not add a redundant post-pause validation call.
-12. Apply only an explicitly selected exact SpecPatch.
-13. Stop before branch, commit, push, QA decision, or merge.
-
-Semantic-model confirmation creates no file or SDD artifact and grants no
-Proposal Gate, approval, patch, implementation, QA, or Git authority.
 
 ## Trust rules
 
