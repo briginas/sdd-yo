@@ -30,8 +30,10 @@ the full specification when a small Capability or Requirement set is enough.
 
 - Root `spec/` content is canonical and may describe only behavior
   implemented and verified on the integration branch.
-- New behavior uses the applicable normal `spec-code`, `spec`, or `code`
-  workflow from a bounded candidate tree.
+- Normal Changes use the applicable `spec-code`, `spec`, or `code` workflow.
+  `spec-code` and `spec` use a bounded authored candidate tree; `code` targets
+  exact active Requirements, keeps the specification unchanged, and retains a
+  package-only bundle.
 - Existing canonical Requirement meaning changes only through the applicable
   normal workflow; no alternate mutation or ID-reservation path exists.
 - Architecture documents explain implementation choices. They do not override
