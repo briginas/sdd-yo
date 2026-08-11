@@ -47,8 +47,8 @@ test("REQ-97D96950 builds the exact version 1 compatibility identity", () => {
   const identity = loadCliCompatibilityIdentity();
 
   assert.deepEqual(identity, {
-    package: { name: "sdd-yo", version: "0.3.0" },
-    cli: { name: "sdd", version: "0.3.0" },
+    package: { name: "sdd-yo", version: "0.4.0" },
+    cli: { name: "sdd", version: "0.4.0" },
     json_schema: { version: "1.0", compatible_major: 1 },
     skill: { name: "sdd-yo", protocol_version: "1.0", compatible_major: 1 },
   });
@@ -65,7 +65,7 @@ test("REQ-D9CF3A46 reports the package version without selecting or mutating an 
     const first = await execute(["--version"], directory);
     const second = await execute(["--version"], directory);
 
-    assert.deepEqual(first, { exitCode: 0, standardOutput: "0.3.0\n", standardError: "" });
+    assert.deepEqual(first, { exitCode: 0, standardOutput: "0.4.0\n", standardError: "" });
     assert.deepEqual(second, first);
     assert.deepEqual(await readdir(directory), []);
   } finally {
@@ -88,8 +88,8 @@ test("REQ-97D96950 reports deterministic machine-readable compatibility identity
       project_id: null,
       status: "ok",
       result: {
-        package: { name: "sdd-yo", version: "0.3.0" },
-        cli: { name: "sdd", version: "0.3.0" },
+        package: { name: "sdd-yo", version: "0.4.0" },
+        cli: { name: "sdd", version: "0.4.0" },
         json_schema: { version: "1.0", compatible_major: 1 },
         skill: { name: "sdd-yo", protocol_version: "1.0", compatible_major: 1 },
       },

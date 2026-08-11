@@ -48,7 +48,8 @@ the full specification when a small Capability or Requirement set is enough.
   compatible deterministic CLI JSON; it does not replace CLI authority or human
   evidence.
 - Distribution state: version `0.3.0` is public on npm; the exact offline
-  tarball installation route is retained. No Codex plugin is published.
+  tarball installation route is retained. Source package `0.4.0` is the next
+  reviewed local artifact and is not published. No Codex plugin is published.
 
 Exact dependency versions are selected and locked during the scaffold
 milestone. Do not add a runtime dependency without explaining why a platform

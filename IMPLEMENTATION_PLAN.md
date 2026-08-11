@@ -2,8 +2,8 @@
 
 ## Status
 
-- Active: Milestone 18.5 — Distribution contract, package evidence, and documentation
-- Complete: Milestones 0–17, Milestones 18.1–18.4, and public/offline wording alignment
+- Active: Milestone 18.6 — Public macOS consumer proof and closeout
+- Complete: Milestones 0–17, Milestones 18.1–18.5, and public/offline wording alignment
 - Last updated: 2026-08-11
 
 ## Authority and navigation
@@ -175,7 +175,7 @@ missing private bytes without PATH, repository CLI, network, or first-use
 repair fallback. Requirement-named wrapper tests and the retained Skill eval
 corpus cover two separately selected projects and repository-mode compatibility.
 
-### 18.5 — Distribution contract, package evidence, and documentation (active)
+### 18.5 — Distribution contract, package evidence, and documentation (complete)
 
 - Update CLI help, machine-readable results, schemas, diagnostics, fixtures,
   architecture, and public documentation for the exact user lifecycle while
@@ -194,6 +194,15 @@ corpus cover two separately selected projects and repository-mode compatibility.
 Done when one reviewed local package artifact can install, use, update, and
 remove the macOS user Skill and private CLI in a clean isolated home while the
 full repository validation suite passes. No registry publication is implied.
+
+Completed with dual-scope CLI help, exact user-binding schema and fixtures,
+code-specific diagnostics, architecture and README guidance, strict executing
+package identity checks, and package smoke over ordinary and retained-offline
+tarball consumers. Both clean macOS homes install, use, update unchanged, and
+remove only the verified user Skill and private CLI; tampered bytes are
+preserved and refused. Source package `0.4.0` is synchronized as the reviewed
+next local artifact while public `0.3.0` remains unchanged. The full validation
+suite passes; no registry publication or public-version claim was made.
 
 ### 18.6 — Public macOS consumer proof and closeout
 

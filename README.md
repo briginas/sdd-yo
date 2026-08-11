@@ -13,9 +13,10 @@ Version `0.3.0` is public on npm and requires Node.js `22.18.0` or newer. The
 project is pre-1.0, and installing the package does not install or publish a
 Codex plugin.
 
-The repository's next reviewed package artifact adds the macOS user-scoped
-lifecycle documented below. A local pack or dry run is not npm publication,
-and the public `0.3.0` package does not contain that new lifecycle.
+Source package `0.4.0` is the next reviewed artifact and adds the macOS
+user-scoped lifecycle documented below. A local pack or dry run is not npm
+publication, and the public `0.3.0` package does not contain that new
+lifecycle.
 
 ## Quick start
 
