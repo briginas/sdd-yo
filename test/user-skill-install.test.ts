@@ -10,8 +10,8 @@ import { SkillInstallationError } from "../src/skill-install/installer.ts";
 
 const repositoryRoot = join(import.meta.dirname, "..");
 const compatibility = {
-  package: { name: "sdd-yo", version: "0.5.0" },
-  cli: { name: "sdd", version: "0.5.0" },
+  package: { name: "sdd-yo", version: "0.5.1" },
+  cli: { name: "sdd", version: "0.5.1" },
   json_schema: { version: "1.0", compatible_major: 1 },
   skill: { name: "sdd-yo", protocol_version: "1.0", compatible_major: 1 },
 } as const;
@@ -31,7 +31,7 @@ async function fixture() {
   await cp(join(repositoryRoot, "skills", "sdd-yo"), join(packageRoot, "skills", "sdd-yo"), { recursive: true });
   await writeFile(
     join(packageRoot, "package.json"),
-    `${JSON.stringify({ name: "sdd-yo", version: "0.5.0", type: "module", bin: { sdd: "./dist/bin/sdd.js" } }, null, 2)}\n`,
+    `${JSON.stringify({ name: "sdd-yo", version: "0.5.1", type: "module", bin: { sdd: "./dist/bin/sdd.js" } }, null, 2)}\n`,
   );
   await writeFile(cliPath, "#!/usr/bin/env node\n");
   await chmod(cliPath, 0o755);
@@ -68,7 +68,7 @@ test("REQ-778099C0 installs one exact macOS user Skill and private CLI without c
       roots: { home: value.home, applicationSupport: value.applicationSupport, platform: "darwin" },
     });
     assert.equal(result.scope, "user");
-    assert.equal(result.cli_destination, join(await realpath(value.applicationSupport), "sdd-yo", "cli", "0.5.0"));
+    assert.equal(result.cli_destination, join(await realpath(value.applicationSupport), "sdd-yo", "cli", "0.5.1"));
     assert.match(result.package_fingerprint, /^sha256:[0-9a-f]{64}$/u);
     assert.deepEqual(result.owned_paths, [...result.owned_paths].sort());
     const binding = JSON.parse(await readFile(join(result.skill_destination, "installation.json"), "utf8")) as {
@@ -131,7 +131,7 @@ test("REQ-778099C0 REQ-C18AEE90 refuses an incompatible executing package identi
   try {
     await writeFile(
       join(value.packageRoot, "package.json"),
-      `${JSON.stringify({ name: "foreign-package", version: "0.5.0", type: "module", bin: { sdd: "./dist/bin/sdd.js" } }, null, 2)}\n`,
+      `${JSON.stringify({ name: "foreign-package", version: "0.5.1", type: "module", bin: { sdd: "./dist/bin/sdd.js" } }, null, 2)}\n`,
     );
     await assert.rejects(
       createNodeUserSkillInstaller().install({
@@ -161,17 +161,17 @@ test("REQ-2B49D454 updates an owned user installation and reports an exact no-op
       roots,
     });
     assert.equal(unchanged.outcome, "unchanged");
-    await replacePackage(value, "0.5.1", "replacement Skill\n");
+    await replacePackage(value, "0.5.2", "replacement Skill\n");
     const updated = await installer.update({
       packageRoot: value.packageRoot,
       cliPath: value.cliPath,
-      compatibility: compatibilityFor("0.5.1"),
+      compatibility: compatibilityFor("0.5.2"),
       roots,
     });
     assert.equal(updated.outcome, "updated");
     assert.equal(await readFile(join(updated.skill_destination, "SKILL.md"), "utf8"), "replacement Skill\n");
     await assert.rejects(
-      readFile(join(value.applicationSupport, "sdd-yo", "cli", "0.5.0", "dist", "bin", "sdd.js")),
+      readFile(join(value.applicationSupport, "sdd-yo", "cli", "0.5.1", "dist", "bin", "sdd.js")),
       /ENOENT/u,
     );
   } finally {
@@ -191,7 +191,7 @@ test("REQ-C18AEE90 preserves concurrent changes before update and removal public
       compatibility,
       roots: rootsFor(updateValue),
     });
-    await replacePackage(updateValue, "0.5.1", "replacement Skill\n");
+    await replacePackage(updateValue, "0.5.2", "replacement Skill\n");
     const updateSentinel = join(updateValue.home, ".agents", "skills", "sdd-yo", "concurrent.txt");
     const concurrentUpdate = createNodeUserSkillInstaller({
       beforeUpdatePublish: () => writeFile(updateSentinel, "preserve\n"),
@@ -200,7 +200,7 @@ test("REQ-C18AEE90 preserves concurrent changes before update and removal public
       concurrentUpdate.update({
         packageRoot: updateValue.packageRoot,
         cliPath: updateValue.cliPath,
-        compatibility: compatibilityFor("0.5.1"),
+        compatibility: compatibilityFor("0.5.2"),
         roots: rootsFor(updateValue),
       }),
       (error: unknown) =>
@@ -248,7 +248,7 @@ test("REQ-C18AEE90 retains verified recovery state when publication is interrupt
       (error: unknown) => error instanceof SkillInstallationError && error.code === "SDD_USER_SKILL_INSTALL_FAILED",
     );
     assert.equal(
-      await readFile(join(value.applicationSupport, "sdd-yo", "cli", "0.5.0", "dist", "bin", "sdd.js"), "utf8"),
+      await readFile(join(value.applicationSupport, "sdd-yo", "cli", "0.5.1", "dist", "bin", "sdd.js"), "utf8"),
       "#!/usr/bin/env node\n",
     );
     await assert.rejects(readFile(join(value.home, ".agents", "skills", "sdd-yo", "installation.json")), /ENOENT/u);
@@ -279,8 +279,8 @@ test("REQ-2B49D454 reconciles an interrupted verified update on the next explici
       compatibility,
       roots,
     });
-    await replacePackage(value, "0.5.1", "replacement Skill\n");
-    const replacementCompatibility = compatibilityFor("0.5.1");
+    await replacePackage(value, "0.5.2", "replacement Skill\n");
+    const replacementCompatibility = compatibilityFor("0.5.2");
     const interrupted = createNodeUserSkillInstaller({
       afterUpdateCliPublish: () => {
         throw new Error("interrupted");

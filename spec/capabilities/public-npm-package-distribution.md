@@ -37,11 +37,11 @@ dependency wiring.
 ### Acceptance criteria <!-- sdd:acceptance -->
 
 - The source and packed manifests retain package name `sdd-yo`, package version
-  `0.5.0`, explicit public access, ESM module type, the `sdd` executable
+  `0.5.1`, explicit public access, ESM module type, the `sdd` executable
   mapping, library export and declaration mappings, and Node.js engine baseline
   `>=22.18.0`.
-- The public registry artifact installs by the exact `sdd-yo@0.5.0` package
-  identity, and `npm exec --package=sdd-yo@0.5.0 -- sdd ...` invokes its exact
+- The public registry artifact installs by the exact `sdd-yo@0.5.1` package
+  identity, and `npm exec --package=sdd-yo@0.5.1 -- sdd ...` invokes its exact
   executable without a global installation or PATH fallback.
 - `npm pack` creates exactly one retained local tarball without registry
   publication; the tarball remains installable in npm offline mode.

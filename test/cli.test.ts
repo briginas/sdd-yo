@@ -197,7 +197,7 @@ test("REQ-778099C0 REQ-50351033 user scope is explicit and remains separate from
           return {
             scope: "user",
             skill_destination: join(input.roots.home, ".agents/skills/sdd-yo"),
-            cli_destination: join(input.roots.applicationSupport, "sdd-yo/cli/0.5.0"),
+            cli_destination: join(input.roots.applicationSupport, "sdd-yo/cli/0.5.1"),
             owned_paths: [],
             package_fingerprint: `sha256:${"0".repeat(64)}`,
             payload_fingerprint: `sha256:${"1".repeat(64)}`,

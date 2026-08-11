@@ -169,7 +169,7 @@ test("REQ-32C76ED3 REQ-F7D39246 pure ApprovalEvidence construction preserves the
     actor: "Ivan Briginas",
     decision: "approved",
     reason: " exact message \n",
-    producer: { name: "sdd", version: "0.5.0" },
+    producer: { name: "sdd", version: "0.5.1" },
   });
   const bytes = serializeApprovalEvidence(evidence);
   assert.equal(new TextDecoder().decode(bytes), `${JSON.stringify(evidence)}\n`);

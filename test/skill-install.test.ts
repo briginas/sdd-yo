@@ -13,8 +13,8 @@ import { SkillInstallationError } from "../src/skill-install/installer.ts";
 const executeFile = promisify(execFile);
 const repositoryRoot = resolve(import.meta.dirname, "..");
 const compatibility = {
-  package: { name: "sdd-yo", version: "0.5.0" },
-  cli: { name: "sdd", version: "0.5.0" },
+  package: { name: "sdd-yo", version: "0.5.1" },
+  cli: { name: "sdd", version: "0.5.1" },
   json_schema: { version: "1.0", compatible_major: 1 },
   skill: { name: "sdd-yo", protocol_version: "1.0", compatible_major: 1 },
 } as const;

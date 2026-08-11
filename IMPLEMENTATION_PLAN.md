@@ -2,7 +2,7 @@
 
 ## Status
 
-- Active: none — no milestone is selected
+- Active: Milestone 22 — public `sdd-yo@0.5.1` patch release
 - Complete: Milestones 0–21 and public `sdd-yo@0.5.0`
 - Last updated: 2026-08-11
 
@@ -41,6 +41,61 @@ inventory SHA-256
 `db26f2f8520dee2e2717039e771ddd666b11edeaf9814fd77676b4b09c1f646d`,
 and 2,138 entries. The public package, CLI identity, library, schemas,
 repository Skill, and macOS user-scoped private CLI and wrapper are verified.
+
+## Milestone 22 — Public `sdd-yo@0.5.1` patch release
+
+### Outcome
+
+Publish one immutable `sdd-yo@0.5.1` artifact from annotated tag `v0.5.1`
+through the protected GitHub `release` environment and npm trusted publishing.
+The patch release changes only the exact package and CLI version identity; its
+runtime behavior, schema and Skill protocol majors, Node.js baseline, package
+inventory boundaries, and macOS-only user-scoped lifecycle remain unchanged.
+
+### Requirement traceability
+
+- `REQ-B0B35D6D` — bind the registry, offline artifact, and documented commands
+  to exact version `0.5.1`.
+- `REQ-A2199BC2` — keep package, CLI, schema, and Skill surfaces on one exact
+  compatibility identity.
+- `REQ-ABFFEAF2` — publish only from the immutable reviewed release subject
+  through protected OIDC trusted publishing.
+- `REQ-0163273A` — retain exact artifact hashes, inventory, registry identity,
+  and provenance evidence.
+
+### Leaves
+
+- [x] 22.1 — confirm the ID-free semantic model, retain and review the
+      `spec-code` proposal, record explicit ApprovalEvidence, and apply its exact
+      SpecPatch.
+- [x] 22.2 — update package identity, user documentation, compatibility tests,
+      Skill payload identity, and the release workflow for `0.5.1`.
+- [x] 22.3 — pack the exact release tarball, verify package smoke, and bind its
+      SHA-256, sorted inventory SHA-256, and entry count into the workflow tests.
+- [ ] 22.4 — run full validation, commit and push the immutable subject, create
+      and push annotated tag `v0.5.1`, publish the GitHub Release, and verify npm
+      registry identity, integrity, provenance, and exact consumer installation.
+
+### Exclusions
+
+- no runtime feature, schema-major, Skill-protocol, or Node.js-baseline change;
+- no Linux or Windows user-scoped lifecycle;
+- no Codex plugin, hosted state, or unrelated refactor;
+- no token-based npm publication or local `npm publish`.
+
+### Done condition
+
+Milestone 22 is complete only when the exact tagged artifact is public as npm
+`latest`, its registry bytes and inventory match the reviewed release subject,
+provenance links it to `briginas/sdd-yo` and `publish.yml`, an isolated exact
+consumer smoke succeeds, and the active plan is compacted to the next state.
+
+The reviewed npm `11.16.0` candidate has artifact SHA-256
+`58d63d00103b06ef70539256bafd18b3faac5fb62dc4ba9d1bc52d9f0141dc8c`,
+sorted inventory SHA-256
+`db26f2f8520dee2e2717039e771ddd666b11edeaf9814fd77676b4b09c1f646d`,
+and 2,138 entries; two independent packs matched byte-for-byte and package
+smoke passed.
 
 ## Candidate backlog
 
