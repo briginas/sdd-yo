@@ -13,6 +13,10 @@ Version `0.3.0` is public on npm and requires Node.js `22.18.0` or newer. The
 project is pre-1.0, and installing the package does not install or publish a
 Codex plugin.
 
+The repository's next reviewed package artifact adds the macOS user-scoped
+lifecycle documented below. A local pack or dry run is not npm publication,
+and the public `0.3.0` package does not contain that new lifecycle.
+
 ## Quick start
 
 From the root of an existing Git repository, install the exact package:
@@ -52,6 +56,28 @@ Replace `<repository-root>` with an absolute path. Do not rely on a global
 `sdd` executable or Skill. The public package currently has independent
 consumer evidence on macOS; Linux and Windows compatibility is not yet
 claimed.
+
+## One macOS user Skill
+
+From one exact package installation, install a single user-scoped Skill and its
+private versioned CLI:
+
+```text
+node ./node_modules/sdd-yo/dist/bin/sdd.js skill install --scope user --format json
+node ~/.agents/skills/sdd-yo/scripts/check-cli-compatibility -- validate --cwd <repository-root>
+```
+
+For initialization, the wrapper instead requires an explicit `--root` and
+adoption mode. Every other project operation requires exactly one explicit
+`--cwd` or `--config`. User mode rejects `--cli`.
+
+The explicit install creates exactly `~/.agents/skills/sdd-yo` and
+`~/Library/Application Support/sdd-yo/cli/<package-version>`. The Skill invokes
+only the private CLI named by its verified binding. It does not use `PATH`, a
+repository CLI, a package manager, or the network. Installation does not
+initialize a project or change a repository, Git, approval, QA, or publication
+state. Exactly one active user installation is supported; repository-scoped
+Skills remain separate and explicitly selectable.
 
 ## Offline installation
 
@@ -111,16 +137,31 @@ These commands refuse modified, stale, incompatible, unsafe, or undeclared
 installation bytes. Removal leaves the npm package, `.sdd`, `spec`, Git, and
 adjacent repositories untouched.
 
+On macOS, update or remove the independently selected user installation with:
+
+```text
+node ./node_modules/sdd-yo/dist/bin/sdd.js skill update --scope user --format json
+node ./node_modules/sdd-yo/dist/bin/sdd.js skill remove --scope user --format json
+```
+
+User lifecycle commands verify both the Skill and private CLI inventories.
+They refuse modified, missing, foreign, ambiguous, or incomplete recovery
+state without falling back to a repository installation.
+
 ## Common diagnostics
 
-| Code                         | Action                                                                |
-| ---------------------------- | --------------------------------------------------------------------- |
-| `SDD_CONFIG_NOT_FOUND`       | Correct the explicit project selector; initialize only when intended. |
-| `SDD_INIT_TARGET_CONFLICT`   | Preserve existing bytes and resolve the conflicting target.           |
-| `SDD_INIT_ROOT_INVALID`      | Select an existing directory.                                         |
-| `SDD_INIT_TARGET_UNSAFE`     | Stop and correct the unsafe target.                                   |
-| `SDD_GIT_HISTORY_INCOMPLETE` | Fetch complete history before relying on ID-reuse guarantees.         |
-| `SDD_GIT_REF_UNRESOLVED`     | Fetch or correct the exact requested Git ref.                         |
+| Code                                         | Action                                                                          |
+| -------------------------------------------- | ------------------------------------------------------------------------------- |
+| `SDD_CONFIG_NOT_FOUND`                       | Correct the explicit project selector; initialize only when intended.           |
+| `SDD_INIT_TARGET_CONFLICT`                   | Preserve existing bytes and resolve the conflicting target.                     |
+| `SDD_INIT_ROOT_INVALID`                      | Select an existing directory.                                                   |
+| `SDD_INIT_TARGET_UNSAFE`                     | Stop and correct the unsafe target.                                             |
+| `SDD_GIT_HISTORY_INCOMPLETE`                 | Fetch complete history before relying on ID-reuse guarantees.                   |
+| `SDD_GIT_REF_UNRESOLVED`                     | Fetch or correct the exact requested Git ref.                                   |
+| `SDD_USER_SKILL_PLATFORM_UNSUPPORTED`        | Use user scope only on macOS; do not substitute a global install.               |
+| `SDD_USER_SKILL_PACKAGE_INVALID`             | Preserve both stores and select the reviewed exact package bytes.               |
+| `SDD_USER_SKILL_LIFECYCLE_OWNERSHIP_INVALID` | Preserve modified or foreign bytes; do not overwrite or delete.                 |
+| `SDD_USER_SKILL_RECOVERY_REQUIRED`           | Retry only the intended explicit lifecycle command to reconcile verified state. |
 
 For Skill lifecycle failures, correct the reported root, compatibility,
 binding, or owned-byte mismatch; never bypass verification with a global

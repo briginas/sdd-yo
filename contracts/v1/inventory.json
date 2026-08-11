@@ -438,6 +438,42 @@
       ]
     },
     {
+      "contract_id": "artifact.user-skill-installation",
+      "category": "artifact",
+      "wire_name": "sdd_yo_user_skill_installation",
+      "wire_format": "json",
+      "version": "1.0",
+      "definition_status": "specified",
+      "materialized_schema": "contracts/v1/schemas/user-skill-installation.schema.json",
+      "authority": "spec/capabilities/macos-user-scoped-agent-skill-installation-and-lifecycle.md#req-c975ae17",
+      "requirements": [
+        "REQ-778099C0",
+        "REQ-C975AE17",
+        "REQ-2B49D454",
+        "REQ-DEB23207",
+        "REQ-C18AEE90"
+      ],
+      "required_fields": [
+        "schema_version",
+        "artifact_type",
+        "scope",
+        "package",
+        "cli",
+        "json_schema",
+        "skill",
+        "package_fingerprint",
+        "package_files",
+        "skill_files"
+      ],
+      "optional_provenance_profile": "none",
+      "ordering_profile": "deterministic-json",
+      "limit_profile": "artifact-input",
+      "compatibility_profile": "json-v1-strict",
+      "fixture_families": [
+        "user-skill-installation"
+      ]
+    },
+    {
       "contract_id": "artifact.candidate-tree-manifest",
       "category": "artifact",
       "wire_name": "candidate_tree_manifest",
@@ -1812,6 +1848,31 @@
         "exit-2",
         "exit-3",
         "crash-never-pass"
+      ]
+    },
+    {
+      "fixture_family_id": "user-skill-installation",
+      "category": "artifact",
+      "planned_path": "fixtures/v1/artifacts/skill/user-skill-installation",
+      "contracts": [
+        "artifact.user-skill-installation"
+      ],
+      "requirements": [
+        "REQ-778099C0",
+        "REQ-C975AE17",
+        "REQ-2B49D454",
+        "REQ-DEB23207",
+        "REQ-C18AEE90"
+      ],
+      "required_cases": [
+        "minimal-valid",
+        "unknown-field",
+        "unsafe-path",
+        "unsorted-inventory",
+        "duplicate-inventory",
+        "bad-fingerprint",
+        "wrong-scope",
+        "incompatible-identity"
       ]
     },
     {

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, realpath, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -49,6 +49,10 @@ const documentedQuickstartCommands = [
   "node ./node_modules/sdd-yo/dist/bin/sdd.js validate --cwd <repository-root> --format json",
   "node ./node_modules/sdd-yo/dist/bin/sdd.js skill update --root <repository-root> --format json",
   "node ./node_modules/sdd-yo/dist/bin/sdd.js skill remove --root <repository-root> --format json",
+  "node ./node_modules/sdd-yo/dist/bin/sdd.js skill install --scope user --format json",
+  "node ~/.agents/skills/sdd-yo/scripts/check-cli-compatibility -- validate --cwd <repository-root>",
+  "node ./node_modules/sdd-yo/dist/bin/sdd.js skill update --scope user --format json",
+  "node ./node_modules/sdd-yo/dist/bin/sdd.js skill remove --scope user --format json",
 ] as const;
 const forbiddenLifecycleScripts = [
   "preinstall",
@@ -178,7 +182,7 @@ function parsePackResult(standardOutput: string): PackResult {
   return result as PackResult;
 }
 
-test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-0163273A REQ-3F19778B REQ-CF3A1070 REQ-A0456614 REQ-DAF21960 REQ-8DC50806 REQ-AA165BDE REQ-FFE60B5A REQ-D9CF3A46 REQ-97D96950 REQ-382BBBD6 REQ-7C848ED0 package builds, verifies its public and offline quickstart, manages its repository Skill, and completes first use offline", async () => {
+test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-0163273A REQ-3F19778B REQ-CF3A1070 REQ-A0456614 REQ-DAF21960 REQ-8DC50806 REQ-AA165BDE REQ-FFE60B5A REQ-D9CF3A46 REQ-97D96950 REQ-382BBBD6 REQ-7C848ED0 REQ-778099C0 REQ-C975AE17 REQ-05CABE17 REQ-2B49D454 REQ-DEB23207 REQ-C18AEE90 REQ-50351033 package builds, verifies public and offline quickstarts, manages repository and macOS user Skills, and completes first use offline", async () => {
   const temporaryRoot = await mkdtemp(join(tmpdir(), "sdd-yo-package-smoke-"));
   const buildCache = join(temporaryRoot, "build-cache");
   const installCache = join(temporaryRoot, "install-cache");
@@ -274,6 +278,10 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-0163273A REQ-3F19778B REQ-CF3A1
       "SDD_INIT_TARGET_UNSAFE",
       "SDD_GIT_HISTORY_INCOMPLETE",
       "SDD_GIT_REF_UNRESOLVED",
+      "SDD_USER_SKILL_PLATFORM_UNSUPPORTED",
+      "SDD_USER_SKILL_PACKAGE_INVALID",
+      "SDD_USER_SKILL_LIFECYCLE_OWNERSHIP_INVALID",
+      "SDD_USER_SKILL_RECOVERY_REQUIRED",
     ])
       assert.ok(quickstart.includes(`\`${diagnostic}\``), diagnostic);
     assert.match(quickstart, /use `\$sdd-yo`/u);
@@ -293,13 +301,10 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-0163273A REQ-3F19778B REQ-CF3A1
       `${JSON.stringify({ name: "sdd-yo-consumer", version: "1.0.0", private: true, type: "module" }, null, 2)}\n`,
     );
     const install = await runNpm(
-      ["install", "--offline", "--no-audit", "--no-fund", "--save-exact", tarballPath],
+      ["install", "--no-audit", "--no-fund", "--save-exact", tarballPath],
       consumerRoot,
       installCache,
-      {
-        npm_config_registry: "http://127.0.0.1:9/",
-        npm_config_update_notifier: "false",
-      },
+      { npm_config_update_notifier: "false" },
     );
     assert.equal(install.exitCode, 0, install.standardError || install.standardOutput);
     assert.equal(install.signal, null);
@@ -420,6 +425,17 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-0163273A REQ-3F19778B REQ-CF3A1
     assert.equal(commandHelp.exitCode, 0, commandHelp.standardError);
     assert.equal(commandHelp.standardError, "");
     assert.match(commandHelp.standardOutput, /^Usage: sdd proposal prepare /u);
+
+    for (const lifecycle of ["install", "update", "remove"] as const) {
+      const lifecycleHelp = await runCommand(process.execPath, [binTarget, "skill", lifecycle, "--help"], consumerRoot);
+      assert.equal(lifecycleHelp.exitCode, 0, lifecycleHelp.standardError);
+      assert.ok(
+        lifecycleHelp.standardOutput.startsWith(
+          `Usage: sdd skill ${lifecycle} (--root <repository-root> | --scope user)\n`,
+        ),
+      );
+      assert.doesNotMatch(lifecycleHelp.standardOutput, /--scope user --root/u);
+    }
 
     const version = await runCommand(process.execPath, [binTarget, "--version"], consumerRoot);
     assert.deepEqual(version, {
@@ -619,6 +635,164 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-0163273A REQ-3F19778B REQ-CF3A1
     await assert.rejects(readFile(join(repositorySkillRoot, "installation.json")), /ENOENT/u);
     assert.equal(await readFile(sentinelPath, "utf8"), "outside consumer\n");
 
+    if (process.platform === "darwin") {
+      const userHome = join(temporaryRoot, "user-home");
+      const applicationSupport = join(userHome, "Library", "Application Support");
+      await mkdir(applicationSupport, { recursive: true });
+      const canonicalUserHome = await realpath(userHome);
+      const canonicalApplicationSupport = await realpath(applicationSupport);
+      const userEnvironment = { ...process.env, HOME: userHome, PATH: process.env["PATH"] ?? "" };
+      const consumerLockBeforeUserLifecycle = await readFile(join(consumerRoot, "package-lock.json"));
+      const consumerStatusBeforeUserLifecycle = await runCommand(
+        "git",
+        ["status", "--porcelain=v1", "--untracked-files=all"],
+        consumerRoot,
+      );
+
+      const userInstallation = await runCommand(
+        process.execPath,
+        [binTarget, "skill", "install", "--scope", "user", "--format", "json"],
+        consumerRoot,
+        userEnvironment,
+      );
+      assert.equal(userInstallation.exitCode, 0, userInstallation.standardError || userInstallation.standardOutput);
+      const userInstallationResponse = JSON.parse(userInstallation.standardOutput) as {
+        readonly command: string;
+        readonly project_id: null;
+        readonly status: string;
+        readonly result: {
+          readonly scope: string;
+          readonly skill_destination: string;
+          readonly cli_destination: string;
+          readonly owned_paths: readonly string[];
+          readonly package_fingerprint: string;
+          readonly payload_fingerprint: string;
+        };
+      };
+      assert.equal(userInstallationResponse.command, "skill.install");
+      assert.equal(userInstallationResponse.project_id, null);
+      assert.equal(userInstallationResponse.status, "ok");
+      assert.equal(userInstallationResponse.result.scope, "user");
+      assert.equal(userInstallationResponse.result.skill_destination, join(canonicalUserHome, ".agents/skills/sdd-yo"));
+      assert.equal(
+        userInstallationResponse.result.cli_destination,
+        join(canonicalApplicationSupport, "sdd-yo/cli", installedManifest.version),
+      );
+      assert.deepEqual(
+        [...userInstallationResponse.result.owned_paths].sort(),
+        userInstallationResponse.result.owned_paths,
+      );
+      assert.match(userInstallationResponse.result.package_fingerprint, /^sha256:[0-9a-f]{64}$/u);
+      assert.match(userInstallationResponse.result.payload_fingerprint, /^sha256:[0-9a-f]{64}$/u);
+
+      const userBindingPath = join(userInstallationResponse.result.skill_destination, "installation.json");
+      const userBindingBytes = await readFile(userBindingPath, "utf8");
+      const userBinding = JSON.parse(userBindingBytes) as {
+        readonly schema_version: string;
+        readonly artifact_type: string;
+        readonly scope: string;
+        readonly package: { readonly name: string; readonly version: string };
+        readonly cli: { readonly path: string; readonly name: string; readonly version: string };
+        readonly package_fingerprint: string;
+        readonly package_files: readonly { readonly path: string; readonly sha256: string }[];
+        readonly skill_files: readonly { readonly path: string; readonly sha256: string }[];
+      };
+      assert.equal(userBindingBytes, `${JSON.stringify(userBinding, null, 2)}\n`);
+      assert.equal(userBinding.schema_version, "1.0");
+      assert.equal(userBinding.artifact_type, "sdd_yo_user_skill_installation");
+      assert.equal(userBinding.scope, "user");
+      assert.deepEqual(userBinding.package, { name: installedManifest.name, version: installedManifest.version });
+      assert.deepEqual(userBinding.cli, {
+        name: "sdd",
+        version: installedManifest.version,
+        path: join(userInstallationResponse.result.cli_destination, "dist/bin/sdd.js"),
+      });
+      assert.equal(userBinding.package_fingerprint, userInstallationResponse.result.package_fingerprint);
+      assert.deepEqual(
+        userBinding.package_files.map((entry) => entry.path),
+        await listFiles(installedPackageRoot),
+      );
+      assert.deepEqual(
+        userBinding.skill_files.map((entry) => entry.path),
+        await listFiles(installedSkillRoot),
+      );
+
+      const userWrapper = join(userInstallationResponse.result.skill_destination, "scripts/check-cli-compatibility");
+      const userFirstUse = await runCommand(
+        process.execPath,
+        [userWrapper, "--", "validate", "--cwd", consumerRoot],
+        consumerRoot,
+        userEnvironment,
+      );
+      assert.equal(userFirstUse.exitCode, 0, userFirstUse.standardError || userFirstUse.standardOutput);
+      const userFirstUseResponse = JSON.parse(userFirstUse.standardOutput) as {
+        readonly status: string;
+        readonly project_id: string;
+      };
+      assert.equal(userFirstUseResponse.status, "ok");
+      assert.equal(userFirstUseResponse.project_id, firstValidateResponse.project_id);
+
+      const noSelector = await runCommand(process.execPath, [userWrapper, "--", "validate"], consumerRoot, {
+        ...userEnvironment,
+        PATH: "",
+      });
+      assert.notEqual(noSelector.exitCode, 0);
+      const explicitCli = await runCommand(
+        process.execPath,
+        [userWrapper, "--cli", binTarget, "--", "validate", "--cwd", consumerRoot],
+        consumerRoot,
+        { ...userEnvironment, PATH: "" },
+      );
+      assert.notEqual(explicitCli.exitCode, 0);
+
+      const bindingBeforeUpdate = await readFile(userBindingPath);
+      const userUpdate = await runCommand(
+        process.execPath,
+        [binTarget, "skill", "update", "--scope", "user", "--format", "json"],
+        consumerRoot,
+        userEnvironment,
+      );
+      assert.equal(userUpdate.exitCode, 0, userUpdate.standardError || userUpdate.standardOutput);
+      assert.equal(JSON.parse(userUpdate.standardOutput).result.outcome, "unchanged");
+      assert.deepEqual(await readFile(userBindingPath), bindingBeforeUpdate);
+
+      const tamperPath = join(userInstallationResponse.result.cli_destination, "undeclared.txt");
+      await writeFile(tamperPath, "foreign bytes\n");
+      const refusedRemoval = await runCommand(
+        process.execPath,
+        [binTarget, "skill", "remove", "--scope", "user", "--format", "json"],
+        consumerRoot,
+        userEnvironment,
+      );
+      assert.equal(refusedRemoval.exitCode, 3);
+      const refusedRemovalResponse = JSON.parse(refusedRemoval.standardOutput) as {
+        readonly status: string;
+        readonly diagnostics: readonly { readonly code: string }[];
+      };
+      assert.equal(refusedRemovalResponse.status, "error");
+      assert.equal(refusedRemovalResponse.diagnostics[0]?.code, "SDD_USER_SKILL_LIFECYCLE_OWNERSHIP_INVALID");
+      assert.equal(await pathExists(userBindingPath), true);
+      assert.equal(await pathExists(tamperPath), true);
+      await rm(tamperPath);
+
+      const userRemoval = await runCommand(
+        process.execPath,
+        [binTarget, "skill", "remove", "--scope", "user", "--format", "json"],
+        consumerRoot,
+        userEnvironment,
+      );
+      assert.equal(userRemoval.exitCode, 0, userRemoval.standardError || userRemoval.standardOutput);
+      assert.equal(JSON.parse(userRemoval.standardOutput).status, "ok");
+      assert.equal(await pathExists(userInstallationResponse.result.skill_destination), false);
+      assert.equal(await pathExists(userInstallationResponse.result.cli_destination), false);
+      assert.deepEqual(await readFile(join(consumerRoot, "package-lock.json")), consumerLockBeforeUserLifecycle);
+      assert.deepEqual(
+        await runCommand("git", ["status", "--porcelain=v1", "--untracked-files=all"], consumerRoot),
+        consumerStatusBeforeUserLifecycle,
+      );
+      assert.equal(await readFile(sentinelPath, "utf8"), "outside consumer\n");
+    }
+
     const yarnPnpRoot = join(temporaryRoot, "yarn-pnp-consumer");
     const isolatedConsumerRoot = join(yarnPnpRoot, ".sdd-tooling/consumer");
     await mkdir(yarnPnpRoot);
@@ -740,6 +914,68 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-0163273A REQ-3F19778B REQ-CF3A1
     assert.equal(isolatedValidateResponse.result.valid, true);
     assert.equal(isolatedValidateResponse.result.adoption.mode, "incremental");
     assert.match(isolatedValidateResponse.project_id, /^SDD-[0-9A-F]{8}$/u);
+
+    if (process.platform === "darwin") {
+      const offlineUserHome = join(temporaryRoot, "offline-user-home");
+      await mkdir(join(offlineUserHome, "Library", "Application Support"), { recursive: true });
+      const offlineUserEnvironment = { ...process.env, HOME: offlineUserHome };
+      const offlineStatusBeforeUser = await runCommand(
+        "git",
+        ["status", "--porcelain=v1", "--untracked-files=all"],
+        yarnPnpRoot,
+      );
+      const offlineUserInstall = await runCommand(
+        process.execPath,
+        [isolatedBinTarget, "skill", "install", "--scope", "user", "--format", "json"],
+        yarnPnpRoot,
+        offlineUserEnvironment,
+      );
+      assert.equal(
+        offlineUserInstall.exitCode,
+        0,
+        offlineUserInstall.standardError || offlineUserInstall.standardOutput,
+      );
+      const offlineUserInstallResponse = JSON.parse(offlineUserInstall.standardOutput) as {
+        readonly result: { readonly skill_destination: string; readonly cli_destination: string };
+      };
+      const offlineUserWrapper = join(
+        offlineUserInstallResponse.result.skill_destination,
+        "scripts/check-cli-compatibility",
+      );
+      const offlineUserFirstUse = await runCommand(
+        process.execPath,
+        [offlineUserWrapper, "--", "validate", "--cwd", yarnPnpRoot],
+        yarnPnpRoot,
+        offlineUserEnvironment,
+      );
+      assert.equal(
+        offlineUserFirstUse.exitCode,
+        0,
+        offlineUserFirstUse.standardError || offlineUserFirstUse.standardOutput,
+      );
+      assert.equal(JSON.parse(offlineUserFirstUse.standardOutput).project_id, isolatedValidateResponse.project_id);
+      const offlineUserUpdate = await runCommand(
+        process.execPath,
+        [isolatedBinTarget, "skill", "update", "--scope", "user", "--format", "json"],
+        yarnPnpRoot,
+        offlineUserEnvironment,
+      );
+      assert.equal(offlineUserUpdate.exitCode, 0, offlineUserUpdate.standardError || offlineUserUpdate.standardOutput);
+      assert.equal(JSON.parse(offlineUserUpdate.standardOutput).result.outcome, "unchanged");
+      const offlineUserRemove = await runCommand(
+        process.execPath,
+        [isolatedBinTarget, "skill", "remove", "--scope", "user", "--format", "json"],
+        yarnPnpRoot,
+        offlineUserEnvironment,
+      );
+      assert.equal(offlineUserRemove.exitCode, 0, offlineUserRemove.standardError || offlineUserRemove.standardOutput);
+      assert.equal(await pathExists(offlineUserInstallResponse.result.skill_destination), false);
+      assert.equal(await pathExists(offlineUserInstallResponse.result.cli_destination), false);
+      assert.deepEqual(
+        await runCommand("git", ["status", "--porcelain=v1", "--untracked-files=all"], yarnPnpRoot),
+        offlineStatusBeforeUser,
+      );
+    }
     assert.equal(await readFile(join(yarnPnpRoot, "yarn.lock"), "utf8"), "# retained Yarn Plug'n'Play baseline\n");
     assert.equal(await readFile(join(yarnPnpRoot, ".pnp.cjs"), "utf8"), "module.exports = {};\n");
   } finally {

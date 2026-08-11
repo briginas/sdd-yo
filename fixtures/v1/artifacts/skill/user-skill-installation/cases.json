@@ -1,0 +1,81 @@
+{
+  "fixture_manifest_version": "1.0",
+  "fixture_family_id": "user-skill-installation",
+  "status": "contract-fixture-manifest",
+  "contract_id": "artifact.user-skill-installation",
+  "schema": "../../../../../contracts/v1/schemas/user-skill-installation.schema.json",
+  "requirements": [
+    "REQ-778099C0",
+    "REQ-C975AE17",
+    "REQ-2B49D454",
+    "REQ-DEB23207",
+    "REQ-C18AEE90"
+  ],
+  "cases": [
+    {
+      "case_id": "minimal-valid",
+      "path": "minimal-valid.json",
+      "parse_valid": true,
+      "schema_valid": true,
+      "context_valid": true
+    },
+    {
+      "case_id": "unknown-field",
+      "path": "unknown-field.json",
+      "parse_valid": true,
+      "schema_valid": false,
+      "context_valid": false
+    },
+    {
+      "case_id": "unsafe-path",
+      "path": "unsafe-path.json",
+      "parse_valid": true,
+      "schema_valid": false,
+      "context_valid": false
+    },
+    {
+      "case_id": "unsorted-inventory",
+      "path": "unsorted-inventory.json",
+      "parse_valid": true,
+      "schema_valid": true,
+      "context_valid": false,
+      "expectation": "Reject because owned file inventories must be sorted by path."
+    },
+    {
+      "case_id": "duplicate-inventory",
+      "path": "duplicate-inventory.json",
+      "parse_valid": true,
+      "schema_valid": false,
+      "context_valid": false
+    },
+    {
+      "case_id": "bad-fingerprint",
+      "path": "bad-fingerprint.json",
+      "parse_valid": true,
+      "schema_valid": false,
+      "context_valid": false
+    },
+    {
+      "case_id": "fingerprint-mismatch",
+      "path": "fingerprint-mismatch.json",
+      "parse_valid": true,
+      "schema_valid": true,
+      "context_valid": false,
+      "expectation": "Reject because the declared package fingerprint does not match package_files."
+    },
+    {
+      "case_id": "wrong-scope",
+      "path": "wrong-scope.json",
+      "parse_valid": true,
+      "schema_valid": false,
+      "context_valid": false
+    },
+    {
+      "case_id": "incompatible-identity",
+      "path": "incompatible-identity.json",
+      "parse_valid": true,
+      "schema_valid": false,
+      "context_valid": false
+    }
+  ]
+}

@@ -1,9 +1,21 @@
 {
   "fixture_matrix_version": "1.0",
   "status": "contract-artifact-fixture-matrix",
-  "scope": "The fifteen artifact contracts materialized by Milestone 0.2b; ChangeDescriptor remains covered by Milestone 0.2a.",
+  "scope": "The sixteen artifact contracts materialized as version 1 fixtures; ChangeDescriptor remains covered by Milestone 0.2a.",
   "project_id": "SDD-17EF8B29",
   "manifests": [
+    {
+      "contract_id": "artifact.user-skill-installation",
+      "schema": "../../../contracts/v1/schemas/user-skill-installation.schema.json",
+      "manifest": "skill/user-skill-installation/cases.json",
+      "requirements": [
+        "REQ-778099C0",
+        "REQ-C975AE17",
+        "REQ-2B49D454",
+        "REQ-DEB23207",
+        "REQ-C18AEE90"
+      ]
+    },
     {
       "contract_id": "artifact.candidate-tree-manifest",
       "schema": "../../../contracts/v1/schemas/candidate-tree-manifest.schema.json",

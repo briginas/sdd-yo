@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "sdd_yo_user_skill_installation",
+  "scope": "user",
+  "package": { "name": "sdd-yo", "version": "0.3.0" },
+  "cli": { "name": "sdd", "version": "0.3.0", "path": "/Users/example/Library/Application Support/sdd-yo/cli/0.3.0/dist/bin/sdd.js" },
+  "json_schema": { "version": "1.0", "compatible_major": 1 },
+  "skill": { "name": "sdd-yo", "protocol_version": "1.0", "compatible_major": 1, "payload_fingerprint": "sha256:7d20a520d08e9ebd4c9d53a480a3dd6ecb8f36e62e57c6c5ebff2ac308e8981f" },
+  "package_fingerprint": "sha256:2291f0df02018a335630e44babb0d054eb6e0d8d1679a9aab4ca96afcc19fc72",
+  "package_files": [
+    { "path": "z.js", "sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
+    { "path": "a.js", "sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }
+  ],
+  "skill_files": [{ "path": "SKILL.md", "sha256": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" }]
+}

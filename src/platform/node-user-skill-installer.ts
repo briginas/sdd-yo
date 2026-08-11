@@ -233,8 +233,16 @@ async function rootsFor(input: UserSkillInstallationInput) {
   return { home, applicationSupport, skillRoot, skillDestination, cliRoot };
 }
 
-async function inventory(root: string, code: string): Promise<TreeInventory> {
-  const entries = await readdir(root, { recursive: true, withFileTypes: true });
+async function inventory(
+  root: string,
+  code: string,
+  ignoredDirectories: readonly string[] = [],
+): Promise<TreeInventory> {
+  const discovered = await readdir(root, { recursive: true, withFileTypes: true });
+  const entries = discovered.filter((entry) => {
+    const path = portable(relative(root, join(entry.parentPath, entry.name)));
+    return !ignoredDirectories.some((ignored) => path === ignored || path.startsWith(`${ignored}/`));
+  });
   if (entries.some((entry) => entry.isSymbolicLink() || (!entry.isDirectory() && !entry.isFile())))
     fail(code, "The user Skill lifecycle tree contains an unsafe entry.");
   const paths = entries.map((entry) => portable(relative(root, join(entry.parentPath, entry.name))));
@@ -268,10 +276,27 @@ async function sourceFor(input: UserSkillInstallationInput) {
     !(await stat(cliPath)).isFile()
   )
     fail("SDD_USER_SKILL_PACKAGE_INVALID", "The executing CLI is outside its package.");
+  let packageManifest: unknown;
+  try {
+    packageManifest = JSON.parse(
+      new TextDecoder("utf-8", { fatal: true }).decode(await readFile(join(packageRoot, "package.json"))),
+    );
+  } catch {
+    fail("SDD_USER_SKILL_PACKAGE_INVALID", "The executing package identity is unavailable.");
+  }
+  if (
+    !isRecord(packageManifest) ||
+    packageManifest["name"] !== input.compatibility.package.name ||
+    packageManifest["version"] !== input.compatibility.package.version ||
+    packageManifest["type"] !== "module" ||
+    !isRecord(packageManifest["bin"]) ||
+    packageManifest["bin"][input.compatibility.cli.name] !== `./${PRIVATE_CLI_PATH}`
+  )
+    fail("SDD_USER_SKILL_PACKAGE_INVALID", "The executing package identity is incompatible.");
   const skillSource = join(packageRoot, "skills", "sdd-yo");
   if (!(await metadata(skillSource))?.isDirectory())
     fail("SDD_USER_SKILL_PACKAGE_INVALID", "The packaged Skill is unavailable.");
-  const packageFiles = (await inventory(packageRoot, "SDD_USER_SKILL_PACKAGE_INVALID")).files;
+  const packageFiles = (await inventory(packageRoot, "SDD_USER_SKILL_PACKAGE_INVALID", ["node_modules/.bin"])).files;
   const skillFiles = (await inventory(skillSource, "SDD_USER_SKILL_PACKAGE_INVALID")).files;
   let manifest: unknown;
   try {

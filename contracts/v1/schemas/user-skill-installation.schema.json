@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "user-skill-installation.schema.json",
+  "title": "SDD Yo UserSkillInstallation",
+  "description": "Version 1 owned macOS user-scoped Skill and private CLI installation binding.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_type",
+    "scope",
+    "package",
+    "cli",
+    "json_schema",
+    "skill",
+    "package_fingerprint",
+    "package_files",
+    "skill_files"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "artifact_type": {
+      "const": "sdd_yo_user_skill_installation"
+    },
+    "scope": {
+      "const": "user"
+    },
+    "package": {
+      "$ref": "#/$defs/packageIdentity"
+    },
+    "cli": {
+      "$ref": "#/$defs/cliIdentity"
+    },
+    "json_schema": {
+      "$ref": "#/$defs/jsonSchemaIdentity"
+    },
+    "skill": {
+      "$ref": "#/$defs/skillIdentity"
+    },
+    "package_fingerprint": {
+      "$ref": "common.schema.json#/$defs/fingerprint"
+    },
+    "package_files": {
+      "$ref": "#/$defs/fileInventory"
+    },
+    "skill_files": {
+      "$ref": "#/$defs/fileInventory"
+    }
+  },
+  "$defs": {
+    "packageIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "const": "sdd-yo"
+        },
+        "version": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "cliIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version",
+        "path"
+      ],
+      "properties": {
+        "name": {
+          "const": "sdd"
+        },
+        "version": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*\\\\)(?!.*\\u0000)/.+/Library/Application Support/sdd-yo/cli/[^/]+/dist/bin/sdd\\.js$"
+        }
+      }
+    },
+    "jsonSchemaIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "compatible_major"
+      ],
+      "properties": {
+        "version": {
+          "const": "1.0"
+        },
+        "compatible_major": {
+          "const": 1
+        }
+      }
+    },
+    "skillIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "protocol_version",
+        "compatible_major",
+        "payload_fingerprint"
+      ],
+      "properties": {
+        "name": {
+          "const": "sdd-yo"
+        },
+        "protocol_version": {
+          "const": "1.0"
+        },
+        "compatible_major": {
+          "const": 1
+        },
+        "payload_fingerprint": {
+          "$ref": "common.schema.json#/$defs/fingerprint"
+        }
+      }
+    },
+    "ownedPath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))[^\\\\\\u0000]+$"
+    },
+    "fileEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/ownedPath"
+        },
+        "sha256": {
+          "$ref": "common.schema.json#/$defs/fingerprint"
+        }
+      }
+    },
+    "fileInventory": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/fileEntry"
+      },
+      "uniqueItems": true,
+      "x-sdd-ordering": "path"
+    }
+  }
+}

@@ -7,18 +7,18 @@ export type CliHelpEntry = {
 export const CLI_HELP_ENTRIES: readonly CliHelpEntry[] = [
   {
     path: "skill install",
-    usage: "sdd skill install --root <repository-root>",
-    summary: "Install the packaged sdd-yo Skill in one explicit Git repository.",
+    usage: "sdd skill install (--root <repository-root> | --scope user)",
+    summary: "Install the packaged Skill in one explicit repository or macOS user store.",
   },
   {
     path: "skill update",
-    usage: "sdd skill update --root <repository-root>",
-    summary: "Update one verified repository-scoped sdd-yo Skill installation.",
+    usage: "sdd skill update (--root <repository-root> | --scope user)",
+    summary: "Update one verified repository-scoped or macOS user-scoped installation.",
   },
   {
     path: "skill remove",
-    usage: "sdd skill remove --root <repository-root>",
-    summary: "Remove one verified repository-scoped sdd-yo Skill installation.",
+    usage: "sdd skill remove (--root <repository-root> | --scope user)",
+    summary: "Remove one verified repository-scoped or macOS user-scoped installation.",
   },
   {
     path: "init",

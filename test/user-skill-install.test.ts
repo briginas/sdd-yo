@@ -29,6 +29,10 @@ async function fixture() {
   await mkdir(applicationSupport, { recursive: true });
   await mkdir(join(packageRoot, "dist", "bin"), { recursive: true });
   await cp(join(repositoryRoot, "skills", "sdd-yo"), join(packageRoot, "skills", "sdd-yo"), { recursive: true });
+  await writeFile(
+    join(packageRoot, "package.json"),
+    `${JSON.stringify({ name: "sdd-yo", version: "0.3.0", type: "module", bin: { sdd: "./dist/bin/sdd.js" } }, null, 2)}\n`,
+  );
   await writeFile(cliPath, "#!/usr/bin/env node\n");
   await chmod(cliPath, 0o755);
   return { root, home, applicationSupport, packageRoot, cliPath };
@@ -47,6 +51,11 @@ async function replacePackage(value: Awaited<ReturnType<typeof fixture>>, versio
   assert.ok(entry);
   entry.sha256 = `sha256:${createHash("sha256").update(skillText).digest("hex")}`;
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  const packageManifest = JSON.parse(await readFile(join(value.packageRoot, "package.json"), "utf8")) as {
+    version: string;
+  };
+  packageManifest.version = version;
+  await writeFile(join(value.packageRoot, "package.json"), `${JSON.stringify(packageManifest, null, 2)}\n`);
 }
 
 test("REQ-778099C0 installs one exact macOS user Skill and private CLI without changing a repository", async () => {
@@ -102,6 +111,28 @@ test("REQ-C18AEE90 refuses a stale packaged Skill manifest before creating user 
   const value = await fixture();
   try {
     await writeFile(join(value.packageRoot, "skills", "sdd-yo", "SKILL.md"), "modified\n");
+    await assert.rejects(
+      createNodeUserSkillInstaller().install({
+        packageRoot: value.packageRoot,
+        cliPath: value.cliPath,
+        compatibility,
+        roots: { home: value.home, applicationSupport: value.applicationSupport, platform: "darwin" },
+      }),
+      (error: unknown) => error instanceof SkillInstallationError && error.code === "SDD_USER_SKILL_PACKAGE_INVALID",
+    );
+    await assert.rejects(readFile(join(value.home, ".agents", "skills", "sdd-yo", "installation.json")), /ENOENT/u);
+  } finally {
+    await rm(value.root, { recursive: true, force: true });
+  }
+});
+
+test("REQ-778099C0 REQ-C18AEE90 refuses an incompatible executing package identity before mutation", async () => {
+  const value = await fixture();
+  try {
+    await writeFile(
+      join(value.packageRoot, "package.json"),
+      `${JSON.stringify({ name: "foreign-package", version: "0.3.0", type: "module", bin: { sdd: "./dist/bin/sdd.js" } }, null, 2)}\n`,
+    );
     await assert.rejects(
       createNodeUserSkillInstaller().install({
         packageRoot: value.packageRoot,

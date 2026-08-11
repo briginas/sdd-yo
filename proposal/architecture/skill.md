@@ -74,6 +74,15 @@ and retains only verifiable recovery state across handled interruption. This
 path never selects or mutates a repository and never creates a global
 executable or PATH entry.
 
+The user updater reports `unchanged` without rewriting an exact installation,
+refuses an occupied same-version destination with different bytes, and removes
+only the previously bound version after a complete replacement is active. The
+remover first verifies and detaches both owned destinations. A later explicit
+lifecycle operation reconciles only matching private recovery state; ordinary
+product commands never repair it. Before forwarding a product command, the
+user wrapper requires an explicit project selector and checks the returned
+project identity against that selection.
+
 ## Intent routing
 
 | User intent                       | Skill behavior                                                                                                              |

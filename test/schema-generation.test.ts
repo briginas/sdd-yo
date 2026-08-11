@@ -27,6 +27,7 @@ const expectedArtifactSchemas = [
   "spec-patch.schema.json",
   "test-execution-evidence.schema.json",
   "test-index.schema.json",
+  "user-skill-installation.schema.json",
   "verification-report.schema.json",
 ] as const;
 

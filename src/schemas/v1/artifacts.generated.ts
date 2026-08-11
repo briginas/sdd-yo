@@ -5,6 +5,7 @@
 
 export type Version1Artifact =
   | SDDYoChangeDescriptor
+  | SDDYoUserSkillInstallation
   | SDDYoCandidateTreeManifest
   | SDDYoProposalPackage
   | SDDYoSpecPatch
@@ -34,6 +35,10 @@ export type SDDYoChangeDescriptor = ArtifactEnvelope & {
   code_targets: CodeTarget[];
   [k: string]: unknown | undefined;
 };
+/**
+ * @minItems 1
+ */
+export type FileInventory = [FileEntry, ...FileEntry[]];
 /**
  * Version 1 virtual candidate specification tree input.
  */
@@ -402,6 +407,44 @@ export interface CodeTarget {
   requirement_id: string;
   semantic_fingerprint: string;
   structural_fingerprint: string;
+}
+/**
+ * Version 1 owned macOS user-scoped Skill and private CLI installation binding.
+ */
+export interface SDDYoUserSkillInstallation {
+  schema_version: "1.0";
+  artifact_type: "sdd_yo_user_skill_installation";
+  scope: "user";
+  package: PackageIdentity;
+  cli: CliIdentity;
+  json_schema: JsonSchemaIdentity;
+  skill: SkillIdentity;
+  package_fingerprint: string;
+  package_files: FileInventory;
+  skill_files: FileInventory;
+}
+export interface PackageIdentity {
+  name: "sdd-yo";
+  version: string;
+}
+export interface CliIdentity {
+  name: "sdd";
+  version: string;
+  path: string;
+}
+export interface JsonSchemaIdentity {
+  version: "1.0";
+  compatible_major: 1;
+}
+export interface SkillIdentity {
+  name: "sdd-yo";
+  protocol_version: "1.0";
+  compatible_major: 1;
+  payload_fingerprint: string;
+}
+export interface FileEntry {
+  path: string;
+  sha256: string;
 }
 export interface Diagnostic {
   code: string;

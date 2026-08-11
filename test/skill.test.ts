@@ -312,6 +312,10 @@ test("REQ-C975AE17 REQ-05CABE17 user wrapper invokes only its verified private C
     await mkdir(applicationSupport, { recursive: true });
     await mkdir(join(packageRoot, "dist", "bin"), { recursive: true });
     await cp(skillRoot, join(packageRoot, "skills", "sdd-yo"), { recursive: true });
+    await writeFile(
+      join(packageRoot, "package.json"),
+      `${JSON.stringify({ name: "sdd-yo", version: "0.3.0", type: "module", bin: { sdd: "./dist/bin/sdd.js" } }, null, 2)}\n`,
+    );
     await cp(await fakeCli("0.3.0"), privateCli);
     await chmod(privateCli, 0o755);
     const compatibility = {

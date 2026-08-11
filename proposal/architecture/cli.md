@@ -78,6 +78,9 @@ failures.
 sdd skill install --root <repository-root>
 sdd skill update --root <repository-root>
 sdd skill remove --root <repository-root>
+sdd skill install --scope user
+sdd skill update --scope user
+sdd skill remove --scope user
 ```
 
 Installs the verified Skill payload from the executing exact package at
@@ -95,6 +98,24 @@ stages and publishes one complete replacement or reports that the installation
 is already exact. Removal deletes only the verified installation inventory.
 Neither operation follows symbolic links, accepts traversal, mutates adjacent
 repository content, or runs implicitly from an ordinary product command.
+
+On macOS, the mutually exclusive `--scope user` form selects the user Skill at
+`~/.agents/skills/sdd-yo` and its versioned private package under
+`~/Library/Application Support/sdd-yo/cli`. Its result is discriminated by
+`scope: "user"` and reports canonical absolute Skill and CLI destinations,
+sorted owned or removed paths, exact package and Skill fingerprints,
+compatibility identity, and the update outcome when applicable. User lifecycle
+commands accept no repository selector and never initialize a project, invoke
+a package manager, access the network, mutate Git, or imply approval, QA, or
+publication. Repository scope remains the default and continues to require
+`--root <repository-root>`.
+
+The user Skill wrapper accepts an explicit `--root` plus adoption mode only for
+initialization and exactly one explicit `--cwd` or `--config` for every other
+project operation. It verifies that the bound private CLI reports the selected
+project identity. It rejects `--cli`, incomplete recovery state, and any moved,
+modified, undeclared, or incompatible Skill or private-package byte without
+PATH, repository-CLI, network, package-manager, or first-use repair fallback.
 
 ### `sdd init`
 
