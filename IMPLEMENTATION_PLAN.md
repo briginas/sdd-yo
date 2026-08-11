@@ -2,8 +2,8 @@
 
 ## Status
 
-- Active: Milestone 19.6 — Clean `0.5.0` release candidate and integrated proof
-- Complete: Milestones 0–18, Milestones 19.1–19.5, and public `sdd-yo@0.4.1`
+- Active: Milestone 19.7 — Public `0.5.0` release and closeout
+- Complete: Milestones 0–18, Milestones 19.1–19.6, and public `sdd-yo@0.4.1`
 - Last updated: 2026-08-11
 
 ## Authority and navigation
@@ -240,6 +240,15 @@ mode-specific, and downstream authority stops through focused evals.
 Done when one reviewed immutable `sdd-yo@0.5.0` artifact implements only the
 new workflow contract, passes the complete repository and package proof, and
 is ready for a separately authorized public release.
+
+Implemented and verified: the final bundle-only workflow contract and exact
+`0.5.0` identity pass representative isolated `spec-code`, `spec`, and `code`
+CLI workflows plus the complete repository and package proof. The retained
+release candidate has SHA-256
+`af6abc82173d0d31dc579672bde939c186d6d221f41383536a53c02d89298835`,
+inventory SHA-256
+`db26f2f8520dee2e2717039e771ddd666b11edeaf9814fd77676b4b09c1f646d`,
+and 2,138 entries. No publication, tag, push, or release authority was inferred.
 
 ### 19.7 — Public `0.5.0` release and closeout
 

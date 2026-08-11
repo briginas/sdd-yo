@@ -49,8 +49,6 @@
         "source": {
           "enum": [
             "base",
-            "directory",
-            "archive",
             "manifest"
           ]
         },

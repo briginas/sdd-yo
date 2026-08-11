@@ -9,7 +9,7 @@ You can add SDD Yo to an existing project and build the specification step by
 step. Every change to the specification or code carries its own context, so
 several changes can be developed at the same time without confusion.
 
-Version `0.4.1` requires Node.js `22.18.0` or newer. Public availability is
+Version `0.5.0` requires Node.js `22.18.0` or newer. Public availability is
 established only by the npm registry, not by source or README state. The
 project is pre-1.0, and installing the package does not install or publish a
 Codex plugin.
@@ -19,12 +19,12 @@ Codex plugin.
 From the root of an existing Git repository, install the exact package:
 
 ```text
-npm install --save-dev --save-exact sdd-yo@0.4.1
-npm exec --package=sdd-yo@0.4.1 -- sdd --version --format json
+npm install --save-dev --save-exact sdd-yo@0.5.0
+npm exec --package=sdd-yo@0.5.0 -- sdd --version --format json
 ```
 
 The version check must return exit code `0`, `status: "ok"`, package and CLI
-version `0.4.1`, and compatible JSON-schema and Skill protocol major `1`.
+version `0.5.0`, and compatible JSON-schema and Skill protocol major `1`.
 
 Install the repository-scoped Skill:
 

@@ -45,12 +45,7 @@ Every JSON response has:
 Arrays representing sets are deterministically sorted. Human output is a view
 over this object and is not parsed by automation.
 
-`candidate snapshot` additionally requires `--manifest`; that path receives
-the reusable CandidateTreeManifest while the ordinary command response remains
-on stdout. `--output` is unavailable for this command so a response write
-cannot partially follow successful immutable artifact creation.
-
-`proposal materialize` instead requires `--bundle`. The bundle path names one
+`proposal materialize` requires `--bundle`. The bundle path names one
 new ignored project-local directory; the command publishes the complete
 candidate manifest and exact ProposalPackage together and never uses stdout as
 the retained handoff.
@@ -221,41 +216,16 @@ Supplying both subject-matched TestIndexes adds `verification` to
 `available_classes`, removes it from `unavailable_classes`, and adds its
 independently canonicalized delta. Supplying only one index is invalid.
 
-### `sdd candidate snapshot`
-
-```text
-sdd candidate snapshot --base <git-ref> --candidate-ref <git-ref> \
-  --manifest <project-relative-path>
-```
-
-Resolves each supplied ref once, loads the selected SDD Project from both Git
-trees, and creates one deterministic CandidateTreeManifest at a new regular
-file under an existing Git-ignored project-local staging directory. The
-manifest binds the base specification-tree fingerprint and contains the
-path-sorted exact UTF-8 candidate specification files and hashes. It can be
-supplied directly to each existing `--candidate` input after byte-for-byte
-materialization from durable storage.
-
-The command rejects a missing or mismatched project at either ref, invalid
-specification trees, traversal, symbolic-link output components, missing
-parents, a path inside the configured specification root, a path not ignored
-by Git, and an existing manifest target. It does not read the working-tree
-candidate, create `.sdd/config.yaml`, replace retained bytes, ingest an
-archive, mutate Git, or establish a durable store. The invoker exports the
-manifest before optionally removing the staging copy.
-
 ### `sdd proposal validate`
 
 ```text
 sdd proposal validate --bundle <project-relative-path>
-sdd proposal validate --package <code-package-path>
 ```
 
-Revalidates the exact retained proposal subject without writing. A bundle is
-used for `spec-code` and `spec`; code may use its retained ProposalPackage
-member directly. The command resolves the bound base, reconstructs the
-candidate from the retained manifest or unchanged base, and requires the
-recomputed package to equal the retained package exactly.
+Revalidates the exact retained proposal subject without writing. It resolves
+the bound base, reconstructs the candidate from the bundle's fixed embedded
+CandidateTreeManifest member or unchanged base, and requires the recomputed
+package to equal the retained package exactly.
 
 ### `sdd proposal materialize`
 
@@ -293,8 +263,6 @@ and empty semantic and structural deltas.
 ```text
 sdd approval record --bundle <project-relative-path> --issuer <name> \
   --actor <identity> --decision approved|rejected --reason <path> --evidence <path>
-sdd approval record --package <code-package-path> --issuer <name> \
-  --actor <identity> --decision approved|rejected --reason <path> --evidence <path>
 ```
 
 Atomically revalidates the retained subject inside the recorder invocation and
@@ -306,17 +274,16 @@ is unnecessary and cannot substitute for recorder-owned freshness.
 ### `sdd proposal prepare`
 
 ```text
-sdd proposal prepare --package <path> --candidate <path> \
+sdd proposal prepare --bundle <project-relative-path> \
   --branch-head <git-ref> --integration-ref <git-ref> \
   [--approval <project-relative-path> ...]
 ```
 
 Performs mechanical three-way analysis and emits a ConflictReport plus an exact
-`SpecPatch`. `B` is `package.base.git_ref`; `P` is the exact candidate directory
-or CandidateTreeManifest supplied again and revalidated against the package
-candidate-tree and object-delta fingerprints; `H` is `--branch-head`; and `M`
-is `--integration-ref`. It reads refs and candidate state but does not write
-them. ApprovalEvidence must name the exact project, issuer provenance, approved
+`SpecPatch`. `B` is the retained package base, `P` is the bundle's fixed
+embedded CandidateTreeManifest, `H` is `--branch-head`; and `M` is
+`--integration-ref`. It revalidates the retained bundle before reading refs and
+does not write them. ApprovalEvidence must name the exact project, issuer provenance, approved
 mode, base object ID, and semantic and structural delta fingerprints. Missing
 approval or reviewable preparation drift withholds SpecPatch and returns
 `review_required`; stale, negative, contradictory, or definite blocker state
@@ -382,8 +349,7 @@ a model or make a human decision.
 ### `sdd merge check`
 
 ```text
-sdd merge check --change <ChangeDescriptor-path> \
-  --package <ProposalPackage-path> --candidate <directory|manifest> \
+sdd merge check --change <ChangeDescriptor-path> --bundle <project-relative-path> \
   --approval <path> \
   --test-index <path> --test-evidence <path> ... --qa <path> ... \
   [--input-manifest <path> --findings <path> ...] \
@@ -391,9 +357,9 @@ sdd merge check --change <ChangeDescriptor-path> \
   [--human-semantic-review <path>]
 ```
 
-The ChangeDescriptor supplies the integration and proposal refs while the
-ProposalPackage and candidate bytes remain explicit so the command can repeat
-package validation rather than trusting hidden workflow state. The command
+The ChangeDescriptor supplies the integration and proposal refs. The bundle is
+the sole retained proposal input, so the command repeats package validation
+from its fixed members rather than trusting hidden workflow state. The command
 resolves the current configured integration ref and declared proposal ref,
 recomputes conflict and affected scope, validates all evidence, and returns a
 `MergeReport`. It never modifies Git or hosting state.
@@ -414,8 +380,9 @@ and exit-code mapping remain unchanged.
   storage. Primary output may be captured from stdout or written to that
   staging root and exported after the command.
 - Refs are resolved once at command start and reported as object IDs.
-- Candidate directories are read as immutable snapshots; a change during the
-  command causes a technical failure.
+- Only `proposal materialize` reads an authored candidate directory, and only
+  in `spec-code` and `spec` modes. All downstream proposal commands consume a
+  retained bundle; its CandidateTreeManifest is never a standalone input.
 - Size, count, depth, and command time limits come from configuration.
 - Secrets and unrestricted environment dumps are never emitted.
 

@@ -310,13 +310,13 @@ test("REQ-C975AE17 REQ-05CABE17 user wrapper invokes only its verified private C
     await cp(skillRoot, join(packageRoot, "skills", "sdd-yo"), { recursive: true });
     await writeFile(
       join(packageRoot, "package.json"),
-      `${JSON.stringify({ name: "sdd-yo", version: "0.4.1", type: "module", bin: { sdd: "./dist/bin/sdd.js" } }, null, 2)}\n`,
+      `${JSON.stringify({ name: "sdd-yo", version: "0.5.0", type: "module", bin: { sdd: "./dist/bin/sdd.js" } }, null, 2)}\n`,
     );
-    await cp(await fakeCli("0.4.1"), privateCli);
+    await cp(await fakeCli("0.5.0"), privateCli);
     await chmod(privateCli, 0o755);
     const compatibility = {
-      package: { name: "sdd-yo", version: "0.4.1" },
-      cli: { name: "sdd", version: "0.4.1" },
+      package: { name: "sdd-yo", version: "0.5.0" },
+      cli: { name: "sdd", version: "0.5.0" },
       json_schema: { version: "1.0", compatible_major: 1 },
       skill: { name: "sdd-yo", protocol_version: "1.0", compatible_major: 1 },
     } as const;
@@ -406,18 +406,7 @@ test("REQ-2C8E8085 compatibility wrapper accepts only project-aware authoring ID
 
 test("REQ-8DE9E078 REQ-E80F09C6 REQ-18F84CE2 review route accepts only deterministic ProposalPackage JSON", async () => {
   const cli = await fakeCli();
-  const args = [
-    "proposal",
-    "validate",
-    "--mode",
-    "spec-code",
-    "--base",
-    "main",
-    "--candidate",
-    ".sdd/staging/candidate.json",
-    "--cwd",
-    repositoryRoot,
-  ] as const;
+  const args = ["proposal", "validate", "--bundle", ".sdd/staging/proposal-bundle", "--cwd", repositoryRoot] as const;
   const result = await runChecker(cli, args);
   assert.equal(result.code, 0, result.stderr);
   const response = JSON.parse(result.stdout) as {
@@ -432,18 +421,9 @@ test("REQ-8DE9E078 REQ-E80F09C6 REQ-18F84CE2 review route accepts only determini
   assert.equal(invalid.code, 3);
   assert.match(invalid.stderr, /invalid ProposalPackage result/u);
 
-  const missingCandidate = await runChecker(cli, [
-    "proposal",
-    "validate",
-    "--mode",
-    "spec-code",
-    "--base",
-    "main",
-    "--cwd",
-    repositoryRoot,
-  ]);
-  assert.equal(missingCandidate.code, 3);
-  assert.match(missingCandidate.stderr, /requires --candidate/u);
+  const missingBundle = await runChecker(cli, ["proposal", "validate", "--cwd", repositoryRoot]);
+  assert.equal(missingBundle.code, 3);
+  assert.match(missingBundle.stderr, /requires one retained --bundle/u);
 });
 
 test("REQ-32C76ED3 REQ-F7D39246 compatibility wrapper accepts only explicit approval recording results", async () => {
@@ -513,10 +493,8 @@ test("REQ-AFD65A03 REQ-A8739118 REQ-7341DBB7 REQ-964B9F80 preparation preserves 
   const args = [
     "proposal",
     "prepare",
-    "--package",
-    ".sdd/staging/package.json",
-    "--candidate",
-    ".sdd/staging/candidate.json",
+    "--bundle",
+    ".sdd/staging/proposal-bundle",
     "--branch-head",
     "HEAD",
     "--integration-ref",
@@ -649,10 +627,8 @@ test("REQ-64DB876B REQ-82256D82 REQ-44068C1A merge route validates scoped readin
     "check",
     "--change",
     ".sdd/staging/change.json",
-    "--package",
-    ".sdd/staging/package.json",
-    "--candidate",
-    ".sdd/staging/candidate.json",
+    "--bundle",
+    ".sdd/staging/proposal-bundle",
     "--approval",
     ".sdd/staging/approval.json",
     "--test-index",

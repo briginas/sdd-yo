@@ -35,19 +35,27 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "base_ref",
-        "semantic_delta_fingerprint",
-        "structural_delta_fingerprint"
+        "base",
+        "candidate",
+        "object_delta",
+        "code_targets",
+        "affected_scope"
       ],
       "properties": {
-        "base_ref": {
-          "$ref": "common.schema.json#/$defs/gitObjectId"
+        "base": {
+          "$ref": "proposal-package.schema.json#/properties/base"
         },
-        "semantic_delta_fingerprint": {
-          "$ref": "common.schema.json#/$defs/fingerprint"
+        "candidate": {
+          "$ref": "proposal-package.schema.json#/properties/candidate"
         },
-        "structural_delta_fingerprint": {
-          "$ref": "common.schema.json#/$defs/fingerprint"
+        "object_delta": {
+          "$ref": "proposal-package.schema.json#/properties/object_delta"
+        },
+        "code_targets": {
+          "$ref": "proposal-package.schema.json#/properties/code_targets"
+        },
+        "affected_scope": {
+          "$ref": "proposal-package.schema.json#/properties/affected_scope"
         }
       }
     },

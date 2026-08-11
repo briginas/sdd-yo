@@ -7,7 +7,7 @@
     "tree_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
   },
   "candidate": {
-    "source": "directory",
+    "source": "manifest",
     "tree_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
   },
   "object_delta": {

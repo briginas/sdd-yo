@@ -28,7 +28,7 @@ export type ProposalPackage = {
   readonly project_id: ProjectId;
   readonly mode: ProposalMode;
   readonly base: { readonly git_ref: GitObjectId; readonly tree_fingerprint: Fingerprint };
-  readonly candidate: { readonly source: "base" | "directory" | "manifest"; readonly tree_fingerprint: Fingerprint };
+  readonly candidate: { readonly source: "base" | "manifest"; readonly tree_fingerprint: Fingerprint };
   readonly object_delta: {
     readonly semantic_fingerprint: Fingerprint;
     readonly structural_fingerprint: Fingerprint;
@@ -95,7 +95,7 @@ export async function validateProposal(input: {
       project: input.project,
       baseRef: input.baseRef,
       base,
-      candidate,
+      candidate: { source: "manifest", tree: candidate.tree },
       mode: input.mode,
       codeTargets: input.codeTargets,
     });
@@ -111,7 +111,7 @@ export function validateProposalTrees(input: {
   readonly baseRef: GitObjectId;
   readonly base: SpecificationTree;
   readonly candidate: {
-    readonly source: "base" | "directory" | "manifest";
+    readonly source: "base" | "manifest";
     readonly tree: SpecificationTree;
   };
   readonly mode: ProposalMode;

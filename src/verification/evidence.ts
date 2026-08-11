@@ -20,10 +20,25 @@ import type { FileSystem } from "../platform/filesystem.ts";
 import type { TestIndex } from "../tests/test-index.ts";
 import { fingerprintTestInput } from "../tests/test-index.ts";
 import type { AffectedScope } from "./affected-scope.ts";
+import { parseProposalPackage, ProposalPackageInputError } from "../proposal/package-input.ts";
+import type { ProposalPackage } from "../proposal/validate-proposal.ts";
 
 const testRefPattern = /^[a-z][a-z0-9-]{0,31}:.+$/u;
 const utcTimestampPattern =
   /^([0-9]{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\.[0-9]+)?Z$/u;
+
+function canonicalJson(value: unknown): string {
+  const canonical = (item: unknown): unknown => {
+    if (Array.isArray(item)) return item.map(canonical);
+    if (typeof item !== "object" || item === null) return item;
+    return Object.fromEntries(
+      Object.entries(item)
+        .toSorted(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+        .map(([key, child]) => [key, canonical(child)]),
+    );
+  };
+  return JSON.stringify(canonical(value));
+}
 
 export type EvidenceInputLimits = {
   readonly max_artifact_bytes: number;
@@ -45,11 +60,7 @@ export type ApprovalEvidence = ArtifactProvenance & {
   readonly actor: string;
   readonly decision: "approved" | "rejected";
   readonly mode: "spec-code" | "spec" | "code";
-  readonly subject: {
-    readonly base_ref: GitObjectId;
-    readonly semantic_delta_fingerprint: Fingerprint;
-    readonly structural_delta_fingerprint: Fingerprint;
-  };
+  readonly subject: Pick<ProposalPackage, "base" | "candidate" | "object_delta" | "code_targets" | "affected_scope">;
   readonly reason?: string;
 };
 
@@ -251,13 +262,32 @@ export function parseApprovalEvidence(bytes: Uint8Array, limits: EvidenceInputLi
     (value.decision !== "approved" && value.decision !== "rejected") ||
     (value.mode !== "spec-code" && value.mode !== "spec" && value.mode !== "code") ||
     !isRecord(value.subject) ||
-    !hasExactKeys(value.subject, ["base_ref", "semantic_delta_fingerprint", "structural_delta_fingerprint"]) ||
-    !isGitObjectId(value.subject.base_ref) ||
-    !isFingerprint(value.subject.semantic_delta_fingerprint) ||
-    !isFingerprint(value.subject.structural_delta_fingerprint) ||
     (value.reason !== undefined && !nonEmpty(value.reason))
   ) {
     throw new EvidenceInputError("SDD_EVIDENCE_ARTIFACT_INVALID", "ApprovalEvidence envelope is invalid.");
+  }
+  let subject: ApprovalEvidence["subject"];
+  try {
+    const proposal = parseProposalPackage({
+      schema_version: "1.0",
+      artifact_type: "proposal_package",
+      project_id: value.project_id,
+      mode: value.mode,
+      ...value.subject,
+      diagnostics: [],
+      semantic_candidates: [],
+    });
+    subject = {
+      base: proposal.base,
+      candidate: proposal.candidate,
+      object_delta: proposal.object_delta,
+      code_targets: proposal.code_targets,
+      affected_scope: proposal.affected_scope,
+    };
+  } catch (error) {
+    if (error instanceof ProposalPackageInputError)
+      throw new EvidenceInputError("SDD_EVIDENCE_ARTIFACT_INVALID", "ApprovalEvidence subject is invalid.");
+    throw error;
   }
   return {
     schema_version: "1.0",
@@ -268,11 +298,7 @@ export function parseApprovalEvidence(bytes: Uint8Array, limits: EvidenceInputLi
     actor: value.actor,
     decision: value.decision,
     mode: value.mode,
-    subject: {
-      base_ref: value.subject.base_ref,
-      semantic_delta_fingerprint: value.subject.semantic_delta_fingerprint,
-      structural_delta_fingerprint: value.subject.structural_delta_fingerprint,
-    },
+    subject,
     ...(value.reason === undefined ? {} : { reason: value.reason }),
   };
 }
@@ -604,9 +630,7 @@ function finishHumanDecisionAssessment(
 export function assessApprovalEvidence(input: {
   readonly project_id: ProjectId;
   readonly mode: ApprovalEvidence["mode"];
-  readonly base_ref: GitObjectId;
-  readonly semantic_delta_fingerprint: Fingerprint;
-  readonly structural_delta_fingerprint: Fingerprint;
+  readonly subject: ApprovalEvidence["subject"];
   readonly evidence: readonly ApprovalEvidence[];
 }): HumanDecisionEvidenceAssessment {
   const issues: HumanDecisionEvidenceIssue[] = [];
@@ -615,9 +639,7 @@ export function assessApprovalEvidence(input: {
     if (
       evidence.project_id !== input.project_id ||
       evidence.mode !== input.mode ||
-      evidence.subject.base_ref !== input.base_ref ||
-      evidence.subject.semantic_delta_fingerprint !== input.semantic_delta_fingerprint ||
-      evidence.subject.structural_delta_fingerprint !== input.structural_delta_fingerprint
+      canonicalJson(evidence.subject) !== canonicalJson(input.subject)
     ) {
       issues.push({
         code: "SDD_EVIDENCE_SUBJECT_STALE",

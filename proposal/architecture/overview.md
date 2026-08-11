@@ -43,11 +43,14 @@ tests
 Git history
 ```
 
-Transient external state:
+Transient external state includes proposal bundles, whose fixed members are
+the embedded CandidateTreeManifest (specification-changing modes only) and the
+ProposalPackage:
 
 ```text
-CandidateTreeManifest
-ProposalPackage
+ProposalBundle
+  CandidateTreeManifest (fixed candidate-tree.json member; spec-code/spec only)
+  ProposalPackage (fixed proposal-package.json member)
 SpecPatch
 ApprovalEvidence
 TestIndex

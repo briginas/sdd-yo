@@ -485,7 +485,7 @@
       "requirements": [
         "REQ-8DE9E078",
         "REQ-3BF12AAD",
-        "REQ-A3C3B779"
+        "REQ-20D8EC8C"
       ],
       "required_fields": [
         "schema_version",
@@ -584,6 +584,7 @@
       "materialized_schema": "contracts/v1/schemas/approval-evidence.schema.json",
       "authority": "proposal/architecture/artifact-schemas.md#approvalevidence",
       "requirements": [
+        "REQ-32C76ED3",
         "REQ-7341DBB7",
         "REQ-220945C2",
         "REQ-E85A06C3"
@@ -596,7 +597,12 @@
         "actor",
         "decision",
         "mode",
-        "subject"
+        "subject",
+        "subject.base",
+        "subject.candidate",
+        "subject.object_delta",
+        "subject.code_targets",
+        "subject.affected_scope"
       ],
       "optional_provenance_profile": "human-decision",
       "ordering_profile": "deterministic-json",

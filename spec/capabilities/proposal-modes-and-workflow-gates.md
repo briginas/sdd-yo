@@ -149,7 +149,8 @@ authored candidate tree.
   object deltas are empty.
 - The package retains the exact project, resolved base object, unchanged tree,
   mode, code targets, affected scope, and deterministic semantic candidates.
-- The caller-selected package path satisfies the same ignored, bounded,
+- The caller-selected package-only bundle path satisfies the same ignored,
+  bounded,
   absent-target, symbolic-link, atomic-publication, and no-Git-mutation rules
   as a proposal bundle.
 - `code` creates no authored candidate artifact, SpecPatch, approval, test, QA,
@@ -259,11 +260,11 @@ artifacts rather than requiring a hidden durable workflow database.
 
 ### Acceptance criteria <!-- sdd:acceptance -->
 
-- Proposal bundles, code ProposalPackages, approval, test, QA, finding, and
+- Proposal bundles, approval, test, QA, finding, and
   merge artifacts are explicit versioned inputs and outputs.
 - A specification-changing proposal bundle retains its complete candidate and
-  exact ProposalPackage together; a code ProposalPackage derives its unchanged
-  subject from the selected base and exact Requirement targets.
+  exact ProposalPackage together; a package-only code proposal bundle derives
+  its unchanged subject from the selected base and exact Requirement targets.
 - A removable cache may accelerate processing.
 - Deleting cache does not lose source-of-truth or approval state.
 - No command detects, imports, converts, or falls back to a superseded workflow

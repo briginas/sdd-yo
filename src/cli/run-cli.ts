@@ -66,12 +66,9 @@ import {
   applyProposal,
   ApprovalEvidenceRecordError,
   createApprovalEvidence,
-  createCandidateTreeManifest,
   importSpecPatch,
-  importProposalPackage,
   loadBaseSpecificationTree,
   materializeProposalBundle,
-  parseProposalPackage,
   parseCodeTarget,
   parseProposalMode,
   prepareApprovedProposal,
@@ -79,22 +76,14 @@ import {
   ProposalApplyError,
   ProposalPackageInputError,
   ProposalPreparationError,
-  ProposalRevalidationError,
   ProposalValidationError,
-  serializeCandidateTreeManifest,
+  revalidateProposalBundle,
   serializeApprovalEvidence,
   SpecPatchInputError,
   MAX_APPROVAL_TEXT_BYTES,
-  revalidateProposalPackage,
-  validateProposal,
 } from "../proposal/index.ts";
-import type {
-  CandidateTreeManifest,
-  ConflictReport,
-  ProposalMode,
-  ProposalPackage,
-  SpecPatch,
-} from "../proposal/index.ts";
+import { ProposalRevalidationError } from "../proposal/revalidate-proposal.ts";
+import type { ConflictReport, ProposalMode, ProposalPackage, SpecPatch } from "../proposal/index.ts";
 import {
   EvidenceInputError,
   importApprovalEvidenceFile,
@@ -110,12 +99,7 @@ import {
   importSemanticAnalysisInputManifestFile,
 } from "../verification/findings.ts";
 import type { FindingAssessment } from "../verification/findings.ts";
-import {
-  importChangeDescriptorFile,
-  importProjectJsonArtifact,
-  MergeInputError,
-  resolveProjectCandidatePath,
-} from "../verification/change-descriptor.ts";
+import { importChangeDescriptorFile, MergeInputError } from "../verification/change-descriptor.ts";
 import { runMergeGate } from "../verification/merge-report.ts";
 import type { MergeReport } from "../verification/merge-report.ts";
 import { renderCliHelp } from "./help.ts";
@@ -149,7 +133,6 @@ type Command =
   | "inspect"
   | "trace"
   | "diff"
-  | "candidate.snapshot"
   | "approval.record"
   | "tests.discover"
   | "findings.validate"
@@ -194,7 +177,6 @@ type Invocation = {
   readonly count?: number;
   readonly historyRef?: string;
   readonly baseRef?: string;
-  readonly candidateRef?: string;
   readonly targetRef?: string;
   readonly traceRef?: string;
   readonly changedFrom?: string;
@@ -208,7 +190,6 @@ type Invocation = {
   readonly proposalMode?: ProposalMode;
   readonly candidatePath?: string;
   readonly bundlePath?: ProjectPath;
-  readonly manifestPath?: ProjectPath;
   readonly issuer?: string;
   readonly actor?: string;
   readonly decision?: "approved" | "rejected";
@@ -299,15 +280,6 @@ export type ValidateComparisonResult = DeltaClassesResult & {
   readonly changed_from_ref: GitObjectId;
 };
 
-export type CandidateSnapshotResult = {
-  readonly manifest_path: ProjectPath;
-  readonly base_ref: GitObjectId;
-  readonly candidate_ref: GitObjectId;
-  readonly base_tree_fingerprint: Fingerprint;
-  readonly candidate_tree_fingerprint: Fingerprint;
-  readonly file_count: number;
-};
-
 export type ApprovalRecordResult = {
   readonly evidence_path: ProjectPath;
   readonly decision: "approved" | "rejected";
@@ -337,7 +309,6 @@ export type CliResponse =
   | CliResponseEnvelope<"inspect", "ok", InspectResult>
   | CliResponseEnvelope<"trace", "ok", TraceResult>
   | CliResponseEnvelope<"diff", "ok", DiffResult>
-  | CliResponseEnvelope<"candidate.snapshot", "ok", CandidateSnapshotResult>
   | CliResponseEnvelope<"approval.record", "ok", ApprovalRecordResult>
   | CliResponseEnvelope<"tests.discover", "ok", TestIndex>
   | CliResponseEnvelope<"findings.validate", "ok" | "blocked", FindingAssessment>
@@ -376,19 +347,14 @@ function parseInvocation(
         ? "tests.discover"
         : argv[0] === "approval" && argv[1] === "record"
           ? "approval.record"
-          : argv[0] === "candidate" && argv[1] === "snapshot"
-            ? "candidate.snapshot"
-            : argv[0] === "findings" && argv[1] === "validate"
-              ? "findings.validate"
-              : argv[0] === "merge" && argv[1] === "check"
-                ? "merge.check"
-                : argv[0] === "proposal" &&
-                    (argv[1] === "materialize" ||
-                      argv[1] === "validate" ||
-                      argv[1] === "prepare" ||
-                      argv[1] === "apply")
-                  ? `proposal.${argv[1]}`
-                  : argv[0];
+          : argv[0] === "findings" && argv[1] === "validate"
+            ? "findings.validate"
+            : argv[0] === "merge" && argv[1] === "check"
+              ? "merge.check"
+              : argv[0] === "proposal" &&
+                  (argv[1] === "materialize" || argv[1] === "validate" || argv[1] === "prepare" || argv[1] === "apply")
+                ? `proposal.${argv[1]}`
+                : argv[0];
   if (
     command !== "init" &&
     command !== "skill.install" &&
@@ -399,7 +365,6 @@ function parseInvocation(
     command !== "inspect" &&
     command !== "trace" &&
     command !== "diff" &&
-    command !== "candidate.snapshot" &&
     command !== "approval.record" &&
     command !== "tests.discover" &&
     command !== "findings.validate" &&
@@ -431,7 +396,6 @@ function parseInvocation(
   let count: number | undefined;
   let historyRef: string | undefined;
   let baseRef: string | undefined;
-  let candidateRef: string | undefined;
   let targetRef: string | undefined;
   let traceRef: string | undefined;
   let changedFrom: string | undefined;
@@ -445,7 +409,6 @@ function parseInvocation(
   let proposalMode: ProposalMode | undefined;
   let candidatePath: string | undefined;
   let bundlePath: ProjectPath | undefined;
-  let manifestPath: ProjectPath | undefined;
   let issuer: string | undefined;
   let actor: string | undefined;
   let decision: "approved" | "rejected" | undefined;
@@ -471,7 +434,6 @@ function parseInvocation(
       command === "skill.install" ||
       command === "skill.update" ||
       command === "skill.remove" ||
-      command === "candidate.snapshot" ||
       command === "approval.record" ||
       command === "findings.validate" ||
       command === "merge.check" ||
@@ -497,7 +459,6 @@ function parseInvocation(
       argument === "--count" ||
       argument === "--history-ref" ||
       argument === "--base" ||
-      argument === "--candidate-ref" ||
       argument === "--target" ||
       argument === "--ref" ||
       argument === "--changed-from" ||
@@ -511,7 +472,6 @@ function parseInvocation(
       argument === "--mode" ||
       argument === "--candidate" ||
       argument === "--bundle" ||
-      argument === "--manifest" ||
       argument === "--code-target" ||
       argument === "--package" ||
       argument === "--branch-head" ||
@@ -589,17 +549,6 @@ function parseInvocation(
             ),
           };
         bundlePath = value;
-      } else if (argument === "--manifest") {
-        if (!isProjectPath(value))
-          return {
-            ok: false,
-            diagnostic: cliDiagnostic(
-              "SDD_CANDIDATE_SNAPSHOT_PATH_INVALID",
-              "The candidate snapshot path is not project-relative and portable.",
-              "Select a new manifest path under an ignored directory inside the selected project.",
-            ),
-          };
-        manifestPath = value;
       } else if (
         argument === "--change" ||
         argument === "--input-manifest" ||
@@ -671,17 +620,6 @@ function parseInvocation(
           };
         if (argument === "--branch-head") branchHeadRef = value;
         else integrationRef = value;
-      } else if (argument === "--candidate-ref") {
-        if (value.length === 0 || value.includes("\0"))
-          return {
-            ok: false,
-            diagnostic: cliDiagnostic(
-              "SDD_GIT_REF_INVALID",
-              "The candidate snapshot ref is invalid.",
-              "Supply a non-empty candidate Git ref.",
-            ),
-          };
-        candidateRef = value;
       } else if (argument === "--mode") {
         proposalMode = parseProposalMode(value);
         if (proposalMode === undefined)
@@ -998,7 +936,6 @@ function parseInvocation(
     command !== "diff" &&
     command !== "proposal.validate" &&
     command !== "proposal.materialize" &&
-    command !== "candidate.snapshot" &&
     (baseRef !== undefined || targetRef !== undefined)
   )
     return {
@@ -1027,15 +964,6 @@ function parseInvocation(
         "Use --base with sdd proposal materialize.",
       ),
     };
-  if (command === "candidate.snapshot" && targetRef !== undefined)
-    return {
-      ok: false,
-      diagnostic: cliDiagnostic(
-        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
-        "--target does not apply to candidate snapshot.",
-        "Use --base and --candidate-ref with sdd candidate snapshot.",
-      ),
-    };
   if (command === "diff" && (baseRef === undefined || targetRef === undefined))
     return {
       ok: false,
@@ -1043,36 +971,6 @@ function parseInvocation(
         "SDD_GIT_DIFF_REFS_REQUIRED",
         "diff requires base and target Git refs.",
         "Supply both --base and --target.",
-      ),
-    };
-  if (
-    command === "candidate.snapshot" &&
-    (baseRef === undefined || candidateRef === undefined || manifestPath === undefined)
-  )
-    return {
-      ok: false,
-      diagnostic: cliDiagnostic(
-        "SDD_CANDIDATE_SNAPSHOT_INPUTS_REQUIRED",
-        "candidate snapshot requires base, candidate-ref, and manifest inputs.",
-        "Supply --base, --candidate-ref, and --manifest.",
-      ),
-    };
-  if (command !== "candidate.snapshot" && (candidateRef !== undefined || manifestPath !== undefined))
-    return {
-      ok: false,
-      diagnostic: cliDiagnostic(
-        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
-        "A candidate snapshot option was used with another command.",
-        "Use --candidate-ref and --manifest only with sdd candidate snapshot.",
-      ),
-    };
-  if (command === "candidate.snapshot" && outputPath !== undefined)
-    return {
-      ok: false,
-      diagnostic: cliDiagnostic(
-        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
-        "--output does not apply to candidate snapshot.",
-        "Use --manifest for the exact candidate artifact and read the command response from standard output.",
       ),
     };
   if (
@@ -1104,6 +1002,8 @@ function parseInvocation(
     command !== "proposal.materialize" &&
     command !== "proposal.validate" &&
     command !== "approval.record" &&
+    command !== "proposal.prepare" &&
+    command !== "merge.check" &&
     bundlePath !== undefined
   )
     return {
@@ -1116,28 +1016,25 @@ function parseInvocation(
     };
   if (
     command === "proposal.validate" &&
-    (bundlePath !== undefined || packagePath !== undefined
-      ? (bundlePath === undefined) === (packagePath === undefined) ||
-        baseRef !== undefined ||
-        proposalMode !== undefined ||
-        candidatePath !== undefined ||
-        codeTargets.length > 0
-      : baseRef === undefined || proposalMode === undefined || candidatePath === undefined)
+    (bundlePath === undefined ||
+      packagePath !== undefined ||
+      baseRef !== undefined ||
+      proposalMode !== undefined ||
+      candidatePath !== undefined ||
+      codeTargets.length > 0)
   )
     return {
       ok: false,
       diagnostic: cliDiagnostic(
         "SDD_PROPOSAL_INPUTS_REQUIRED",
-        "proposal validate requires one complete supported input form.",
-        "Supply exactly one of --bundle or --package, or supply --mode, --base, and --candidate.",
+        "proposal validate requires one retained proposal bundle.",
+        "Supply exactly --bundle <project-relative-path>.",
       ),
     };
   if (
     command !== "proposal.validate" &&
     command !== "proposal.materialize" &&
-    command !== "proposal.prepare" &&
     command !== "approval.record" &&
-    command !== "merge.check" &&
     (proposalMode !== undefined || candidatePath !== undefined || codeTargets.length > 0)
   )
     return {
@@ -1150,17 +1047,14 @@ function parseInvocation(
     };
   if (
     command === "proposal.prepare" &&
-    (packagePath === undefined ||
-      candidatePath === undefined ||
-      branchHeadRef === undefined ||
-      integrationRef === undefined)
+    (bundlePath === undefined || branchHeadRef === undefined || integrationRef === undefined)
   )
     return {
       ok: false,
       diagnostic: cliDiagnostic(
         "SDD_PREPARE_INPUTS_REQUIRED",
-        "proposal prepare requires package, candidate, branch-head, and integration-ref inputs.",
-        "Supply --package, --candidate, --branch-head, and --integration-ref.",
+        "proposal prepare requires bundle, branch-head, and integration-ref inputs.",
+        "Supply --bundle, --branch-head, and --integration-ref.",
       ),
     };
   if (
@@ -1175,13 +1069,7 @@ function parseInvocation(
         "Use only preparation inputs with sdd proposal prepare.",
       ),
     };
-  if (
-    command !== "proposal.prepare" &&
-    command !== "approval.record" &&
-    command !== "proposal.validate" &&
-    command !== "merge.check" &&
-    (packagePath !== undefined || approvalPaths.length > 0)
-  )
+  if (packagePath !== undefined)
     return {
       ok: false,
       diagnostic: cliDiagnostic(
@@ -1192,7 +1080,8 @@ function parseInvocation(
     };
   if (
     command === "approval.record" &&
-    ((bundlePath === undefined) === (packagePath === undefined) ||
+    (bundlePath === undefined ||
+      packagePath !== undefined ||
       candidatePath !== undefined ||
       issuer === undefined ||
       actor === undefined ||
@@ -1350,10 +1239,7 @@ function parseInvocation(
   if (
     command === "merge.check" &&
     (changePath === undefined ||
-      packagePath === undefined ||
-      !isProjectPath(packagePath) ||
-      candidatePath === undefined ||
-      !isProjectPath(candidatePath) ||
+      bundlePath === undefined ||
       testIndex === undefined ||
       approvalPaths.length === 0 ||
       testEvidencePaths.length === 0 ||
@@ -1363,7 +1249,7 @@ function parseInvocation(
       ok: false,
       diagnostic: cliDiagnostic(
         "SDD_GATE_INPUTS_REQUIRED",
-        "merge check requires change, package, candidate, approval, TestIndex, test evidence, and QA inputs.",
+        "merge check requires change, bundle, approval, TestIndex, test evidence, and QA inputs.",
         "Supply every required explicit versioned merge input as a project-relative path.",
       ),
     };
@@ -1460,7 +1346,6 @@ function parseInvocation(
       ...(command === "id" ? { count: count ?? 1 } : {}),
       ...(historyRef === undefined ? {} : { historyRef }),
       ...(baseRef === undefined ? {} : { baseRef }),
-      ...(candidateRef === undefined ? {} : { candidateRef }),
       ...(targetRef === undefined ? {} : { targetRef }),
       ...(traceRef === undefined ? {} : { traceRef }),
       ...(changedFrom === undefined ? {} : { changedFrom }),
@@ -1474,7 +1359,6 @@ function parseInvocation(
       ...(proposalMode === undefined ? {} : { proposalMode }),
       ...(candidatePath === undefined ? {} : { candidatePath }),
       ...(bundlePath === undefined ? {} : { bundlePath }),
-      ...(manifestPath === undefined ? {} : { manifestPath }),
       ...(issuer === undefined ? {} : { issuer }),
       ...(actor === undefined ? {} : { actor }),
       ...(decision === undefined ? {} : { decision }),
@@ -1728,16 +1612,6 @@ function humanView(value: CliResponse): string {
       result.deltas.verification === undefined
         ? "verification: unavailable"
         : `verification: ${result.deltas.verification.fingerprint}`,
-    );
-  } else if (value.command === "candidate.snapshot" && value.status === "ok") {
-    const result = value.result as CandidateSnapshotResult;
-    lines.push(
-      `manifest: ${result.manifest_path}`,
-      `base ref: ${result.base_ref}`,
-      `candidate ref: ${result.candidate_ref}`,
-      `base tree: ${result.base_tree_fingerprint}`,
-      `candidate tree: ${result.candidate_tree_fingerprint}`,
-      `files: ${result.file_count}`,
     );
   } else if (value.command === "approval.record" && value.status === "ok") {
     const result = value.result as ApprovalRecordResult;
@@ -2101,51 +1975,6 @@ async function readApprovalReason(
   }
 }
 
-async function revalidateProposalBundle(input: {
-  readonly fileSystem: FileSystem;
-  readonly gitReader: GitReader;
-  readonly project: Parameters<typeof revalidateProposalPackage>[0]["project"];
-  readonly projectRoot: string;
-  readonly bundlePath: ProjectPath;
-}): Promise<Awaited<ReturnType<typeof revalidateProposalPackage>>> {
-  const bundle = resolveConfiguredPath(input.projectRoot, input.bundlePath);
-  const metadata = await input.fileSystem.metadata(bundle);
-  if (metadata.kind !== "directory")
-    throw new ProposalRevalidationError(
-      "SDD_PREPARE_BUNDLE_INVALID",
-      "The retained proposal bundle is not a directory.",
-    );
-  const realRoot = await input.fileSystem.realPath(input.projectRoot);
-  const realBundle = await input.fileSystem.realPath(bundle);
-  const containment = relative(realRoot, realBundle);
-  if (containment === ".." || containment.startsWith(`..${sep}`))
-    throw new ProposalRevalidationError(
-      "SDD_PREPARE_BUNDLE_INVALID",
-      "The retained proposal bundle escapes the project.",
-    );
-  const packagePath = resolve(bundle, "proposal-package.json");
-  const packageBytes = await input.fileSystem.readFile(packagePath);
-  const packageValue = await importProposalPackage(input.fileSystem, packagePath);
-  const candidatePath = packageValue.candidate.source === "base" ? undefined : resolve(bundle, "candidate-tree.json");
-  const result = await revalidateProposalPackage({
-    fileSystem: input.fileSystem,
-    gitReader: input.gitReader,
-    project: input.project,
-    package: packageValue,
-    ...(candidatePath === undefined ? {} : { candidatePath }),
-  });
-  const currentPackageBytes = await input.fileSystem.readFile(packagePath);
-  if (
-    packageBytes.byteLength !== currentPackageBytes.byteLength ||
-    packageBytes.some((byte, index) => byte !== currentPackageBytes[index])
-  )
-    throw new ProposalRevalidationError(
-      "SDD_PREPARE_BUNDLE_CHANGED",
-      "The retained proposal bundle changed during revalidation.",
-    );
-  return result;
-}
-
 async function ensureApprovalTargetIgnored(
   processRunner: ProcessRunner,
   projectRoot: string,
@@ -2199,23 +2028,21 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
       ? `skill.${runtime.argv[1]}`
       : runtime.argv[0] === "tests" && runtime.argv[1] === "discover"
         ? "tests.discover"
-        : runtime.argv[0] === "candidate" && runtime.argv[1] === "snapshot"
-          ? "candidate.snapshot"
-          : runtime.argv[0] === "findings" && runtime.argv[1] === "validate"
-            ? "findings.validate"
-            : runtime.argv[0] === "merge" && runtime.argv[1] === "check"
-              ? "merge.check"
-              : runtime.argv[0] === "proposal" &&
-                  (runtime.argv[1] === "validate" || runtime.argv[1] === "prepare" || runtime.argv[1] === "apply")
-                ? `proposal.${runtime.argv[1]}`
-                : runtime.argv[0] === "init" ||
-                    runtime.argv[0] === "id" ||
-                    runtime.argv[0] === "inspect" ||
-                    runtime.argv[0] === "trace" ||
-                    runtime.argv[0] === "diff" ||
-                    runtime.argv[0] === "validate"
-                  ? runtime.argv[0]
-                  : "unknown";
+        : runtime.argv[0] === "findings" && runtime.argv[1] === "validate"
+          ? "findings.validate"
+          : runtime.argv[0] === "merge" && runtime.argv[1] === "check"
+            ? "merge.check"
+            : runtime.argv[0] === "proposal" &&
+                (runtime.argv[1] === "validate" || runtime.argv[1] === "prepare" || runtime.argv[1] === "apply")
+              ? `proposal.${runtime.argv[1]}`
+              : runtime.argv[0] === "init" ||
+                  runtime.argv[0] === "id" ||
+                  runtime.argv[0] === "inspect" ||
+                  runtime.argv[0] === "trace" ||
+                  runtime.argv[0] === "diff" ||
+                  runtime.argv[0] === "validate"
+                ? runtime.argv[0]
+                : "unknown";
   const inferredFormat: OutputFormat = runtime.argv.some(
     (argument, index) => argument === "--format" && runtime.argv[index + 1] === "json",
   )
@@ -2454,136 +2281,10 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
       return TECHNICAL_FAILURE_EXIT_CODE;
     }
     const outputTarget = selectedOutput?.target;
-    if (invocation.command === "candidate.snapshot") {
-      try {
-        if (
-          invocation.baseRef === undefined ||
-          invocation.candidateRef === undefined ||
-          invocation.manifestPath === undefined
-        ) {
-          throw new Error("Parsed candidate snapshot invocation is missing required inputs.");
-        }
-        if (
-          invocation.manifestPath === project.configuration.spec.root ||
-          invocation.manifestPath.startsWith(`${project.configuration.spec.root}/`)
-        ) {
-          emit(
-            runtime,
-            invocation.format,
-            response("candidate.snapshot", project.configuration.project_id, "error", null, [
-              cliDiagnostic(
-                "SDD_CANDIDATE_SNAPSHOT_TARGET_IN_SPEC",
-                "The candidate snapshot target is inside the governed specification tree.",
-                "Select an ignored staging path outside the configured specification root.",
-              ),
-            ]),
-          );
-          return TECHNICAL_FAILURE_EXIT_CODE;
-        }
-        const selectedManifest = await resolveSafeOutputTarget(
-          runtime.fileSystem,
-          project.project_root,
-          invocation.manifestPath,
-        );
-        if (!selectedManifest.ok) {
-          emit(
-            runtime,
-            invocation.format,
-            response("candidate.snapshot", project.configuration.project_id, "error", null, [
-              selectedManifest.diagnostic,
-            ]),
-          );
-          return TECHNICAL_FAILURE_EXIT_CODE;
-        }
-        const ignored = await runtime.processRunner.run({
-          executable: "git",
-          arguments: ["check-ignore", "--quiet", "--", invocation.manifestPath],
-          workingDirectory: project.project_root,
-          environment: { GIT_OPTIONAL_LOCKS: "0", LC_ALL: "C" },
-          timeoutMilliseconds: 30_000,
-          maxOutputBytes: 1024 * 1024,
-        });
-        if (ignored.exitCode === 1) {
-          emit(
-            runtime,
-            invocation.format,
-            response("candidate.snapshot", project.configuration.project_id, "error", null, [
-              cliDiagnostic(
-                "SDD_CANDIDATE_SNAPSHOT_TARGET_NOT_IGNORED",
-                "The candidate snapshot target is not ignored by Git.",
-                "Establish an ignored project-local staging path before retaining candidate bytes.",
-              ),
-            ]),
-          );
-          return TECHNICAL_FAILURE_EXIT_CODE;
-        }
-        if (ignored.exitCode !== 0)
-          throw new GitReadError("GIT_COMMAND_FAILED", "Git could not validate the candidate staging path.");
-        const reader = await discoverProcessGitReader(runtime.processRunner, project.project_root);
-        const [baseRef, candidateRef] = await Promise.all([
-          reader.resolveRevision(invocation.baseRef),
-          reader.resolveRevision(invocation.candidateRef),
-        ]);
-        const [base, candidate] = await Promise.all([
-          loadBaseSpecificationTree(reader, baseRef, project),
-          loadBaseSpecificationTree(reader, candidateRef, project),
-        ]);
-        const manifest: CandidateTreeManifest = createCandidateTreeManifest({
-          projectId: project.configuration.project_id,
-          base,
-          candidate,
-        });
-        await runtime.projectWriter.writeFileExclusive(
-          selectedManifest.target,
-          serializeCandidateTreeManifest(manifest),
-        );
-        const result: CandidateSnapshotResult = {
-          manifest_path: invocation.manifestPath,
-          base_ref: baseRef,
-          candidate_ref: candidateRef,
-          base_tree_fingerprint: base.fingerprint,
-          candidate_tree_fingerprint: candidate.fingerprint,
-          file_count: candidate.files.length,
-        };
-        emit(
-          runtime,
-          invocation.format,
-          response("candidate.snapshot", project.configuration.project_id, "ok", result, []),
-        );
-        return VALID_EXIT_CODE;
-      } catch (error) {
-        const diagnostic =
-          error instanceof ProposalInputError
-            ? cliDiagnostic(
-                error.code,
-                error.message,
-                "Select refs containing the same valid SDD Project and specification contract.",
-              )
-            : error instanceof GitReadError
-              ? comparisonTechnicalDiagnostic(error)
-              : typeof error === "object" && error !== null && "code" in error && error.code === "EEXIST"
-                ? cliDiagnostic(
-                    "SDD_CANDIDATE_SNAPSHOT_TARGET_EXISTS",
-                    "The candidate snapshot target already exists.",
-                    "Select a new manifest path so retained immutable bytes are not replaced.",
-                  )
-                : cliDiagnostic(
-                    "SDD_CANDIDATE_SNAPSHOT_WRITE_FAILED",
-                    "The candidate snapshot could not be written safely.",
-                    "Correct the staging path or filesystem failure and run the command again.",
-                  );
-        emit(
-          runtime,
-          invocation.format,
-          response("candidate.snapshot", project.configuration.project_id, "error", null, [diagnostic]),
-        );
-        return TECHNICAL_FAILURE_EXIT_CODE;
-      }
-    }
     if (invocation.command === "approval.record") {
       try {
         if (
-          (invocation.bundlePath === undefined && invocation.packagePath === undefined) ||
+          invocation.bundlePath === undefined ||
           invocation.issuer === undefined ||
           invocation.actor === undefined ||
           invocation.decision === undefined ||
@@ -2611,24 +2312,13 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
           readApprovalReason(runtime.fileSystem, project.project_root, invocation.reasonPath),
           discoverProcessGitReader(runtime.processRunner, project.project_root),
         ]);
-        const revalidated =
-          invocation.bundlePath !== undefined
-            ? await revalidateProposalBundle({
-                fileSystem: runtime.fileSystem,
-                gitReader: reader,
-                project,
-                projectRoot: project.project_root,
-                bundlePath: invocation.bundlePath,
-              })
-            : await revalidateProposalPackage({
-                fileSystem: runtime.fileSystem,
-                gitReader: reader,
-                project,
-                package: await importProposalPackage(
-                  runtime.fileSystem,
-                  resolve(runtime.workingDirectory, invocation.packagePath!),
-                ),
-              });
+        const revalidated = await revalidateProposalBundle({
+          fileSystem: runtime.fileSystem,
+          gitReader: reader,
+          project,
+          projectRoot: project.project_root,
+          bundlePath: invocation.bundlePath,
+        });
         const cliIdentity = loadCliCompatibilityIdentity().cli;
         const evidence = createApprovalEvidence({
           projectId: project.configuration.project_id,
@@ -2777,29 +2467,14 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
       try {
         if (
           invocation.changePath === undefined ||
-          invocation.packagePath === undefined ||
-          !isProjectPath(invocation.packagePath) ||
-          invocation.candidatePath === undefined ||
-          !isProjectPath(invocation.candidatePath) ||
+          invocation.bundlePath === undefined ||
           invocation.testIndex === undefined
         ) {
           throw new Error("Parsed merge check invocation is missing required inputs.");
         }
-        const candidatePath = await resolveProjectCandidatePath(
-          runtime.fileSystem,
-          project.project_root,
-          invocation.candidatePath,
-        );
-        const [reader, change, packageValue, approvals, testIndexValue, testExecution, qa] = await Promise.all([
+        const [reader, change, approvals, testIndexValue, testExecution, qa] = await Promise.all([
           discoverProcessGitReader(runtime.processRunner, project.project_root),
           importChangeDescriptorFile(runtime.fileSystem, project.project_root, invocation.changePath),
-          importProjectJsonArtifact(
-            runtime.fileSystem,
-            project.project_root,
-            invocation.packagePath,
-            parseProposalPackage,
-            16 * 1024 * 1024,
-          ),
           Promise.all(
             invocation.approvalPaths.map((path) =>
               importApprovalEvidenceFile(runtime.fileSystem, project.project_root, path, CLI_EVIDENCE_LIMITS),
@@ -2858,8 +2533,7 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
           gitReader: reader,
           project,
           change: { artifact: change, source: invocation.changePath },
-          package: { artifact: packageValue, source: invocation.packagePath },
-          candidatePath,
+          bundlePath: invocation.bundlePath,
           branch_head_ref: change.proposal_ref,
           integration_ref: change.integration_ref,
           approvals: approvals.map((artifact, index) => ({ artifact, source: invocation.approvalPaths[index]! })),
@@ -3089,15 +2763,13 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
     if (invocation.command === "proposal.prepare") {
       try {
         if (
-          invocation.packagePath === undefined ||
-          invocation.candidatePath === undefined ||
+          invocation.bundlePath === undefined ||
           invocation.branchHeadRef === undefined ||
           invocation.integrationRef === undefined
         )
           throw new Error("Parsed proposal preparation invocation is missing required inputs.");
         const reader = await discoverProcessGitReader(runtime.processRunner, project.project_root);
-        const [packageValue, branchHead, integrationRef, approvalEvidence] = await Promise.all([
-          importProposalPackage(runtime.fileSystem, resolve(runtime.workingDirectory, invocation.packagePath)),
+        const [branchHead, integrationRef, approvalEvidence] = await Promise.all([
           reader.resolveRevision(invocation.branchHeadRef),
           reader.resolveRevision(invocation.integrationRef),
           Promise.all(
@@ -3110,8 +2782,7 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
           fileSystem: runtime.fileSystem,
           gitReader: reader,
           project,
-          package: packageValue,
-          candidatePath: resolve(runtime.workingDirectory, invocation.candidatePath),
+          bundlePath: invocation.bundlePath,
           branchHead,
           integrationRef,
           approvalEvidence,
@@ -3222,49 +2893,7 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
           );
           return VALID_EXIT_CODE;
         }
-        if (invocation.packagePath !== undefined) {
-          const packageValue = await importProposalPackage(
-            runtime.fileSystem,
-            resolve(runtime.workingDirectory, invocation.packagePath),
-          );
-          const retained = await revalidateProposalPackage({
-            fileSystem: runtime.fileSystem,
-            gitReader: reader,
-            project,
-            package: packageValue,
-          });
-          emit(
-            runtime,
-            invocation.format,
-            response("proposal.validate", project.configuration.project_id, "ok", retained.package, []),
-            outputTarget,
-          );
-          return VALID_EXIT_CODE;
-        }
-        if (
-          invocation.baseRef === undefined ||
-          invocation.proposalMode === undefined ||
-          invocation.candidatePath === undefined
-        ) {
-          throw new Error("Parsed proposal invocation is missing required inputs.");
-        }
-        const baseRef = await reader.resolveRevision(invocation.baseRef);
-        const result = await validateProposal({
-          fileSystem: runtime.fileSystem,
-          gitReader: reader,
-          project,
-          baseRef,
-          candidatePath: resolve(runtime.workingDirectory, invocation.candidatePath),
-          mode: invocation.proposalMode,
-          codeTargets: invocation.codeTargets,
-        });
-        emit(
-          runtime,
-          invocation.format,
-          response("proposal.validate", project.configuration.project_id, "ok", result, []),
-          outputTarget,
-        );
-        return VALID_EXIT_CODE;
+        throw new Error("Parsed proposal validation invocation is missing its retained bundle.");
       } catch (error) {
         if (error instanceof ProposalValidationError) {
           emit(

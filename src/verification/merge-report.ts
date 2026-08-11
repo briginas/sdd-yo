@@ -14,7 +14,7 @@ import { isFingerprint } from "../contracts/identifiers.ts";
 import { buildCanonicalHistoryIndex, loadCanonicalProjectGraphAt } from "../ids/history-index.ts";
 import type { FileSystem } from "../platform/filesystem.ts";
 import type { GitReader } from "../platform/git-reader.ts";
-import { parseProposalPackage } from "../proposal/package-input.ts";
+import { revalidateProposalBundle } from "../proposal/proposal-bundle.ts";
 import { prepareApprovedProposal } from "../proposal/prepare-proposal.ts";
 import type { PreparationGateIssue } from "../proposal/prepare-proposal.ts";
 import type { ProposalPackage } from "../proposal/validate-proposal.ts";
@@ -173,8 +173,7 @@ export async function runMergeGate(input: {
   readonly gitReader: GitReader;
   readonly project: ResolvedProject;
   readonly change?: VersionedMergeInput<ChangeDescriptor>;
-  readonly package: VersionedMergeInput<unknown>;
-  readonly candidatePath: string;
+  readonly bundlePath: ProjectPath;
   readonly branch_head_ref: string;
   readonly integration_ref: string;
   readonly approvals: readonly VersionedMergeInput<ApprovalEvidence>[];
@@ -192,7 +191,18 @@ export async function runMergeGate(input: {
   };
   readonly current_adapter_fingerprints: Readonly<Record<string, Fingerprint>>;
 }): Promise<MergeReport> {
-  const packageValue = parseProposalPackage(input.package.artifact);
+  const revalidated = await revalidateProposalBundle({
+    fileSystem: input.fileSystem,
+    gitReader: input.gitReader,
+    project: input.project,
+    projectRoot: input.project.project_root,
+    bundlePath: input.bundlePath,
+  });
+  const packageValue = revalidated.package;
+  const packageInput: VersionedMergeInput<ProposalPackage> = {
+    artifact: packageValue,
+    source: `${input.bundlePath}/proposal-package.json` as ProjectPath,
+  };
   const changeMismatch =
     input.change !== undefined &&
     (() => {
@@ -236,8 +246,7 @@ export async function runMergeGate(input: {
     fileSystem: input.fileSystem,
     gitReader: input.gitReader,
     project: input.project,
-    package: packageValue,
-    candidatePath: input.candidatePath,
+    bundlePath: input.bundlePath,
     branchHead,
     integrationRef,
     approvalEvidence: input.approvals.map((item) => item.artifact),
@@ -380,7 +389,7 @@ export async function runMergeGate(input: {
     verification.affected_requirements.length > 0 || verification.affected_capabilities.length > 0;
   const allInputs: VersionedMergeInput<{ readonly artifact_type: string }>[] = [
     ...(input.change === undefined ? [] : [input.change]),
-    input.package as VersionedMergeInput<{ readonly artifact_type: string }>,
+    packageInput as VersionedMergeInput<{ readonly artifact_type: string }>,
     ...input.approvals,
     ...input.governance,
     ...(input.test_index === undefined ? [] : [input.test_index]),

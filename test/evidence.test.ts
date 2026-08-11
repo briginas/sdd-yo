@@ -351,9 +351,17 @@ function approvalEvidence(): ApprovalEvidence {
     decision: "approved",
     mode: "spec-code",
     subject: {
-      base_ref: input.integrationRef,
-      semantic_delta_fingerprint: input.adapterFingerprint,
-      structural_delta_fingerprint: input.scopeFingerprint,
+      base: { git_ref: input.integrationRef, tree_fingerprint: input.configFingerprint },
+      candidate: { source: "manifest", tree_fingerprint: input.scopeFingerprint },
+      object_delta: {
+        semantic_fingerprint: input.adapterFingerprint,
+        structural_fingerprint: input.scopeFingerprint,
+        added: [],
+        modified: [],
+        deleted: [],
+      },
+      code_targets: [],
+      affected_scope: { fingerprint: input.scopeFingerprint, requirements: [], capabilities: [] },
     },
   };
 }
@@ -363,9 +371,7 @@ function assessApproval(evidence: readonly ApprovalEvidence[]) {
   return assessApprovalEvidence({
     project_id: input.projectId,
     mode: "spec-code",
-    base_ref: input.integrationRef,
-    semantic_delta_fingerprint: input.adapterFingerprint,
-    structural_delta_fingerprint: input.scopeFingerprint,
+    subject: approvalEvidence().subject,
     evidence,
   });
 }
@@ -473,7 +479,10 @@ test("REQ-7341DBB7 REQ-AFD65A03 REQ-E85A06C3 assesses exact current ApprovalEvid
     assessApproval([
       {
         ...current,
-        subject: { ...current.subject, semantic_delta_fingerprint: values().configFingerprint },
+        subject: {
+          ...current.subject,
+          object_delta: { ...current.subject.object_delta, semantic_fingerprint: values().configFingerprint },
+        },
       },
     ]).state,
     "stale",

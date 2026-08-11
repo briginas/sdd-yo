@@ -179,17 +179,11 @@ was created.
 
 ## Proposal validation and approval subject result
 
-Milestone 7.1e built the current local SDD Yo CLI and mechanically validated
-the committed `yo` baseline candidate with:
-
-```text
-node /Users/dev.briginas/dev/sdd-yo/dist/bin/sdd.js proposal validate \
-  --cwd /Users/dev.briginas/dev/yo \
-  --mode spec \
-  --base 84133ed37f470040aa829bef393197697934fa9e \
-  --candidate /Users/dev.briginas/dev/yo \
-  --format json
-```
+Milestone 7.1e mechanically validated the committed `yo` baseline candidate.
+Its recorded raw `proposal validate` invocation predates the final 0.5.0
+contract and is retained only as historical evidence. A current replay first
+materializes an ignored proposal bundle from the authored candidate, then
+validates that bundle; raw candidate validation is no longer supported.
 
 The base is the committed initialized empty SDD Project. The candidate is the
 clean `yo` worktree at
@@ -323,15 +317,17 @@ Milestone 7.1i revalidated and retained the exact baseline inputs inside the
   structural delta fingerprints;
 - `evidence/proposals/7.1i-baseline-proposal.json` retains the exact 7.1e
   ProposalPackage;
-- `evidence/candidates/7.1i-baseline-candidate.tar` retains the exact
-  `.sdd/config.yaml` and specification bytes archived from the bound proposal
-  commit; the gate used those bytes in a temporary extracted directory;
+- `evidence/candidates/7.1i-baseline-candidate.tar` is a historical retained
+  candidate record. The final 0.5.0 workflow replaces this archive/extraction
+  route with a proposal bundle whose embedded CandidateTreeManifest has no
+  `.sdd/config.yaml`;
 - `evidence/reports/7.1i-baseline-merge.json` retains the deterministic JSON
   CLI response and MergeReport.
 
-The exact `merge check` invocation composed those inputs with the retained
+The historical `merge check` invocation composed those inputs with the retained
 7.1f ApprovalEvidence, 7.1g TestIndex and TestExecutionEvidence, and 7.1h
-QAEvidence. Two stdout runs each exited 1 and produced byte-identical
+QAEvidence. Final 0.5.0 merge assessment instead consumes one retained proposal
+bundle. Two stdout runs each exited 1 and produced byte-identical
 6,600-character JSON responses with final status `BLOCKED`. The report bound
 integration commit `4e851106eb446c82a85684d38912b84e77cb8f89`, branch head and merge base
 `b446b0d6a98cc2b87b63aa3d0d6c63cc78a179fa`, and all six explicit artifact
@@ -387,17 +383,13 @@ comprehension problem and compare it across the remaining dogfood studies.
 
 ### OBS-YO-006 — A retained directory candidate becomes a nested SDD Project
 
-`merge check` accepts only a portable project-relative candidate path, and a
-directory candidate must contain its `.sdd/config.yaml` as well as its
-specification tree. Retaining that complete directory under `yo/evidence/`
-made normal project discovery see a second current SDD Project with the same
-`SDD-4A2395B6` identity; `sdd validate` correctly returned
-`SDD_ID_PROJECT_DUPLICATE`. The exact Git-derived bytes were therefore retained
-as `7.1i-baseline-candidate.tar`, while the gate used a temporary extracted
-directory that was removed from the project after assessment. This preserves
-reproducibility and a valid project worktree, but requires a manual extraction
-step that the version 1 candidate input and report manifest do not describe. No
-discovery or candidate contract was changed in 7.1i.
+The historical workflow retained a complete directory and then an archive
+because its merge command required a candidate path. That made project
+discovery see a second `SDD-4A2395B6` project and correctly return
+`SDD_ID_PROJECT_DUPLICATE`. Final 0.5.0 resolves the problem with one proposal
+bundle: its fixed embedded CandidateTreeManifest contains specification files
+only, while approval, preparation, and merge check consume the bundle rather
+than a candidate path. No archive extraction or nested project is involved.
 
 ## Initialization result
 

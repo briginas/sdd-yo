@@ -4,6 +4,7 @@
   "contract_id": "artifact.approval-evidence",
   "schema": "../../../../../contracts/v1/schemas/approval-evidence.schema.json",
   "requirements": [
+    "REQ-32C76ED3",
     "REQ-7341DBB7",
     "REQ-220945C2",
     "REQ-E85A06C3"
@@ -15,27 +16,30 @@
         "case": "minimal-valid.json",
         "subject": {
           "mode": "spec",
-          "base_ref": "base-commit",
+          "base": "base-commit",
+          "candidate_tree_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
           "semantic_delta_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-          "structural_delta_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+          "code_targets": []
         }
       },
       {
         "case": "maximally-representative-valid.json",
         "subject": {
           "mode": "spec-code",
-          "base_ref": "4f88abc",
+          "base": "4f88abc",
+          "candidate_tree_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
           "semantic_delta_fingerprint": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
-          "structural_delta_fingerprint": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+          "code_targets": []
         }
       },
       {
         "case": "schema-boundary-valid.json",
         "subject": {
           "mode": "spec",
-          "base_ref": "base-commit",
+          "base": "base-commit",
+          "candidate_tree_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
           "semantic_delta_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-          "structural_delta_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+          "code_targets": []
         }
       }
     ]

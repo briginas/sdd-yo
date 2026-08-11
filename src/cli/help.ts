@@ -51,11 +51,6 @@ export const CLI_HELP_ENTRIES: readonly CliHelpEntry[] = [
     summary: "Compare deterministic specification and optional verification deltas.",
   },
   {
-    path: "candidate snapshot",
-    usage: "sdd candidate snapshot --base <git-ref> --candidate-ref <git-ref> --manifest <project-relative-path>",
-    summary: "Create an immutable candidate-tree manifest in an ignored staging path.",
-  },
-  {
     path: "approval record",
     usage:
       "sdd approval record --bundle <project-relative-path> --issuer <name> --actor <identity> --decision approved|rejected --reason <project-relative-path> --evidence <project-relative-path>",
@@ -75,7 +70,7 @@ export const CLI_HELP_ENTRIES: readonly CliHelpEntry[] = [
   {
     path: "merge check",
     usage:
-      "sdd merge check --change <path> --package <path> --candidate <path> --approval <path> --test-index <path> --test-evidence <path> ... --qa <path> ... [semantic-review options]",
+      "sdd merge check --change <path> --bundle <project-relative-path> --approval <path> --test-index <path> --test-evidence <path> ... --qa <path> ... [semantic-review options]",
     summary: "Evaluate governed-scope merge readiness without modifying Git.",
   },
   {
@@ -92,7 +87,7 @@ export const CLI_HELP_ENTRIES: readonly CliHelpEntry[] = [
   {
     path: "proposal prepare",
     usage:
-      "sdd proposal prepare --package <path> --candidate <path> --branch-head <git-ref> --integration-ref <git-ref> [--approval <project-relative-path> ...]",
+      "sdd proposal prepare --bundle <project-relative-path> --branch-head <git-ref> --integration-ref <git-ref> [--approval <project-relative-path> ...]",
     summary: "Prepare a ConflictReport and exact SpecPatch without writing the worktree.",
   },
   {

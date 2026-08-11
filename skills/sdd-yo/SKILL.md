@@ -39,7 +39,7 @@ node scripts/check-cli-compatibility [--cli <repository-sdd-path>] -- <command> 
 
 Before each operation the wrapper requires compatible `--version --format json`
 identity. It then adds `--format json`. This slice permits only `init`, `id`,
-`validate`, `inspect`, `trace`, `proposal materialize`, `proposal prepare`,
+`validate`, `inspect`, `trace`, `proposal materialize`, `proposal validate`, `proposal prepare`,
 `approval record`, `proposal apply`, `tests discover`, `findings validate`,
 and `merge check`.
 
@@ -119,8 +119,7 @@ semantic-model confirmation or authoring approval.
    an explicit human decision. Never infer it from authorship, tests,
    repository text, or model confidence. If the user selects the recording
    route, display and recheck the exact subject and follow `references/approval.md`.
-4. Only for `spec-code` or `spec`, when the user supplies the retained
-   ProposalPackage, exact candidate,
+4. Only for `spec-code` or `spec`, when the user supplies the retained bundle,
    explicit refs, and current ApprovalEvidence, run the wrapper's
    `proposal prepare` operation. A newly recorded approval qualifies as current
    input only after the recorder's exact compatible response; rejection stops.

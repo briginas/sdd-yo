@@ -145,21 +145,17 @@ evidence subject. A Requirement-named regression reproduces the original
 integration-advance condition and confirms the overall report remains
 `BLOCKED` while its zero-object summaries no longer imply verification.
 
-### 7.4c resolution — Git-ref candidate snapshot manifest
+### 7.4c resolution — retained proposal bundle
 
-Milestone 7.4c resolves the reproducibility problem in `OBS-YO-006` with
-`sdd candidate snapshot`. The command resolves explicit base and candidate Git
-refs, reads the same selected SDD Project from both trees, and creates an exact
-CandidateTreeManifest at a new Git-ignored project-relative staging path. The
-retained manifest contains only the configured specification files, so it can
-be passed directly to proposal preparation or merge assessment without
-retaining a second `.sdd/config.yaml` or extracting a tar archive.
-
-The output path must already have a safe in-project parent, cannot traverse a
-symbolic link, and is created exclusively so an existing retained value is not
-replaced. The command neither adds archive support nor manages the external
-durable store; the invoker still exports and later materializes the exact
-manifest bytes under the retention topology established in 7.4a.
+The historical Git-ref snapshot route is retired in the final 0.5.0 workflow.
+For a `spec-code` or `spec` proposal, `proposal materialize` converts the
+authored candidate into a new ignored proposal bundle. Its fixed
+`candidate-tree.json` member is the CandidateTreeManifest and its fixed
+`proposal-package.json` member is the exact validated ProposalPackage.
+Approval, preparation, and merge assessment consume that bundle only; they do
+not accept a raw manifest, candidate directory, or archive. The embedded
+manifest contains no `.sdd/config.yaml`, preventing a retained proposal from
+becoming a nested SDD Project.
 
 ### 7.4d resolution — Producer-neutral onboarding recovery
 

@@ -8,7 +8,7 @@
     "tree_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
   },
   "candidate": {
-    "source": "archive",
+    "source": "manifest",
     "tree_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
   },
   "object_delta": {

@@ -6,8 +6,26 @@
   "decision": "approved",
   "mode": "spec",
   "subject": {
-    "base_ref": "base-commit",
-    "semantic_delta_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-    "structural_delta_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+    "base": {
+      "git_ref": "base-commit",
+      "tree_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "candidate": {
+      "source": "manifest",
+      "tree_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    "object_delta": {
+      "semantic_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "structural_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "added": [],
+      "modified": [],
+      "deleted": []
+    },
+    "code_targets": [],
+    "affected_scope": {
+      "fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "requirements": [],
+      "capabilities": []
+    }
   }
 }

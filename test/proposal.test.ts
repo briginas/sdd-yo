@@ -1,582 +1,79 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
-import { execFile } from "node:child_process";
-import { cp, mkdir, mkdtemp, readFile, symlink, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { promisify } from "node:util";
 import test from "node:test";
 
 import { runCli } from "../src/cli/run-cli.ts";
-import type { Fingerprint, ProjectId, ProjectPath } from "../src/contracts/identifiers.ts";
-import { parseProposalPackage } from "../src/proposal/package-input.ts";
-import {
-  fingerprintSpecificationTree,
-  ProposalInputError,
-  serializeCandidateTreeManifest,
-} from "../src/proposal/specification-tree.ts";
-import type { CandidateTreeManifest } from "../src/proposal/specification-tree.ts";
 import { nodeFileSystem } from "../src/platform/node-filesystem.ts";
 import { nodeProcessRunner } from "../src/platform/node-process-runner.ts";
 import { nodeProjectWriter } from "../src/platform/node-project-writer.ts";
 import { nodeRandomness } from "../src/platform/node-randomness.ts";
 
-const executeFile = promisify(execFile);
-
-async function execute(argv: readonly string[], cwd: string) {
+async function execute(argv: readonly string[]) {
   const standardOutput: string[] = [];
-  const standardError: string[] = [];
   const exitCode = await runCli({
     argv,
-    workingDirectory: cwd,
+    workingDirectory: process.cwd(),
     fileSystem: nodeFileSystem,
     projectWriter: nodeProjectWriter,
     randomness: nodeRandomness,
     processRunner: nodeProcessRunner,
     writeStandardOutput: (message) => standardOutput.push(message),
-    writeStandardError: (message) => standardError.push(message),
+    writeStandardError: () => {},
     writeOutputFile: () => {
-      throw new Error("Unexpected output write.");
+      throw new Error("Unexpected output-file write.");
     },
   });
-  return { exitCode, standardOutput: standardOutput.join(""), standardError: standardError.join("") };
+  return { exitCode, value: JSON.parse(standardOutput.join("")) as any };
 }
 
-async function repository(): Promise<{ root: string; base: string; projectId: string }> {
-  const root = await mkdtemp(join(tmpdir(), "sdd-proposal-"));
-  await executeFile("git", ["init", "--quiet", "--initial-branch", "main"], { cwd: root });
-  await executeFile("git", ["config", "user.name", "SDD Test"], { cwd: root });
-  await executeFile("git", ["config", "user.email", "sdd@example.invalid"], { cwd: root });
-  const initialized = await execute(["init", "--format", "json"], root);
-  const projectId = (JSON.parse(initialized.standardOutput) as { project_id: string }).project_id;
-  const index = `---\nsdd:\n  type: index\n---\n# Proposal test\n\n## Capabilities <!-- sdd:capabilities -->\n\n- [CAP-A1000001 — Delivery](capabilities/delivery.md)\n\n## Domain concepts <!-- sdd:concepts -->\n`;
-  const capability = `---\nsdd:\n  type: capability\n  id: CAP-A1000001\n---\n\n# Delivery\n\n## Purpose <!-- sdd:purpose -->\n\nDeliver one item.\n\n<a id="req-a1000001"></a>\n\n## REQ-A1000001 — Deliver item\n\n\`\`\`sdd\nkind: behavior\nverification: automated\n\`\`\`\n\n### Relations <!-- sdd:relations -->\n\n### Statement <!-- sdd:statement -->\n\nThe system shall deliver one item.\n\n### Acceptance criteria <!-- sdd:acceptance -->\n\n- Delivery is observable.\n`;
-  await writeFile(join(root, "spec/README.md"), index);
-  await writeFile(join(root, "spec/capabilities/delivery.md"), capability);
-  await executeFile("git", ["add", ".sdd/config.yaml", "spec"], { cwd: root });
-  await executeFile("git", ["commit", "--quiet", "-m", "base"], { cwd: root });
-  const base = (await executeFile("git", ["rev-parse", "HEAD"], { cwd: root })).stdout.trim();
-  return { root, base, projectId };
-}
-
-test("REQ-8DE9E078 specification-tree fingerprint hashes sorted project paths and exact UTF-8 bytes", () => {
-  const files = [
-    { path: "spec/z.md" as ProjectPath, sha256: `sha256:${"2".repeat(64)}` as Fingerprint, content_utf8: "ignored" },
-    {
-      path: "spec/\u{10000}.md" as ProjectPath,
-      sha256: `sha256:${"3".repeat(64)}` as Fingerprint,
-      content_utf8: "ignored astral",
-    },
-    {
-      path: "spec/\u{e000}.md" as ProjectPath,
-      sha256: `sha256:${"4".repeat(64)}` as Fingerprint,
-      content_utf8: "ignored private use",
-    },
-    {
-      path: "spec/a.md" as ProjectPath,
-      sha256: `sha256:${"1".repeat(64)}` as Fingerprint,
-      content_utf8: "ignored too",
-    },
-  ];
-  const canonical = JSON.stringify({
-    canonicalization_version: "1",
-    files: [
-      { path: "spec/a.md", sha256: `sha256:${"1".repeat(64)}` },
-      { path: "spec/z.md", sha256: `sha256:${"2".repeat(64)}` },
-      { path: "spec/\u{e000}.md", sha256: `sha256:${"4".repeat(64)}` },
-      { path: "spec/\u{10000}.md", sha256: `sha256:${"3".repeat(64)}` },
-    ],
-  });
-  assert.equal(fingerprintSpecificationTree(files), `sha256:${createHash("sha256").update(canonical).digest("hex")}`);
-});
-
-test("REQ-A3C3B779 candidate snapshot cannot exceed the manifest consumer byte limit", () => {
-  const manifest: CandidateTreeManifest = {
-    schema_version: "1.0",
-    artifact_type: "candidate_tree_manifest",
-    project_id: "SDD-A1000001" as ProjectId,
-    base_tree_fingerprint: `sha256:${"0".repeat(64)}` as Fingerprint,
-    files: [
-      {
-        path: "spec/README.md" as ProjectPath,
-        sha256: `sha256:${"1".repeat(64)}` as Fingerprint,
-        content_utf8: "x".repeat(16 * 1024 * 1024),
-      },
-    ],
-  };
-  assert.throws(
-    () => serializeCandidateTreeManifest(manifest),
-    (error: unknown) => error instanceof ProposalInputError && error.code === "SDD_PROPOSAL_CANDIDATE_LIMIT_EXCEEDED",
-  );
-});
-
-test("REQ-E26A859E REQ-8DE9E078 REQ-E80F09C6 REQ-18F84CE2 proposal validate deterministically emits directory and manifest packages without writes", async () => {
-  const { root, base, projectId } = await repository();
-  const candidate = await mkdtemp(join(tmpdir(), "sdd-proposal-candidate-"));
-  await cp(join(root, ".sdd"), join(candidate, ".sdd"), { recursive: true });
-  await cp(join(root, "spec"), join(candidate, "spec"), { recursive: true });
-  const capabilityPath = join(candidate, "spec/capabilities/delivery.md");
-  await writeFile(
-    capabilityPath,
-    (await readFile(capabilityPath, "utf8")).replace("deliver one item.", "deliver each item exactly once."),
-  );
-  const before = await executeFile("git", ["status", "--porcelain=v1"], { cwd: root });
-  const argv = [
-    "proposal",
-    "validate",
-    "--mode",
-    "spec-code",
+test("REQ-A3C3B779 candidate snapshot command and options are no longer supported", async () => {
+  const command = await execute([
+    "candidate",
+    "snapshot",
     "--base",
-    base,
-    "--candidate",
-    candidate,
+    "main",
+    "--candidate-ref",
+    "HEAD",
+    "--manifest",
+    ".sdd/staging/candidate.json",
     "--format",
     "json",
-  ];
-  const first = await execute(argv, root);
-  const second = await execute(argv, root);
-  assert.equal(first.exitCode, 0, first.standardOutput);
-  assert.equal(first.standardOutput, second.standardOutput);
-  const envelope = JSON.parse(first.standardOutput) as { status: string; result: Record<string, any> };
-  assert.equal(envelope.status, "ok");
-  assert.equal(envelope.result.artifact_type, "proposal_package");
-  assert.equal(envelope.result.mode, "spec-code");
-  assert.equal(envelope.result.base.git_ref, base);
-  assert.equal(envelope.result.candidate.source, "directory");
-  assert.equal(envelope.result.semantic_candidates.length, 0);
-  assert.deepEqual(envelope.result.object_delta.modified, ["REQ-A1000001"]);
-  assert.deepEqual(envelope.result.affected_scope.requirements, ["REQ-A1000001"]);
-  assert.deepEqual(envelope.result.code_targets, []);
-  assert.equal((await executeFile("git", ["status", "--porcelain=v1"], { cwd: root })).stdout, before.stdout);
+  ]);
+  assert.equal(command.exitCode, 3);
+  assert.equal(command.value.diagnostics[0].code, "SDD_CONFIG_CLI_COMMAND_INVALID");
 
-  const files = await Promise.all(
-    ["spec/README.md", "spec/capabilities/delivery.md"].map(async (path) => {
-      const content_utf8 = await readFile(join(candidate, path), "utf8");
-      return { path, sha256: `sha256:${createHash("sha256").update(content_utf8).digest("hex")}`, content_utf8 };
-    }),
-  );
-  const manifestPath = join(candidate, "manifest.json");
-  await writeFile(
-    manifestPath,
-    JSON.stringify({
-      schema_version: "1.0",
-      artifact_type: "candidate_tree_manifest",
-      project_id: projectId,
-      base_tree_fingerprint: envelope.result.base.tree_fingerprint,
-      files,
-    }),
-  );
-  const manifest = await execute(
-    ["proposal", "validate", "--mode", "spec-code", "--base", base, "--candidate", manifestPath, "--format", "json"],
-    root,
-  );
-  assert.equal(manifest.exitCode, 0, manifest.standardOutput);
-  const manifestPackage = (JSON.parse(manifest.standardOutput) as { result: Record<string, any> }).result;
-  assert.deepEqual(manifestPackage, {
-    ...envelope.result,
-    candidate: { ...envelope.result.candidate, source: "manifest" },
-  });
+  const option = await execute(["proposal", "materialize", "--candidate-ref", "HEAD", "--format", "json"]);
+  assert.equal(option.exitCode, 3);
+  assert.equal(option.value.diagnostics[0].code, "SDD_CONFIG_CLI_ARGUMENT_INVALID");
 });
 
-test("REQ-A3C3B779 REQ-7C848ED0 REQ-F7D39246 candidate snapshot retains deterministic manifest bytes without a nested project", async () => {
-  const { root, base, projectId } = await repository();
-  const capabilityPath = join(root, "spec/capabilities/delivery.md");
-  await writeFile(
-    capabilityPath,
-    (await readFile(capabilityPath, "utf8")).replace("deliver one item.", "deliver each item exactly once."),
-  );
-  await executeFile("git", ["add", "spec/capabilities/delivery.md"], { cwd: root });
-  await executeFile("git", ["commit", "--quiet", "-m", "candidate"], { cwd: root });
-  const candidateRef = (await executeFile("git", ["rev-parse", "HEAD"], { cwd: root })).stdout.trim();
-  await writeFile(join(root, ".git/info/exclude"), ".sdd-stage/\n");
-  await mkdir(join(root, ".sdd-stage"));
-
-  const first = await execute(
-    [
-      "candidate",
-      "snapshot",
-      "--base",
-      base,
-      "--candidate-ref",
-      candidateRef,
-      "--manifest",
-      ".sdd-stage/candidate-1.json",
-      "--format",
-      "json",
-    ],
-    root,
-  );
-  const second = await execute(
-    [
-      "candidate",
-      "snapshot",
-      "--base",
-      base,
-      "--candidate-ref",
-      candidateRef,
-      "--manifest",
-      ".sdd-stage/candidate-2.json",
-      "--format",
-      "json",
-    ],
-    root,
-  );
-  assert.equal(first.exitCode, 0, first.standardOutput);
-  assert.equal(second.exitCode, 0, second.standardOutput);
-  const firstBytes = await readFile(join(root, ".sdd-stage/candidate-1.json"), "utf8");
-  const secondBytes = await readFile(join(root, ".sdd-stage/candidate-2.json"), "utf8");
-  assert.equal(firstBytes, secondBytes);
-  const manifest = JSON.parse(firstBytes) as {
-    artifact_type: string;
-    project_id: string;
-    base_tree_fingerprint: string;
-    files: readonly { path: string; sha256: string; content_utf8: string }[];
-  };
-  assert.equal(manifest.artifact_type, "candidate_tree_manifest");
-  assert.equal(manifest.project_id, projectId);
-  assert.deepEqual(
-    manifest.files.map((file) => file.path),
-    ["spec/README.md", "spec/capabilities/delivery.md"],
-  );
-  assert.equal(
-    manifest.files.some((file) => file.path === ".sdd/config.yaml"),
-    false,
-  );
-  const snapshotResponse = JSON.parse(first.standardOutput) as {
-    command: string;
-    result: { base_ref: string; candidate_ref: string; file_count: number };
-  };
-  assert.equal(snapshotResponse.command, "candidate.snapshot");
-  assert.equal(snapshotResponse.result.base_ref, base);
-  assert.equal(snapshotResponse.result.candidate_ref, candidateRef);
-  assert.equal(snapshotResponse.result.file_count, 2);
-
-  const proposal = await execute(
+test("REQ-E80F09C6 proposal validation accepts only one exact retained bundle", async () => {
+  for (const argv of [
     [
       "proposal",
       "validate",
       "--mode",
       "spec-code",
       "--base",
-      base,
+      "main",
       "--candidate",
-      ".sdd-stage/candidate-1.json",
+      ".sdd/staging/candidate",
       "--format",
       "json",
     ],
-    root,
-  );
-  assert.equal(proposal.exitCode, 0, proposal.standardOutput);
-  assert.equal((JSON.parse(proposal.standardOutput) as any).result.candidate.source, "manifest");
-  assert.deepEqual((JSON.parse(proposal.standardOutput) as any).result.object_delta.modified, ["REQ-A1000001"]);
-  assert.equal((await executeFile("git", ["status", "--porcelain=v1"], { cwd: root })).stdout, "");
-});
-
-test("REQ-A3C3B779 candidate snapshot rejects unsafe or existing staging targets without replacement", async () => {
-  const { root, base } = await repository();
-  const external = await mkdtemp(join(tmpdir(), "sdd-candidate-snapshot-external-"));
-  await symlink(external, join(root, ".sdd-stage"));
-  const unsafe = await execute(
-    [
-      "candidate",
-      "snapshot",
-      "--base",
-      base,
-      "--candidate-ref",
-      base,
-      "--manifest",
-      ".sdd-stage/candidate.json",
-      "--format",
-      "json",
-    ],
-    root,
-  );
-  assert.equal(unsafe.exitCode, 3);
-  assert.equal((JSON.parse(unsafe.standardOutput) as any).diagnostics[0].code, "SDD_CONFIG_CLI_OUTPUT_UNSAFE");
-
-  const { root: nonIgnoredRoot, base: nonIgnoredBase } = await repository();
-  await writeFile(join(nonIgnoredRoot, ".git/info/exclude"), "spec/candidate.json\n");
-  const inSpecification = await execute(
-    [
-      "candidate",
-      "snapshot",
-      "--base",
-      nonIgnoredBase,
-      "--candidate-ref",
-      nonIgnoredBase,
-      "--manifest",
-      "spec/candidate.json",
-      "--format",
-      "json",
-    ],
-    nonIgnoredRoot,
-  );
-  assert.equal(inSpecification.exitCode, 3);
-  assert.equal(
-    (JSON.parse(inSpecification.standardOutput) as any).diagnostics[0].code,
-    "SDD_CANDIDATE_SNAPSHOT_TARGET_IN_SPEC",
-  );
-  await mkdir(join(nonIgnoredRoot, ".sdd-stage"));
-  const nonIgnored = await execute(
-    [
-      "candidate",
-      "snapshot",
-      "--base",
-      nonIgnoredBase,
-      "--candidate-ref",
-      nonIgnoredBase,
-      "--manifest",
-      ".sdd-stage/candidate.json",
-      "--format",
-      "json",
-    ],
-    nonIgnoredRoot,
-  );
-  assert.equal(nonIgnored.exitCode, 3);
-  assert.equal(
-    (JSON.parse(nonIgnored.standardOutput) as any).diagnostics[0].code,
-    "SDD_CANDIDATE_SNAPSHOT_TARGET_NOT_IGNORED",
-  );
-
-  const { root: secondRoot, base: secondBase } = await repository();
-  await writeFile(join(secondRoot, ".git/info/exclude"), ".sdd-stage/\n");
-  await mkdir(join(secondRoot, ".sdd-stage"));
-  const existingPath = join(secondRoot, ".sdd-stage/candidate.json");
-  await writeFile(existingPath, "preserve\n");
-  const existing = await execute(
-    [
-      "candidate",
-      "snapshot",
-      "--base",
-      secondBase,
-      "--candidate-ref",
-      secondBase,
-      "--manifest",
-      ".sdd-stage/candidate.json",
-      "--format",
-      "json",
-    ],
-    secondRoot,
-  );
-  assert.equal(existing.exitCode, 3);
-  assert.equal(
-    (JSON.parse(existing.standardOutput) as any).diagnostics[0].code,
-    "SDD_CANDIDATE_SNAPSHOT_TARGET_EXISTS",
-  );
-  assert.equal(await readFile(existingPath, "utf8"), "preserve\n");
-});
-
-test("REQ-E80F09C6 REQ-18F84CE2 emits deterministic review candidates without blocking or approval", async () => {
-  const { root, base } = await repository();
-  const candidate = await mkdtemp(join(tmpdir(), "sdd-proposal-semantic-candidate-"));
-  await cp(join(root, ".sdd"), join(candidate, ".sdd"), { recursive: true });
-  await cp(join(root, "spec"), join(candidate, "spec"), { recursive: true });
-  const capabilityPath = join(candidate, "spec/capabilities/delivery.md");
-  await writeFile(
-    capabilityPath,
-    `${await readFile(capabilityPath, "utf8")}\n<a id="req-a1000002"></a>\n\n## REQ-A1000002 — Record delivery\n\n\`\`\`sdd\nkind: behavior\nverification: automated\n\`\`\`\n\n### Relations <!-- sdd:relations -->\n\n- depends-on: [REQ-A1000001 — Deliver item](delivery.md#req-a1000001)\n\n### Statement <!-- sdd:statement -->\n\nThe system shall record each delivered item.\n\n### Acceptance criteria <!-- sdd:acceptance -->\n\n- The delivery record is observable.\n`,
-  );
-  const before = (await executeFile("git", ["status", "--porcelain=v1"], { cwd: root })).stdout;
-  const argv = [
-    "proposal",
-    "validate",
-    "--mode",
-    "spec-code",
-    "--base",
-    base,
-    "--candidate",
-    candidate,
-    "--format",
-    "json",
-  ];
-  const first = await execute(argv, root);
-  const second = await execute(argv, root);
-  assert.equal(first.exitCode, 0, first.standardOutput);
-  assert.equal(first.standardOutput, second.standardOutput);
-  const envelope = JSON.parse(first.standardOutput) as {
-    status: string;
-    result: Record<string, unknown> & { diagnostics: readonly unknown[]; semantic_candidates: readonly unknown[] };
-  };
-  assert.equal(envelope.status, "ok");
-  assert.deepEqual(envelope.result.diagnostics, []);
-  assert.deepEqual(envelope.result.semantic_candidates, [
-    { objects: ["REQ-A1000001", "REQ-A1000002"], reason: "requirement-dependency" },
-  ]);
-  assert.deepEqual(parseProposalPackage(envelope.result).semantic_candidates, envelope.result.semantic_candidates);
-  assert.equal(Object.hasOwn(envelope.result, "approval"), false);
-  assert.equal((await executeFile("git", ["status", "--porcelain=v1"], { cwd: root })).stdout, before);
-});
-
-test("REQ-E26A859E REQ-8DE9E078 proposal mechanical mode rules block invalid deltas and bind code targets", async () => {
-  const { root, base } = await repository();
-  const unsupportedMode = await execute(
-    ["proposal", "validate", "--mode", "feature", "--base", base, "--candidate", root, "--format", "json"],
-    root,
-  );
-  assert.equal(unsupportedMode.exitCode, 3);
-  assert.equal((JSON.parse(unsupportedMode.standardOutput) as any).diagnostics[0].code, "SDD_PROPOSAL_MODE_INVALID");
-  const emptySpec = await execute(
-    ["proposal", "validate", "--mode", "spec", "--base", base, "--candidate", root, "--format", "json"],
-    root,
-  );
-  assert.equal(emptySpec.exitCode, 1);
-  assert.equal(
-    (JSON.parse(emptySpec.standardOutput) as any).diagnostics[0].code,
-    "SDD_PROPOSAL_SEMANTIC_DELTA_REQUIRED",
-  );
-  const missingTarget = await execute(
-    ["proposal", "validate", "--mode", "code", "--base", base, "--candidate", root, "--format", "json"],
-    root,
-  );
-  assert.equal(missingTarget.exitCode, 1);
-  assert.equal(
-    (JSON.parse(missingTarget.standardOutput) as any).diagnostics[0].code,
-    "SDD_PROPOSAL_CODE_TARGET_REQUIRED",
-  );
-  const validCode = await execute(
+    ["proposal", "validate", "--package", ".sdd/staging/proposal-package.json", "--format", "json"],
     [
       "proposal",
       "validate",
-      "--mode",
-      "code",
-      "--base",
-      base,
-      "--candidate",
-      root,
-      "--code-target",
-      "REQ-A1000001",
+      "--bundle",
+      ".sdd/staging/bundle",
+      "--package",
+      ".sdd/staging/proposal-package.json",
       "--format",
       "json",
     ],
-    root,
-  );
-  assert.equal(validCode.exitCode, 0, validCode.standardOutput);
-  const target = (JSON.parse(validCode.standardOutput) as any).result.code_targets[0];
-  assert.equal(target.requirement_id, "REQ-A1000001");
-  assert.match(target.semantic_fingerprint, /^sha256:[0-9a-f]{64}$/u);
-  assert.match(target.structural_fingerprint, /^sha256:[0-9a-f]{64}$/u);
-});
-
-test("REQ-8DE9E078 proposal candidate boundaries block invalid manifests and symlinks while unavailable input is technical", async () => {
-  const { root, base, projectId } = await repository();
-  const code = await execute(
-    [
-      "proposal",
-      "validate",
-      "--mode",
-      "code",
-      "--base",
-      base,
-      "--candidate",
-      root,
-      "--code-target",
-      "REQ-A1000001",
-      "--format",
-      "json",
-    ],
-    root,
-  );
-  const baseFingerprint = (JSON.parse(code.standardOutput) as any).result.base.tree_fingerprint;
-  const manifestPath = join(root, "invalid-manifest.json");
-  await writeFile(
-    manifestPath,
-    JSON.stringify({
-      schema_version: "1.0",
-      artifact_type: "candidate_tree_manifest",
-      project_id: projectId,
-      base_tree_fingerprint: baseFingerprint,
-      files: [{ path: "spec/README.md", sha256: `sha256:${"0".repeat(64)}`, content_utf8: "wrong" }],
-    }),
-  );
-  const invalid = await execute(
-    ["proposal", "validate", "--mode", "spec-code", "--base", base, "--candidate", manifestPath, "--format", "json"],
-    root,
-  );
-  assert.equal(invalid.exitCode, 1);
-  assert.equal((JSON.parse(invalid.standardOutput) as any).diagnostics[0].code, "SDD_PROPOSAL_CANDIDATE_HASH_MISMATCH");
-
-  const candidate = await mkdtemp(join(tmpdir(), "sdd-proposal-symlink-"));
-  await cp(join(root, ".sdd"), join(candidate, ".sdd"), { recursive: true });
-  await cp(join(root, "spec"), join(candidate, "spec"), { recursive: true });
-  await symlink(join(root, "README.md"), join(candidate, "spec/escape.md"));
-  const unsafe = await execute(
-    [
-      "proposal",
-      "validate",
-      "--mode",
-      "code",
-      "--base",
-      base,
-      "--candidate",
-      candidate,
-      "--code-target",
-      "REQ-A1000001",
-      "--format",
-      "json",
-    ],
-    root,
-  );
-  assert.equal(unsafe.exitCode, 1);
-  assert.equal((JSON.parse(unsafe.standardOutput) as any).diagnostics[0].code, "SDD_PROPOSAL_CANDIDATE_ENTRY_UNSAFE");
-
-  const rootLinkCandidate = await mkdtemp(join(tmpdir(), "sdd-proposal-root-link-"));
-  await cp(join(root, ".sdd"), join(rootLinkCandidate, ".sdd"), { recursive: true });
-  await symlink(join(root, "spec"), join(rootLinkCandidate, "spec"));
-  const unsafeRoot = await execute(
-    [
-      "proposal",
-      "validate",
-      "--mode",
-      "code",
-      "--base",
-      base,
-      "--candidate",
-      rootLinkCandidate,
-      "--code-target",
-      "REQ-A1000001",
-      "--format",
-      "json",
-    ],
-    root,
-  );
-  assert.equal(unsafeRoot.exitCode, 1);
-  assert.equal(
-    (JSON.parse(unsafeRoot.standardOutput) as any).diagnostics[0].code,
-    "SDD_PROPOSAL_CANDIDATE_ENTRY_UNSAFE",
-  );
-
-  const unavailable = await execute(
-    ["proposal", "validate", "--mode", "spec", "--base", base, "--candidate", "missing-candidate", "--format", "json"],
-    root,
-  );
-  assert.equal(unavailable.exitCode, 3);
-  assert.equal(
-    (JSON.parse(unavailable.standardOutput) as any).diagnostics[0].code,
-    "SDD_PROPOSAL_CANDIDATE_UNAVAILABLE",
-  );
-
-  const extraTargetRef = await execute(
-    [
-      "proposal",
-      "validate",
-      "--mode",
-      "code",
-      "--base",
-      base,
-      "--target",
-      base,
-      "--candidate",
-      root,
-      "--code-target",
-      "REQ-A1000001",
-      "--format",
-      "json",
-    ],
-    root,
-  );
-  assert.equal(extraTargetRef.exitCode, 3);
-  assert.equal(
-    (JSON.parse(extraTargetRef.standardOutput) as any).diagnostics[0].code,
-    "SDD_CONFIG_CLI_ARGUMENT_INVALID",
-  );
+  ]) {
+    const result = await execute(argv);
+    assert.equal(result.exitCode, 3, JSON.stringify(result.value));
+    assert.equal(result.value.diagnostics[0].code, "SDD_PROPOSAL_INPUTS_REQUIRED");
+  }
 });

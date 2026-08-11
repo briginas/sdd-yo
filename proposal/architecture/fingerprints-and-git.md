@@ -251,19 +251,19 @@ not by committing them onto the proposal or integration ref or by creating a
 retention-only branch or tag. A later ref movement is observed as freshness
 change; it is not hidden by restoring an older ref for assessment.
 
-`candidate snapshot` resolves an explicit base ref and candidate ref once and
-serializes the latter specification tree into a CandidateTreeManifest bound to
-the former tree fingerprint. The retained bytes therefore survive later ref
-movement without moving either ref backward; consumers still re-resolve their
-declared current refs and apply normal freshness checks.
+For a specification-changing proposal, `proposal materialize` resolves the
+base once and serializes the authored candidate into the bundle's fixed
+CandidateTreeManifest member, bound to that base tree fingerprint. The retained
+bytes therefore survive later ref movement without moving either ref backward;
+consumers re-resolve their declared current refs and apply normal freshness
+checks from the bundle.
 
 ## Branch preparation
 
-1. read `B` from `package.base.git_ref`, `P` from the explicitly supplied
-   candidate, `H` from the explicit branch-head ref, and `M` from the explicit
-   integration ref;
-2. revalidate the exact `P` bytes against the package candidate-tree and
-   object-delta fingerprints;
+1. read `B` and `P` from the revalidated proposal bundle, `H` from the explicit
+   branch-head ref, and `M` from the explicit integration ref;
+2. revalidate the bundle's exact embedded CandidateTreeManifest against the
+   package candidate-tree and object-delta fingerprints;
 3. perform an internal three-way textual merge;
 4. stop for textual conflicts;
 5. parse and validate the merged candidate;

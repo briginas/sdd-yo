@@ -5,10 +5,9 @@ approved proposal or explicitly apply the resulting exact SpecPatch.
 
 ## Prepare without writing
 
-Require all of these explicit retained inputs:
+Require all of these explicit retained inputs for `spec-code` or `spec`:
 
-- the ProposalPackage file;
-- the exact candidate directory or CandidateTreeManifest bound by the package;
+- the exact retained proposal bundle;
 - branch-head and integration Git refs;
 - current project-relative ApprovalEvidence when approval is expected.
 
@@ -22,15 +21,19 @@ as an implied preparation side effect.
 
 Never infer a human decision, synthesize ApprovalEvidence, change the approved
 mode, or choose replacement refs. ApprovalEvidence recorded by the separate
-explicit decision route is acceptable only when it is current for these exact
-inputs. Invoke preparation only through:
+explicit decision route is acceptable only when it is current for this exact
+bundle. Invoke preparation only through:
 
 ```text
-node scripts/check-cli-compatibility -- proposal prepare --package <path> --candidate <path> --branch-head <git-ref> --integration-ref <git-ref> [--approval <project-relative-path> ...] --cwd <directory>
+node scripts/check-cli-compatibility -- proposal prepare --bundle <project-relative-path> --branch-head <git-ref> --integration-ref <git-ref> [--approval <project-relative-path> ...] --cwd <directory>
 ```
 
 `--config <path>` may replace `--cwd <directory>`. Never add `--format` or
 `--output`.
+
+For `code`, do not prepare a patch: the approved bundle proceeds directly to
+separately authorized implementation verification. A preparation request for a
+`code` bundle is rejected; it must never produce an empty SpecPatch.
 
 Retain the exact status, diagnostics, ConflictReport, and SpecPatch internally.
 Preserve the CLI's distinction, while presenting it by default as follows:

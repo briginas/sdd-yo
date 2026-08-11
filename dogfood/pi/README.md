@@ -395,17 +395,11 @@ Yo.
 
 ## Proposal validation and approval subject result
 
-Milestone 7.2e built the current local SDD Yo CLI and mechanically validated
-the committed `pi` baseline candidate with:
-
-```text
-node /Users/dev.briginas/dev/sdd-yo/dist/bin/sdd.js proposal validate \
-  --cwd /Users/dev.briginas/dev/pi \
-  --mode spec \
-  --base 8ce561aacd3ea0c7a098b923dad07faec3a0db09 \
-  --candidate /Users/dev.briginas/dev/pi \
-  --format json
-```
+Milestone 7.2e mechanically validated the committed `pi` baseline candidate.
+Its recorded raw `proposal validate` invocation predates the final 0.5.0
+contract and is retained only as historical evidence. A current replay first
+materializes an ignored proposal bundle from the authored candidate, then
+validates that bundle; raw candidate validation is no longer supported.
 
 The base is the committed initialized empty SDD Project. The candidate is the
 clean `pi` worktree at `f0a93d155edf214cb020acdbe63319a08f597fa7`. Two

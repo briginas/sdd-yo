@@ -21,7 +21,7 @@ import {
   prepareProposal,
   ProposalPreparationError,
 } from "../src/proposal/prepare-proposal.ts";
-import { validateProposal } from "../src/proposal/validate-proposal.ts";
+import type { ProposalMode, ProposalPackage } from "../src/proposal/validate-proposal.ts";
 import { generateSpecPatch } from "../src/proposal/spec-patch.ts";
 import { runCli } from "../src/cli/run-cli.ts";
 import { nodeFileSystem } from "../src/platform/node-filesystem.ts";
@@ -105,20 +105,16 @@ test("REQ-3BF12AAD exact SpecPatch emits sorted create replace delete operations
 });
 
 test("REQ-A8739118 code proposals bypass preparation instead of producing an empty SpecPatch", async () => {
-  const packageValue = JSON.parse(
-    await readFile(join(process.cwd(), "fixtures/v1/artifacts/workflow/proposal-package/code-mode-valid.json"), "utf8"),
-  ) as Record<string, unknown>;
-  const candidate = packageValue.candidate as { readonly tree_fingerprint: unknown };
-  packageValue.candidate = { source: "base", tree_fingerprint: candidate.tree_fingerprint };
+  const fixture = await repository();
+  const retained = await retainBundle(fixture, undefined, "code", ["REQ-A1000001"]);
   await assert.rejects(
     prepareApprovedProposal({
       fileSystem: nodeFileSystem,
-      gitReader: undefined as never,
-      project: undefined as never,
-      package: packageValue,
-      candidatePath: "unused",
-      branchHead: "base" as GitObjectId,
-      integrationRef: "integration" as GitObjectId,
+      gitReader: fixture.reader,
+      project: fixture.project,
+      bundlePath: retained.bundlePath,
+      branchHead: fixture.base,
+      integrationRef: fixture.base,
       approvalEvidence: [],
     }),
     (error: unknown) => error instanceof ProposalPreparationError && error.code === "SDD_PREPARE_CODE_MODE_INVALID",
@@ -212,11 +208,13 @@ async function repository(empty = false, archivalExtra = false) {
     await writeFile(join(root, "spec/README.md"), indexSource);
     await writeFile(join(root, "spec/capabilities/delivery.md"), capabilitySource);
   }
+  await writeFile(join(root, ".gitignore"), ".sdd-stage/\n");
+  await mkdir(join(root, ".sdd-stage"));
   const activeConfig = await readFile(join(root, ".sdd/config.yaml"), "utf8");
   if (archivalExtra) {
     await writeFile(join(root, ".sdd/config.yaml"), `${activeConfig}retired_policy:\n  value: archival-only\n`);
   }
-  await executeFile("git", ["add", ".sdd/config.yaml", "spec"], { cwd: root });
+  await executeFile("git", ["add", ".sdd/config.yaml", "spec", ".gitignore"], { cwd: root });
   await executeFile("git", ["commit", "--quiet", "-m", "base"], { cwd: root });
   const base = (await executeFile("git", ["rev-parse", "HEAD"], { cwd: root })).stdout.trim() as GitObjectId;
   if (archivalExtra) await writeFile(join(root, ".sdd/config.yaml"), activeConfig);
@@ -234,6 +232,30 @@ async function candidateFrom(root: string): Promise<string> {
   return candidate;
 }
 
+let retainedBundleIndex = 0;
+
+async function retainBundle(
+  fixture: Awaited<ReturnType<typeof repository>>,
+  candidate: string | undefined,
+  mode: ProposalMode = "spec-code",
+  codeTargets: readonly string[] = [],
+): Promise<{ readonly bundlePath: ProjectPath; readonly packageValue: ProposalPackage; readonly packagePath: string }> {
+  retainedBundleIndex += 1;
+  const bundlePath = `.sdd-stage/proposal-${retainedBundleIndex}` as ProjectPath;
+  const argv = ["proposal", "materialize", "--mode", mode, "--base", fixture.base];
+  if (candidate !== undefined) argv.push("--candidate", candidate);
+  for (const target of codeTargets) argv.push("--code-target", target);
+  argv.push("--bundle", bundlePath, "--format", "json");
+  const response = await executeCli(argv, fixture.root);
+  assert.equal(response.exitCode, 0, response.standardOutput);
+  const packagePath = join(fixture.root, bundlePath, "proposal-package.json");
+  return {
+    bundlePath,
+    packageValue: parseProposalPackage(JSON.parse(await readFile(packagePath, "utf8"))),
+    packagePath,
+  };
+}
+
 test("REQ-0361538D package-bound preparation locates an archival base and detects drift", async () => {
   const fixture = await repository(false, true);
   const candidate = await candidateFrom(fixture.root);
@@ -242,15 +264,8 @@ test("REQ-0361538D package-bound preparation locates an archival base and detect
     candidateFile,
     (await readFile(candidateFile, "utf8")).replace("deliver one item", "deliver each item exactly once"),
   );
-  const packageValue = await validateProposal({
-    fileSystem: nodeFileSystem,
-    gitReader: fixture.reader,
-    project: fixture.project,
-    baseRef: fixture.base,
-    candidatePath: candidate,
-    mode: "spec-code",
-    codeTargets: [],
-  });
+  const retained = await retainBundle(fixture, candidate);
+  const packageValue = retained.packageValue;
   assert.throws(
     () => parseProposalPackage({ ...packageValue, unknown: true }),
     (error) => error instanceof ProposalPackageInputError,
@@ -259,9 +274,7 @@ test("REQ-0361538D package-bound preparation locates an archival base and detect
     () => parseProposalPackage({ ...packageValue, created_at: "not-a-timestamp" }),
     (error) => error instanceof ProposalPackageInputError,
   );
-  const packagePath = join(candidate, "proposal-package.json");
-  await writeFile(packagePath, JSON.stringify(packageValue));
-  assert.deepEqual(await importProposalPackage(nodeFileSystem, packagePath), packageValue);
+  assert.deepEqual(await importProposalPackage(nodeFileSystem, retained.packagePath), packageValue);
   await cp(join(candidate, "spec"), join(fixture.root, "spec"), { recursive: true, force: true });
   await executeFile("git", ["add", "spec"], { cwd: fixture.root });
   await executeFile("git", ["commit", "--quiet", "-m", "candidate"], { cwd: fixture.root });
@@ -273,8 +286,7 @@ test("REQ-0361538D package-bound preparation locates an archival base and detect
     fileSystem: nodeFileSystem,
     gitReader: fixture.reader,
     project: fixture.project,
-    package: packageValue,
-    candidatePath: candidate,
+    bundlePath: retained.bundlePath,
     branchHead,
     integrationRef: fixture.base,
   };
@@ -290,9 +302,13 @@ test("REQ-0361538D package-bound preparation locates an archival base and detect
     candidate: { ...packageValue.candidate, tree_fingerprint: `sha256:${"0".repeat(64)}` },
   };
   await assert.rejects(
-    () => prepareProposal({ ...input, package: stale }),
+    async () => {
+      await writeFile(retained.packagePath, JSON.stringify(stale));
+      await prepareProposal(input);
+    },
     (error) => error instanceof ProposalPreparationError && error.code === "SDD_PREPARE_PACKAGE_STALE",
   );
+  await writeFile(retained.packagePath, `${JSON.stringify(packageValue)}\n`);
 
   await writeFile(
     join(fixture.root, "spec/README.md"),
@@ -314,15 +330,8 @@ test("REQ-7AFE9904 REQ-964B9F80 candidate mutation between preparation revalidat
   const candidateFile = join(candidate, "spec/capabilities/delivery.md");
   const proposed = capabilitySource.replace("deliver one item", "deliver each item exactly once");
   await writeFile(candidateFile, proposed);
-  const packageValue = await validateProposal({
-    fileSystem: nodeFileSystem,
-    gitReader: fixture.reader,
-    project: fixture.project,
-    baseRef: fixture.base,
-    candidatePath: candidate,
-    mode: "spec-code",
-    codeTargets: [],
-  });
+  const retained = await retainBundle(fixture, candidate);
+  const candidateManifest = join(fixture.root, retained.bundlePath, "candidate-tree.json");
   let mutated = false;
   await assert.rejects(
     () =>
@@ -330,16 +339,15 @@ test("REQ-7AFE9904 REQ-964B9F80 candidate mutation between preparation revalidat
         fileSystem: nodeFileSystem,
         gitReader: fixture.reader,
         project: fixture.project,
-        package: packageValue,
-        candidatePath: candidate,
+        bundlePath: retained.bundlePath,
         branchHead: fixture.base,
         integrationRef: fixture.base,
-        afterCandidateRevalidation: async () => {
+        afterBundleRevalidation: async () => {
           mutated = true;
-          await writeFile(candidateFile, proposed.replace("exactly once", "after revalidation"));
+          await writeFile(candidateManifest, `${await readFile(candidateManifest, "utf8")} `);
         },
       }),
-    (error) => error instanceof ProposalPreparationError && error.code === "SDD_PREPARE_CANDIDATE_CHANGED",
+    (error) => error instanceof ProposalPreparationError && error.code === "SDD_PREPARE_BUNDLE_CHANGED",
   );
   assert.equal(mutated, true);
 });
@@ -350,15 +358,8 @@ test("REQ-AFD65A03 REQ-A8739118 package-added active identity in integration is 
   await mkdir(join(candidate, "spec/capabilities"), { recursive: true });
   await writeFile(join(candidate, "spec/README.md"), indexSource);
   await writeFile(join(candidate, "spec/capabilities/delivery.md"), capabilitySource);
-  const packageValue = await validateProposal({
-    fileSystem: nodeFileSystem,
-    gitReader: fixture.reader,
-    project: fixture.project,
-    baseRef: fixture.base,
-    candidatePath: candidate,
-    mode: "spec-code",
-    codeTargets: [],
-  });
+  const retained = await retainBundle(fixture, candidate);
+  const packageValue = retained.packageValue;
   await cp(join(candidate, "spec"), join(fixture.root, "spec"), { recursive: true, force: true });
   await executeFile("git", ["add", "spec"], { cwd: fixture.root });
   await executeFile("git", ["commit", "--quiet", "-m", "candidate"], { cwd: fixture.root });
@@ -381,8 +382,7 @@ test("REQ-AFD65A03 REQ-A8739118 package-added active identity in integration is 
     fileSystem: nodeFileSystem,
     gitReader: fixture.reader,
     project: fixture.project,
-    package: packageValue,
-    candidatePath: candidate,
+    bundlePath: retained.bundlePath,
     branchHead,
     integrationRef,
   });
@@ -408,8 +408,7 @@ test("REQ-AFD65A03 REQ-A8739118 package-added active identity in integration is 
       ...fixture.project,
       configuration: fixture.project.configuration,
     },
-    package: packageValue,
-    candidatePath: candidate,
+    bundlePath: retained.bundlePath,
     branchHead,
     integrationRef,
     approvalEvidence: [
@@ -422,9 +421,11 @@ test("REQ-AFD65A03 REQ-A8739118 package-added active identity in integration is 
         decision: "approved",
         mode: packageValue.mode,
         subject: {
-          base_ref: packageValue.base.git_ref,
-          semantic_delta_fingerprint: packageValue.object_delta.semantic_fingerprint,
-          structural_delta_fingerprint: packageValue.object_delta.structural_fingerprint,
+          base: packageValue.base,
+          candidate: packageValue.candidate,
+          object_delta: packageValue.object_delta,
+          code_targets: packageValue.code_targets,
+          affected_scope: packageValue.affected_scope,
         },
       },
     ],
@@ -442,17 +443,8 @@ async function cliPreparationFixture() {
     candidateFile,
     (await readFile(candidateFile, "utf8")).replace("deliver one item", "deliver every item exactly once"),
   );
-  const packageValue = await validateProposal({
-    fileSystem: nodeFileSystem,
-    gitReader: fixture.reader,
-    project: fixture.project,
-    baseRef: fixture.base,
-    candidatePath: candidate,
-    mode: "spec-code",
-    codeTargets: [],
-  });
-  const packagePath = join(fixture.root, "proposal-package.json");
-  await writeFile(packagePath, JSON.stringify(packageValue));
+  const retained = await retainBundle(fixture, candidate);
+  const packageValue = retained.packageValue;
   const approvalValue = {
     schema_version: "1.0",
     artifact_type: "approval_evidence",
@@ -462,9 +454,11 @@ async function cliPreparationFixture() {
     decision: "approved",
     mode: packageValue.mode,
     subject: {
-      base_ref: packageValue.base.git_ref,
-      semantic_delta_fingerprint: packageValue.object_delta.semantic_fingerprint,
-      structural_delta_fingerprint: packageValue.object_delta.structural_fingerprint,
+      base: packageValue.base,
+      candidate: packageValue.candidate,
+      object_delta: packageValue.object_delta,
+      code_targets: packageValue.code_targets,
+      affected_scope: packageValue.affected_scope,
     },
   } as const;
   const approvalPath = join(fixture.root, "approval.json");
@@ -478,10 +472,8 @@ async function cliPreparationFixture() {
   const argv = [
     "proposal",
     "prepare",
-    "--package",
-    packagePath,
-    "--candidate",
-    candidate,
+    "--bundle",
+    retained.bundlePath,
     "--branch-head",
     branchHead,
     "--integration-ref",
@@ -489,7 +481,17 @@ async function cliPreparationFixture() {
     "--approval",
     "approval.json",
   ];
-  return { ...fixture, candidate, packagePath, packageValue, branchHead, approvalPath, approvalValue, argv };
+  return {
+    ...fixture,
+    candidate,
+    bundlePath: retained.bundlePath,
+    packagePath: retained.packagePath,
+    packageValue,
+    branchHead,
+    approvalPath,
+    approvalValue,
+    argv,
+  };
 }
 
 test("REQ-AFD65A03 REQ-A8739118 REQ-7341DBB7 proposal prepare CLI requires current approval and emits a read-only exact patch", async () => {
@@ -531,7 +533,10 @@ test("REQ-AFD65A03 REQ-A8739118 REQ-7341DBB7 withholds SpecPatch for missing sta
     fixture.approvalPath,
     JSON.stringify({
       ...fixture.approvalValue,
-      subject: { ...fixture.approvalValue.subject, semantic_delta_fingerprint: hash("stale") },
+      subject: {
+        ...fixture.approvalValue.subject,
+        object_delta: { ...fixture.approvalValue.subject.object_delta, semantic_fingerprint: hash("stale") },
+      },
     }),
   );
   const staleDelta = await executeCli([...fixture.argv, "--format", "json"], fixture.root);
@@ -656,6 +661,6 @@ test("proposal prepare CLI separates stale mechanical blocks from malformed and 
   );
   const unresolved = await executeCli([...unresolvedArgs, "--format", "json"], fixture.root);
   assert.equal(unresolved.exitCode, 3, unresolved.standardOutput);
-  const missing = await executeCli(["proposal", "prepare", "--package", fixture.packagePath], fixture.root);
+  const missing = await executeCli(["proposal", "prepare", "--bundle", fixture.bundlePath], fixture.root);
   assert.equal(missing.exitCode, 3);
 });

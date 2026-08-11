@@ -40,7 +40,7 @@ export type SDDYoChangeDescriptor = ArtifactEnvelope & {
  */
 export type FileInventory = [FileEntry, ...FileEntry[]];
 /**
- * Version 1 virtual candidate specification tree input.
+ * Version 1 candidate specification tree retained only as a fixed proposal-bundle member.
  */
 export type SDDYoCandidateTreeManifest = ArtifactEnvelope & {
   artifact_type?: "candidate_tree_manifest";
@@ -60,32 +60,17 @@ export type SDDYoProposalPackage = ArtifactEnvelope & {
 } & {
   artifact_type?: "proposal_package";
   mode: "spec-code" | "spec" | "code";
-  base: {
-    git_ref: string;
-    tree_fingerprint: string;
-  };
-  candidate: {
-    source: "base" | "directory" | "archive" | "manifest";
-    tree_fingerprint: string;
-  };
-  object_delta: {
-    semantic_fingerprint: string;
-    structural_fingerprint: string;
-    added: ObjectIds;
-    modified: ObjectIds;
-    deleted: ObjectIds;
-  };
-  code_targets: CodeTarget[];
-  affected_scope: {
-    fingerprint: string;
-    requirements: RequirementIds;
-    capabilities: CapabilityIds;
-  };
+  base: Base;
+  candidate: Candidate;
+  object_delta: ObjectDelta;
+  code_targets: CodeTargets;
+  affected_scope: AffectedScope;
   diagnostics: Diagnostic[];
   semantic_candidates: SemanticCandidate[];
   [k: string]: unknown | undefined;
 };
 export type ObjectIds = string[];
+export type CodeTargets = CodeTarget[];
 export type RequirementIds = string[];
 export type CapabilityIds = string[];
 /**
@@ -127,9 +112,11 @@ export type SDDYoApprovalEvidence = ArtifactEnvelope & {
   decision: "approved" | "rejected";
   mode: "spec-code" | "spec" | "code";
   subject: {
-    base_ref: string;
-    semantic_delta_fingerprint: string;
-    structural_delta_fingerprint: string;
+    base: Base;
+    candidate: Candidate;
+    object_delta: ObjectDelta;
+    code_targets: CodeTargets;
+    affected_scope: AffectedScope;
   };
   reason?: string;
   [k: string]: unknown | undefined;
@@ -445,6 +432,26 @@ export interface SkillIdentity {
 export interface FileEntry {
   path: string;
   sha256: string;
+}
+export interface Base {
+  git_ref: string;
+  tree_fingerprint: string;
+}
+export interface Candidate {
+  source: "base" | "manifest";
+  tree_fingerprint: string;
+}
+export interface ObjectDelta {
+  semantic_fingerprint: string;
+  structural_fingerprint: string;
+  added: ObjectIds;
+  modified: ObjectIds;
+  deleted: ObjectIds;
+}
+export interface AffectedScope {
+  fingerprint: string;
+  requirements: RequirementIds;
+  capabilities: CapabilityIds;
 }
 export interface Diagnostic {
   code: string;

@@ -67,9 +67,17 @@ test("generated artifact types expose representative version 1 shapes", () => {
     decision: "approved",
     mode: "spec-code",
     subject: {
-      base_ref: "4f88",
-      semantic_delta_fingerprint: `sha256:${"0".repeat(64)}`,
-      structural_delta_fingerprint: `sha256:${"1".repeat(64)}`,
+      base: { git_ref: "4f88", tree_fingerprint: `sha256:${"0".repeat(64)}` },
+      candidate: { source: "manifest", tree_fingerprint: `sha256:${"1".repeat(64)}` },
+      object_delta: {
+        semantic_fingerprint: `sha256:${"2".repeat(64)}`,
+        structural_fingerprint: `sha256:${"3".repeat(64)}`,
+        added: [],
+        modified: [],
+        deleted: [],
+      },
+      code_targets: [],
+      affected_scope: { fingerprint: `sha256:${"4".repeat(64)}`, requirements: [], capabilities: [] },
     },
   } satisfies SDDYoApprovalEvidence;
   const patchOperation = {

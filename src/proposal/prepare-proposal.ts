@@ -11,11 +11,11 @@ import { assessApprovalEvidence } from "../verification/evidence.ts";
 import type { ApprovalEvidence, HumanDecisionEvidenceIssue } from "../verification/evidence.ts";
 import { generateSemanticCandidates } from "../verification/semantic-review.ts";
 import type { SemanticCandidate } from "../verification/semantic-review.ts";
-import { parseProposalPackage } from "./package-input.ts";
+import { revalidateProposalBundle } from "./proposal-bundle.ts";
 import { buildSpecificationTree, compareUnicodeCodePoints, loadBaseSpecificationTree } from "./specification-tree.ts";
 import type { SpecificationTree, SpecificationTreeFile } from "./specification-tree.ts";
 import type { ProposalPackage } from "./validate-proposal.ts";
-import { ProposalRevalidationError, revalidateProposalPackage } from "./revalidate-proposal.ts";
+import { ProposalRevalidationError } from "./revalidate-proposal.ts";
 
 export type MechanicalConflictKind = "add_add" | "modify_modify" | "modify_delete" | "delete_modify" | "id_reuse";
 
@@ -39,6 +39,7 @@ export type ConflictReport = {
 };
 
 export type PreparedProposal = {
+  readonly package: ProposalPackage;
   readonly report: ConflictReport;
   readonly integration_tree: SpecificationTree;
   readonly prepared_tree?: SpecificationTree;
@@ -294,20 +295,31 @@ export async function prepareProposal(input: {
   readonly fileSystem: FileSystem;
   readonly gitReader: GitReader;
   readonly project: ResolvedProject;
-  readonly package: unknown;
-  readonly candidatePath: string;
+  readonly bundlePath: ProjectPath;
   readonly branchHead: GitObjectId;
   readonly integrationRef: GitObjectId;
-  readonly afterCandidateRevalidation?: () => Promise<void>;
+  readonly afterBundleRevalidation?: () => Promise<void>;
 }): Promise<PreparedProposal> {
   let revalidated;
   try {
-    revalidated = await revalidateProposalPackage(input);
+    revalidated = await revalidateProposalBundle({
+      fileSystem: input.fileSystem,
+      gitReader: input.gitReader,
+      project: input.project,
+      projectRoot: input.project.project_root,
+      bundlePath: input.bundlePath,
+      ...(input.afterBundleRevalidation === undefined ? {} : { afterFirstRead: input.afterBundleRevalidation }),
+    });
   } catch (error) {
     if (error instanceof ProposalRevalidationError) throw new ProposalPreparationError(error.code, error.message);
     throw error;
   }
   const packageValue = revalidated.package;
+  if (packageValue.mode === "code")
+    throw new ProposalPreparationError(
+      "SDD_PREPARE_CODE_MODE_INVALID",
+      "Code proposals bypass specification patch preparation.",
+    );
   const base = revalidated.base;
   const candidate = revalidated.candidate;
   const [branch, integration, mergeBase] = await Promise.all([
@@ -368,10 +380,16 @@ export async function prepareProposal(input: {
     input_fingerprint: inputFingerprint,
   };
   if (conflicts.length > 0)
-    return { report, integration_tree: integration, affected_object_changed: affectedObjectChanged };
+    return {
+      package: packageValue,
+      report,
+      integration_tree: integration,
+      affected_object_changed: affectedObjectChanged,
+    };
   try {
     return {
       report,
+      package: packageValue,
       integration_tree: integration,
       prepared_tree: buildSpecificationTree(merged.files, input.project.configuration),
       affected_object_changed: affectedObjectChanged,
@@ -392,25 +410,23 @@ export async function prepareApprovedProposal(input: {
   readonly fileSystem: FileSystem;
   readonly gitReader: GitReader;
   readonly project: ResolvedProject;
-  readonly package: unknown;
-  readonly candidatePath: string;
+  readonly bundlePath: ProjectPath;
   readonly branchHead: GitObjectId;
   readonly integrationRef: GitObjectId;
   readonly approvalEvidence: readonly ApprovalEvidence[];
 }): Promise<ApprovedPreparedProposal> {
-  const packageValue = parseProposalPackage(input.package);
-  if (packageValue.mode === "code")
-    throw new ProposalPreparationError(
-      "SDD_PREPARE_CODE_MODE_INVALID",
-      "Code proposals bypass specification patch preparation.",
-    );
   const prepared = await prepareProposal(input);
+  const packageValue = prepared.package;
   const approval = assessApprovalEvidence({
     project_id: input.project.configuration.project_id,
     mode: packageValue.mode,
-    base_ref: packageValue.base.git_ref,
-    semantic_delta_fingerprint: packageValue.object_delta.semantic_fingerprint,
-    structural_delta_fingerprint: packageValue.object_delta.structural_fingerprint,
+    subject: {
+      base: packageValue.base,
+      candidate: packageValue.candidate,
+      object_delta: packageValue.object_delta,
+      code_targets: packageValue.code_targets,
+      affected_scope: packageValue.affected_scope,
+    },
     evidence: input.approvalEvidence,
   });
   const issues: PreparationGateIssue[] = [...approval.issues];

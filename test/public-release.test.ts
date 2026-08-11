@@ -27,14 +27,14 @@ test("REQ-ABFFEAF2 REQ-9CE36B68 REQ-0163273A permits only the exact protected tr
   assert.match(workflow, /registry-url: https:\/\/registry\.npmjs\.org/u);
   assert.match(workflow, /package-manager-cache: false/u);
   assert.match(workflow, /PACKAGE_NAME: sdd-yo/u);
-  assert.match(workflow, /PACKAGE_VERSION: 0\.4\.1/u);
-  assert.match(workflow, /PREVIOUS_PUBLIC_VERSION: 0\.4\.0/u);
-  assert.match(workflow, /EXPECTED_ARTIFACT_SHA256: 4c53500735a50ac7f8a72d45a942caa64aa4ee0951d0b414aee9295593112697/u);
+  assert.match(workflow, /PACKAGE_VERSION: 0\.5\.0/u);
+  assert.match(workflow, /PREVIOUS_PUBLIC_VERSION: 0\.4\.1/u);
+  assert.match(workflow, /EXPECTED_ARTIFACT_SHA256: af6abc82173d0d31dc579672bde939c186d6d221f41383536a53c02d89298835/u);
   assert.match(
     workflow,
-    /EXPECTED_INVENTORY_SHA256: 60e9ffa99d6b6d9e4d5cf27cc36df571175f751022ca675d11e9493de7102f6d/u,
+    /EXPECTED_INVENTORY_SHA256: db26f2f8520dee2e2717039e771ddd666b11edeaf9814fd77676b4b09c1f646d/u,
   );
-  assert.match(workflow, /EXPECTED_INVENTORY_ENTRY_COUNT: "2130"/u);
+  assert.match(workflow, /EXPECTED_INVENTORY_ENTRY_COUNT: "2138"/u);
   assert.match(workflow, /Require npm provenance support/u);
   assert.match(workflow, /major < 11 \|\| \(major === 11 && \(minor < 5 \|\| \(minor === 5 && patch < 1\)\)\)/u);
   assert.match(workflow, /test "\$GITHUB_REPOSITORY" = "briginas\/sdd-yo"/u);

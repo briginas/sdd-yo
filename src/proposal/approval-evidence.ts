@@ -61,9 +61,11 @@ export function createApprovalEvidence(input: {
     decision: input.decision,
     mode: input.package.mode,
     subject: {
-      base_ref: input.package.base.git_ref,
-      semantic_delta_fingerprint: input.package.object_delta.semantic_fingerprint,
-      structural_delta_fingerprint: input.package.object_delta.structural_fingerprint,
+      base: input.package.base,
+      candidate: input.package.candidate,
+      object_delta: input.package.object_delta,
+      code_targets: input.package.code_targets,
+      affected_scope: input.package.affected_scope,
     },
     reason: input.reason,
   };

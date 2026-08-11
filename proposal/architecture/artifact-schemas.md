@@ -39,6 +39,9 @@ The complete version 1 artifact schema set is:
 The contract parse, schema, project, and subject cases are enumerated by the
 [`artifact fixture matrix`](../../fixtures/v1/artifacts/cases.json).
 
+CandidateTreeManifest is materialized only as the fixed `candidate-tree.json`
+member of a proposal bundle.
+
 ## Common envelope
 
 Every external artifact uses this envelope:
@@ -99,10 +102,10 @@ project-namespaced durable store
 
 The durable store may be a local archive, CI artifact service, or issuer-owned
 system. It is outside the Git refs being assessed and namespaces retained
-values by SDD Project. It preserves the exact artifact bytes and any candidate
-bytes needed to reproduce a command; an external manifest or content-addressed
-key may describe that retained set, but it is not hidden CLI workflow state and
-does not replace the versioned artifact subjects.
+values by SDD Project. It preserves exact artifact bytes, including complete
+proposal bundles; an external manifest or content-addressed key may describe
+that retained set, but it is not hidden CLI workflow state and does not replace
+the versioned artifact subjects.
 
 Before a command, the invoker materializes the required immutable values under
 an ignored staging root inside the selected project. The staging root is
@@ -114,14 +117,12 @@ checks. Primary output is written to the same staging boundary or captured from
 stdout, then exported byte-for-byte to durable storage before optional staging
 cleanup.
 
-Candidate bytes follow the same lifecycle: the retained source is immutable,
-and the exact directory or CandidateTreeManifest accepted by the current
-command is materialized inside the project only for the run. A retained
-directory containing another `.sdd/config.yaml` must not remain discoverable
-as a nested project. The candidate-snapshot command writes a
-CandidateTreeManifest directly under the staging boundary from explicit Git
-refs, so later commands consume that file without directory extraction. This
-workflow does not add archive ingestion or weaken project discovery.
+An authored candidate directory is transient input to `proposal materialize`
+only in `spec-code` and `spec` modes. The command converts it into the fixed
+`candidate-tree.json` bundle member; downstream commands never accept a
+candidate directory, a raw CandidateTreeManifest, or an archive. The embedded
+member contains only configured specification-tree files and never embeds a
+second `.sdd/config.yaml`, so bundle retention cannot create a nested project.
 
 For a confirmed authored `spec-code` or `spec` candidate, `proposal
 materialize` creates the handoff without conversational JSON transcription. It
@@ -139,7 +140,7 @@ from that manifest. The package therefore records `candidate.source` as
 `manifest`, and both files retain the same candidate-tree fingerprint. The
 directory is a publication boundary rather than a third JSON artifact: its
 fixed member names and all-or-nothing creation are part of the CLI contract.
-Downstream commands receive the explicit retained member paths.
+Downstream commands receive the bundle path and derive its fixed members.
 
 Reproduction resolves the declared mutable refs again and accepts each
 retained value only when its exact subject still applies. Ref movement
@@ -183,14 +184,13 @@ project-relative path, its exact SHA-256 content hash, and its UTF-8 content.
 Duplicate paths, unsafe paths, unknown fields, and a content/hash mismatch are
 invalid; hash revalidation is a runtime check over schema-valid input.
 
-`sdd candidate snapshot` produces this artifact from one explicitly resolved
-base ref and one explicitly resolved candidate ref. It loads the selected SDD
-Project configuration and specification tree from both refs, rejects a
-missing, mismatched, or invalid project snapshot, omits provenance fields so
-identical inputs produce identical bytes, and creates a new manifest without
-replacing an existing retained value. The output path must be ignored by Git.
-The manifest contains only configured specification-tree files; it does not
-embed another `.sdd/config.yaml`.
+CandidateTreeManifest is not a standalone workflow artifact or CLI input. In
+`spec-code` and `spec` modes, `proposal materialize` derives it from the
+complete authored candidate and atomically publishes it only as the fixed
+`candidate-tree.json` member of a new bundle. The manifest contains only
+configured specification-tree files; it does not embed another
+`.sdd/config.yaml`. `code` bundles omit the member because their candidate is
+the resolved base.
 
 ## ProposalPackage
 
@@ -205,7 +205,7 @@ embed another `.sdd/config.yaml`.
     "tree_fingerprint": "sha256:..."
   },
   "candidate": {
-    "source": "directory",
+    "source": "manifest",
     "tree_fingerprint": "sha256:..."
   },
   "object_delta": {
@@ -235,12 +235,12 @@ Capability sets to their canonical fingerprint. The Proposal Gate populates
 Those candidates are review inputs: they do not block an otherwise valid
 package, declare Findings, or grant approval.
 
-Candidate content accepted by the version 1 CLI lives in an SDD Project
-directory or CandidateTreeManifest. The schema reserves `archive` as a source
-value, but version 1 commands do not ingest archives. Equivalent normalized
-candidate trees produce identical tree fingerprints, object deltas, code
-targets, and affected scope; `candidate.source` still records the selected
-input form and therefore may differ between a directory and a manifest.
+For specification-changing modes, ProposalPackage records candidate source
+`manifest` because its candidate is the bundle's embedded
+CandidateTreeManifest. No directory, archive, or standalone manifest source
+is accepted by a command. Equivalent normalized candidate
+trees produce identical tree fingerprints, object deltas, code targets, and
+affected scope.
 
 The optimized `code` route uses candidate source `base`: the CLI derives the
 unchanged candidate directly from the once-resolved base, retains only the
@@ -286,15 +286,29 @@ Every operation is validated before any write. The final tree must equal
   "decision": "approved",
   "mode": "spec-code",
   "subject": {
-    "base_ref": "4f88...",
-    "semantic_delta_fingerprint": "sha256:...",
-    "structural_delta_fingerprint": "sha256:..."
+    "base": {"git_ref": "4f88...", "tree_fingerprint": "sha256:..."},
+    "candidate": {"source": "manifest", "tree_fingerprint": "sha256:..."},
+    "object_delta": {
+      "semantic_fingerprint": "sha256:...",
+      "structural_fingerprint": "sha256:...",
+      "added": ["REQ-7F3A2C91"],
+      "modified": [],
+      "deleted": []
+    },
+    "code_targets": [],
+    "affected_scope": {
+      "fingerprint": "sha256:...",
+      "requirements": ["REQ-7F3A2C91"],
+      "capabilities": ["CAP-CB22A5A3"]
+    }
   },
   "reason": "optional human-readable note"
 }
 ```
 
-The CLI validates schema, issuer syntax, decision, mode, and subject. Issuer
+The subject retains the exact base, candidate, object delta, code targets, and
+affected scope derived from the displayed ProposalPackage. The CLI validates
+schema, issuer syntax, decision, mode, and that complete subject. Issuer
 text is untrusted provenance. Authentication, signature verification, actor
 authorization, and organizational policy remain external. Negative and
 contradictory decisions prevent `PASS`.

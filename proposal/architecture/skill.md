@@ -122,8 +122,8 @@ decision-bearing proposal. It does not silently switch modes after approval.
    `code` bypasses this checkpoint and retains exact active Requirement targets.
 8. Only after confirmation, generate IDs through `sdd id`; never invent or
    recycle them, then draft a complete virtual candidate tree.
-9. Materialize the exact retained proposal through the CLI, then revalidate it
-   from its retained bundle or code package with JSON output.
+9. Materialize the exact retained proposal bundle through the CLI, then
+   revalidate that bundle with JSON output.
 10. Present exact diagnostics, object delta, affected scope, and open decisions.
 11. When explicitly asked to record a human decision, display the exact
     revalidated subject before the pause, write only the bounded reason input,

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "candidate-tree-manifest.schema.json",
   "title": "SDD Yo CandidateTreeManifest",
-  "description": "Version 1 virtual candidate specification tree input.",
+  "description": "Version 1 candidate specification tree retained only as a fixed proposal-bundle member.",
   "type": "object",
   "unevaluatedProperties": false,
   "required": [

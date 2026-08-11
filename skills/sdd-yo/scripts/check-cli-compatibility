@@ -357,7 +357,7 @@ function verifyProposalPackage(result, projectId) {
     result.base.git_ref.length === 0 ||
     !isFingerprint(result.base.tree_fingerprint) ||
     !isRecord(result.candidate) ||
-    !["base", "directory", "manifest"].includes(result.candidate.source) ||
+    !["base", "manifest"].includes(result.candidate.source) ||
     !isFingerprint(result.candidate.tree_fingerprint) ||
     !isRecord(result.object_delta) ||
     !isFingerprint(result.object_delta.semantic_fingerprint) ||
@@ -704,7 +704,7 @@ const operation = ["approval", "proposal", "tests", "findings", "merge"].include
   : command;
 if (command === undefined || !SUPPORTED_OPERATIONS.has(operation))
   fail(
-    "this skill slice permits only init, id, validate, inspect, trace, approval record, proposal validate/prepare/apply, tests discover, findings validate, or merge check.",
+    "this skill slice permits only init, id, validate, inspect, trace, proposal materialize/validate/prepare/apply, approval record, tests discover, findings validate, or merge check.",
   );
 if (commandArguments.includes("--output")) fail("--output is unavailable because JSON must remain on stdout.");
 if (commandArguments.includes("--format")) fail("omit --format; the compatibility wrapper always selects JSON.");
@@ -758,14 +758,10 @@ if (command === "init") {
 
 if (operation === "proposal.validate") {
   const bundle = optionValue(commandArguments, "--bundle");
-  const packagePath = optionValue(commandArguments, "--package");
-  if (bundle !== undefined && packagePath !== undefined) fail("proposal.validate accepts one retained subject input.");
-  if (bundle === undefined && packagePath === undefined) {
-    const mode = requireOption(commandArguments, "--mode", operation);
-    if (!["spec-code", "spec", "code"].includes(mode)) fail("proposal.validate requires a supported --mode.");
-    requireOption(commandArguments, "--base", operation);
-    requireOption(commandArguments, "--candidate", operation);
-  }
+  if (bundle === undefined) fail("proposal.validate requires one retained --bundle.");
+  for (const option of ["--package", "--mode", "--base", "--candidate", "--code-target"])
+    if (optionValue(commandArguments, option) !== undefined)
+      fail("proposal.validate accepts only one retained --bundle.");
 }
 if (operation === "proposal.materialize") {
   for (const option of ["--mode", "--base", "--bundle"]) requireOption(commandArguments, option, operation);
@@ -780,17 +776,24 @@ if (operation === "proposal.materialize") {
   }
 }
 if (operation === "approval.record") {
-  for (const option of ["--issuer", "--actor", "--decision", "--reason", "--evidence"])
+  for (const option of ["--bundle", "--issuer", "--actor", "--decision", "--reason", "--evidence"])
     requireOption(commandArguments, option, operation);
-  if ((optionValue(commandArguments, "--bundle") === undefined) === (optionValue(commandArguments, "--package") === undefined))
-    fail("approval.record requires exactly one retained bundle or code package.");
+  if (
+    optionValue(commandArguments, "--package") !== undefined ||
+    optionValue(commandArguments, "--candidate") !== undefined
+  )
+    fail("approval.record accepts only one retained --bundle.");
   const decision = optionValue(commandArguments, "--decision");
   if (decision !== "approved" && decision !== "rejected")
     fail("approval.record requires --decision approved or rejected.");
 }
 if (operation === "proposal.prepare") {
-  requireOption(commandArguments, "--package", operation);
-  requireOption(commandArguments, "--candidate", operation);
+  requireOption(commandArguments, "--bundle", operation);
+  if (
+    optionValue(commandArguments, "--package") !== undefined ||
+    optionValue(commandArguments, "--candidate") !== undefined
+  )
+    fail("proposal.prepare accepts only one retained --bundle.");
   requireOption(commandArguments, "--branch-head", operation);
   requireOption(commandArguments, "--integration-ref", operation);
 }
@@ -801,16 +804,13 @@ if (operation === "findings.validate") {
   requireOption(commandArguments, "--findings", operation);
 }
 if (operation === "merge.check") {
-  for (const option of [
-    "--change",
-    "--package",
-    "--candidate",
-    "--approval",
-    "--test-index",
-    "--test-evidence",
-    "--qa",
-  ])
+  for (const option of ["--change", "--bundle", "--approval", "--test-index", "--test-evidence", "--qa"])
     requireOption(commandArguments, option, operation);
+  if (
+    optionValue(commandArguments, "--package") !== undefined ||
+    optionValue(commandArguments, "--candidate") !== undefined
+  )
+    fail("merge.check accepts only one retained --bundle.");
 }
 
 let expectedIdCount;

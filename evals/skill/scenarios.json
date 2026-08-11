@@ -526,7 +526,7 @@
       ],
       "human_review": [
         "Code mode uses active Requirement targets and a retained base-derived ProposalPackage, with no authored candidate or semantic-model confirmation.",
-        "Approval recording receives the package path, not a bundle or candidate path.",
+        "Approval recording receives the exact retained bundle, never a separate package or candidate path.",
         "The agent refuses patch preparation and application and requires separate implementation-verification authority."
       ]
     },

@@ -69,7 +69,7 @@ Require exact project-relative inputs for the current workflow:
 
 ```text
 node scripts/check-cli-compatibility -- merge check \
-  --change <path> --package <path> --candidate <directory-or-manifest> \
+  --change <path> --bundle <project-relative-path> \
   --approval <path> --test-index <path> --test-evidence <path> --qa <path> \
   [--input-manifest <path> --findings <path> ...] \
   [--resolutions <path> ...] [--human-semantic-review <path>] \

@@ -1,22 +1,20 @@
 # Explicit approval decision recording
 
 Load this reference only after proposal review when an identified human asks to
-record an explicit decision on the exact retained ProposalPackage and candidate.
+record an explicit decision on one exact retained proposal bundle.
 The human decides; the Skill displays the subject and orchestrates the
 deterministic recorder.
 
 ## Informed decision request
 
-Require one selected SDD Project, the exact retained proposal bundle for
-`spec-code` or `spec` or its exact retained ProposalPackage member for `code`,
-and a caller-selected project-relative Git-ignored evidence path outside the
-specification root.
+Require one selected SDD Project, its exact retained proposal bundle for every
+mode, and a caller-selected project-relative Git-ignored evidence path outside
+the specification root.
 
 Immediately before asking for a decision, run:
 
 ```text
 node scripts/check-cli-compatibility -- proposal validate --bundle <project-relative-path> --cwd <directory>
-node scripts/check-cli-compatibility -- proposal validate --package <code-package-path> --cwd <directory>
 ```
 
 Stop unless its unchanged compatible result is `ok`. Display all of these
@@ -47,7 +45,6 @@ other workflow input directly. Invoke only:
 
 ```text
 node scripts/check-cli-compatibility -- approval record --bundle <project-relative-path> --issuer <name> --actor <identity> --decision approved|rejected --reason <project-relative-path> --evidence <project-relative-path> --cwd <directory>
-node scripts/check-cli-compatibility -- approval record --package <code-package-path> --issuer <name> --actor <identity> --decision approved|rejected --reason <project-relative-path> --evidence <project-relative-path> --cwd <directory>
 ```
 
 `--config <path>` may replace `--cwd <directory>`. Never add `--format` or

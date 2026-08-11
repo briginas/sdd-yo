@@ -12,9 +12,27 @@
   "decision": "approved",
   "mode": "spec-code",
   "subject": {
-    "base_ref": "4f88abc",
-    "semantic_delta_fingerprint": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
-    "structural_delta_fingerprint": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    "base": {
+      "git_ref": "4f88abc",
+      "tree_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "candidate": {
+      "source": "manifest",
+      "tree_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    "object_delta": {
+      "semantic_fingerprint": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "structural_fingerprint": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "added": [],
+      "modified": ["REQ-A1000001"],
+      "deleted": []
+    },
+    "code_targets": [],
+    "affected_scope": {
+      "fingerprint": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+      "requirements": ["REQ-A1000001"],
+      "capabilities": ["CAP-A1000001"]
+    }
   },
   "reason": "The proposed product behavior is approved."
 }

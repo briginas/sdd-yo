@@ -185,10 +185,11 @@ authenticating the decision itself.
 
 ### Acceptance criteria <!-- sdd:acceptance -->
 
-- Input requires the exact retained proposal bundle or code ProposalPackage, a
-  bounded non-empty issuer, an identified actor, an explicit `approved` or
-  `rejected` decision, a bounded UTF-8 reason file containing the human
-  message, and a caller-selected evidence path.
+- Input requires the exact retained proposal bundle, containing a candidate
+  and ProposalPackage for specification-changing modes or only a
+  ProposalPackage for `code`, plus a bounded non-empty issuer, an identified
+  actor, an explicit `approved` or `rejected` decision, a bounded UTF-8 reason
+  file containing the human message, and a caller-selected evidence path.
 - The project, mode, base object ID, candidate tree, object-ID delta, code
   targets, and semantic and structural delta fingerprints are derived only by
   atomically revalidating the retained subject. The response returns that
