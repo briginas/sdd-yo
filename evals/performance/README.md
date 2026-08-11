@@ -6,5 +6,5 @@ product source, dependency lock, scale, environment, measurements, and accepted
 targets.
 
 A report covers only its recorded environment. Smoke reports are not retained
-as performance evidence, and a macOS report does not satisfy Linux or Windows
-conformance.
+as performance evidence, and a macOS report does not generalize beyond its
+recorded environment.

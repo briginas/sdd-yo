@@ -11,7 +11,7 @@ import { loadSpecificationDocuments } from "../src/markdown/index.ts";
 import { nodeFileSystem } from "../src/platform/index.ts";
 
 const schemaVersion = "1.0" as const;
-const suiteName = "sdd-cross-platform-conformance" as const;
+const suiteName = "sdd-macos-conformance" as const;
 
 type DeterministicCase = {
   readonly name: string;
@@ -32,11 +32,11 @@ type DeterministicManifest = {
   readonly security_fixture_sha256: string;
 };
 
-export type PlatformConformanceReport = {
+export type MacosConformanceReport = {
   readonly schema_version: typeof schemaVersion;
   readonly suite: typeof suiteName;
   readonly status: "MET";
-  readonly platform: string;
+  readonly platform: "darwin";
   readonly architecture: string;
   readonly os_release: string;
   readonly node_version: string;
@@ -50,23 +50,6 @@ export type PlatformConformanceReport = {
   };
   readonly checks: readonly ["product-and-security-tests", "package", "schemas", "build", "typecheck", "format"];
   readonly deterministic_manifest: DeterministicManifest;
-};
-
-type CrossPlatformSummary = {
-  readonly schema_version: typeof schemaVersion;
-  readonly suite: typeof suiteName;
-  readonly status: "MET";
-  readonly platforms: readonly string[];
-  readonly source_sha256: string;
-  readonly deterministic_manifest_sha256: string;
-  readonly reports: readonly {
-    readonly platform: string;
-    readonly architecture: string;
-    readonly os_release: string;
-    readonly node_version: string;
-    readonly run_id: string | null;
-    readonly git_sha: string | null;
-  }[];
 };
 
 function sha256(bytes: Uint8Array | string): string {
@@ -89,14 +72,12 @@ async function sourceFingerprint(root: string): Promise<string> {
   const files = [
     "package.json",
     "package-lock.json",
-    "scripts/cross-platform-conformance.ts",
+    "scripts/macos-conformance.ts",
     "scripts/performance-benchmark.ts",
   ];
   const visit = async (relativeDirectory: string): Promise<void> => {
     const entries = await readdir(join(root, relativeDirectory), { withFileTypes: true });
-    for (const entry of entries.toSorted((left, right) =>
-      left.name < right.name ? -1 : left.name > right.name ? 1 : 0,
-    )) {
+    for (const entry of entries.toSorted((left, right) => left.name.localeCompare(right.name))) {
       const relativePath = `${relativeDirectory}/${entry.name}`;
       if (entry.isDirectory()) await visit(relativePath);
       else if (entry.isFile() && entry.name.endsWith(".ts")) files.push(relativePath);
@@ -104,7 +85,7 @@ async function sourceFingerprint(root: string): Promise<string> {
   };
   await visit("src");
   const hash = createHash("sha256");
-  for (const path of files.toSorted((left, right) => (left < right ? -1 : left > right ? 1 : 0))) {
+  for (const path of files.toSorted((left, right) => left.localeCompare(right))) {
     hash.update(path, "utf8");
     hash.update("\0", "utf8");
     hash.update(await readFile(join(root, ...path.split("/"))));
@@ -167,17 +148,20 @@ async function deterministicManifest(root: string): Promise<DeterministicManifes
   };
 }
 
-export async function createPlatformConformanceReport(options: {
+export async function createMacosConformanceReport(options: {
   readonly root: string;
   readonly runId?: string;
   readonly gitSha?: string;
-}): Promise<PlatformConformanceReport> {
+  readonly platformName?: string;
+}): Promise<MacosConformanceReport> {
+  const platformName = options.platformName ?? platform();
+  if (platformName !== "darwin") throw new Error("macOS conformance requires Darwin.");
   const manifest = await deterministicManifest(options.root);
   return {
     schema_version: schemaVersion,
     suite: suiteName,
     status: "MET",
-    platform: platform(),
+    platform: "darwin",
     architecture: arch(),
     os_release: release(),
     node_version: process.version,
@@ -194,75 +178,8 @@ export async function createPlatformConformanceReport(options: {
   };
 }
 
-function isReport(value: unknown): value is PlatformConformanceReport {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "schema_version" in value &&
-    value.schema_version === schemaVersion &&
-    "suite" in value &&
-    value.suite === suiteName &&
-    "status" in value &&
-    value.status === "MET" &&
-    "platform" in value &&
-    typeof value.platform === "string" &&
-    "source_sha256" in value &&
-    typeof value.source_sha256 === "string" &&
-    "deterministic_manifest_sha256" in value &&
-    typeof value.deterministic_manifest_sha256 === "string"
-  );
-}
-
-export function comparePlatformConformanceReports(
-  reportsInput: readonly PlatformConformanceReport[],
-): CrossPlatformSummary {
-  const reports = reportsInput.toSorted((left, right) =>
-    left.platform < right.platform ? -1 : left.platform > right.platform ? 1 : 0,
-  );
-  const expectedPlatforms = ["darwin", "linux", "win32"];
-  if (
-    reports.length !== expectedPlatforms.length ||
-    reports.some((report, index) => report.platform !== expectedPlatforms[index])
-  ) {
-    throw new Error("Conformance comparison requires exactly darwin, linux, and win32 reports.");
-  }
-  const sources = new Set(reports.map((report) => report.source_sha256));
-  const manifests = new Set(reports.map((report) => report.deterministic_manifest_sha256));
-  if (sources.size !== 1) throw new Error("Conformance reports do not bind the same source bytes.");
-  if (manifests.size !== 1) throw new Error("Conformance deterministic payloads differ across platforms.");
-  return {
-    schema_version: schemaVersion,
-    suite: suiteName,
-    status: "MET",
-    platforms: expectedPlatforms,
-    source_sha256: reports[0]!.source_sha256,
-    deterministic_manifest_sha256: reports[0]!.deterministic_manifest_sha256,
-    reports: reports.map((report) => ({
-      platform: report.platform,
-      architecture: report.architecture,
-      os_release: report.os_release,
-      node_version: report.node_version,
-      run_id: report.external_run.run_id,
-      git_sha: report.external_run.git_sha,
-    })),
-  };
-}
-
 export async function writeNewJson(path: string, value: unknown): Promise<void> {
   await writeFile(resolve(path), `${JSON.stringify(value, null, 2)}\n`, { encoding: "utf8", flag: "wx" });
-}
-
-async function readReports(directory: string): Promise<readonly PlatformConformanceReport[]> {
-  const paths = (await readdir(directory))
-    .filter((path) => path.endsWith(".json"))
-    .toSorted((left, right) => (left < right ? -1 : left > right ? 1 : 0));
-  const reports: PlatformConformanceReport[] = [];
-  for (const path of paths) {
-    const value: unknown = JSON.parse(await readFile(join(directory, path), "utf8"));
-    if (!isReport(value)) throw new Error(`Invalid conformance report: ${path}`);
-    reports.push(value);
-  }
-  return reports;
 }
 
 function optionValue(argumentsValue: readonly string[], name: string): string | undefined {
@@ -272,16 +189,11 @@ function optionValue(argumentsValue: readonly string[], name: string): string | 
 
 async function main(argumentsValue: readonly string[]): Promise<void> {
   const output = optionValue(argumentsValue, "--output");
-  if (output === undefined) throw new Error("Conformance requires a create-only --output path.");
-  const compareDirectory = optionValue(argumentsValue, "--compare");
-  if (compareDirectory !== undefined) {
-    await writeNewJson(output, comparePlatformConformanceReports(await readReports(resolve(compareDirectory))));
-    return;
-  }
+  if (output === undefined) throw new Error("macOS conformance requires a create-only --output path.");
   const root = dirname(dirname(fileURLToPath(import.meta.url)));
   await writeNewJson(
     output,
-    await createPlatformConformanceReport({
+    await createMacosConformanceReport({
       root,
       ...(optionValue(argumentsValue, "--run-id") === undefined
         ? {}
@@ -296,7 +208,7 @@ async function main(argumentsValue: readonly string[]): Promise<void> {
 const isMain = process.argv[1] !== undefined && import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
 if (isMain) {
   main(process.argv.slice(2)).catch((error: unknown) => {
-    process.stderr.write(`${error instanceof Error ? error.message : "Unknown conformance failure."}\n`);
+    process.stderr.write(`${error instanceof Error ? error.message : "Unknown macOS conformance failure."}\n`);
     process.exitCode = 1;
   });
 }

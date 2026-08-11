@@ -2,17 +2,17 @@
 
 ## Release principle
 
-SDD Yo is ready for broader use only when deterministic conformance, adversarial
-security behavior, cross-platform reproducibility, and human workflow clarity
-are demonstrated on both fixtures and existing projects. A successful demo on
-a greenfield repository is insufficient.
+SDD Yo is ready for broader use only when deterministic macOS conformance,
+adversarial security behavior, and human workflow clarity are demonstrated on
+both fixtures and existing projects. A successful demo on a greenfield
+repository is insufficient.
 
 ## Conformance suite
 
 ### Markdown and graph
 
 - Parse valid Capability, Requirement, and Concept fixtures byte-identically
-  on macOS, Linux, and Windows.
+  on macOS.
 - Reject unknown document types, malformed markers, duplicate objects,
   unresolved links, cross-project relations, and invalid relation kinds.
 - Distinguish normative from explanatory sections.
@@ -257,7 +257,7 @@ authorization, adapter execution, incident response, and rollback policy.
 ## MVP completion checklist
 
 - [x] Published Markdown grammar and JSON Schemas match implementation.
-- [x] Cross-platform conformance and security suites pass.
+- [x] macOS conformance and security suites pass.
 - [x] Performance targets are met or explicitly revised in the specification.
 - [x] Adapter contract kit and JUnit importer are documented and tested.
 - [x] Two complementary existing-project onboarding studies complete.

@@ -10,7 +10,7 @@ permissions:
 jobs:
   publish:
     name: Publish exact release artifact
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     environment: release
     env:
       PACKAGE_NAME: sdd-yo
@@ -121,8 +121,8 @@ jobs:
         run: |
           set -euo pipefail
           artifact="$RUNNER_TEMP/sdd-yo-release/$PACKAGE_NAME-$PACKAGE_VERSION.tgz"
-          test "$(sha256sum "$artifact" | awk '{print $1}')" = "$EXPECTED_ARTIFACT_SHA256"
-          test "$(tar -tzf "$artifact" | LC_ALL=C sort | sha256sum | awk '{print $1}')" = "$EXPECTED_INVENTORY_SHA256"
+          test "$(shasum -a 256 "$artifact" | awk '{print $1}')" = "$EXPECTED_ARTIFACT_SHA256"
+          test "$(tar -tzf "$artifact" | LC_ALL=C sort | shasum -a 256 | awk '{print $1}')" = "$EXPECTED_INVENTORY_SHA256"
           test "$(tar -tzf "$artifact" | wc -l | tr -d ' ')" = "$EXPECTED_INVENTORY_ENTRY_COUNT"
 
       - name: Publish through the configured npm trusted publisher

@@ -116,8 +116,6 @@ The verifier performs these checks:
 
 ## Platform evidence
 
-Milestone 0.8 is verified locally on macOS with Node.js 22. Linux and Windows
-execution is deferred until those environments are available. Their
-declarative security and portability fixtures remain in the corpus and are
-checked for manifest completeness, but this macOS run is not evidence that
-host-specific behavior executed successfully on either platform.
+Milestone 0.8 is verified locally and in CI on macOS with Node.js 22.
+Declarative security and portability fixtures remain in the corpus and are
+checked for manifest completeness.

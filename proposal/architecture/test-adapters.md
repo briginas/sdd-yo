@@ -198,7 +198,7 @@ The published adapter kit shall verify:
 - malformed, truncated, oversized, and non-UTF-8 output;
 - timeout and non-zero exit;
 - deterministic ordering independent of record order;
-- Windows and POSIX project path normalization;
+- project path normalization and safe handling of foreign path forms;
 - stale index and execution fingerprint rejection.
 
 The kit uses fixtures only and does not assume a programming language.

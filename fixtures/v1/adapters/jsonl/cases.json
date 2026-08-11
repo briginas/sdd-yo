@@ -6,7 +6,7 @@
     "0.6a",
     "0.6b"
   ],
-  "scope": "Valid discovery, execution, selection, hierarchy, normalization, malformed-stream, and adapter-process failure fixtures; JUnit, security-path, cross-platform path, freshness, and runtime behavior are deferred.",
+  "scope": "Valid discovery, execution, selection, hierarchy, normalization, malformed-stream, and adapter-process failure fixtures; JUnit, security-path, platform-path, freshness, and runtime behavior are deferred.",
   "contracts": [
     "adapter.jsonl-test-stream-header",
     "adapter.jsonl-suite-record",

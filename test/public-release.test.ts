@@ -13,7 +13,7 @@ test("REQ-ABFFEAF2 REQ-9CE36B68 REQ-0163273A permits only the exact protected tr
   assert.match(workflow, /^on:\n  release:\n    types: \[published\]$/mu);
   assert.doesNotMatch(workflow, /\b(?:push|pull_request|workflow_dispatch|workflow_call):/u);
   assert.match(workflow, /^    environment: release$/mu);
-  assert.match(workflow, /^    runs-on: ubuntu-latest$/mu);
+  assert.match(workflow, /^    runs-on: macos-latest$/mu);
   assert.match(workflow, /^      contents: read\n      id-token: write$/mu);
   assert.match(workflow, /uses: actions\/checkout@v7/u);
   assert.match(workflow, /ref: \$\{\{ github\.sha \}\}/u);
@@ -48,8 +48,8 @@ test("REQ-ABFFEAF2 REQ-9CE36B68 REQ-0163273A permits only the exact protected tr
   assert.match(workflow, /publication is forbidden because \$PACKAGE_NAME@\$PACKAGE_VERSION already exists/u);
   assert.match(workflow, /npm pack --json --pack-destination "\$RUNNER_TEMP\/sdd-yo-release"/u);
   assert.match(workflow, /Verify reviewed artifact bytes and inventory/u);
-  assert.match(workflow, /sha256sum "\$artifact"/u);
-  assert.match(workflow, /tar -tzf "\$artifact" \| LC_ALL=C sort \| sha256sum/u);
+  assert.match(workflow, /shasum -a 256 "\$artifact"/u);
+  assert.match(workflow, /tar -tzf "\$artifact" \| LC_ALL=C sort \| shasum -a 256/u);
   assert.match(workflow, /Publish through the configured npm trusted publisher/u);
   assert.match(
     workflow,

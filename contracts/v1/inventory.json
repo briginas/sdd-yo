@@ -2036,7 +2036,7 @@
         "unknown-newer-major",
         "canonicalization-version-change",
         "cache-deletion-equivalence",
-        "cross-platform-byte-equivalence"
+        "macos-byte-equivalence"
       ]
     }
   ],

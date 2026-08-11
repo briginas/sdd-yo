@@ -50,9 +50,8 @@ commit. The first validation should return `status: "ok"` and
 `result.valid: true`.
 
 Replace `<repository-root>` with an absolute path. Do not rely on a global
-`sdd` executable or Skill. The deterministic core and package support macOS,
-Linux, and Windows. The `--scope user` lifecycle and its public consumer proof
-are macOS-only.
+`sdd` executable or Skill. The deterministic core and package support macOS.
+The `--scope user` lifecycle and its public consumer proof are macOS-only.
 
 ## One macOS user Skill
 

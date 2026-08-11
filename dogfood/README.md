@@ -209,7 +209,7 @@ results.
   deferred.
 - The two-study MVP onboarding criterion does not establish monorepo or
   sibling-project isolation guarantees.
-- Cross-platform reproducibility, broader usability, and enforced merge policy
+- macOS reproducibility, broader usability, and enforced merge policy
   remain outside these two studies.
 - No observation here authorizes a product fix, external-project mutation,
   branch operation, merge, approval, or QA decision.

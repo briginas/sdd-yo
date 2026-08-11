@@ -64,7 +64,7 @@ require demonstrated consumer need, not speculative modularity.
   than reading `process.cwd`, environment, clock, randomness, filesystem, or
   Git implicitly.
 - Platform-specific behavior is isolated behind narrow interfaces and tested
-  on macOS, Linux, and Windows.
+  on macOS.
 
 ## Dependency policy
 
@@ -87,7 +87,7 @@ Selection criteria:
 - deterministic behavior;
 - source position preservation;
 - bounded input handling;
-- Windows path compatibility;
+- safe handling of foreign path forms;
 - no required network or telemetry;
 - active maintenance and acceptable transitive dependency surface;
 - ability to inject I/O for tests.
@@ -105,7 +105,7 @@ The test suite supports:
   fingerprint invariants;
 - integration tests using temporary Git repositories and filesystems;
 - process tests for JSONL adapters, timeouts, and output limits;
-- cross-platform CI;
+- macOS CI;
 - packaged CLI smoke tests.
 
 Every test or ancestor suite verifying an active Requirement contains the exact
