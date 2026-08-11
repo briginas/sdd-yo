@@ -200,9 +200,9 @@ code-specific diagnostics, architecture and README guidance, strict executing
 package identity checks, and package smoke over ordinary and retained-offline
 tarball consumers. Both clean macOS homes install, use, update unchanged, and
 remove only the verified user Skill and private CLI; tampered bytes are
-preserved and refused. Source package `0.4.0` is synchronized as the reviewed
-next local artifact while public `0.3.0` remains unchanged. The full validation
-suite passes; no registry publication or public-version claim was made.
+preserved and refused. Source package `0.4.0` was synchronized as the reviewed
+release candidate. The full validation suite passed; publication remained a
+separate authority outside this leaf.
 
 ### 18.6 — Public macOS consumer proof and closeout
 
@@ -219,6 +219,10 @@ suite passes; no registry publication or public-version claim was made.
 - Update canonical specification, architecture, README, supported-environment
   wording, limitations, and deferred work, run the full validation suite, then
   compact this plan according to `plans/README.md`.
+
+Publication and automated public-consumer evidence are complete for exact
+`sdd-yo@0.4.0`. The separately identified human review of Skill discovery and
+first use remains pending; Milestone 18 is not closed until it is recorded.
 
 Milestone 18 is done when another macOS developer can install one public exact
 `sdd-yo` user Skill and private CLI, use the bound CLI across explicit

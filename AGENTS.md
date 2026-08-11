@@ -8,7 +8,8 @@ system with a deterministic CLI and an optional Agent Skill.
 The TypeScript runtime and canonical `spec/` exist, and the deterministic
 version 1 CLI, proposal and exact-patch workflow, evidence composition,
 Verification and Merge gates, enforced governed-scope integration,
-repository-scoped `sdd-yo` Agent Skill, and public npm package are implemented.
+repository-scoped and macOS user-scoped `sdd-yo` Agent Skill routes, and public
+npm package are implemented.
 
 ## Source-of-truth map
 
@@ -47,9 +48,9 @@ the full specification when a small Capability or Requirement set is enough.
 - Optional Agent Skill: `sdd-yo`, a progressive-disclosure orchestrator over
   compatible deterministic CLI JSON; it does not replace CLI authority or human
   evidence.
-- Distribution state: version `0.3.0` is public on npm; the exact offline
-  tarball installation route is retained. Source package `0.4.0` is the next
-  reviewed local artifact and is not published. No Codex plugin is published.
+- Distribution state: version `0.4.0` is public on npm; the exact offline
+  tarball installation route is retained, the user-scoped lifecycle is
+  macOS-only, and no Codex plugin is published.
 
 Exact dependency versions are selected and locked during the scaffold
 milestone. Do not add a runtime dependency without explaining why a platform

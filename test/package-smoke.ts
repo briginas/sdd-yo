@@ -33,8 +33,8 @@ type PackResult = {
 
 const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
 const documentedQuickstartCommands = [
-  "npm install --save-dev --save-exact sdd-yo@0.3.0",
-  "npm exec --package=sdd-yo@0.3.0 -- sdd --version --format json",
+  "npm install --save-dev --save-exact sdd-yo@0.4.0",
+  "npm exec --package=sdd-yo@0.4.0 -- sdd --version --format json",
   "npm install --offline --no-audit --no-fund --save-exact <tarball-path>",
   "node ./node_modules/sdd-yo/dist/bin/sdd.js --version --format json",
   "mkdir .sdd-tooling",
