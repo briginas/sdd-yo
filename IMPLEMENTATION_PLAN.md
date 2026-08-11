@@ -245,7 +245,7 @@ Implemented and verified: the final bundle-only workflow contract and exact
 `0.5.0` identity pass representative isolated `spec-code`, `spec`, and `code`
 CLI workflows plus the complete repository and package proof. The retained
 release candidate has SHA-256
-`af6abc82173d0d31dc579672bde939c186d6d221f41383536a53c02d89298835`,
+`9999ad5cfaf4e5c594222213854ddddf1e4620a6cf9d2f8972927426c68110e9`,
 inventory SHA-256
 `db26f2f8520dee2e2717039e771ddd666b11edeaf9814fd77676b4b09c1f646d`,
 and 2,138 entries. No publication, tag, push, or release authority was inferred.

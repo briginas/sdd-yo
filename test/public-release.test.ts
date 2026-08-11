@@ -28,14 +28,17 @@ test("REQ-ABFFEAF2 REQ-9CE36B68 REQ-0163273A permits only the exact protected tr
   assert.match(workflow, /package-manager-cache: false/u);
   assert.match(workflow, /PACKAGE_NAME: sdd-yo/u);
   assert.match(workflow, /PACKAGE_VERSION: 0\.5\.0/u);
+  assert.match(workflow, /NPM_VERSION: 11\.16\.0/u);
   assert.match(workflow, /PREVIOUS_PUBLIC_VERSION: 0\.4\.1/u);
-  assert.match(workflow, /EXPECTED_ARTIFACT_SHA256: af6abc82173d0d31dc579672bde939c186d6d221f41383536a53c02d89298835/u);
+  assert.match(workflow, /EXPECTED_ARTIFACT_SHA256: 9999ad5cfaf4e5c594222213854ddddf1e4620a6cf9d2f8972927426c68110e9/u);
   assert.match(
     workflow,
     /EXPECTED_INVENTORY_SHA256: db26f2f8520dee2e2717039e771ddd666b11edeaf9814fd77676b4b09c1f646d/u,
   );
   assert.match(workflow, /EXPECTED_INVENTORY_ENTRY_COUNT: "2138"/u);
   assert.match(workflow, /Require npm provenance support/u);
+  assert.match(workflow, /npm install --global "npm@\$NPM_VERSION"/u);
+  assert.match(workflow, /test "\$\(npm --version\)" = "\$NPM_VERSION"/u);
   assert.match(workflow, /major < 11 \|\| \(major === 11 && \(minor < 5 \|\| \(minor === 5 && patch < 1\)\)\)/u);
   assert.match(workflow, /test "\$GITHUB_REPOSITORY" = "briginas\/sdd-yo"/u);
   assert.match(workflow, /test "\$GITHUB_REF" = "refs\/tags\/\$RELEASE_TAG"/u);

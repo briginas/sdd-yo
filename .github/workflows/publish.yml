@@ -15,8 +15,9 @@ jobs:
     env:
       PACKAGE_NAME: sdd-yo
       PACKAGE_VERSION: 0.5.0
+      NPM_VERSION: 11.16.0
       PREVIOUS_PUBLIC_VERSION: 0.4.1
-      EXPECTED_ARTIFACT_SHA256: af6abc82173d0d31dc579672bde939c186d6d221f41383536a53c02d89298835
+      EXPECTED_ARTIFACT_SHA256: 9999ad5cfaf4e5c594222213854ddddf1e4620a6cf9d2f8972927426c68110e9
       EXPECTED_INVENTORY_SHA256: db26f2f8520dee2e2717039e771ddd666b11edeaf9814fd77676b4b09c1f646d
       EXPECTED_INVENTORY_ENTRY_COUNT: "2138"
     permissions:
@@ -51,7 +52,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          npm --version
+          npm install --global "npm@$NPM_VERSION"
+          test "$(npm --version)" = "$NPM_VERSION"
           node --input-type=module --eval 'const [major, minor, patch] = process.argv[1].split(".").map(Number); if (major < 11 || (major === 11 && (minor < 5 || (minor === 5 && patch < 1)))) process.exitCode = 1' "$(npm --version)"
 
       - name: Verify the release subject and package identity
