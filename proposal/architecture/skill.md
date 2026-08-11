@@ -25,7 +25,6 @@ sdd-yo/
     approval.md
     branch-preparation.md
     verification.md
-    semantic-review.md
     diagnostics.md
   templates/
     capability.md
@@ -156,20 +155,9 @@ The skill:
 - does not report success if the CLI is missing, incompatible, interrupted, or
   returns malformed JSON.
 
-## Semantic review
-
-Deterministic candidate generation comes from the CLI. Optional model analysis
-receives an input manifest plus only:
-
-- changed normative object sections;
-- directly related Concepts and Requirements;
-- transitive dependency objects selected by the core;
-- the deterministic candidate reason.
-
-The skill requests schema-constrained Finding output, validates it through
-`sdd findings validate`, and displays cited object/section evidence. It does
-not request or persist hidden reasoning. If a model is unavailable, it asks for
-human semantic review evidence rather than skipping the gate.
+The current Skill payload does not provide a model semantic-review route. It
+may mechanically validate existing Finding and FindingResolution artifacts
+through the verification route.
 
 ## Failure behavior
 
