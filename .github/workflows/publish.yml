@@ -14,10 +14,11 @@ jobs:
     environment: release
     env:
       PACKAGE_NAME: sdd-yo
-      PACKAGE_VERSION: 0.3.0
-      EXPECTED_ARTIFACT_SHA256: 65a7f9f95684085ad54af828e32e5cb64bad2a9f1f3e1ce7769841cf04d4fae8
-      EXPECTED_INVENTORY_SHA256: 6341e4d5024509bb54bcdb255b2458ebbff314ba9d6480c529dc46a02a1f2838
-      EXPECTED_INVENTORY_ENTRY_COUNT: "2125"
+      PACKAGE_VERSION: 0.4.0
+      PREVIOUS_PUBLIC_VERSION: 0.3.0
+      EXPECTED_ARTIFACT_SHA256: 2fa81655a83788f1a14e0a5e9c57cdda49b262c9292c70cf2cf729e66a0500c8
+      EXPECTED_INVENTORY_SHA256: 60e9ffa99d6b6d9e4d5cf27cc36df571175f751022ca675d11e9493de7102f6d
+      EXPECTED_INVENTORY_ENTRY_COUNT: "2130"
     permissions:
       contents: read
       id-token: write
@@ -39,7 +40,7 @@ jobs:
           git update-ref refs/heads/main "$RELEASE_SHA"
           test "$(git rev-parse "main^{commit}")" = "$RELEASE_SHA"
 
-      - name: Set up Node.js and npm bootstrap publishing
+      - name: Set up Node.js and npm trusted publishing
         uses: actions/setup-node@v7
         with:
           node-version: 24
@@ -51,7 +52,7 @@ jobs:
         run: |
           set -euo pipefail
           npm --version
-          node --input-type=module --eval 'const [major, minor] = process.argv[1].split(".").map(Number); if (major < 11 || (major === 11 && minor < 5)) process.exitCode = 1' "$(npm --version)"
+          node --input-type=module --eval 'const [major, minor, patch] = process.argv[1].split(".").map(Number); if (major < 11 || (major === 11 && (minor < 5 || (minor === 5 && patch < 1)))) process.exitCode = 1' "$(npm --version)"
 
       - name: Verify the release subject and package identity
         shell: bash
@@ -69,20 +70,13 @@ jobs:
           test "$(node --input-type=module --eval 'import manifest from "./package.json" with { type: "json" }; process.stdout.write(String(manifest.private))')" = "false"
           test "$(node --input-type=module --eval 'import manifest from "./package.json" with { type: "json" }; process.stdout.write(manifest.publishConfig?.access ?? "")')" = "public"
 
-      - name: Require the exact first-publication registry state
+      - name: Require the exact existing-package registry state
         shell: bash
         run: |
           set -euo pipefail
-          if npm view "$PACKAGE_NAME" version --json >"$RUNNER_TEMP/npm-package.json" 2>"$RUNNER_TEMP/npm-package.err"; then
-            echo "bootstrap publication is forbidden because $PACKAGE_NAME already exists" >&2
-            exit 1
-          fi
-          if ! grep -q "E404" "$RUNNER_TEMP/npm-package.err"; then
-            cat "$RUNNER_TEMP/npm-package.err" >&2
-            exit 1
-          fi
+          test "$(npm view "$PACKAGE_NAME" version --json)" = "\"$PREVIOUS_PUBLIC_VERSION\""
           if npm view "$PACKAGE_NAME@$PACKAGE_VERSION" version --json >"$RUNNER_TEMP/npm-version.json" 2>"$RUNNER_TEMP/npm-version.err"; then
-            echo "bootstrap publication is forbidden because $PACKAGE_NAME@$PACKAGE_VERSION already exists" >&2
+            echo "publication is forbidden because $PACKAGE_NAME@$PACKAGE_VERSION already exists" >&2
             exit 1
           fi
           if ! grep -q "E404" "$RUNNER_TEMP/npm-version.err"; then
@@ -131,10 +125,7 @@ jobs:
           test "$(tar -tzf "$artifact" | LC_ALL=C sort | sha256sum | awk '{print $1}')" = "$EXPECTED_INVENTORY_SHA256"
           test "$(tar -tzf "$artifact" | wc -l | tr -d ' ')" = "$EXPECTED_INVENTORY_ENTRY_COUNT"
 
-      - name: Publish the one bootstrap artifact
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_BOOTSTRAP_TOKEN }}
+      - name: Publish through the configured npm trusted publisher
         run: |
           set -euo pipefail
-          test -n "$NODE_AUTH_TOKEN"
           npm publish "$RUNNER_TEMP/sdd-yo-release/$PACKAGE_NAME-$PACKAGE_VERSION.tgz" --access public --provenance

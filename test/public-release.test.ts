@@ -6,7 +6,7 @@ import test from "node:test";
 
 const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
 
-test("REQ-ABFFEAF2 REQ-9CE36B68 REQ-0163273A permits only the exact protected bootstrap publication", async () => {
+test("REQ-ABFFEAF2 REQ-9CE36B68 REQ-0163273A permits only the exact protected trusted-publisher release", async () => {
   const workflow = await readFile(join(repositoryRoot, ".github/workflows/publish.yml"), "utf8");
   const ordinaryCi = await readFile(join(repositoryRoot, ".github/workflows/ci.yml"), "utf8");
 
@@ -27,36 +27,35 @@ test("REQ-ABFFEAF2 REQ-9CE36B68 REQ-0163273A permits only the exact protected bo
   assert.match(workflow, /registry-url: https:\/\/registry\.npmjs\.org/u);
   assert.match(workflow, /package-manager-cache: false/u);
   assert.match(workflow, /PACKAGE_NAME: sdd-yo/u);
-  assert.match(workflow, /PACKAGE_VERSION: 0\.3\.0/u);
-  assert.match(workflow, /EXPECTED_ARTIFACT_SHA256: 65a7f9f95684085ad54af828e32e5cb64bad2a9f1f3e1ce7769841cf04d4fae8/u);
+  assert.match(workflow, /PACKAGE_VERSION: 0\.4\.0/u);
+  assert.match(workflow, /PREVIOUS_PUBLIC_VERSION: 0\.3\.0/u);
+  assert.match(workflow, /EXPECTED_ARTIFACT_SHA256: 2fa81655a83788f1a14e0a5e9c57cdda49b262c9292c70cf2cf729e66a0500c8/u);
   assert.match(
     workflow,
-    /EXPECTED_INVENTORY_SHA256: 6341e4d5024509bb54bcdb255b2458ebbff314ba9d6480c529dc46a02a1f2838/u,
+    /EXPECTED_INVENTORY_SHA256: 60e9ffa99d6b6d9e4d5cf27cc36df571175f751022ca675d11e9493de7102f6d/u,
   );
-  assert.match(workflow, /EXPECTED_INVENTORY_ENTRY_COUNT: "2125"/u);
+  assert.match(workflow, /EXPECTED_INVENTORY_ENTRY_COUNT: "2130"/u);
   assert.match(workflow, /Require npm provenance support/u);
-  assert.match(workflow, /major < 11 \|\| \(major === 11 && minor < 5\)/u);
+  assert.match(workflow, /major < 11 \|\| \(major === 11 && \(minor < 5 \|\| \(minor === 5 && patch < 1\)\)\)/u);
   assert.match(workflow, /test "\$GITHUB_REPOSITORY" = "briginas\/sdd-yo"/u);
   assert.match(workflow, /test "\$GITHUB_REF" = "refs\/tags\/\$RELEASE_TAG"/u);
   assert.match(workflow, /git rev-parse "\$RELEASE_TAG\^\{commit\}"/u);
   assert.match(workflow, /test "\$RELEASE_TAG" = "v\$\(node/u);
-  assert.match(workflow, /Require the exact first-publication registry state/u);
+  assert.match(workflow, /Require the exact existing-package registry state/u);
   assert.match(workflow, /npm view "\$PACKAGE_NAME" version --json/u);
   assert.match(workflow, /npm view "\$PACKAGE_NAME@\$PACKAGE_VERSION" version --json/u);
-  assert.match(workflow, /bootstrap publication is forbidden because \$PACKAGE_NAME already exists/u);
+  assert.match(workflow, /PREVIOUS_PUBLIC_VERSION/u);
+  assert.match(workflow, /publication is forbidden because \$PACKAGE_NAME@\$PACKAGE_VERSION already exists/u);
   assert.match(workflow, /npm pack --json --pack-destination "\$RUNNER_TEMP\/sdd-yo-release"/u);
   assert.match(workflow, /Verify reviewed artifact bytes and inventory/u);
   assert.match(workflow, /sha256sum "\$artifact"/u);
   assert.match(workflow, /tar -tzf "\$artifact" \| LC_ALL=C sort \| sha256sum/u);
-  assert.match(workflow, /NODE_AUTH_TOKEN: \$\{\{ secrets\.NPM_BOOTSTRAP_TOKEN \}\}/u);
-  assert.match(workflow, /test -n "\$NODE_AUTH_TOKEN"/u);
+  assert.match(workflow, /Publish through the configured npm trusted publisher/u);
   assert.match(
     workflow,
     /npm publish "\$RUNNER_TEMP\/sdd-yo-release\/\$PACKAGE_NAME-\$PACKAGE_VERSION\.tgz" --access public --provenance/u,
   );
-  assert.doesNotMatch(workflow, /NPM_TOKEN/u);
-  assert.equal((workflow.match(/NODE_AUTH_TOKEN/g) ?? []).length, 2);
-  assert.equal((workflow.match(/secrets\.NPM_BOOTSTRAP_TOKEN/g) ?? []).length, 1);
+  assert.doesNotMatch(workflow, /NPM_TOKEN|NODE_AUTH_TOKEN|NPM_BOOTSTRAP_TOKEN|secrets\./u);
 
   assert.doesNotMatch(ordinaryCi, /id-token: write|npm publish/u);
 });
