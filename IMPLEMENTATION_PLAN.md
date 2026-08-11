@@ -48,12 +48,19 @@ application only when the specification changes. Deterministic work between
 those decisions may be composed by the Skill, but remains implemented and
 validated by the CLI rather than reimplemented in prompts.
 
+Milestone 19 produces one clean `0.5.0` contract. It assumes no existing user
+depends on a `0.4.x` configuration, workflow artifact, command shape, Skill
+route, installation binding, or retained package. Design and implementation
+target only the final `0.5.0` behavior; no compatibility layer, migration,
+deprecation period, legacy reader, fallback, or conversion path is required.
+
 Existing canonical Requirements expected to change or gain related behavior
 include `REQ-E26A859E`, `REQ-8DE9E078`, `REQ-E80F09C6`, `REQ-A8739118`,
 `REQ-A3C3B779`, `REQ-2C8E8085`, `REQ-32C76ED3`, `REQ-26234DC8`,
-`REQ-D17B2FB9`, `REQ-F7D39246`, `REQ-7C848ED0`, and `REQ-7AFE9904`.
-Implementation and test changes must retain exact Requirement traceability
-after the governed specification Change establishes the final contract.
+`REQ-D17B2FB9`, `REQ-F7D39246`, `REQ-7C848ED0`, `REQ-7AFE9904`,
+`REQ-97D96950`, `REQ-A2199BC2`, and `REQ-B0B35D6D`. Implementation and test
+changes must retain exact Requirement traceability after the governed
+specification Change establishes the final contract.
 
 ### Boundaries
 
@@ -68,6 +75,14 @@ after the governed specification Change establishes the final contract.
 - The CLI remains deterministic, provider-neutral, offline-first, and driven
   by explicit versioned artifacts. No hidden durable workflow database or
   prompt-owned fingerprint, delta, patch, or approval rule is introduced.
+- Treat every affected `0.4.x` configuration, artifact format, CLI option,
+  wrapper route, Skill instruction, fixture, and installation binding as
+  nonexistent. Remove superseded surfaces instead of detecting, reading,
+  converting, documenting, or testing them.
+- Select schema and Skill protocol versions solely for the final `0.5.0`
+  contract. The compatibility identity binds the exact `0.5.0` package, CLI,
+  schema, and Skill protocol that belong together and rejects a mixed
+  installation; it makes no backward-compatibility promise.
 - `code` keeps the active specification byte-for-byte unchanged and targets
   exact active Requirement IDs. It must not create or apply an empty
   SpecPatch merely to pass through a specification-oriented route.
@@ -75,9 +90,13 @@ after the governed specification Change establishes the final contract.
   remain distinguishable. No command creates a branch, commit, push, merge,
   approval decision, QA decision, publication, or release as an implied side
   effect.
-- Public package version selection and npm publication remain separate future
-  decisions. Linux and Windows support, a Codex plugin, hosted workflow state,
-  and changes to the canonical Markdown dialect are out of scope.
+- Exact package version `0.5.0` and its public release are milestone outcomes.
+  Version synchronization, immutable artifact preparation, Git operations,
+  npm publication, and release verification remain separate leaves and
+  explicit authorities; this plan does not itself authorize any of them.
+- Linux and Windows support, a Codex plugin, hosted workflow state, migration
+  notes, legacy compatibility documentation, and changes to the canonical
+  Markdown dialect unrelated to the optimized workflow are out of scope.
 
 ### 19.1 — Workflow optimization semantic contract and candidate
 
@@ -150,9 +169,9 @@ chat or stdout and without changing the active specification or Git state.
   all three successful routes and for attempted mode switching or invalid
   deltas.
 
-Done when every mode performs only its necessary mechanical work and produces
-the same or stronger explicit bindings and gate evidence as the current
-workflow.
+Done when every mode performs only its necessary mechanical work and the final
+`0.5.0` contract has complete explicit bindings and gate evidence without any
+retained legacy route.
 
 ### 19.5 — Composed Skill orchestration and approval freshness
 
@@ -179,23 +198,58 @@ Done when the Skill provides one continuous, progressive-disclosure workflow
 over deterministic CLI JSON while remaining thin and making no human decision
 or product-rule computation itself.
 
-### 19.6 — Integrated proof, documentation, and closeout
+### 19.6 — Clean `0.5.0` release candidate and integrated proof
 
 - Run representative end-to-end `spec-code`, `spec`, and `code` workflows in
   isolated repositories, including retained artifacts, human-decision pauses,
   exact patch behavior where applicable, implementation verification, and
   merge-readiness recomputation.
+- Remove superseded `0.4.x` command paths, configuration and artifact readers,
+  Skill instructions, fixtures, diagnostics, compatibility branches, and tests
+  instead of retaining migration or deprecation behavior.
+- Synchronize exact version `0.5.0` across the package manifest, lockfile, CLI
+  identity, schemas and fixtures where applicable, Skill metadata and binding,
+  installation inventories, documentation, and package assertions.
 - Update CLI help, schemas, fixtures, architecture, Skill references, evals,
   README guidance, and package smoke coverage for the final command and
   artifact contract.
-- Run the focused checks and the full repository validation suite, then inspect
-  the exact diff and close the milestone according to `plans/README.md`.
-- Compact this plan only after every leaf and the milestone done condition are
-  current and verified. Any package version change or publication remains a
-  separately reviewed and authorized follow-up.
+- Build and retain one exact offline and public-registry-shaped `0.5.0` package
+  artifact, verify its inventory, compatibility identity, CLI, library,
+  schemas, repository Skill, macOS user Skill lifecycle, and absence of hidden
+  network or migration work.
+- Run the focused checks and the full repository validation suite and inspect
+  the exact candidate diff. A successful pack or dry run is not publication
+  authorization.
+
+Done when one reviewed immutable `sdd-yo@0.5.0` artifact implements only the
+new workflow contract, passes the complete repository and package proof, and
+is ready for a separately authorized public release.
+
+### 19.7 — Public `0.5.0` release and closeout
+
+- After separate publication authorization, publish only the reviewed exact
+  `0.5.0` artifact from one immutable subject through the protected release
+  route and verify registry identity, integrity, provenance, and selected tag.
+- In a fresh macOS environment with no retained SDD Yo configuration,
+  artifacts, installation, or cache, install the exact public package and
+  complete representative first-use workflows through its bound user Skill
+  and private CLI.
+- Record automated release evidence separately from any identified human
+  first-use review. Neither source creates approval, QA, Git, or merge
+  authority for a target SDD Project.
+- Update current canonical documentation with the final supported `0.5.0`
+  behavior and limitations, run the required closeout checks, inspect the exact
+  diff, and compact this plan according to `plans/README.md`.
+
+Done when exact `sdd-yo@0.5.0` is public, a clean macOS consumer proves the
+packaged CLI and Skill workflow without legacy state, all release evidence is
+current, and Milestone 19 is closed. Git commit, push, tag, publication, and
+human review remain separately authorized actions even when this leaf is
+active.
 
 Milestone 19 is done when a developer can complete each normal Change mode
 without manually materializing or transcribing workflow artifacts, `code`
 performs no specification-patch ceremony, the Skill retains only the necessary
-human stops, and all deterministic bindings, freshness checks, safety
-boundaries, and merge-readiness guarantees remain verified.
+human stops, no legacy configuration or artifact path is retained, and exact
+public `sdd-yo@0.5.0` preserves all deterministic bindings, freshness checks,
+safety boundaries, and merge-readiness guarantees.
