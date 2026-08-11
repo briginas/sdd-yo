@@ -16,64 +16,85 @@ install or publish a Codex plugin.
 
 ## Quick start
 
-From the root of an existing Git repository, install the exact package:
+Requires macOS and Node.js `22.18.0` or newer. Choose one setup.
+
+### Install for your macOS user
+
+Use one SDD Yo Skill across multiple repositories. This does not add `sdd-yo`
+to a project or create a global `sdd` command.
 
 ```text
+npm exec --package=sdd-yo@0.5.0 -- sdd skill install --scope user --format json
+```
+
+Then use `$sdd-yo` in Codex. Always select the repository explicitly:
+
+```text
+node ~/.agents/skills/sdd-yo/scripts/check-cli-compatibility -- init --root /absolute/path/to/repository --adoption incremental
+node ~/.agents/skills/sdd-yo/scripts/check-cli-compatibility -- validate --cwd /absolute/path/to/repository
+```
+
+The install creates `~/.agents/skills/sdd-yo` and a private CLI under
+`~/Library/Application Support/sdd-yo/cli/<package-version>`. The Skill uses
+only that verified CLI. It does not use `PATH`, a repository CLI, a package
+manager, or the network after installation. User mode rejects `--cli`.
+
+### Install in one repository
+
+Run these commands from the selected Git repository:
+
+```text
+cd /absolute/path/to/repository
 npm install --save-dev --save-exact sdd-yo@0.5.0
+npm exec -- sdd --version --format json
+node ./node_modules/sdd-yo/dist/bin/sdd.js skill install --root /absolute/path/to/repository --format json
+```
+
+This creates `/absolute/path/to/repository/.agents/skills/sdd-yo` without
+initializing the project or modifying Git. In Codex, use `$sdd-yo`. For a
+direct first run:
+
+```text
+node ./.agents/skills/sdd-yo/scripts/check-cli-compatibility -- init --root /absolute/path/to/repository --adoption incremental
+node ./.agents/skills/sdd-yo/scripts/check-cli-compatibility -- validate --cwd /absolute/path/to/repository
+```
+
+### Use the npm CLI without a Skill
+
+Run the exact package without adding it to a repository:
+
+```text
 npm exec --package=sdd-yo@0.5.0 -- sdd --version --format json
+npm exec --package=sdd-yo@0.5.0 -- sdd validate --cwd /absolute/path/to/repository --format json
 ```
 
-The version check must return exit code `0`, `status: "ok"`, package and CLI
-version `0.5.0`, and compatible JSON-schema and Skill protocol major `1`.
+The validation command requires an initialized SDD Project. After installing
+the package in a repository, use `npm exec -- sdd ...` to run its local CLI.
 
-Install the repository-scoped Skill:
-
-```text
-node ./node_modules/sdd-yo/dist/bin/sdd.js skill install --root <repository-root> --format json
-```
-
-This creates `<repository-root>/.agents/skills/sdd-yo` without initializing the
-project or modifying Git. In Codex, use `$sdd-yo` to initialize that root with
-`incremental` or `complete` adoption. The Skill must confirm both choices.
-
-For a direct first run:
-
-```text
-node ./.agents/skills/sdd-yo/scripts/check-cli-compatibility -- init --root <repository-root> --adoption incremental
-node ./.agents/skills/sdd-yo/scripts/check-cli-compatibility -- validate --cwd <repository-root>
-```
-
-Use `--adoption complete` only when the specification will govern the entire
-repository. Initialization creates `.sdd/config.yaml`, `spec/README.md`,
-`spec/capabilities/`, and `spec/concepts/`; it does not create a branch or
-commit. The first validation should return `status: "ok"` and
+For every setup, initialize with `incremental` adoption unless the specification
+will govern the entire repository. Initialization creates `.sdd/config.yaml`,
+`spec/README.md`, `spec/capabilities/`, and `spec/concepts/`; it does not create
+a branch or commit. The first validation should return `status: "ok"` and
 `result.valid: true`.
 
-Replace `<repository-root>` with an absolute path. Do not rely on a global
-`sdd` executable or Skill. The deterministic core and package support macOS.
-The `--scope user` lifecycle and its public consumer proof are macOS-only.
+The version check should return exit code `0`, `status: "ok"`, package and CLI
+version `0.5.0`, and compatible JSON-schema and Skill protocol major `1`. Do
+not rely on a global `sdd` executable or Skill. User-scoped installation and
+its public consumer proof are macOS-only.
 
-## One macOS user Skill
+## Use as a library
 
-From one exact package installation, install a single user-scoped Skill and its
-private versioned CLI:
+The npm package provides an ESM library, TypeScript declarations, the `sdd`
+CLI, and versioned JSON Schemas.
 
-```text
-node ./node_modules/sdd-yo/dist/bin/sdd.js skill install --scope user --format json
-node ~/.agents/skills/sdd-yo/scripts/check-cli-compatibility -- validate --cwd <repository-root>
+```js
+import { JSON_SCHEMA_VERSION_V1 } from "sdd-yo";
+
+console.log(JSON_SCHEMA_VERSION_V1); // "1.0"
 ```
 
-For initialization, the wrapper instead requires an explicit `--root` and
-adoption mode. Every other project operation requires exactly one explicit
-`--cwd` or `--config`. User mode rejects `--cli`.
-
-The explicit install creates exactly `~/.agents/skills/sdd-yo` and
-`~/Library/Application Support/sdd-yo/cli/<package-version>`. The Skill invokes
-only the private CLI named by its verified binding. It does not use `PATH`, a
-repository CLI, a package manager, or the network. Installation does not
-initialize a project or change a repository, Git, approval, QA, or publication
-state. Exactly one active user installation is supported; repository-scoped
-Skills remain separate and explicitly selectable.
+Versioned schemas are available through paths such as
+`sdd-yo/schemas/v1/common.schema.json`.
 
 ## Offline installation
 

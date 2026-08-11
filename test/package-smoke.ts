@@ -33,8 +33,17 @@ type PackResult = {
 
 const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
 const documentedQuickstartCommands = [
+  "npm exec --package=sdd-yo@0.5.0 -- sdd skill install --scope user --format json",
+  "node ~/.agents/skills/sdd-yo/scripts/check-cli-compatibility -- init --root /absolute/path/to/repository --adoption incremental",
+  "node ~/.agents/skills/sdd-yo/scripts/check-cli-compatibility -- validate --cwd /absolute/path/to/repository",
+  "cd /absolute/path/to/repository",
   "npm install --save-dev --save-exact sdd-yo@0.5.0",
+  "npm exec -- sdd --version --format json",
+  "node ./node_modules/sdd-yo/dist/bin/sdd.js skill install --root /absolute/path/to/repository --format json",
+  "node ./.agents/skills/sdd-yo/scripts/check-cli-compatibility -- init --root /absolute/path/to/repository --adoption incremental",
+  "node ./.agents/skills/sdd-yo/scripts/check-cli-compatibility -- validate --cwd /absolute/path/to/repository",
   "npm exec --package=sdd-yo@0.5.0 -- sdd --version --format json",
+  "npm exec --package=sdd-yo@0.5.0 -- sdd validate --cwd /absolute/path/to/repository --format json",
   "npm install --offline --no-audit --no-fund --save-exact <tarball-path>",
   "node ./node_modules/sdd-yo/dist/bin/sdd.js --version --format json",
   "mkdir .sdd-tooling",
@@ -43,16 +52,15 @@ const documentedQuickstartCommands = [
   "npm init --yes",
   "node ./.sdd-tooling/consumer/node_modules/sdd-yo/dist/bin/sdd.js --version --format json",
   "node ./.sdd-tooling/consumer/node_modules/sdd-yo/dist/bin/sdd.js skill install --root <repository-root> --format json",
-  "node ./node_modules/sdd-yo/dist/bin/sdd.js skill install --root <repository-root> --format json",
-  "node ./.agents/skills/sdd-yo/scripts/check-cli-compatibility -- init --root <repository-root> --adoption incremental",
-  "node ./.agents/skills/sdd-yo/scripts/check-cli-compatibility -- validate --cwd <repository-root>",
   "node ./node_modules/sdd-yo/dist/bin/sdd.js validate --cwd <repository-root> --format json",
   "node ./node_modules/sdd-yo/dist/bin/sdd.js skill update --root <repository-root> --format json",
   "node ./node_modules/sdd-yo/dist/bin/sdd.js skill remove --root <repository-root> --format json",
-  "node ./node_modules/sdd-yo/dist/bin/sdd.js skill install --scope user --format json",
-  "node ~/.agents/skills/sdd-yo/scripts/check-cli-compatibility -- validate --cwd <repository-root>",
   "node ./node_modules/sdd-yo/dist/bin/sdd.js skill update --scope user --format json",
   "node ./node_modules/sdd-yo/dist/bin/sdd.js skill remove --scope user --format json",
+] as const;
+const documentedLibrarySnippets = [
+  'import { JSON_SCHEMA_VERSION_V1 } from "sdd-yo";',
+  "sdd-yo/schemas/v1/common.schema.json",
 ] as const;
 const forbiddenLifecycleScripts = [
   "preinstall",
@@ -271,6 +279,7 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-0163273A REQ-3F19778B REQ-CF3A1
     for (const hook of forbiddenLifecycleScripts) assert.equal(sourceManifest.scripts[hook], undefined);
     const quickstart = await readFile(join(repositoryRoot, "README.md"), "utf8");
     for (const command of documentedQuickstartCommands) assert.ok(quickstart.includes(command), command);
+    for (const snippet of documentedLibrarySnippets) assert.ok(quickstart.includes(snippet), snippet);
     for (const diagnostic of [
       "SDD_CONFIG_NOT_FOUND",
       "SDD_INIT_TARGET_CONFLICT",
