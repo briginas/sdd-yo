@@ -10,8 +10,8 @@ import { SkillInstallationError } from "../src/skill-install/installer.ts";
 
 const repositoryRoot = join(import.meta.dirname, "..");
 const compatibility = {
-  package: { name: "sdd-yo", version: "0.4.0" },
-  cli: { name: "sdd", version: "0.4.0" },
+  package: { name: "sdd-yo", version: "0.4.1" },
+  cli: { name: "sdd", version: "0.4.1" },
   json_schema: { version: "1.0", compatible_major: 1 },
   skill: { name: "sdd-yo", protocol_version: "1.0", compatible_major: 1 },
 } as const;
@@ -31,7 +31,7 @@ async function fixture() {
   await cp(join(repositoryRoot, "skills", "sdd-yo"), join(packageRoot, "skills", "sdd-yo"), { recursive: true });
   await writeFile(
     join(packageRoot, "package.json"),
-    `${JSON.stringify({ name: "sdd-yo", version: "0.4.0", type: "module", bin: { sdd: "./dist/bin/sdd.js" } }, null, 2)}\n`,
+    `${JSON.stringify({ name: "sdd-yo", version: "0.4.1", type: "module", bin: { sdd: "./dist/bin/sdd.js" } }, null, 2)}\n`,
   );
   await writeFile(cliPath, "#!/usr/bin/env node\n");
   await chmod(cliPath, 0o755);
@@ -68,7 +68,7 @@ test("REQ-778099C0 installs one exact macOS user Skill and private CLI without c
       roots: { home: value.home, applicationSupport: value.applicationSupport, platform: "darwin" },
     });
     assert.equal(result.scope, "user");
-    assert.equal(result.cli_destination, join(await realpath(value.applicationSupport), "sdd-yo", "cli", "0.4.0"));
+    assert.equal(result.cli_destination, join(await realpath(value.applicationSupport), "sdd-yo", "cli", "0.4.1"));
     assert.match(result.package_fingerprint, /^sha256:[0-9a-f]{64}$/u);
     assert.deepEqual(result.owned_paths, [...result.owned_paths].sort());
     const binding = JSON.parse(await readFile(join(result.skill_destination, "installation.json"), "utf8")) as {
@@ -131,7 +131,7 @@ test("REQ-778099C0 REQ-C18AEE90 refuses an incompatible executing package identi
   try {
     await writeFile(
       join(value.packageRoot, "package.json"),
-      `${JSON.stringify({ name: "foreign-package", version: "0.4.0", type: "module", bin: { sdd: "./dist/bin/sdd.js" } }, null, 2)}\n`,
+      `${JSON.stringify({ name: "foreign-package", version: "0.4.1", type: "module", bin: { sdd: "./dist/bin/sdd.js" } }, null, 2)}\n`,
     );
     await assert.rejects(
       createNodeUserSkillInstaller().install({
@@ -171,7 +171,7 @@ test("REQ-2B49D454 updates an owned user installation and reports an exact no-op
     assert.equal(updated.outcome, "updated");
     assert.equal(await readFile(join(updated.skill_destination, "SKILL.md"), "utf8"), "replacement Skill\n");
     await assert.rejects(
-      readFile(join(value.applicationSupport, "sdd-yo", "cli", "0.4.0", "dist", "bin", "sdd.js")),
+      readFile(join(value.applicationSupport, "sdd-yo", "cli", "0.4.1", "dist", "bin", "sdd.js")),
       /ENOENT/u,
     );
   } finally {
@@ -248,7 +248,7 @@ test("REQ-C18AEE90 retains verified recovery state when publication is interrupt
       (error: unknown) => error instanceof SkillInstallationError && error.code === "SDD_USER_SKILL_INSTALL_FAILED",
     );
     assert.equal(
-      await readFile(join(value.applicationSupport, "sdd-yo", "cli", "0.4.0", "dist", "bin", "sdd.js"), "utf8"),
+      await readFile(join(value.applicationSupport, "sdd-yo", "cli", "0.4.1", "dist", "bin", "sdd.js"), "utf8"),
       "#!/usr/bin/env node\n",
     );
     await assert.rejects(readFile(join(value.home, ".agents", "skills", "sdd-yo", "installation.json")), /ENOENT/u);

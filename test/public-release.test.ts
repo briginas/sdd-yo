@@ -27,9 +27,9 @@ test("REQ-ABFFEAF2 REQ-9CE36B68 REQ-0163273A permits only the exact protected tr
   assert.match(workflow, /registry-url: https:\/\/registry\.npmjs\.org/u);
   assert.match(workflow, /package-manager-cache: false/u);
   assert.match(workflow, /PACKAGE_NAME: sdd-yo/u);
-  assert.match(workflow, /PACKAGE_VERSION: 0\.4\.0/u);
-  assert.match(workflow, /PREVIOUS_PUBLIC_VERSION: 0\.3\.0/u);
-  assert.match(workflow, /EXPECTED_ARTIFACT_SHA256: 2fa81655a83788f1a14e0a5e9c57cdda49b262c9292c70cf2cf729e66a0500c8/u);
+  assert.match(workflow, /PACKAGE_VERSION: 0\.4\.1/u);
+  assert.match(workflow, /PREVIOUS_PUBLIC_VERSION: 0\.4\.0/u);
+  assert.match(workflow, /EXPECTED_ARTIFACT_SHA256: 4c53500735a50ac7f8a72d45a942caa64aa4ee0951d0b414aee9295593112697/u);
   assert.match(
     workflow,
     /EXPECTED_INVENTORY_SHA256: 60e9ffa99d6b6d9e4d5cf27cc36df571175f751022ca675d11e9493de7102f6d/u,

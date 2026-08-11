@@ -33,8 +33,8 @@ type PackResult = {
 
 const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
 const documentedQuickstartCommands = [
-  "npm install --save-dev --save-exact sdd-yo@0.4.0",
-  "npm exec --package=sdd-yo@0.4.0 -- sdd --version --format json",
+  "npm install --save-dev --save-exact sdd-yo@0.4.1",
+  "npm exec --package=sdd-yo@0.4.1 -- sdd --version --format json",
   "npm install --offline --no-audit --no-fund --save-exact <tarball-path>",
   "node ./node_modules/sdd-yo/dist/bin/sdd.js --version --format json",
   "mkdir .sdd-tooling",
@@ -257,7 +257,7 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-0163273A REQ-3F19778B REQ-CF3A1
       "Repository-native specification governance with a deterministic CLI and optional Agent Skill.",
     );
     assert.equal(sourceManifest.name, "sdd-yo");
-    assert.equal(sourceManifest.version, "0.4.0");
+    assert.equal(sourceManifest.version, "0.4.1");
     assert.equal(sourceManifest.private, false);
     assert.deepEqual(sourceManifest.publishConfig, { access: "public", provenance: true });
     assert.equal(sourceManifest.license, "Apache-2.0");

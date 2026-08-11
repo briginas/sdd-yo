@@ -221,8 +221,24 @@ separate authority outside this leaf.
   compact this plan according to `plans/README.md`.
 
 Publication and automated public-consumer evidence are complete for exact
-`sdd-yo@0.4.0`. The separately identified human review of Skill discovery and
-first use remains pending; Milestone 18 is not closed until it is recorded.
+`sdd-yo@0.4.0`. Ivan Briginas separately discovered `$sdd-yo` from the public
+user installation and completed first use: the Skill verified its private
+binding and payload, invoked the bound `0.4.0` CLI, preserved the repository,
+and correctly reported `SDD_ID_PROJECT_DUPLICATE` for the active project plus
+its two retained candidate trees. This human review passes Skill discovery and
+first-use behavior; it does not claim that the selected project validated.
+
+The immutable public `0.4.0` artifact retains pre-publication README wording.
+Prepare `0.4.1` as a documentation-only patch release with synchronized exact
+package identity and no product-behavior, protocol, dependency, lifecycle, or
+supported-platform change before closing the milestone.
+
+The reviewed `0.4.1` candidate is complete and the full validation suite
+passes. Two independent packs produced identical bytes: artifact SHA-256
+`4c53500735a50ac7f8a72d45a942caa64aa4ee0951d0b414aee9295593112697`,
+inventory SHA-256
+`60e9ffa99d6b6d9e4d5cf27cc36df571175f751022ca675d11e9493de7102f6d`,
+and `2130` entries. Public registry mutation remains a separate release action.
 
 Milestone 18 is done when another macOS developer can install one public exact
 `sdd-yo` user Skill and private CLI, use the bound CLI across explicit

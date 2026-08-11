@@ -48,9 +48,10 @@ the full specification when a small Capability or Requirement set is enough.
 - Optional Agent Skill: `sdd-yo`, a progressive-disclosure orchestrator over
   compatible deterministic CLI JSON; it does not replace CLI authority or human
   evidence.
-- Distribution state: version `0.4.0` is public on npm; the exact offline
-  tarball installation route is retained, the user-scoped lifecycle is
-  macOS-only, and no Codex plugin is published.
+- Distribution state: version `0.4.0` is public on npm; source version `0.4.1`
+  is the reviewed documentation-only patch candidate. The exact offline
+  tarball route is retained, the user-scoped lifecycle is macOS-only, and no
+  Codex plugin is published.
 
 Exact dependency versions are selected and locked during the scaffold
 milestone. Do not add a runtime dependency without explaining why a platform

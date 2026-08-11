@@ -1,6 +1,6 @@
 {
   "name": "sdd-yo",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Repository-native specification governance with a deterministic CLI and optional Agent Skill.",
   "private": false,
   "publishConfig": {
