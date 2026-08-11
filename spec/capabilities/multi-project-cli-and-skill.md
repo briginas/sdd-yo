@@ -79,12 +79,11 @@ verification: automated
 ### Statement <!-- sdd:statement -->
 
 The deterministic core shall require no network service or telemetry and shall
-produce equivalent fingerprints and JSON results on supported platforms for
-identical inputs.
+produce equivalent fingerprints and JSON results on macOS for identical inputs.
 
 ### Acceptance criteria <!-- sdd:acceptance -->
 
-- macOS, Linux, and Windows are supported.
+- macOS is the only supported platform.
 - Specification content is UTF-8.
 - Core processing does not transmit repository content.
 - Cache deletion does not change results.
