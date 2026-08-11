@@ -50,6 +50,11 @@ the reusable CandidateTreeManifest while the ordinary command response remains
 on stdout. `--output` is unavailable for this command so a response write
 cannot partially follow successful immutable artifact creation.
 
+`proposal materialize` instead requires `--bundle`. The bundle path names one
+new ignored project-local directory; the command publishes the complete
+candidate manifest and exact ProposalPackage together and never uses stdout as
+the retained handoff.
+
 ## Exit codes
 
 General commands use:
@@ -242,18 +247,61 @@ manifest before optionally removing the staging copy.
 ### `sdd proposal validate`
 
 ```text
-sdd proposal validate --mode spec-code|spec|code --base <git-ref> \
-  --candidate <path> [--code-target <REQ-ID> ...]
+sdd proposal validate --bundle <project-relative-path>
+sdd proposal validate --package <code-package-path>
 ```
 
-Mechanically validates a candidate and emits a deterministic
-`ProposalPackage`. In version 1, `--candidate` accepts either an SDD Project
-directory or a CandidateTreeManifest file; archive ingestion is reserved for a
-future CLI version. `spec-code` and `spec` require a non-empty semantic delta.
-`code` requires empty semantic and structural deltas plus one or more active
-Requirement targets, whose semantic and structural fingerprints are captured
-in the package. This operation does not validate implementation-behavior,
-existing-behavior, approval, or semantic-review claims.
+Revalidates the exact retained proposal subject without writing. A bundle is
+used for `spec-code` and `spec`; code may use its retained ProposalPackage
+member directly. The command resolves the bound base, reconstructs the
+candidate from the retained manifest or unchanged base, and requires the
+recomputed package to equal the retained package exactly.
+
+### `sdd proposal materialize`
+
+```text
+sdd proposal materialize --mode spec-code|spec --base <git-ref> \
+  --candidate <authored-project-directory> --bundle <project-relative-path>
+sdd proposal materialize --mode code --base <git-ref> \
+  --code-target <REQ-ID> ... --bundle <project-relative-path>
+```
+
+Loads one complete authored SDD Project candidate, resolves the selected base
+once, validates the graph and mode rules, and publishes one new immutable
+bundle containing `candidate-tree.json` and `proposal-package.json`. Both
+members are canonical JSON with a trailing newline. Repeated runs over
+identical inputs produce byte-for-byte identical member files.
+
+The selected bundle directory must be absent, inside the selected project,
+outside the governed specification root, beneath existing non-symbolic-link
+parents, and ignored by Git. The writer stages all members in a private sibling
+directory and makes the complete directory visible with one final rename.
+Failure before publication removes the staging directory; collision never
+replaces an existing target. The candidate and resulting package are loaded
+again immediately before publication, and changed input aborts the operation.
+
+The response identifies the retained members and includes the exact
+ProposalPackage as a review view. The retained member bytes, not copied stdout,
+are the downstream workflow input. In `code` mode the CLI derives the candidate
+directly from the resolved base, requires one or more active Requirement
+targets, and publishes only `proposal-package.json`; no authored candidate or
+candidate member is created. The code package records candidate source `base`
+and empty semantic and structural deltas.
+
+### `sdd approval record`
+
+```text
+sdd approval record --bundle <project-relative-path> --issuer <name> \
+  --actor <identity> --decision approved|rejected --reason <path> --evidence <path>
+sdd approval record --package <code-package-path> --issuer <name> \
+  --actor <identity> --decision approved|rejected --reason <path> --evidence <path>
+```
+
+Atomically revalidates the retained subject inside the recorder invocation and
+exclusively publishes immutable ApprovalEvidence. Its response returns the
+complete revalidated ProposalPackage subject so an orchestrator can compare it
+to what the human saw before the pause. A separate post-pause validation call
+is unnecessary and cannot substitute for recorder-owned freshness.
 
 ### `sdd proposal prepare`
 
@@ -273,6 +321,10 @@ mode, base object ID, and semantic and structural delta fingerprints. Missing
 approval or reviewable preparation drift withholds SpecPatch and returns
 `review_required`; stale, negative, contradictory, or definite blocker state
 returns `blocked`.
+
+Code-mode packages are rejected by this command. After approval they proceed
+directly to implementation verification and never create a null or empty
+SpecPatch.
 
 The stable result value is:
 

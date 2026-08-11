@@ -122,11 +122,14 @@ decision-bearing proposal. It does not silently switch modes after approval.
    `code` bypasses this checkpoint and retains exact active Requirement targets.
 8. Only after confirmation, generate IDs through `sdd id`; never invent or
    recycle them, then draft a complete virtual candidate tree.
-9. Call the relevant CLI gate with JSON output.
+9. Materialize the exact retained proposal through the CLI, then revalidate it
+   from its retained bundle or code package with JSON output.
 10. Present exact diagnostics, object delta, affected scope, and open decisions.
-11. When explicitly asked to record a human decision, display and recheck its
-    exact subject around the pause, write only the bounded reason input, and
-    invoke `approval record` with explicit issuer, actor, decision, and message.
+11. When explicitly asked to record a human decision, display the exact
+    revalidated subject before the pause, write only the bounded reason input,
+    and invoke `approval record` once afterward with explicit issuer, actor,
+    decision, and message. Accept only a returned subject equal to the display;
+    do not add a redundant post-pause validation call.
 12. Apply only an explicitly selected exact SpecPatch.
 13. Stop before branch, commit, push, QA decision, or merge.
 

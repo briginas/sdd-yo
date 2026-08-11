@@ -1,5 +1,6 @@
 export * from "./apply-proposal.ts";
 export * from "./approval-evidence.ts";
+export * from "./materialize-proposal.ts";
 export * from "./specification-tree.ts";
 export * from "./package-input.ts";
 export * from "./prepare-proposal.ts";

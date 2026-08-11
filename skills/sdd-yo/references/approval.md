@@ -7,14 +7,20 @@ deterministic recorder.
 
 ## Informed decision request
 
-Require one selected SDD Project, the retained ProposalPackage file, the exact
-candidate directory or CandidateTreeManifest, and a caller-selected
-project-relative Git-ignored evidence path outside the specification root.
+Require one selected SDD Project, the exact retained proposal bundle for
+`spec-code` or `spec` or its exact retained ProposalPackage member for `code`,
+and a caller-selected project-relative Git-ignored evidence path outside the
+specification root.
 
-Immediately before asking for a decision, run the same `proposal validate`
-operation described by [proposal-gate.md](proposal-gate.md) against the retained
-mode, base ref, and candidate. Stop unless its unchanged compatible result is
-`ok` and exactly matches the retained package. Display all of these values:
+Immediately before asking for a decision, run:
+
+```text
+node scripts/check-cli-compatibility -- proposal validate --bundle <project-relative-path> --cwd <directory>
+node scripts/check-cli-compatibility -- proposal validate --package <code-package-path> --cwd <directory>
+```
+
+Stop unless its unchanged compatible result is `ok`. Display all of these
+returned values without reconstructing them:
 
 - project and mode;
 - base Git object ID;
@@ -31,20 +37,17 @@ inputs.
 
 ## Post-pause recheck and recording
 
-Treat every wait for human input as a pause. After the response, rerun
-`proposal validate` from the same explicit inputs and compare the complete
-project, mode, base object ID, candidate tree fingerprint, semantic and
-structural delta fingerprints, and object-ID delta with the displayed subject.
-Any changed, missing, malformed, blocked, or review-required input invalidates
-the response. Stop and begin a new informed decision request; never ask whether
-the old response should carry over.
+Treat every wait for human input as a pause. Do not run a redundant separate
+validation after the response. The recorder atomically revalidates the retained
+bundle inside its invocation.
 
 Only after an exact recheck, create one new bounded project-relative UTF-8 reason
 file containing exactly the human message bytes. Write no evidence JSON and no
 other workflow input directly. Invoke only:
 
 ```text
-node scripts/check-cli-compatibility -- approval record --package <path> --candidate <path> --issuer <name> --actor <identity> --decision approved|rejected --reason <project-relative-path> --evidence <project-relative-path> --cwd <directory>
+node scripts/check-cli-compatibility -- approval record --bundle <project-relative-path> --issuer <name> --actor <identity> --decision approved|rejected --reason <project-relative-path> --evidence <project-relative-path> --cwd <directory>
+node scripts/check-cli-compatibility -- approval record --package <code-package-path> --issuer <name> --actor <identity> --decision approved|rejected --reason <project-relative-path> --evidence <project-relative-path> --cwd <directory>
 ```
 
 `--config <path>` may replace `--cwd <directory>`. Never add `--format` or
@@ -54,9 +57,10 @@ recorder input; do not present it as evidence or authority.
 
 Accept success only when the unchanged wrapper response is `ok`, its
 `evidence_path` equals the selected target, its `decision` equals the explicit
-human decision, and its mode and complete subject equal the post-pause
-revalidation. Otherwise stop without preparation, patch application, or retry
-with altered inputs.
+human decision, and its mode and complete returned subject exactly equal what
+was displayed before the pause. Any changed, missing, malformed, blocked, or
+mismatched input invalidates the response. Stop and begin a new informed
+decision request; never carry the old decision forward.
 
 ## Separate preparation boundary
 

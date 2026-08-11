@@ -2,8 +2,8 @@
 
 ## Status
 
-- Active: Milestone 19.1 — Workflow optimization semantic contract and candidate
-- Complete: Milestones 0–18 and public `sdd-yo@0.4.1`
+- Active: Milestone 19.6 — Clean `0.5.0` release candidate and integrated proof
+- Complete: Milestones 0–18, Milestones 19.1–19.5, and public `sdd-yo@0.4.1`
 - Last updated: 2026-08-11
 
 ## Authority and navigation
@@ -153,6 +153,11 @@ Done when the Skill can obtain a reviewable candidate and retained exact
 ProposalPackage through deterministic CLI operations without copying JSON from
 chat or stdout and without changing the active specification or Git state.
 
+Implemented and verified for `REQ-20D8EC8C`: `proposal materialize` publishes
+one new ignored two-member bundle through an atomic writer boundary, rejects
+unsafe, changed, malformed, stale, or colliding inputs, and leaves the active
+specification and Git state unchanged.
+
 ### 19.4 — Mode-specific mechanical routes
 
 - Preserve the shared mode-selection and ProposalPackage semantics while
@@ -172,6 +177,11 @@ chat or stdout and without changing the active specification or Git state.
 Done when every mode performs only its necessary mechanical work and the final
 `0.5.0` contract has complete explicit bindings and gate evidence without any
 retained legacy route.
+
+Implemented and verified for `REQ-5FFEC13F` and `REQ-A8739118`: code mode
+derives its unchanged subject from the resolved base, retains only an exact
+package with bound active Requirement targets, and is rejected by SpecPatch
+preparation while specification-changing modes keep the bundle-and-patch path.
 
 ### 19.5 — Composed Skill orchestration and approval freshness
 
@@ -197,6 +207,12 @@ retained legacy route.
 Done when the Skill provides one continuous, progressive-disclosure workflow
 over deterministic CLI JSON while remaining thin and making no human decision
 or product-rule computation itself.
+
+Implemented and verified for `REQ-32C76ED3`, `REQ-26234DC8`, and
+`REQ-D17B2FB9`: the Skill revalidates and displays one retained subject before
+the approval pause, invokes the recorder once afterward, accepts only the same
+complete recorder-returned subject, and preserves correction, rejection,
+mode-specific, and downstream authority stops through focused evals.
 
 ### 19.6 — Clean `0.5.0` release candidate and integrated proof
 

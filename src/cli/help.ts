@@ -58,7 +58,7 @@ export const CLI_HELP_ENTRIES: readonly CliHelpEntry[] = [
   {
     path: "approval record",
     usage:
-      "sdd approval record --package <path> --candidate <path> --issuer <name> --actor <identity> --decision approved|rejected --reason <project-relative-path> --evidence <project-relative-path>",
+      "sdd approval record --bundle <project-relative-path> --issuer <name> --actor <identity> --decision approved|rejected --reason <project-relative-path> --evidence <project-relative-path>",
     summary: "Record one explicit human decision as immutable ApprovalEvidence.",
   },
   {
@@ -79,10 +79,15 @@ export const CLI_HELP_ENTRIES: readonly CliHelpEntry[] = [
     summary: "Evaluate governed-scope merge readiness without modifying Git.",
   },
   {
-    path: "proposal validate",
+    path: "proposal materialize",
     usage:
-      "sdd proposal validate --mode spec-code|spec|code --base <git-ref> --candidate <path> [--code-target <REQ-ID> ...]",
-    summary: "Validate a bounded candidate and emit a ProposalPackage.",
+      "sdd proposal materialize --mode spec-code|spec|code --base <git-ref> [--candidate <path>] [--code-target <REQ-ID> ...] --bundle <project-relative-path>",
+    summary: "Atomically retain a mode-correct exact proposal subject.",
+  },
+  {
+    path: "proposal validate",
+    usage: "sdd proposal validate --bundle <project-relative-path>",
+    summary: "Revalidate an exact retained proposal subject without writing.",
   },
   {
     path: "proposal prepare",

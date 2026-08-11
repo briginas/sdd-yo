@@ -83,15 +83,43 @@ const proposalPackage = {
 if (mode === "changed-subject") {
   proposalPackage.object_delta.semantic_fingerprint = `sha256:${"b".repeat(64)}`;
 }
+const argumentValue = (name) => {
+  const index = args.indexOf(name);
+  return index === -1 ? undefined : args[index + 1];
+};
+const materializedMode = argumentValue("--mode") ?? proposalPackage.mode;
+proposalPackage.mode = materializedMode;
+proposalPackage.candidate.source = materializedMode === "code" ? "base" : "manifest";
+proposalPackage.object_delta.added = materializedMode === "code" ? [] : ["REQ-A1000001"];
+proposalPackage.code_targets =
+  materializedMode === "code"
+    ? [
+        {
+          requirement_id: "REQ-A1000001",
+          semantic_fingerprint: fingerprint,
+          structural_fingerprint: fingerprint,
+        },
+      ]
+    : [];
+const bundlePath = argumentValue("--bundle") ?? ".sdd/staging/proposal-bundle";
+const materializationResult =
+  materializedMode === "code"
+    ? {
+        bundle_path: bundlePath,
+        package_path: `${bundlePath}/proposal-package.json`,
+        proposal: proposalPackage,
+      }
+    : {
+        bundle_path: bundlePath,
+        candidate_path: `${bundlePath}/candidate-tree.json`,
+        package_path: `${bundlePath}/proposal-package.json`,
+        proposal: proposalPackage,
+      };
 const approvalRecord = {
   evidence_path: ".sdd/staging/approval.json",
   decision: mode === "rejected-approval" ? "rejected" : "approved",
   mode: proposalPackage.mode,
-  subject: {
-    base_ref: proposalPackage.base.git_ref,
-    semantic_delta_fingerprint: proposalPackage.object_delta.semantic_fingerprint,
-    structural_delta_fingerprint: proposalPackage.object_delta.structural_fingerprint,
-  },
+  subject: proposalPackage,
 };
 const conflictReport = {
   schema_version: "1.0",
@@ -191,29 +219,33 @@ const result =
       ? { candidates, history: { status: "complete", resolved_ref: "abc123" } }
       : operation === "approval.record"
         ? approvalRecord
-        : operation === "proposal.validate"
-          ? proposalPackage
-          : operation === "proposal.prepare"
-            ? { conflict_report: conflictReport, spec_patch: mode === "review-required" ? null : specPatch }
-            : operation === "proposal.apply"
-              ? {
-                  result_tree_fingerprint: fingerprint,
-                  applied_paths: ["spec/capabilities/example.md"],
-                }
-              : operation === "tests.discover"
-                ? testIndex
-                : operation === "findings.validate"
-                  ? findingAssessment
-                  : operation === "merge.check"
-                    ? mergeReport
-                    : { valid: true, fingerprints: [] };
+        : operation === "proposal.materialize"
+          ? materializationResult
+          : operation === "proposal.validate"
+            ? proposalPackage
+            : operation === "proposal.prepare"
+              ? { conflict_report: conflictReport, spec_patch: mode === "review-required" ? null : specPatch }
+              : operation === "proposal.apply"
+                ? {
+                    result_tree_fingerprint: fingerprint,
+                    applied_paths: ["spec/capabilities/example.md"],
+                  }
+                : operation === "tests.discover"
+                  ? testIndex
+                  : operation === "findings.validate"
+                    ? findingAssessment
+                    : operation === "merge.check"
+                      ? mergeReport
+                      : { valid: true, fingerprints: [] };
 
 const status =
-  mode === "review-required" || mode === "review-required-merge"
-    ? "review_required"
-    : mode === "blocked-merge"
-      ? "blocked"
-      : "ok";
+  mode === "artifact-write-failure"
+    ? "error"
+    : mode === "review-required" || mode === "review-required-merge"
+      ? "review_required"
+      : mode === "blocked-merge"
+        ? "blocked"
+        : "ok";
 const schemaVersion = mode === "incompatible" ? "2.0" : "1.0";
 process.stdout.write(
   JSON.stringify({
@@ -221,9 +253,20 @@ process.stdout.write(
     command: operation,
     project_id: projectId,
     status,
-    result,
-    diagnostics: [],
+    result: mode === "artifact-write-failure" ? null : result,
+    diagnostics:
+      mode === "artifact-write-failure"
+        ? [
+            {
+              code: "SDD_PROPOSAL_BUNDLE_WRITE_FAILED",
+              message: "The proposal bundle could not be published atomically.",
+              severity: "error",
+              remediation: "Select a new ignored bundle path and retry explicitly.",
+            },
+          ]
+        : [],
   }),
 );
-if (status === "blocked") process.exitCode = 1;
+if (status === "error") process.exitCode = 3;
+else if (status === "blocked") process.exitCode = 1;
 else if (status === "review_required") process.exitCode = 2;

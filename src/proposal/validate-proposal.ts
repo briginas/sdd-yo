@@ -17,6 +17,7 @@ import type { GitReader } from "../platform/git-reader.ts";
 import { computeAffectedScope } from "../verification/affected-scope.ts";
 import { generateSemanticCandidates } from "../verification/semantic-review.ts";
 import type { SemanticCandidate } from "../verification/semantic-review.ts";
+import type { SpecificationTree } from "./specification-tree.ts";
 import { loadBaseSpecificationTree, loadCandidateSpecificationTree, ProposalInputError } from "./specification-tree.ts";
 
 export type ProposalMode = "spec-code" | "spec" | "code";
@@ -27,7 +28,7 @@ export type ProposalPackage = {
   readonly project_id: ProjectId;
   readonly mode: ProposalMode;
   readonly base: { readonly git_ref: GitObjectId; readonly tree_fingerprint: Fingerprint };
-  readonly candidate: { readonly source: "directory" | "manifest"; readonly tree_fingerprint: Fingerprint };
+  readonly candidate: { readonly source: "base" | "directory" | "manifest"; readonly tree_fingerprint: Fingerprint };
   readonly object_delta: {
     readonly semantic_fingerprint: Fingerprint;
     readonly structural_fingerprint: Fingerprint;
@@ -90,6 +91,35 @@ export async function validateProposal(input: {
       selected: input.project,
       baseFingerprint: base.fingerprint,
     });
+    return validateProposalTrees({
+      project: input.project,
+      baseRef: input.baseRef,
+      base,
+      candidate,
+      mode: input.mode,
+      codeTargets: input.codeTargets,
+    });
+  } catch (error) {
+    if (error instanceof ProposalValidationError) throw error;
+    if (error instanceof ProposalInputError) throw inputFailure(error);
+    throw error;
+  }
+}
+
+export function validateProposalTrees(input: {
+  readonly project: ResolvedProject;
+  readonly baseRef: GitObjectId;
+  readonly base: SpecificationTree;
+  readonly candidate: {
+    readonly source: "base" | "directory" | "manifest";
+    readonly tree: SpecificationTree;
+  };
+  readonly mode: ProposalMode;
+  readonly codeTargets: readonly RequirementId[];
+}): ProposalPackage {
+  try {
+    const base = input.base;
+    const candidate = input.candidate;
     const delta = computeGraphObjectDelta(base.graph, candidate.tree.graph);
     const targets = [...new Set(input.codeTargets)].toSorted();
     if (targets.length !== input.codeTargets.length) {

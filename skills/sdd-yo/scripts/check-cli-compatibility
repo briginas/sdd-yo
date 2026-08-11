@@ -2,7 +2,7 @@
 
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { lstatSync, readFileSync, readdirSync, realpathSync } from "node:fs";
+import { lstatSync, readFileSync, readdirSync, realpathSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -16,6 +16,7 @@ const SUPPORTED_OPERATIONS = new Set([
   "inspect",
   "trace",
   "proposal.validate",
+  "proposal.materialize",
   "proposal.prepare",
   "proposal.apply",
   "tests.discover",
@@ -65,17 +66,14 @@ function isCapabilityId(value) {
   return typeof value === "string" && /^CAP-[0-9A-F]{8}$/u.test(value);
 }
 
-function verifyApprovalRecordResult(result) {
+function verifyApprovalRecordResult(result, projectId) {
   return (
     hasExactKeys(result, ["evidence_path", "decision", "mode", "subject"]) &&
     isProjectPath(result.evidence_path) &&
     ["approved", "rejected"].includes(result.decision) &&
     ["spec-code", "spec", "code"].includes(result.mode) &&
-    hasExactKeys(result.subject, ["base_ref", "semantic_delta_fingerprint", "structural_delta_fingerprint"]) &&
-    typeof result.subject.base_ref === "string" &&
-    result.subject.base_ref.length > 0 &&
-    isFingerprint(result.subject.semantic_delta_fingerprint) &&
-    isFingerprint(result.subject.structural_delta_fingerprint)
+    result.subject.mode === result.mode &&
+    verifyProposalPackage(result.subject, projectId) === undefined
   );
 }
 
@@ -359,7 +357,7 @@ function verifyProposalPackage(result, projectId) {
     result.base.git_ref.length === 0 ||
     !isFingerprint(result.base.tree_fingerprint) ||
     !isRecord(result.candidate) ||
-    !["directory", "manifest"].includes(result.candidate.source) ||
+    !["base", "directory", "manifest"].includes(result.candidate.source) ||
     !isFingerprint(result.candidate.tree_fingerprint) ||
     !isRecord(result.object_delta) ||
     !isFingerprint(result.object_delta.semantic_fingerprint) ||
@@ -759,14 +757,33 @@ if (command === "init") {
 }
 
 if (operation === "proposal.validate") {
-  const mode = requireOption(commandArguments, "--mode", operation);
-  if (!["spec-code", "spec", "code"].includes(mode)) fail("proposal.validate requires a supported --mode.");
-  requireOption(commandArguments, "--base", operation);
-  requireOption(commandArguments, "--candidate", operation);
+  const bundle = optionValue(commandArguments, "--bundle");
+  const packagePath = optionValue(commandArguments, "--package");
+  if (bundle !== undefined && packagePath !== undefined) fail("proposal.validate accepts one retained subject input.");
+  if (bundle === undefined && packagePath === undefined) {
+    const mode = requireOption(commandArguments, "--mode", operation);
+    if (!["spec-code", "spec", "code"].includes(mode)) fail("proposal.validate requires a supported --mode.");
+    requireOption(commandArguments, "--base", operation);
+    requireOption(commandArguments, "--candidate", operation);
+  }
+}
+if (operation === "proposal.materialize") {
+  for (const option of ["--mode", "--base", "--bundle"]) requireOption(commandArguments, option, operation);
+  const mode = optionValue(commandArguments, "--mode");
+  if (!["spec-code", "spec", "code"].includes(mode)) fail("proposal.materialize requires a supported --mode.");
+  if (mode === "code") {
+    if (optionValue(commandArguments, "--candidate") !== undefined)
+      fail("proposal.materialize code mode does not accept --candidate.");
+    requireOption(commandArguments, "--code-target", operation);
+  } else if (optionValue(commandArguments, "--candidate") === undefined) {
+    fail("proposal.materialize specification-changing modes require --candidate.");
+  }
 }
 if (operation === "approval.record") {
-  for (const option of ["--package", "--candidate", "--issuer", "--actor", "--decision", "--reason", "--evidence"])
+  for (const option of ["--issuer", "--actor", "--decision", "--reason", "--evidence"])
     requireOption(commandArguments, option, operation);
+  if ((optionValue(commandArguments, "--bundle") === undefined) === (optionValue(commandArguments, "--package") === undefined))
+    fail("approval.record requires exactly one retained bundle or code package.");
   const decision = optionValue(commandArguments, "--decision");
   if (decision !== "approved" && decision !== "rejected")
     fail("approval.record requires --decision approved or rejected.");
@@ -892,9 +909,27 @@ if (command === "id" && response.status === "ok") {
 }
 if (operation === "proposal.validate" && response.status === "ok")
   verifyProposalPackage(response.result, response.project_id);
+if (operation === "proposal.materialize" && response.status === "ok") {
+  const bundle = optionValue(commandArguments, "--bundle");
+  const mode = optionValue(commandArguments, "--mode");
+  const expectedKeys =
+    mode === "code"
+      ? ["bundle_path", "package_path", "proposal"]
+      : ["bundle_path", "candidate_path", "package_path", "proposal"];
+  if (
+    !hasExactKeys(response.result, expectedKeys) ||
+    response.result.bundle_path !== bundle ||
+    (mode !== "code" && response.result.candidate_path !== `${bundle}/candidate-tree.json`) ||
+    response.result.package_path !== `${bundle}/proposal-package.json`
+  )
+    fail("the sdd CLI returned an invalid proposal materialization result.");
+  verifyProposalPackage(response.result.proposal, response.project_id);
+  if (response.result.proposal.candidate.source !== (mode === "code" ? "base" : "manifest"))
+    fail("the proposal materialization package is not bound to its retained candidate.");
+}
 if (operation === "approval.record" && response.status === "ok") {
   if (
-    !verifyApprovalRecordResult(response.result) ||
+    !verifyApprovalRecordResult(response.result, response.project_id) ||
     response.result.evidence_path !== optionValue(commandArguments, "--evidence") ||
     response.result.decision !== optionValue(commandArguments, "--decision")
   )
@@ -943,6 +978,6 @@ if (
     fail("the sdd CLI returned an invalid MergeReport result.");
 }
 
-process.stdout.write(execution.stdout);
-process.stderr.write(execution.stderr);
+writeFileSync(1, execution.stdout);
+writeFileSync(2, execution.stderr);
 process.exit(execution.status);

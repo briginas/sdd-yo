@@ -104,6 +104,27 @@ test("REQ-3BF12AAD exact SpecPatch emits sorted create replace delete operations
   );
 });
 
+test("REQ-A8739118 code proposals bypass preparation instead of producing an empty SpecPatch", async () => {
+  const packageValue = JSON.parse(
+    await readFile(join(process.cwd(), "fixtures/v1/artifacts/workflow/proposal-package/code-mode-valid.json"), "utf8"),
+  ) as Record<string, unknown>;
+  const candidate = packageValue.candidate as { readonly tree_fingerprint: unknown };
+  packageValue.candidate = { source: "base", tree_fingerprint: candidate.tree_fingerprint };
+  await assert.rejects(
+    prepareApprovedProposal({
+      fileSystem: nodeFileSystem,
+      gitReader: undefined as never,
+      project: undefined as never,
+      package: packageValue,
+      candidatePath: "unused",
+      branchHead: "base" as GitObjectId,
+      integrationRef: "integration" as GitObjectId,
+      approvalEvidence: [],
+    }),
+    (error: unknown) => error instanceof ProposalPreparationError && error.code === "SDD_PREPARE_CODE_MODE_INVALID",
+  );
+});
+
 test("mechanical three-way merge allows independent line changes and classifies every file conflict kind", () => {
   const path = "spec/a.md";
   const base = fakeTree([file(path, "one\ntwo\nthree\n")]);

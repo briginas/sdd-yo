@@ -9,9 +9,9 @@ Require the selected SDD Project plus:
 
 - exactly one confirmed mode: `spec-code`, `spec`, or `code`;
 - an explicit base Git ref;
-- an exact candidate directory or CandidateTreeManifest;
-- one or more active Requirement IDs for `code`, and no code targets for the
-  other modes.
+- one new caller-selected ignored bundle path;
+- a complete authored candidate directory for `spec-code` or `spec`;
+- one or more active Requirement IDs and no authored candidate for `code`.
 
 The earlier authoring preview is not CLI input and is not a ProposalPackage.
 Do not synthesize deltas, fingerprints, affected scope, or semantic candidates
@@ -23,13 +23,15 @@ workflow, stop and request that input.
 Invoke only through the compatibility wrapper:
 
 ```text
-node scripts/check-cli-compatibility -- proposal validate --mode <mode> --base <git-ref> --candidate <path> [--code-target <REQ-ID> ...] --cwd <directory>
+node scripts/check-cli-compatibility -- proposal materialize --mode spec-code|spec --base <git-ref> --candidate <path> --bundle <path> --cwd <directory>
+node scripts/check-cli-compatibility -- proposal materialize --mode code --base <git-ref> --code-target <REQ-ID> ... --bundle <path> --cwd <directory>
 ```
 
 `--config <path>` may replace `--cwd <directory>`. Never use both. Keep JSON on
 stdout and do not add `--format` or `--output`.
 
-On `status: ok`, present without reinterpretation:
+On `status: ok`, retain the exact returned package path and the candidate path
+when present. Present without reinterpretation:
 
 1. project, mode, base ref, base tree, candidate source, and candidate tree;
 2. semantic and structural delta fingerprints plus added, modified, and

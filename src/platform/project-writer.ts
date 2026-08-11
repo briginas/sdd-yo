@@ -21,6 +21,11 @@ export class SpecificationWritePreconditionError extends Error {
 export type ProjectWriter = {
   createDirectory(path: string): Promise<void>;
   writeFileExclusive(path: string, content: Uint8Array): Promise<void>;
+  publishDirectoryExclusiveAtomically(
+    transactionRoot: string,
+    target: string,
+    files: readonly { readonly path: string; readonly content: Uint8Array }[],
+  ): Promise<void>;
   replaceSpecificationFilesAtomically(
     transactionRoot: string,
     operations: readonly SpecificationWriteOperation[],

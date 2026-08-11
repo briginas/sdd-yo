@@ -399,6 +399,11 @@ export async function prepareApprovedProposal(input: {
   readonly approvalEvidence: readonly ApprovalEvidence[];
 }): Promise<ApprovedPreparedProposal> {
   const packageValue = parseProposalPackage(input.package);
+  if (packageValue.mode === "code")
+    throw new ProposalPreparationError(
+      "SDD_PREPARE_CODE_MODE_INVALID",
+      "Code proposals bypass specification patch preparation.",
+    );
   const prepared = await prepareProposal(input);
   const approval = assessApprovalEvidence({
     project_id: input.project.configuration.project_id,

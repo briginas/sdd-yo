@@ -123,6 +123,24 @@ CandidateTreeManifest directly under the staging boundary from explicit Git
 refs, so later commands consume that file without directory extraction. This
 workflow does not add archive ingestion or weaken project discovery.
 
+For a confirmed authored `spec-code` or `spec` candidate, `proposal
+materialize` creates the handoff without conversational JSON transcription. It
+atomically publishes one new ignored directory with exactly these versioned
+artifact members:
+
+```text
+<bundle>/candidate-tree.json
+<bundle>/proposal-package.json
+```
+
+The first member is the deterministic CandidateTreeManifest derived from the
+complete authored candidate. The second is the exact ProposalPackage validated
+from that manifest. The package therefore records `candidate.source` as
+`manifest`, and both files retain the same candidate-tree fingerprint. The
+directory is a publication boundary rather than a third JSON artifact: its
+fixed member names and all-or-nothing creation are part of the CLI contract.
+Downstream commands receive the explicit retained member paths.
+
 Reproduction resolves the declared mutable refs again and accepts each
 retained value only when its exact subject still applies. Ref movement
 invalidates only artifacts that bind the moved subject: for example,
@@ -223,6 +241,12 @@ value, but version 1 commands do not ingest archives. Equivalent normalized
 candidate trees produce identical tree fingerprints, object deltas, code
 targets, and affected scope; `candidate.source` still records the selected
 input form and therefore may differ between a directory and a manifest.
+
+The optimized `code` route uses candidate source `base`: the CLI derives the
+unchanged candidate directly from the once-resolved base, retains only the
+ProposalPackage, and binds each selected active Requirement to its current
+semantic and structural fingerprints. Source `base` is invalid for an authored
+specification-changing candidate.
 
 ## SpecPatch
 

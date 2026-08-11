@@ -62,6 +62,8 @@ output rendered as a replaceable view over the same result.
 - Paths are project-relative and use `/`.
 - Stable diagnostic codes are available to automation.
 - Unknown newer major schemas are rejected.
+- Every artifact-producing operation returns the exact published artifact
+  identity and subject through the same versioned deterministic response.
 
 <a id="req-f91f7d11"></a>
 
@@ -142,18 +144,20 @@ verification: automated
 ### Statement <!-- sdd:statement -->
 
 The CLI shall expose initialization, ID generation, validation, inspection,
-traceability, object diff, candidate snapshot, proposal
-validation/preparation/application, approval evidence recording, test discovery,
-finding validation, and merge-check operations.
+traceability, object diff, mode-specific proposal materialization and
+validation, specification-only proposal preparation and application, approval
+evidence recording, test discovery, finding validation, and merge-check
+operations.
 
 ### Acceptance criteria <!-- sdd:acceptance -->
 
 - Only initialization and proposal application modify governed project state;
-  candidate snapshot and approval evidence recording each create only one
-  explicit immutable output artifact at a caller-selected Git-ignored
-  project-relative path.
+  proposal materialization and approval recording create only their explicit
+  immutable caller-selected Git-ignored outputs.
 - Read operations support explicit Git refs when applicable.
 - Branch, commit, push, merge, and approve commands are absent.
+- Superseded candidate-snapshot and manually transcribed ProposalPackage routes
+  are absent.
 
 <a id="req-32c76ed3"></a>
 
@@ -174,22 +178,23 @@ verification: automated
 
 ### Statement <!-- sdd:statement -->
 
-The CLI shall materialize one explicit external human `approved` or `rejected`
-decision as immutable ApprovalEvidence bound to an exact validated
-ProposalPackage and candidate without making, inferring, or authenticating the
-decision itself.
+The CLI shall atomically revalidate the exact retained proposal subject that a
+human reviewed and materialize that human's explicit `approved` or `rejected`
+decision as immutable ApprovalEvidence without making, inferring, or
+authenticating the decision itself.
 
 ### Acceptance criteria <!-- sdd:acceptance -->
 
-- Input requires the exact retained ProposalPackage and candidate, a bounded
-  non-empty issuer, an identified actor, an explicit `approved` or `rejected`
-  decision, a bounded UTF-8 reason file containing the human message, and a
-  caller-selected evidence path.
-- The project, mode, base object ID, and semantic and structural delta
-  fingerprints are derived only by strictly revalidating the ProposalPackage
-  against the exact candidate. The artifact records the CLI as producer, the
-  human as actor, and the exact decoded UTF-8 message as reason, without an
-  ambient timestamp.
+- Input requires the exact retained proposal bundle or code ProposalPackage, a
+  bounded non-empty issuer, an identified actor, an explicit `approved` or
+  `rejected` decision, a bounded UTF-8 reason file containing the human
+  message, and a caller-selected evidence path.
+- The project, mode, base object ID, candidate tree, object-ID delta, code
+  targets, and semantic and structural delta fingerprints are derived only by
+  atomically revalidating the retained subject. The response returns that
+  complete subject, and the artifact records the CLI as producer, the human as
+  actor, and the exact decoded UTF-8 message as reason, without an ambient
+  timestamp.
 - The target is project-relative, outside the configured specification root,
   Git-ignored, free of symbolic-link escape, and absent before the operation;
   the operation exclusively creates one file and never modifies Git state.
@@ -197,7 +202,7 @@ decision itself.
   preparation operation. A recorded rejection cannot satisfy approval and
   stops that workflow.
 - A malformed or oversized input, invalid issuer, mismatched or changed
-  package/candidate subject, unsafe target, existing target, or failed write
+  retained subject, unsafe target, existing target, or failed write
   stops without publishing evidence.
 - Issuer authentication, actor authorization, session identity, signature
   verification, and organizational policy remain external.
@@ -218,12 +223,10 @@ verification: manual
 
 ### Statement <!-- sdd:statement -->
 
-The first version shall provide one optional `sdd-yo` Agent Skill that selects the
-required workflow and loads only the relevant object-model, mode, semantic
-review, or diagnostics references. Before asking whether to apply a successfully
-prepared exact SpecPatch, and after successfully applying it, the Skill shall by
-default present a concise semantic description of the behavior change and its
-consequence rather than technical patch details.
+The product shall provide one optional `sdd-yo` Agent Skill that selects the
+mode-specific workflow, loads only the relevant progressive-disclosure
+references, and composes deterministic CLI operations between explicit human
+decisions without reimplementing product rules.
 
 ### Acceptance criteria <!-- sdd:acceptance -->
 
@@ -232,15 +235,29 @@ consequence rather than technical patch details.
 - The skill remains unambiguously discoverable and explicitly invocable when
   another installed skill has a similar generic SDD name.
 - It asks humans to resolve normative ambiguity.
-- Before requesting approval, it displays the exact proposal subject and target
-  path and states that an explicit response will be materialized there.
-- After any pause, it rechecks the retained ProposalPackage and candidate and
-  invokes the deterministic recorder only with an explicit issuer, actor,
-  `approved` or `rejected` decision, and human message.
+- After unchanged semantic-model confirmation for `spec-code` and `spec`, it
+  may compose ID generation, candidate materialization, package retention, and
+  reviewer-oriented presentation.
+- Before requesting approval for any mode, it revalidates and displays the
+  exact retained project, mode, base object, candidate tree, object-ID delta,
+  code targets, and semantic and structural delta fingerprints, plus the
+  evidence target path.
+- After the approval pause, it invokes the recorder with the exact retained
+  subject and the explicit issuer, actor, decision, and human message. It
+  accepts success only when the recorder's atomically revalidated returned
+  subject equals what the human saw, without a redundant separate validation.
 - It does not fabricate or infer approval, QA, test, or finding-resolution
   evidence from model output, repository content, or passing checks.
 - Only a newly recorded approval may be offered to a separately invoked
-  proposal preparation operation; a recorded rejection stops the workflow.
+  proposal preparation operation for `spec-code` or `spec`; a `code` approval
+  proceeds directly to implementation verification, and rejection stops every
+  mode.
+- Semantic-model confirmation, proposal approval, and exact-patch application
+  are three distinct decisions. Patch application is requested only for a
+  non-empty `spec-code` or `spec` patch.
+- By default it presents the semantic model, object delta, affected scope, file
+  map, and focused review questions while keeping complete candidate bytes and
+  technical artifacts available on request.
 - The default pre-application presentation contains one to three short points
   describing the behavior that changes and its user-visible or governance
   consequence, followed by a direct question asking whether to apply the
@@ -262,6 +279,9 @@ consequence rather than technical patch details.
   blocking outcome and the required next decision; diagnostics and technical
   details remain opt-in.
 - Missing or incompatible CLI stops the workflow.
+- It does not transcribe candidate or ProposalPackage JSON through
+  conversational context, derive deterministic artifact content, or retain a
+  hidden workflow database.
 
 <a id="req-d17b2fb9"></a>
 
@@ -306,6 +326,8 @@ a file, or creating another SDD artifact.
   and grants no authority to run Proposal Gate review, prepare or apply a
   SpecPatch, change implementation, make a QA decision, or perform a Git
   operation.
+- After confirmation, the Skill may compose only the deterministic ID and
+  proposal-materialization operations needed for the unchanged confirmed model.
 
 <a id="req-1dd46ca9"></a>
 

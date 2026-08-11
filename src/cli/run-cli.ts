@@ -70,6 +70,7 @@ import {
   importSpecPatch,
   importProposalPackage,
   loadBaseSpecificationTree,
+  materializeProposalBundle,
   parseProposalPackage,
   parseCodeTarget,
   parseProposalMode,
@@ -154,6 +155,7 @@ type Command =
   | "findings.validate"
   | "merge.check"
   | "proposal.validate"
+  | "proposal.materialize"
   | "proposal.prepare"
   | "proposal.apply";
 type ResponseCommand = Command | "version" | "unknown";
@@ -205,6 +207,7 @@ type Invocation = {
   readonly targetTestIndex?: ProjectPath;
   readonly proposalMode?: ProposalMode;
   readonly candidatePath?: string;
+  readonly bundlePath?: ProjectPath;
   readonly manifestPath?: ProjectPath;
   readonly issuer?: string;
   readonly actor?: string;
@@ -309,11 +312,14 @@ export type ApprovalRecordResult = {
   readonly evidence_path: ProjectPath;
   readonly decision: "approved" | "rejected";
   readonly mode: ProposalMode;
-  readonly subject: {
-    readonly base_ref: GitObjectId;
-    readonly semantic_delta_fingerprint: Fingerprint;
-    readonly structural_delta_fingerprint: Fingerprint;
-  };
+  readonly subject: ProposalPackage;
+};
+
+export type ProposalMaterializeResult = {
+  readonly bundle_path: ProjectPath;
+  readonly candidate_path?: ProjectPath;
+  readonly package_path: ProjectPath;
+  readonly proposal: ProposalPackage;
 };
 
 export type CliResponse =
@@ -337,6 +343,7 @@ export type CliResponse =
   | CliResponseEnvelope<"findings.validate", "ok" | "blocked", FindingAssessment>
   | CliResponseEnvelope<"merge.check", "ok" | "blocked" | "review_required", MergeReport>
   | CliResponseEnvelope<"proposal.validate", "ok", ProposalPackage>
+  | CliResponseEnvelope<"proposal.materialize", "ok", ProposalMaterializeResult>
   | CliResponseEnvelope<"proposal.apply", "ok", import("../proposal/index.ts").ProposalApplyResult>
   | CliResponseEnvelope<
       "proposal.prepare",
@@ -375,7 +382,11 @@ function parseInvocation(
               ? "findings.validate"
               : argv[0] === "merge" && argv[1] === "check"
                 ? "merge.check"
-                : argv[0] === "proposal" && (argv[1] === "validate" || argv[1] === "prepare" || argv[1] === "apply")
+                : argv[0] === "proposal" &&
+                    (argv[1] === "materialize" ||
+                      argv[1] === "validate" ||
+                      argv[1] === "prepare" ||
+                      argv[1] === "apply")
                   ? `proposal.${argv[1]}`
                   : argv[0];
   if (
@@ -394,6 +405,7 @@ function parseInvocation(
     command !== "findings.validate" &&
     command !== "merge.check" &&
     command !== "proposal.validate" &&
+    command !== "proposal.materialize" &&
     command !== "proposal.prepare" &&
     command !== "proposal.apply"
   )
@@ -432,6 +444,7 @@ function parseInvocation(
   let targetTestIndex: ProjectPath | undefined;
   let proposalMode: ProposalMode | undefined;
   let candidatePath: string | undefined;
+  let bundlePath: ProjectPath | undefined;
   let manifestPath: ProjectPath | undefined;
   let issuer: string | undefined;
   let actor: string | undefined;
@@ -463,6 +476,7 @@ function parseInvocation(
       command === "findings.validate" ||
       command === "merge.check" ||
       command === "proposal.validate" ||
+      command === "proposal.materialize" ||
       command === "proposal.prepare" ||
       command === "proposal.apply"
         ? 2
@@ -496,6 +510,7 @@ function parseInvocation(
       argument === "--target-test-index" ||
       argument === "--mode" ||
       argument === "--candidate" ||
+      argument === "--bundle" ||
       argument === "--manifest" ||
       argument === "--code-target" ||
       argument === "--package" ||
@@ -563,6 +578,17 @@ function parseInvocation(
             ),
           };
         decision = value;
+      } else if (argument === "--bundle") {
+        if (!isProjectPath(value))
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_PROPOSAL_BUNDLE_PATH_INVALID",
+              "The proposal bundle path is not project-relative and portable.",
+              "Select a new ignored staging directory inside the selected project.",
+            ),
+          };
+        bundlePath = value;
       } else if (argument === "--manifest") {
         if (!isProjectPath(value))
           return {
@@ -971,6 +997,7 @@ function parseInvocation(
   if (
     command !== "diff" &&
     command !== "proposal.validate" &&
+    command !== "proposal.materialize" &&
     command !== "candidate.snapshot" &&
     (baseRef !== undefined || targetRef !== undefined)
   )
@@ -989,6 +1016,15 @@ function parseInvocation(
         "SDD_CONFIG_CLI_ARGUMENT_INVALID",
         "--target does not apply to proposal validation.",
         "Use --base with sdd proposal validate.",
+      ),
+    };
+  if (command === "proposal.materialize" && targetRef !== undefined)
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "--target does not apply to proposal materialization.",
+        "Use --base with sdd proposal materialize.",
       ),
     };
   if (command === "candidate.snapshot" && targetRef !== undefined)
@@ -1040,19 +1076,65 @@ function parseInvocation(
       ),
     };
   if (
+    command === "proposal.materialize" &&
+    (baseRef === undefined || proposalMode === undefined || bundlePath === undefined)
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_PROPOSAL_MATERIALIZE_INPUTS_REQUIRED",
+        "proposal materialize requires mode, base, and bundle inputs.",
+        "Supply --mode, --base, and --bundle; specification-changing modes also require --candidate.",
+      ),
+    };
+  if (
+    command === "proposal.materialize" &&
+    ((proposalMode === "code" && candidatePath !== undefined) ||
+      (proposalMode !== "code" && (candidatePath === undefined || codeTargets.length > 0)))
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_PROPOSAL_MATERIALIZE_MODE_INVALID",
+        "The proposal materialization inputs do not match the selected mode.",
+        "Use --candidate only for spec-code or spec, and --code-target only for code.",
+      ),
+    };
+  if (
+    command !== "proposal.materialize" &&
+    command !== "proposal.validate" &&
+    command !== "approval.record" &&
+    bundlePath !== undefined
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "A proposal bundle option was used with another command.",
+        "Use --bundle only with sdd proposal materialize.",
+      ),
+    };
+  if (
     command === "proposal.validate" &&
-    (baseRef === undefined || proposalMode === undefined || candidatePath === undefined)
+    (bundlePath !== undefined || packagePath !== undefined
+      ? (bundlePath === undefined) === (packagePath === undefined) ||
+        baseRef !== undefined ||
+        proposalMode !== undefined ||
+        candidatePath !== undefined ||
+        codeTargets.length > 0
+      : baseRef === undefined || proposalMode === undefined || candidatePath === undefined)
   )
     return {
       ok: false,
       diagnostic: cliDiagnostic(
         "SDD_PROPOSAL_INPUTS_REQUIRED",
-        "proposal validate requires mode, base, and candidate inputs.",
-        "Supply --mode, --base, and --candidate.",
+        "proposal validate requires one complete supported input form.",
+        "Supply exactly one of --bundle or --package, or supply --mode, --base, and --candidate.",
       ),
     };
   if (
     command !== "proposal.validate" &&
+    command !== "proposal.materialize" &&
     command !== "proposal.prepare" &&
     command !== "approval.record" &&
     command !== "merge.check" &&
@@ -1096,6 +1178,7 @@ function parseInvocation(
   if (
     command !== "proposal.prepare" &&
     command !== "approval.record" &&
+    command !== "proposal.validate" &&
     command !== "merge.check" &&
     (packagePath !== undefined || approvalPaths.length > 0)
   )
@@ -1109,8 +1192,8 @@ function parseInvocation(
     };
   if (
     command === "approval.record" &&
-    (packagePath === undefined ||
-      candidatePath === undefined ||
+    ((bundlePath === undefined) === (packagePath === undefined) ||
+      candidatePath !== undefined ||
       issuer === undefined ||
       actor === undefined ||
       decision === undefined ||
@@ -1121,8 +1204,8 @@ function parseInvocation(
       ok: false,
       diagnostic: cliDiagnostic(
         "SDD_APPROVAL_INPUTS_REQUIRED",
-        "approval record requires package, candidate, issuer, actor, decision, reason, and evidence inputs.",
-        "Supply every explicit approval recording input.",
+        "approval record requires a bundle, issuer, actor, decision, reason, and evidence inputs.",
+        "Supply the exact retained bundle and every explicit human decision input.",
       ),
     };
   if (
@@ -1139,7 +1222,7 @@ function parseInvocation(
       diagnostic: cliDiagnostic(
         "SDD_CONFIG_CLI_ARGUMENT_INVALID",
         "An unsupported option was used with approval record.",
-        "Use only package, candidate, issuer, actor, decision, reason, evidence, project selection, and formatting inputs.",
+        "Use only bundle, issuer, actor, decision, reason, evidence, project selection, and formatting inputs.",
       ),
     };
   if (
@@ -1390,6 +1473,7 @@ function parseInvocation(
       ...(targetTestIndex === undefined ? {} : { targetTestIndex }),
       ...(proposalMode === undefined ? {} : { proposalMode }),
       ...(candidatePath === undefined ? {} : { candidatePath }),
+      ...(bundlePath === undefined ? {} : { bundlePath }),
       ...(manifestPath === undefined ? {} : { manifestPath }),
       ...(issuer === undefined ? {} : { issuer }),
       ...(actor === undefined ? {} : { actor }),
@@ -1661,9 +1745,9 @@ function humanView(value: CliResponse): string {
       `evidence: ${result.evidence_path}`,
       `decision: ${result.decision}`,
       `mode: ${result.mode}`,
-      `base: ${result.subject.base_ref}`,
-      `semantic: ${result.subject.semantic_delta_fingerprint}`,
-      `structural: ${result.subject.structural_delta_fingerprint}`,
+      `base: ${result.subject.base.git_ref}`,
+      `semantic: ${result.subject.object_delta.semantic_fingerprint}`,
+      `structural: ${result.subject.object_delta.structural_fingerprint}`,
     );
   } else if (value.command === "init" && value.status === "ok") {
     const result = value.result as InitResult;
@@ -2015,6 +2099,51 @@ async function readApprovalReason(
       "The approval reason file is unavailable.",
     );
   }
+}
+
+async function revalidateProposalBundle(input: {
+  readonly fileSystem: FileSystem;
+  readonly gitReader: GitReader;
+  readonly project: Parameters<typeof revalidateProposalPackage>[0]["project"];
+  readonly projectRoot: string;
+  readonly bundlePath: ProjectPath;
+}): Promise<Awaited<ReturnType<typeof revalidateProposalPackage>>> {
+  const bundle = resolveConfiguredPath(input.projectRoot, input.bundlePath);
+  const metadata = await input.fileSystem.metadata(bundle);
+  if (metadata.kind !== "directory")
+    throw new ProposalRevalidationError(
+      "SDD_PREPARE_BUNDLE_INVALID",
+      "The retained proposal bundle is not a directory.",
+    );
+  const realRoot = await input.fileSystem.realPath(input.projectRoot);
+  const realBundle = await input.fileSystem.realPath(bundle);
+  const containment = relative(realRoot, realBundle);
+  if (containment === ".." || containment.startsWith(`..${sep}`))
+    throw new ProposalRevalidationError(
+      "SDD_PREPARE_BUNDLE_INVALID",
+      "The retained proposal bundle escapes the project.",
+    );
+  const packagePath = resolve(bundle, "proposal-package.json");
+  const packageBytes = await input.fileSystem.readFile(packagePath);
+  const packageValue = await importProposalPackage(input.fileSystem, packagePath);
+  const candidatePath = packageValue.candidate.source === "base" ? undefined : resolve(bundle, "candidate-tree.json");
+  const result = await revalidateProposalPackage({
+    fileSystem: input.fileSystem,
+    gitReader: input.gitReader,
+    project: input.project,
+    package: packageValue,
+    ...(candidatePath === undefined ? {} : { candidatePath }),
+  });
+  const currentPackageBytes = await input.fileSystem.readFile(packagePath);
+  if (
+    packageBytes.byteLength !== currentPackageBytes.byteLength ||
+    packageBytes.some((byte, index) => byte !== currentPackageBytes[index])
+  )
+    throw new ProposalRevalidationError(
+      "SDD_PREPARE_BUNDLE_CHANGED",
+      "The retained proposal bundle changed during revalidation.",
+    );
+  return result;
 }
 
 async function ensureApprovalTargetIgnored(
@@ -2454,8 +2583,7 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
     if (invocation.command === "approval.record") {
       try {
         if (
-          invocation.packagePath === undefined ||
-          invocation.candidatePath === undefined ||
+          (invocation.bundlePath === undefined && invocation.packagePath === undefined) ||
           invocation.issuer === undefined ||
           invocation.actor === undefined ||
           invocation.decision === undefined ||
@@ -2479,18 +2607,28 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
         if (!selectedEvidence.ok)
           throw new ApprovalEvidenceRecordError("SDD_APPROVAL_TARGET_UNSAFE", selectedEvidence.diagnostic.message);
         await ensureApprovalTargetIgnored(runtime.processRunner, project.project_root, invocation.evidencePath);
-        const [packageValue, reason, reader] = await Promise.all([
-          importProposalPackage(runtime.fileSystem, resolve(runtime.workingDirectory, invocation.packagePath)),
+        const [reason, reader] = await Promise.all([
           readApprovalReason(runtime.fileSystem, project.project_root, invocation.reasonPath),
           discoverProcessGitReader(runtime.processRunner, project.project_root),
         ]);
-        const revalidated = await revalidateProposalPackage({
-          fileSystem: runtime.fileSystem,
-          gitReader: reader,
-          project,
-          package: packageValue,
-          candidatePath: resolve(runtime.workingDirectory, invocation.candidatePath),
-        });
+        const revalidated =
+          invocation.bundlePath !== undefined
+            ? await revalidateProposalBundle({
+                fileSystem: runtime.fileSystem,
+                gitReader: reader,
+                project,
+                projectRoot: project.project_root,
+                bundlePath: invocation.bundlePath,
+              })
+            : await revalidateProposalPackage({
+                fileSystem: runtime.fileSystem,
+                gitReader: reader,
+                project,
+                package: await importProposalPackage(
+                  runtime.fileSystem,
+                  resolve(runtime.workingDirectory, invocation.packagePath!),
+                ),
+              });
         const cliIdentity = loadCliCompatibilityIdentity().cli;
         const evidence = createApprovalEvidence({
           projectId: project.configuration.project_id,
@@ -2509,7 +2647,7 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
           evidence_path: invocation.evidencePath,
           decision: evidence.decision,
           mode: evidence.mode,
-          subject: evidence.subject,
+          subject: revalidated.package,
         };
         emit(
           runtime,
@@ -2798,6 +2936,113 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
         return TECHNICAL_FAILURE_EXIT_CODE;
       }
     }
+    if (invocation.command === "proposal.materialize") {
+      try {
+        if (
+          invocation.baseRef === undefined ||
+          invocation.proposalMode === undefined ||
+          invocation.bundlePath === undefined
+        )
+          throw new Error("Parsed proposal materialization invocation is missing required inputs.");
+        if (
+          invocation.bundlePath === project.configuration.spec.root ||
+          invocation.bundlePath.startsWith(`${project.configuration.spec.root}/`)
+        )
+          throw new SpecificationWritePreconditionError(
+            "SDD_PROPOSAL_BUNDLE_TARGET_IN_SPEC",
+            "The proposal bundle target is inside the governed specification tree.",
+          );
+        const selectedBundle = await resolveSafeOutputTarget(
+          runtime.fileSystem,
+          project.project_root,
+          invocation.bundlePath,
+        );
+        if (!selectedBundle.ok)
+          throw new SpecificationWritePreconditionError(
+            selectedBundle.diagnostic.code === "SDD_CONFIG_CLI_OUTPUT_INVALID"
+              ? "SDD_PROPOSAL_BUNDLE_TARGET_EXISTS"
+              : selectedBundle.diagnostic.code,
+            selectedBundle.diagnostic.message,
+          );
+        const ignored = await runtime.processRunner.run({
+          executable: "git",
+          arguments: ["check-ignore", "--quiet", "--", invocation.bundlePath],
+          workingDirectory: project.project_root,
+          environment: { GIT_OPTIONAL_LOCKS: "0", LC_ALL: "C" },
+          timeoutMilliseconds: 30_000,
+          maxOutputBytes: 1024 * 1024,
+        });
+        if (ignored.exitCode === 1)
+          throw new SpecificationWritePreconditionError(
+            "SDD_PROPOSAL_BUNDLE_TARGET_NOT_IGNORED",
+            "The proposal bundle target is not ignored by Git.",
+          );
+        if (ignored.exitCode !== 0)
+          throw new GitReadError("GIT_COMMAND_FAILED", "Git could not validate the proposal bundle target.");
+        const reader = await discoverProcessGitReader(runtime.processRunner, project.project_root);
+        const baseRef = await reader.resolveRevision(invocation.baseRef);
+        const materialize = () =>
+          materializeProposalBundle({
+            fileSystem: runtime.fileSystem,
+            gitReader: reader,
+            project,
+            baseRef,
+            ...(invocation.candidatePath === undefined
+              ? {}
+              : { candidatePath: resolve(runtime.workingDirectory, invocation.candidatePath) }),
+            mode: invocation.proposalMode!,
+            codeTargets: invocation.codeTargets,
+          });
+        const first = await materialize();
+        const current = await materialize();
+        if (JSON.stringify(first.package) !== JSON.stringify(current.package))
+          throw new SpecificationWritePreconditionError(
+            "SDD_PROPOSAL_BUNDLE_CANDIDATE_CHANGED",
+            "The candidate changed before proposal bundle publication.",
+          );
+        await runtime.projectWriter.publishDirectoryExclusiveAtomically(
+          project.project_root,
+          selectedBundle.target,
+          current.files,
+        );
+        const result: ProposalMaterializeResult = {
+          bundle_path: invocation.bundlePath,
+          ...(invocation.proposalMode === "code"
+            ? {}
+            : { candidate_path: `${invocation.bundlePath}/candidate-tree.json` as ProjectPath }),
+          package_path: `${invocation.bundlePath}/proposal-package.json` as ProjectPath,
+          proposal: current.package,
+        };
+        emit(
+          runtime,
+          invocation.format,
+          response("proposal.materialize", project.configuration.project_id, "ok", result, []),
+        );
+        return VALID_EXIT_CODE;
+      } catch (error) {
+        const blocked = error instanceof ProposalValidationError && !error.technical;
+        const diagnostic =
+          error instanceof ProposalValidationError
+            ? error.diagnostic
+            : cliDiagnostic(
+                error instanceof ProposalInputError || error instanceof SpecificationWritePreconditionError
+                  ? error.code
+                  : error instanceof GitReadError
+                    ? error.code
+                    : "SDD_PROPOSAL_BUNDLE_WRITE_FAILED",
+                error instanceof Error ? error.message : "The proposal bundle could not be materialized.",
+                "Restore unchanged safe inputs and select a new ignored bundle path.",
+              );
+        emit(
+          runtime,
+          invocation.format,
+          response("proposal.materialize", project.configuration.project_id, blocked ? "blocked" : "error", null, [
+            diagnostic,
+          ]),
+        );
+        return blocked ? BLOCKED_EXIT_CODE : TECHNICAL_FAILURE_EXIT_CODE;
+      }
+    }
     if (invocation.command === "proposal.apply") {
       try {
         if (invocation.patchPath === undefined) throw new Error("Parsed proposal apply invocation has no patch path.");
@@ -2960,6 +3205,42 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
     }
     if (invocation.command === "proposal.validate") {
       try {
+        const reader = await discoverProcessGitReader(runtime.processRunner, project.project_root);
+        if (invocation.bundlePath !== undefined) {
+          const retained = await revalidateProposalBundle({
+            fileSystem: runtime.fileSystem,
+            gitReader: reader,
+            project,
+            projectRoot: project.project_root,
+            bundlePath: invocation.bundlePath,
+          });
+          emit(
+            runtime,
+            invocation.format,
+            response("proposal.validate", project.configuration.project_id, "ok", retained.package, []),
+            outputTarget,
+          );
+          return VALID_EXIT_CODE;
+        }
+        if (invocation.packagePath !== undefined) {
+          const packageValue = await importProposalPackage(
+            runtime.fileSystem,
+            resolve(runtime.workingDirectory, invocation.packagePath),
+          );
+          const retained = await revalidateProposalPackage({
+            fileSystem: runtime.fileSystem,
+            gitReader: reader,
+            project,
+            package: packageValue,
+          });
+          emit(
+            runtime,
+            invocation.format,
+            response("proposal.validate", project.configuration.project_id, "ok", retained.package, []),
+            outputTarget,
+          );
+          return VALID_EXIT_CODE;
+        }
         if (
           invocation.baseRef === undefined ||
           invocation.proposalMode === undefined ||
@@ -2967,7 +3248,6 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
         ) {
           throw new Error("Parsed proposal invocation is missing required inputs.");
         }
-        const reader = await discoverProcessGitReader(runtime.processRunner, project.project_root);
         const baseRef = await reader.resolveRevision(invocation.baseRef);
         const result = await validateProposal({
           fileSystem: runtime.fileSystem,
@@ -3000,6 +3280,21 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
             outputTarget,
           );
           return error.technical ? TECHNICAL_FAILURE_EXIT_CODE : BLOCKED_EXIT_CODE;
+        }
+        if (error instanceof ProposalRevalidationError) {
+          emit(
+            runtime,
+            invocation.format,
+            response("proposal.validate", project.configuration.project_id, "blocked", null, [
+              cliDiagnostic(
+                error.code.replace(/^SDD_PREPARE_/u, "SDD_PROPOSAL_"),
+                error.message,
+                "Restore the exact retained bundle.",
+              ),
+            ]),
+            outputTarget,
+          );
+          return BLOCKED_EXIT_CODE;
         }
         const diagnostic = comparisonTechnicalDiagnostic(error);
         emit(

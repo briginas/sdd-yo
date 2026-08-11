@@ -111,8 +111,10 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
   assert.deepEqual(suite.requirements, [
     "REQ-05CABE17",
     "REQ-1DD46CA9",
+    "REQ-20D8EC8C",
     "REQ-26234DC8",
     "REQ-32C76ED3",
+    "REQ-5FFEC13F",
     "REQ-C975AE17",
     "REQ-D17B2FB9",
   ]);
@@ -122,6 +124,7 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
     "approval-recording",
     "author",
     "branch-preparation",
+    "composed-workflow",
     "diagnose",
     "discovery",
     "initialize",
@@ -160,13 +163,62 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
       "inspect",
       "merge.check",
       "proposal.apply",
+      "proposal.materialize",
       "proposal.prepare",
-      "proposal.validate",
       "tests.discover",
       "trace",
       "validate",
     ],
   );
+});
+
+test("REQ-20D8EC8C REQ-5FFEC13F REQ-32C76ED3 Milestone 19.5 composed routes cover freshness and authority stops", async () => {
+  const suite = await loadSuite();
+  const scenarios = new Map(suite.scenarios.map((scenario) => [scenario.id, scenario]));
+  const expected = [
+    "approval-atomic-stale-pause-stops",
+    "approval-changed-candidate-before-decision-restarts",
+    "approval-explicit-rejection-stops",
+    "composed-authority-stops-remain-distinct",
+    "composed-code-uses-base-derived-package",
+    "composed-spec-code-correction-requires-fresh-confirmation",
+    "composed-spec-code-retains-review-bundle",
+    "composed-spec-retains-review-bundle",
+    "proposal-artifact-write-failure-stops",
+  ] as const;
+  assert.ok(expected.every((id) => scenarios.has(id)));
+
+  for (const id of [
+    "composed-spec-code-retains-review-bundle",
+    "composed-spec-retains-review-bundle",
+    "composed-code-uses-base-derived-package",
+  ] as const) {
+    assert.ok(scenarios.get(id)?.expected_operations.includes("proposal.materialize"), id);
+  }
+
+  const code = scenarios.get("composed-code-uses-base-derived-package");
+  assert.ok(code?.forbidden_actions.includes("author-candidate"));
+  assert.ok(code?.forbidden_actions.includes("prepare-code-proposal"));
+  assert.ok(code?.forbidden_actions.includes("apply-spec-patch"));
+
+  const stale = scenarios.get("approval-atomic-stale-pause-stops");
+  assert.deepEqual(stale?.expected_operations, ["approval.record", "proposal.materialize"]);
+  assert.ok(stale?.forbidden_actions.includes("redundant-post-pause-materialization"));
+  assert.ok(stale?.forbidden_actions.includes("carry-approval-to-stale-subject"));
+
+  const artifactFailure = scenarios.get("proposal-artifact-write-failure-stops");
+  assert.ok(artifactFailure?.forbidden_actions.includes("manually-write-bundle"));
+  assert.ok(artifactFailure?.forbidden_actions.includes("reconstruct-package-from-chat"));
+
+  const authority = scenarios.get("composed-authority-stops-remain-distinct");
+  assert.deepEqual(authority?.forbidden_actions, [
+    "apply-spec-patch",
+    "commit-change",
+    "implement-change",
+    "infer-approval",
+    "publish-release",
+    "record-qa-decision",
+  ]);
 });
 
 test("REQ-1DD46CA9 skill eval corpus covers every untrusted repository data channel", async () => {
@@ -322,13 +374,65 @@ test("REQ-26234DC8 controlled fake CLI exercises exact failure and status bounda
     assert.equal(result.code, 3, `${mode}: ${result.stderr}`);
   }
 
+  for (const proposalMode of ["spec-code", "spec", "code"] as const) {
+    const bundle = `.sdd/staging/${proposalMode}-bundle`;
+    const modeArguments =
+      proposalMode === "code" ? ["--code-target", "REQ-A1000001"] : ["--candidate", ".sdd/staging/candidate"];
+    const materialized = await runChecker("valid", [
+      "proposal",
+      "materialize",
+      "--mode",
+      proposalMode,
+      "--base",
+      "base123",
+      ...modeArguments,
+      "--bundle",
+      bundle,
+      "--cwd",
+      repositoryRoot,
+    ]);
+    assert.equal(materialized.code, 0, `${proposalMode}: ${materialized.stderr}`);
+    const response = JSON.parse(materialized.stdout) as {
+      result: { bundle_path: string; candidate_path?: string; proposal: { candidate: { source: string } } };
+    };
+    assert.equal(response.result.bundle_path, bundle);
+    assert.equal(response.result.proposal.candidate.source, proposalMode === "code" ? "base" : "manifest");
+    if (proposalMode === "code") assert.equal(response.result.candidate_path, undefined);
+    else assert.equal(response.result.candidate_path, `${bundle}/candidate-tree.json`);
+  }
+
+  const artifactFailure = await runChecker("artifact-write-failure", [
+    "proposal",
+    "materialize",
+    "--mode",
+    "spec-code",
+    "--base",
+    "base123",
+    "--candidate",
+    ".sdd/staging/candidate",
+    "--bundle",
+    ".sdd/staging/colliding-bundle",
+    "--cwd",
+    repositoryRoot,
+  ]);
+  assert.equal(artifactFailure.code, 3, artifactFailure.stderr);
+  const artifactResponse = JSON.parse(artifactFailure.stdout) as {
+    status: string;
+    result: unknown;
+    diagnostics: readonly { readonly code: string }[];
+  };
+  assert.equal(artifactResponse.status, "error");
+  assert.equal(artifactResponse.result, null);
+  assert.deepEqual(
+    artifactResponse.diagnostics.map(({ code }) => code),
+    ["SDD_PROPOSAL_BUNDLE_WRITE_FAILED"],
+  );
+
   const approvalArguments = [
     "approval",
     "record",
-    "--package",
-    ".sdd/staging/package.json",
-    "--candidate",
-    ".sdd/staging/candidate.json",
+    "--bundle",
+    ".sdd/staging/proposal-bundle",
     "--issuer",
     "product-review",
     "--actor",

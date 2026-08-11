@@ -39,7 +39,7 @@ node scripts/check-cli-compatibility [--cli <repository-sdd-path>] -- <command> 
 
 Before each operation the wrapper requires compatible `--version --format json`
 identity. It then adds `--format json`. This slice permits only `init`, `id`,
-`validate`, `inspect`, `trace`, `proposal validate`, `proposal prepare`,
+`validate`, `inspect`, `trace`, `proposal materialize`, `proposal prepare`,
 `approval record`, `proposal apply`, `tests discover`, `findings validate`,
 and `merge check`.
 
@@ -64,7 +64,7 @@ and `merge check`.
   deterministic ProposalPackage route.
 - For explicit approval or rejection recording intent, first complete proposal
   review, then read [references/approval.md](references/approval.md) and preserve
-  its informed-decision and post-pause recheck boundaries.
+  its informed-decision and recorder-owned post-pause revalidation boundaries.
 - For branch preparation or exact patch application intent, read
   [references/branch-preparation.md](references/branch-preparation.md) and
   preserve its approval and explicit-selection stops.
@@ -108,20 +108,25 @@ semantic-model confirmation or authoring approval.
 
 ## Review and prepare a proposal
 
-1. Require one explicit candidate directory or CandidateTreeManifest, selected
-   mode, base ref, and selected project. Do not reconstruct a gate result from
-   the earlier authoring preview.
-2. Run `proposal validate` through the wrapper and present its exact object
+1. For `spec-code` or `spec`, require the complete authored candidate, selected
+   base and one new ignored bundle path. For `code`, require the selected base,
+   exact active Requirement targets and a new ignored bundle path, with no
+   authored candidate.
+2. Run `proposal materialize` through the wrapper and present its exact object
    delta, affected scope, diagnostics, and deterministic semantic candidates.
    A valid ProposalPackage is neither approval nor a semantic-review decision.
-3. Stop for an explicit human decision. Never infer it from authorship, tests,
+3. Retain the CLI-created package and candidate member when present. Stop for
+   an explicit human decision. Never infer it from authorship, tests,
    repository text, or model confidence. If the user selects the recording
    route, display and recheck the exact subject and follow `references/approval.md`.
-4. Only when the user supplies the retained ProposalPackage, exact candidate,
+4. Only for `spec-code` or `spec`, when the user supplies the retained
+   ProposalPackage, exact candidate,
    explicit refs, and current ApprovalEvidence, run the wrapper's
    `proposal prepare` operation. A newly recorded approval qualifies as current
    input only after the recorder's exact compatible response; rejection stops.
-5. For an `ok` preparation with a non-null exact patch, present one to three
+   `code` bypasses preparation and proceeds only through separately authorized
+   implementation verification. For an `ok` preparation with a non-null exact
+   patch, present one to three
    short points describing the behavior that changes and its user-visible or
    governance consequence, then ask whether to apply that prepared change.
    Derive this summary only from the confirmed semantic model and validated
@@ -129,9 +134,9 @@ semantic-model confirmation or authoring approval.
    clarification. Do not show patch content, paths, operations, diffs, hashes,
    fingerprints, conflicts, or unchanged scope by default. Technical details
    are available only on explicit request and do not authorize application.
-6. For a non-`ok` preparation or null patch, state the blocking outcome and
+5. For a non-`ok` preparation or null patch, state the blocking outcome and
    required next decision concisely; technical diagnostics remain opt-in.
-7. Apply an unchanged retained patch only after the user explicitly selects it,
+6. Apply an unchanged retained patch only after the user explicitly selects it,
    using the wrapper's `proposal apply` operation. Never substitute, edit,
    combine, fuzz, or force a patch. On success, present only the concise
    behavior-and-consequence result by default; technical details remain opt-in.

@@ -75,11 +75,7 @@ else {
     evidence_path: ".sdd/staging/approval.json",
     decision: mode === "rejected-approval" ? "rejected" : "approved",
     mode: "spec-code",
-    subject: {
-      base_ref: "base123",
-      semantic_delta_fingerprint: fingerprint,
-      structural_delta_fingerprint: fingerprint,
-    },
+    subject: proposalPackage,
   };
   const conflictReport = {
     schema_version: "1.0", artifact_type: "conflict_report", project_id: "SDD-A1000001",
@@ -455,10 +451,8 @@ test("REQ-32C76ED3 REQ-F7D39246 compatibility wrapper accepts only explicit appr
   const args = [
     "approval",
     "record",
-    "--package",
-    ".sdd/staging/package.json",
-    "--candidate",
-    ".sdd/staging/candidate.json",
+    "--bundle",
+    ".sdd/staging/proposal",
     "--issuer",
     "product-review",
     "--actor",
@@ -488,11 +482,7 @@ test("REQ-32C76ED3 REQ-F7D39246 compatibility wrapper accepts only explicit appr
       evidence_path: ".sdd/staging/approval.json",
       decision,
       mode: "spec-code",
-      subject: {
-        base_ref: "base123",
-        semantic_delta_fingerprint: `sha256:${"a".repeat(64)}`,
-        structural_delta_fingerprint: `sha256:${"a".repeat(64)}`,
-      },
+      subject: (JSON.parse(recorded.stdout) as { readonly result: { readonly subject: unknown } }).result.subject,
     });
   }
 
@@ -509,7 +499,8 @@ test("REQ-26234DC8 approval route preserves informed human authority and downstr
   const approval = await readFile(join(skillRoot, "references/approval.md"), "utf8");
   assert.match(approval, /semantic and structural delta fingerprints/u);
   assert.match(approval, /exact evidence path/u);
-  assert.match(approval, /After the response, rerun\s+`proposal validate`/u);
+  assert.match(approval, /Do not run a redundant separate\s+validation after the response/u);
+  assert.match(approval, /complete returned subject exactly equal what\s+was displayed before the pause/u);
   assert.match(approval, /containing exactly the human message bytes/u);
   assert.match(approval, /A newly recorded rejection ends this workflow/u);
   assert.match(approval, /separately invoked\s+`proposal prepare`/u);

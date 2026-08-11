@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { open, lstat, mkdir, readFile, rename, rm, rmdir } from "node:fs/promises";
-import { basename, dirname, relative, sep } from "node:path";
+import { basename, dirname, isAbsolute, relative, resolve, sep } from "node:path";
 
 import { SpecificationWritePreconditionError } from "./project-writer.ts";
 import type { ProjectWriter } from "./project-writer.ts";
@@ -52,6 +52,85 @@ export function createNodeProjectWriter(options: NodeProjectWriterOptions = {}):
         }
       } finally {
         await handle.close();
+      }
+    },
+    publishDirectoryExclusiveAtomically: async (transactionRoot, target, files) => {
+      const containment = relative(transactionRoot, target);
+      if (containment === "" || containment === ".." || containment.startsWith(`..${sep}`))
+        throw new SpecificationWritePreconditionError(
+          "SDD_PROPOSAL_BUNDLE_PATH_UNSAFE",
+          "The proposal bundle target is outside its transaction root.",
+        );
+      let current = transactionRoot;
+      for (const segment of containment.split(sep).slice(0, -1)) {
+        current = resolve(current, segment);
+        const metadata = await lstat(current);
+        if (metadata.isSymbolicLink() || !metadata.isDirectory())
+          throw new SpecificationWritePreconditionError(
+            "SDD_PROPOSAL_BUNDLE_PATH_UNSAFE",
+            "The proposal bundle target has an unsafe parent.",
+          );
+      }
+      try {
+        await lstat(target);
+        throw new SpecificationWritePreconditionError(
+          "SDD_PROPOSAL_BUNDLE_TARGET_EXISTS",
+          "The proposal bundle target already exists.",
+        );
+      } catch (error) {
+        if (!(typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT")) throw error;
+      }
+      const seen = new Set<string>();
+      for (const file of files) {
+        if (
+          file.path.length === 0 ||
+          isAbsolute(file.path) ||
+          file.path.split(/[\\/]/u).some((segment) => segment === "" || segment === "." || segment === "..") ||
+          seen.has(file.path)
+        )
+          throw new SpecificationWritePreconditionError(
+            "SDD_PROPOSAL_BUNDLE_MEMBER_UNSAFE",
+            "A proposal bundle member path is unsafe or duplicated.",
+          );
+        seen.add(file.path);
+      }
+      const staged = `${dirname(target)}${sep}.${basename(target)}.sdd-stage-${randomUUID()}`;
+      let published = false;
+      try {
+        await mkdir(staged, { mode: 0o700 });
+        for (let index = 0; index < files.length; index += 1) {
+          const file = files[index]!;
+          await phase("before-staging", index);
+          const stagedTarget = resolve(staged, ...file.path.split("/"));
+          await mkdir(dirname(stagedTarget), { recursive: true, mode: 0o700 });
+          const handle = await open(stagedTarget, "wx", 0o600);
+          try {
+            await handle.writeFile(file.content);
+            try {
+              await handle.sync();
+            } catch (error) {
+              if (!isUnsupportedSync(error)) throw error;
+            }
+          } finally {
+            await handle.close();
+          }
+          await phase("after-staging", index);
+        }
+        await phase("before-preflight", null);
+        try {
+          await lstat(target);
+          throw new SpecificationWritePreconditionError(
+            "SDD_PROPOSAL_BUNDLE_TARGET_EXISTS",
+            "The proposal bundle target appeared before publication.",
+          );
+        } catch (error) {
+          if (!(typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT")) throw error;
+        }
+        await renamePath(staged, target);
+        published = true;
+        await phase("after-replacement", null);
+      } finally {
+        if (!published) await rm(staged, { recursive: true, force: true });
       }
     },
     replaceSpecificationFilesAtomically: async (transactionRoot, operations) => {

@@ -107,7 +107,9 @@ export function parseProposalPackage(value: unknown): ProposalPackage {
   if (!isGitObjectId(value.base.git_ref) || !isFingerprint(value.base.tree_fingerprint)) return fail();
   if (!record(value.candidate) || !exact(value.candidate, ["source", "tree_fingerprint"])) return fail();
   if (
-    (value.candidate.source !== "directory" && value.candidate.source !== "manifest") ||
+    (value.candidate.source !== "base" &&
+      value.candidate.source !== "directory" &&
+      value.candidate.source !== "manifest") ||
     !isFingerprint(value.candidate.tree_fingerprint)
   )
     return fail();

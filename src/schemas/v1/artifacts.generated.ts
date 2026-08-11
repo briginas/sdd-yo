@@ -65,7 +65,7 @@ export type SDDYoProposalPackage = ArtifactEnvelope & {
     tree_fingerprint: string;
   };
   candidate: {
-    source: "directory" | "archive" | "manifest";
+    source: "base" | "directory" | "archive" | "manifest";
     tree_fingerprint: string;
   };
   object_delta: {

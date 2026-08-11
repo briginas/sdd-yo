@@ -110,6 +110,11 @@
   ],
   "cli_modes": [
     {
+      "id": "artifact-write-failure",
+      "exit_code": 3,
+      "purpose": "Return a compatible error response for an atomic proposal artifact publication failure."
+    },
+    {
       "id": "blocked-merge",
       "exit_code": 1,
       "purpose": "Return a compatible governed-scope BLOCKED MergeReport."
