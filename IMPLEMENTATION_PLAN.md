@@ -2,9 +2,40 @@
 
 ## Status
 
-- Active: no implementation milestone is selected
+- Active: Milestone 20.1 — make the repository workflow Skill-first without
+  duplicating the Skill's operating sequence
 - Complete: Milestones 0–19 and public `sdd-yo@0.5.0`
 - Last updated: 2026-08-11
+
+## Milestone 20 — Skill-first workflow ownership
+
+Goal: make the packaged `sdd-yo` Skill the single agent-facing workflow while
+retaining canonical product authority in `spec/`, deterministic authority in
+the CLI, and repository-specific development discipline in `AGENTS.md`.
+
+### 20.1 — Remove duplicated repository workflow
+
+- In `AGENTS.md`, require requests covered by `sdd-yo` to load the available
+  compatible Skill first, let it select the route and progressive references,
+  and then read only the relevant repository source-of-truth slice.
+- In `proposal/architecture/skill.md`, replace the duplicated Skill package
+  inventory, intent table, and operating sequence with checked links and a
+  concise ownership boundary.
+- Preserve the separation between authoring, Proposal Gate, approval,
+  preparation or application, and verification routes.
+- Treat this as repository maintenance outside `spec-code`, `spec`, and `code`:
+  no Requirement IDs or canonical specification candidate are required because
+  normative and observable product behavior remain unchanged.
+
+Excludes changes to canonical `spec/`, the `skills/sdd-yo` payload, CLI,
+schemas, runtime, tests, package identity, installed Skills, publication, and
+Git history or remote state.
+
+Done when the remaining duplicated workflow is absent, retained architecture
+and authority boundaries are still explicit, local Skill links resolve,
+`npm run format:check`, `npm run verify:contracts`, and `git diff --check` pass,
+and the exact final diff is reviewed. Closeout compacts this plan to the next
+active state and does not authorize a commit or push.
 
 ## Authority and navigation
 
