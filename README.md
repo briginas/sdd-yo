@@ -16,18 +16,34 @@ install or publish a Codex plugin.
 
 ## Quick start
 
-Requires macOS and Node.js `22.18.0` or newer. Choose one setup.
+Requires Node.js `22.18.0` or newer.
 
-### Install for your macOS user
+For a new SDD Project, first initialize its specification and then validate it.
+Use `incremental` adoption unless the specification will govern the entire
+repository. Initialization creates `.sdd/config.yaml`, `spec/README.md`,
+`spec/capabilities/`, and `spec/concepts/`; it does not create a branch or
+commit. The first validation should return `status: "ok"` and
+`result.valid: true`.
 
-Use one SDD Yo Skill across multiple repositories. This does not add `sdd-yo`
-to a project or create a global `sdd` command.
+Choose how you want to run SDD Yo:
+
+- use one Codex Skill across repositories on macOS;
+- install the Skill in one repository;
+- use the npm CLI without a Skill.
+
+### Use one Codex Skill across repositories on macOS
+
+Install the Skill once for your macOS user. This does not add `sdd-yo` to a
+project or create a global `sdd` command.
 
 ```text
 npm exec --package=sdd-yo@0.5.1 -- sdd skill install --scope user --format json
 ```
 
-Then use `$sdd-yo` in Codex. Always select the repository explicitly:
+In Codex, use `$sdd-yo` to initialize and validate the selected repository.
+Always provide its absolute path.
+
+To perform the same first steps directly from the terminal:
 
 ```text
 node ~/.agents/skills/sdd-yo/scripts/check-cli-compatibility -- init --root /absolute/path/to/repository --adoption incremental
@@ -39,9 +55,9 @@ The install creates `~/.agents/skills/sdd-yo` and a private CLI under
 only that verified CLI. It does not use `PATH`, a repository CLI, a package
 manager, or the network after installation. User mode rejects `--cli`.
 
-### Install in one repository
+### Use the Skill in one repository
 
-Run these commands from the selected Git repository:
+Install SDD Yo and its Skill in the selected Git repository:
 
 ```text
 cd /absolute/path/to/repository
@@ -51,8 +67,10 @@ node ./node_modules/sdd-yo/dist/bin/sdd.js skill install --root /absolute/path/t
 ```
 
 This creates `/absolute/path/to/repository/.agents/skills/sdd-yo` without
-initializing the project or modifying Git. In Codex, use `$sdd-yo`. For a
-direct first run:
+initializing the project or modifying Git. In Codex, use `$sdd-yo` to initialize
+and validate this repository.
+
+To perform the same first steps directly from the terminal:
 
 ```text
 node ./.agents/skills/sdd-yo/scripts/check-cli-compatibility -- init --root /absolute/path/to/repository --adoption incremental
@@ -61,21 +79,16 @@ node ./.agents/skills/sdd-yo/scripts/check-cli-compatibility -- validate --cwd /
 
 ### Use the npm CLI without a Skill
 
-Run the exact package without adding it to a repository:
+Validate an existing SDD Project from the terminal without adding the package
+or Skill to its repository:
 
 ```text
 npm exec --package=sdd-yo@0.5.1 -- sdd --version --format json
 npm exec --package=sdd-yo@0.5.1 -- sdd validate --cwd /absolute/path/to/repository --format json
 ```
 
-The validation command requires an initialized SDD Project. After installing
-the package in a repository, use `npm exec -- sdd ...` to run its local CLI.
-
-For every setup, initialize with `incremental` adoption unless the specification
-will govern the entire repository. Initialization creates `.sdd/config.yaml`,
-`spec/README.md`, `spec/capabilities/`, and `spec/concepts/`; it does not create
-a branch or commit. The first validation should return `status: "ok"` and
-`result.valid: true`.
+After installing the package in a repository, use `npm exec -- sdd ...` to run
+its local CLI.
 
 The version check should return exit code `0`, `status: "ok"`, package and CLI
 version `0.5.1`, and compatible JSON-schema and Skill protocol major `1`. Do
