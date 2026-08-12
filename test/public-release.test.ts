@@ -27,15 +27,15 @@ test("REQ-ABFFEAF2 REQ-9CE36B68 REQ-0163273A permits only the exact protected tr
   assert.match(workflow, /registry-url: https:\/\/registry\.npmjs\.org/u);
   assert.match(workflow, /package-manager-cache: false/u);
   assert.match(workflow, /PACKAGE_NAME: sdd-yo/u);
-  assert.match(workflow, /PACKAGE_VERSION: 0\.5\.1/u);
+  assert.match(workflow, /PACKAGE_VERSION: 0\.5\.2/u);
   assert.match(workflow, /NPM_VERSION: 11\.16\.0/u);
-  assert.match(workflow, /PREVIOUS_PUBLIC_VERSION: 0\.5\.0/u);
-  assert.match(workflow, /EXPECTED_ARTIFACT_SHA256: 58d63d00103b06ef70539256bafd18b3faac5fb62dc4ba9d1bc52d9f0141dc8c/u);
+  assert.match(workflow, /PREVIOUS_PUBLIC_VERSION: 0\.5\.1/u);
+  assert.match(workflow, /EXPECTED_ARTIFACT_SHA256: 2129c9ec55e0095aaff96554a2cd120641fa9338e408419a223cdab0c836beba/u);
   assert.match(
     workflow,
-    /EXPECTED_INVENTORY_SHA256: db26f2f8520dee2e2717039e771ddd666b11edeaf9814fd77676b4b09c1f646d/u,
+    /EXPECTED_INVENTORY_SHA256: 7d2e69d75debc2639fcc0a9470df3b9494a378b45c831db5e803f47235448079/u,
   );
-  assert.match(workflow, /EXPECTED_INVENTORY_ENTRY_COUNT: "2138"/u);
+  assert.match(workflow, /EXPECTED_INVENTORY_ENTRY_COUNT: "2139"/u);
   assert.match(workflow, /Require npm provenance support/u);
   assert.match(workflow, /npm install --global "npm@\$NPM_VERSION"/u);
   assert.match(workflow, /test "\$\(npm --version\)" = "\$NPM_VERSION"/u);

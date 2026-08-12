@@ -9,7 +9,7 @@ You can add SDD Yo to an existing project and build the specification step by
 step. Every change to the specification or code carries its own context, so
 several changes can be developed at the same time without confusion.
 
-Exact version `0.5.1` is public on npm and requires Node.js `22.18.0` or newer.
+Exact version `0.5.2` is public on npm and requires Node.js `22.18.0` or newer.
 Public availability is established only by the npm registry, not by source or
 README state. The project is pre-1.0, and installing the package does not
 install or publish a Codex plugin.
@@ -37,7 +37,7 @@ Install the Skill once for your macOS user. This does not add `sdd-yo` to a
 project or create a global `sdd` command.
 
 ```text
-npm exec --package=sdd-yo@0.5.1 -- sdd skill install --scope user --format json
+npm exec --package=sdd-yo@0.5.2 -- sdd skill install --scope user --format json
 ```
 
 In Codex, use `$sdd-yo` to initialize and validate the selected repository.
@@ -61,7 +61,7 @@ Install SDD Yo and its Skill in the selected Git repository:
 
 ```text
 cd /absolute/path/to/repository
-npm install --save-dev --save-exact sdd-yo@0.5.1
+npm install --save-dev --save-exact sdd-yo@0.5.2
 npm exec -- sdd --version --format json
 node ./node_modules/sdd-yo/dist/bin/sdd.js skill install --root /absolute/path/to/repository --format json
 ```
@@ -83,15 +83,15 @@ Validate an existing SDD Project from the terminal without adding the package
 or Skill to its repository:
 
 ```text
-npm exec --package=sdd-yo@0.5.1 -- sdd --version --format json
-npm exec --package=sdd-yo@0.5.1 -- sdd validate --cwd /absolute/path/to/repository --format json
+npm exec --package=sdd-yo@0.5.2 -- sdd --version --format json
+npm exec --package=sdd-yo@0.5.2 -- sdd validate --cwd /absolute/path/to/repository --format json
 ```
 
 After installing the package in a repository, use `npm exec -- sdd ...` to run
 its local CLI.
 
 The version check should return exit code `0`, `status: "ok"`, package and CLI
-version `0.5.1`, and compatible JSON-schema and Skill protocol major `1`. Do
+version `0.5.2`, and compatible JSON-schema and Skill protocol major `1`. Do
 not rely on a global `sdd` executable or Skill. User-scoped installation and
 its public consumer proof are macOS-only.
 

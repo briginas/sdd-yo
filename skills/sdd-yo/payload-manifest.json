@@ -3,7 +3,7 @@
   "artifact_type": "sdd_yo_skill_payload_manifest",
   "package": {
     "name": "sdd-yo",
-    "version": "0.5.1"
+    "version": "0.5.2"
   },
   "skill": {
     "name": "sdd-yo",

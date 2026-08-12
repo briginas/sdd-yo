@@ -33,17 +33,17 @@ type PackResult = {
 
 const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
 const documentedQuickstartCommands = [
-  "npm exec --package=sdd-yo@0.5.1 -- sdd skill install --scope user --format json",
+  "npm exec --package=sdd-yo@0.5.2 -- sdd skill install --scope user --format json",
   "node ~/.agents/skills/sdd-yo/scripts/check-cli-compatibility -- init --root /absolute/path/to/repository --adoption incremental",
   "node ~/.agents/skills/sdd-yo/scripts/check-cli-compatibility -- validate --cwd /absolute/path/to/repository",
   "cd /absolute/path/to/repository",
-  "npm install --save-dev --save-exact sdd-yo@0.5.1",
+  "npm install --save-dev --save-exact sdd-yo@0.5.2",
   "npm exec -- sdd --version --format json",
   "node ./node_modules/sdd-yo/dist/bin/sdd.js skill install --root /absolute/path/to/repository --format json",
   "node ./.agents/skills/sdd-yo/scripts/check-cli-compatibility -- init --root /absolute/path/to/repository --adoption incremental",
   "node ./.agents/skills/sdd-yo/scripts/check-cli-compatibility -- validate --cwd /absolute/path/to/repository",
-  "npm exec --package=sdd-yo@0.5.1 -- sdd --version --format json",
-  "npm exec --package=sdd-yo@0.5.1 -- sdd validate --cwd /absolute/path/to/repository --format json",
+  "npm exec --package=sdd-yo@0.5.2 -- sdd --version --format json",
+  "npm exec --package=sdd-yo@0.5.2 -- sdd validate --cwd /absolute/path/to/repository --format json",
   "npm install --offline --no-audit --no-fund --save-exact <tarball-path>",
   "node ./node_modules/sdd-yo/dist/bin/sdd.js --version --format json",
   "mkdir .sdd-tooling",
@@ -265,7 +265,7 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-0163273A REQ-3F19778B REQ-CF3A1
       "Repository-native specification governance with a deterministic CLI and optional Agent Skill.",
     );
     assert.equal(sourceManifest.name, "sdd-yo");
-    assert.equal(sourceManifest.version, "0.5.1");
+    assert.equal(sourceManifest.version, "0.5.2");
     assert.equal(sourceManifest.private, false);
     assert.deepEqual(sourceManifest.publishConfig, { access: "public", provenance: true });
     assert.equal(sourceManifest.license, "Apache-2.0");
