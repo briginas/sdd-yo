@@ -2,8 +2,8 @@
 
 ## Status
 
-- Active: Milestone 25 — public `sdd-yo@0.5.2` patch release
-- Complete: Milestones 0–23 and public `sdd-yo@0.5.1`
+- Active: none — product work is intentionally paused
+- Complete: Milestones 0–23 and 25; public `sdd-yo@0.5.2`
 - Last updated: 2026-08-12
 
 ## Authority and navigation
@@ -38,76 +38,16 @@ package-only bundle and performs no specification-patch ceremony. Proposal
 validation, approval recording, preparation, and merge checks consume the exact
 retained bundle; superseded `0.4.x` handoff routes are absent.
 
-Exact `sdd-yo@0.5.1` is public on npm from annotated tag `v0.5.1` at commit
-`877c25c5f76cb7002eccb9ebbad7ddecb81d6f45`. Its registry tarball matches the
+Exact `sdd-yo@0.5.2` is public on npm from annotated tag `v0.5.2` at commit
+`15f7a33c290ddd742ff57470af35480645ce03fb`. Its registry tarball matches the
 reviewed release subject byte-for-byte with SHA-256
-`58d63d00103b06ef70539256bafd18b3faac5fb62dc4ba9d1bc52d9f0141dc8c`,
+`2129c9ec55e0095aaff96554a2cd120641fa9338e408419a223cdab0c836beba`,
 inventory SHA-256
-`db26f2f8520dee2e2717039e771ddd666b11edeaf9814fd77676b4b09c1f646d`,
-and 2,138 entries. npm trusted publishing records SLSA provenance for the
+`7d2e69d75debc2639fcc0a9470df3b9494a378b45c831db5e803f47235448079`,
+and 2,139 entries. npm trusted publishing records SLSA provenance for the
 GitHub Actions `publish.yml` subject. The public package, CLI identity, library,
 schemas, repository Skill, macOS user-scoped private CLI and wrapper, and an
 isolated exact consumer installation are verified.
-
-## Milestone 25 — Public `sdd-yo@0.5.2` patch release
-
-### Outcome
-
-Publish one immutable `sdd-yo@0.5.2` artifact from annotated tag `v0.5.2`
-through the protected GitHub `release` environment and npm trusted publishing.
-The patch release changes only the exact package and CLI version identity; its
-runtime behavior, schema and Skill protocol majors, Node.js baseline, package
-inventory boundaries, and macOS-only user-scoped lifecycle remain unchanged.
-
-### Requirement traceability
-
-- `REQ-B0B35D6D` — bind the registry, offline artifact, and documented commands
-  to exact version `0.5.2`.
-- `REQ-A2199BC2` — keep package, CLI, schema, and Skill surfaces on one exact
-  compatibility identity.
-- `REQ-ABFFEAF2` — publish only from the immutable reviewed release subject
-  through protected OIDC trusted publishing.
-- `REQ-0163273A` — retain exact artifact hashes, inventory, registry identity,
-  and provenance evidence.
-
-### Leaves
-
-- [x] **25.1 — Govern the exact version change.** Retain and review the
-      confirmed `spec-code` candidate, record explicit ApprovalEvidence, prepare
-      and explicitly apply its exact SpecPatch.
-- [x] **25.2 — Bind the release identity.** Update package identity, user and
-      repository documentation, compatibility tests, Skill payload identity,
-      and the release workflow for `0.5.2`.
-- [x] **25.3 — Reproduce and verify the release artifact.** Produce matching
-      independent packs with npm `11.16.0`, bind their exact hashes and
-      inventory into the workflow, and run the complete validation baseline.
-- [ ] **25.4 — Publish and verify.** Commit and push the immutable subject,
-      require successful CI, add the protected `v0.5.2` deployment rule, create
-      and push the annotated tag, publish the GitHub Release, and verify npm
-      registry bytes, integrity, provenance, and an isolated exact consumer.
-- [ ] **25.5 — Close the release milestone.** Compact the durable release
-      baseline, create and push the separate closeout commit, and require final
-      CI while keeping `v0.5.2` bound to the release subject.
-
-### Exclusions
-
-- no runtime feature, schema-major, Skill-protocol, or Node.js-baseline change;
-- no Linux or Windows user-scoped lifecycle;
-- no Codex plugin, hosted state, or unrelated refactor;
-- no token-based npm publication or local `npm publish`.
-
-### Done condition
-
-Milestone 25 is complete only when the exact tagged artifact is public as npm
-`latest`, its registry bytes and inventory match the reviewed release subject,
-provenance links it to `briginas/sdd-yo` and `publish.yml`, an isolated exact
-consumer smoke succeeds, the active plan is compacted, and final CI passes.
-
-The reviewed npm `11.16.0` candidate has artifact SHA-256
-`2129c9ec55e0095aaff96554a2cd120641fa9338e408419a223cdab0c836beba`,
-sorted inventory SHA-256
-`7d2e69d75debc2639fcc0a9470df3b9494a378b45c831db5e803f47235448079`,
-and 2,139 entries; two independent packs matched byte-for-byte.
 
 ## Milestone 24 — History-free object ID generation
 
