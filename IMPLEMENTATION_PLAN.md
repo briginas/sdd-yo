@@ -2,7 +2,7 @@
 
 ## Status
 
-- Active: Milestone 24 — history-free object ID generation
+- Active: none — product work is intentionally paused
 - Complete: Milestones 0–23 and public `sdd-yo@0.5.1`
 - Last updated: 2026-08-12
 
@@ -51,9 +51,9 @@ isolated exact consumer installation are verified.
 
 ## Milestone 24 — History-free object ID generation
 
-Milestone 24 is active. Its immediate leaf is semantic-contract confirmation;
-implementation does not begin until the normal governed proposal sequence has
-completed.
+Milestone 24 is a future candidate, not active work. It has no immediate leaf;
+its semantic-contract confirmation begins only when the milestone is explicitly
+selected.
 
 ### Outcome
 
@@ -118,7 +118,7 @@ history index, weaken ref freshness or three-way Git comparison, change exact
 patch behavior, infer approval or QA, add remote operations, publish a package,
 or release a version.
 
-### Leaves
+### Planned leaves
 
 - [ ] **24.1 — Activate and confirm the complete semantic contract.**
       Revalidate the selected project, present the complete ID-free model and
@@ -138,12 +138,11 @@ or release a version.
       performs no reachable-history traversal, run the complete validation and
       package-smoke suite, update canonical documentation, and compact the plan.
 
-### Immediate leaf
+### First leaf when selected
 
-Milestone 24.1 is next. It confirms only the semantic model and boundaries for
-history-free object ID generation. It does not generate IDs, author a candidate,
-record approval, apply a patch, change implementation, mutate Git, publish, or
-release.
+Milestone 24.1 confirms only the semantic model and boundaries for history-free
+object ID generation. It does not generate IDs, author a candidate, record
+approval, apply a patch, change implementation, mutate Git, publish, or release.
 
 ### Validation
 
@@ -159,8 +158,8 @@ Milestone 24 requires focused tests proving that:
 
 ## Candidate backlog
 
-Milestone 24 is active. Other possible future milestones remain deliberately
-uncommitted:
+No milestone or immediate leaf is active. Other possible future milestones
+remain deliberately uncommitted:
 
 - Linux or Windows support;
 - a published Codex plugin;
