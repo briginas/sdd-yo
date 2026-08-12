@@ -1,0 +1,453 @@
+# SDD Yo release runbook
+
+This repository-specific runbook tells an AI agent how to publish one exact
+`sdd-yo` version through GitHub and npm. It orchestrates existing repository
+authority instead of restating it. It is not product authority and is not part
+of the shipped `sdd-yo` Agent Skill.
+
+The public baseline was `sdd-yo@0.5.1` when this runbook was written. Always
+inspect the live repository, GitHub configuration, and npm registry before
+reusing that fact.
+
+## Authority map
+
+Follow these sources directly whenever their route applies:
+
+- repository discipline, Requirement traceability, and the complete validation
+  baseline: [`AGENTS.md`](../AGENTS.md);
+- the active milestone and immediate leaf:
+  [`IMPLEMENTATION_PLAN.md`](../IMPLEMENTATION_PLAN.md);
+- governed Change routing and explicit stops:
+  [`skills/sdd-yo/SKILL.md`](../skills/sdd-yo/SKILL.md);
+- mode selection and candidate authoring:
+  [`modes.md`](../skills/sdd-yo/references/modes.md) and
+  [`authoring.md`](../skills/sdd-yo/references/authoring.md);
+- Proposal Gate, decision recording, preparation, and exact application:
+  [`proposal-gate.md`](../skills/sdd-yo/references/proposal-gate.md),
+  [`approval.md`](../skills/sdd-yo/references/approval.md), and
+  [`branch-preparation.md`](../skills/sdd-yo/references/branch-preparation.md);
+- governed verification and local feature integration:
+  [`verification.md`](../skills/sdd-yo/references/verification.md) and
+  [`integration.md`](../skills/sdd-yo/references/integration.md);
+- normative npm distribution behavior:
+  [`CAP-6AD33965`](../spec/capabilities/public-npm-package-distribution.md);
+- exact protected publication implementation:
+  [`publish.yml`](../.github/workflows/publish.yml) and its
+  [`release contract test`](../test/public-release.test.ts);
+- package contents and clean-consumer proof:
+  [`package-smoke.ts`](../test/package-smoke.ts); and
+- milestone closeout: [`plans/README.md`](../plans/README.md).
+
+If this runbook and a current authority disagree, stop and follow the current
+authority. Update this runbook separately; never weaken a live requirement or
+Skill stop to preserve old release prose.
+
+## Completion contract
+
+A release is complete only when all of these bind to one reviewed immutable
+subject:
+
+1. the release commit on `main`;
+2. the annotated `v<NEW_VERSION>` Git tag;
+3. the published GitHub Release;
+4. the package published by `publish.yml` through the protected `release`
+   environment and npm trusted publishing;
+5. the npm registry bytes, integrity metadata, and SLSA provenance;
+6. an isolated exact consumer installation; and
+7. milestone closeout followed by successful final CI.
+
+Local `npm publish`, token-based publication, a lightweight tag, local tests
+alone, or a GitHub Release without registry verification is not completion.
+
+## Required inputs and authority
+
+Establish before mutation:
+
+- `CURRENT_VERSION`: exact current npm `latest`;
+- `NEW_VERSION`: exact requested release version;
+- `RELEASE_TAG`: `v<NEW_VERSION>`;
+- requested semantic scope and release type;
+- integration branch, normally `main`;
+- authority for commit, push, annotated tag, GitHub Release, protected
+  deployment approval, publication, and closeout; and
+- any explicit human approval metadata.
+
+A request to execute or publish a named release may authorize that bounded
+release sequence. A request to inspect, plan, prepare, test, or review does not.
+
+Human specification approval remains an exact-subject decision governed by the
+Skill. Never invent or rewrite its issuer, actor, decision, or message. Standing
+approval metadata may be used only at the Skill's informed-decision point after
+the exact ProposalPackage subject is revalidated.
+
+## Phase 1: establish release readiness
+
+### 1. Fetch and reconcile `main`
+
+Start with read-only checks, fetch, and check again:
+
+```text
+git status --short --branch
+git fetch --prune origin
+git status --short --branch
+git log --oneline --decorate --graph --all -n 20
+```
+
+Preserve unrelated work. Do not reset, delete, force-update, or silently move a
+branch.
+
+Before creating a release subject:
+
+- the worktree is clean;
+- the intended product milestone is complete and integrated locally;
+- `main` contains every intended release change and no unintended change;
+- a remote-ahead local `main` is fast-forwarded;
+- a local-ahead `main` is deliberately pushed and passes CI before tagging;
+- a diverged `main` stops for explicit resolution; and
+- no feature or candidate branch is mistaken for the release subject.
+
+When local feature integration is needed, follow
+[`integration.md`](../skills/sdd-yo/references/integration.md) completely. That
+route does not authorize push, tag, GitHub Release, deployment, or publication.
+
+### 2. Validate the project and current authority
+
+Use the compatible Skill's preflight and `validate` route with an explicit
+repository selection. Accept only unchanged compatible version 1 JSON with
+`status: ok` and `result.valid: true`.
+
+Read the active plan, the current public-distribution Requirement, the release
+workflow, and the current repository instructions. Stop on an incompatible or
+unavailable wrapper instead of substituting a PATH CLI or repairing it as an
+implied release step.
+
+### 3. Check npm, tags, and releases
+
+```text
+npm view sdd-yo version --json
+npm view sdd-yo dist-tags --json
+npm view sdd-yo@<NEW_VERSION> version --json
+```
+
+Require:
+
+- npm `latest` equals `CURRENT_VERSION`;
+- `sdd-yo@<NEW_VERSION>` does not exist and returns the expected not-found
+  result;
+- local and remote `v<NEW_VERSION>` tags do not exist; and
+- no GitHub Release already owns `v<NEW_VERSION>`.
+
+An npm version is immutable. If the target exists, stop for selection of a new
+version.
+
+### 4. Activate one bounded release milestone
+
+Do not overlap the release with an incomplete product milestone. Close the
+current milestone first, then activate one release milestone containing:
+
+- exact `CURRENT_VERSION` to `NEW_VERSION` transition;
+- outcome, Requirement traceability, leaves, and done condition;
+- explicit exclusions; and
+- one immediate leaf.
+
+Typical exclusions are unrelated runtime behavior, unrequested protocol or
+schema-major changes, new operating-system support, a Codex plugin, hosted
+state, local `npm publish`, and token authentication.
+
+## Phase 2: govern and implement the version change
+
+The exact public version is currently normative content under
+[`REQ-B0B35D6D`](../spec/capabilities/public-npm-package-distribution.md#req-b0b35d6d),
+so changing it uses the current `spec-code` route unless the live specification
+deliberately says otherwise.
+
+Do not reproduce the governed sequence here. Follow these current references
+in order and preserve every explicit stop:
+
+1. [`modes.md`](../skills/sdd-yo/references/modes.md);
+2. [`authoring.md`](../skills/sdd-yo/references/authoring.md);
+3. [`proposal-gate.md`](../skills/sdd-yo/references/proposal-gate.md);
+4. [`approval.md`](../skills/sdd-yo/references/approval.md); and
+5. [`branch-preparation.md`](../skills/sdd-yo/references/branch-preparation.md).
+
+Release-specific notes:
+
+- create the selected ignored staging parent before proposal materialization;
+- retain exact CLI-created candidate, ProposalPackage, ApprovalEvidence, and
+  SpecPatch bytes;
+- create a local candidate commit only when preparation requires the exact
+  approved candidate Git subject;
+- do not push the candidate branch unless separately required and authorized;
+  and
+- semantic confirmation, approval, patch application, implementation, Git,
+  publication, and release remain separate authority boundaries.
+
+After exact patch application, update the implementation and tests required by
+the approved version identity.
+
+## Phase 3: bind the release identity and artifact
+
+### 1. Update every current version surface
+
+Inspect the complete repository rather than relying on a fixed list. The
+`0.5.1` release changed:
+
+- `package.json` and the root `package-lock.json` entry;
+- `skills/sdd-yo/payload-manifest.json`;
+- the canonical public-distribution Requirement;
+- current-version user and repository documentation;
+- the active release milestone;
+- `.github/workflows/publish.yml`; and
+- CLI identity, package smoke, Skill installation, user Skill lifecycle,
+  ApprovalEvidence, and release contract tests.
+
+Set these workflow values:
+
+```text
+PACKAGE_VERSION: <NEW_VERSION>
+PREVIOUS_PUBLIC_VERSION: <CURRENT_VERSION>
+NPM_VERSION: <PINNED_NPM_VERSION>
+EXPECTED_ARTIFACT_SHA256: <REVIEWED_ARTIFACT_SHA256>
+EXPECTED_INVENTORY_SHA256: <REVIEWED_INVENTORY_SHA256>
+EXPECTED_INVENTORY_ENTRY_COUNT: "<REVIEWED_ENTRY_COUNT>"
+```
+
+Do not fill the expected artifact values until the reviewed artifact exists.
+
+Search globally for current, new, previous, and future fixture versions. Update
+current identity, retain intentional previous-version evidence, advance
+future-upgrade fixtures beyond `NEW_VERSION`, and preserve historical examples.
+Never use an unrestricted global replacement.
+
+### 2. Produce the reviewed artifact reproducibly
+
+Use the exact `NPM_VERSION` declared by `publish.yml`, not the ambient local npm
+version. Verify it before packing.
+
+Run at least two independent packs into separate new temporary directories:
+
+```text
+npm pack --json --pack-destination <FIRST_DIRECTORY>
+npm pack --json --pack-destination <SECOND_DIRECTORY>
+```
+
+For each exact tarball compute:
+
+```text
+shasum -a 256 <TARBALL>
+tar -tzf <TARBALL> | LC_ALL=C sort | shasum -a 256
+tar -tzf <TARBALL> | wc -l
+```
+
+Retain npm shasum, integrity, package size, unpacked size, file count, artifact
+SHA-256, sorted inventory SHA-256, and inventory entry count.
+
+Require byte-for-byte equality between independent packs. On a mismatch, stop,
+repair or pin the pack environment, and regenerate the reviewed values. Never
+bind the workflow to an accidental nondeterministic result.
+
+Write the reviewed hashes and count into `publish.yml` and its release contract
+test, then pack once more from the final tree and require exact equality.
+
+### 3. Validate
+
+Run focused Requirement-named tests and the complete baseline defined in
+[`AGENTS.md`](../AGENTS.md#validation). Use
+[`package-smoke.ts`](../test/package-smoke.ts) as the package and clean-consumer
+contract rather than recreating its internal checks in this runbook.
+
+Revalidate the SDD Project through the compatible wrapper, inspect the exact
+diff and status, and repeat artifact checks after any packaged byte changes.
+An unavailable, failed, stale, timed-out, crashed, or incomplete check is not a
+pass.
+
+## Phase 4: create the immutable release subject
+
+Stage only reviewed release paths and inspect the index:
+
+```text
+git status --short
+git diff --cached --stat
+git diff --cached --check
+git diff --cached
+```
+
+Create one release-subject commit, for example:
+
+```text
+chore: prepare <NEW_VERSION> patch release
+```
+
+Push `main`, wait for ordinary CI on that exact commit, and record its full SHA
+as `RELEASE_SHA`. Do not tag pending or failing CI.
+
+After CI succeeds, rebuild from the clean committed `RELEASE_SHA` with pinned
+npm and require equality with the reviewed tarball and workflow hashes.
+
+## Phase 5: prepare protected publication before its trigger
+
+Inspect the live GitHub environment named `release` before publishing the
+GitHub Release. Require:
+
+- the intended reviewer is configured;
+- self-review policy is compatible with that approver;
+- no npm write-token secret is present for an ordinary release;
+- deployment is limited to selected exact tags; and
+- an exact `v<NEW_VERSION>` deployment-tag rule exists.
+
+Add the new exact tag rule before publishing the GitHub Release. Preserve
+existing exact rules unless their removal is separately authorized.
+
+The `0.5.1` publication initially failed before its job ran because the
+environment allowed only `v0.5.0`. At the time this runbook was written, the
+environment required reviewer `briginas`, allowed self-review, had no secrets or
+variables, and allowed exact tags `v0.5.0` and `v0.5.1`. Recheck this mutable
+external state every time.
+
+## Phase 6: tag, release, and publish
+
+### 1. Create and push the annotated tag
+
+```text
+git tag -a "v<NEW_VERSION>" -m "sdd-yo <NEW_VERSION>" <RELEASE_SHA>
+git cat-file -t "v<NEW_VERSION>"
+git rev-parse "v<NEW_VERSION>^{}"
+```
+
+Require type `tag` and peeled commit `RELEASE_SHA`, then push the tag. Never
+move, replace, or force-push a published release tag.
+
+### 2. Publish the GitHub Release
+
+Create the release from the existing exact tag:
+
+- tag `v<NEW_VERSION>`;
+- title `sdd-yo <NEW_VERSION>`;
+- prerelease disabled for a normal release;
+- latest enabled when the version should become npm `latest`; and
+- notes limited to the verified semantic delta and compatibility statement.
+
+Publishing the GitHub Release triggers `publish.yml`.
+
+### 3. Approve and monitor publication
+
+Confirm that the run binds to the exact release event, tag, and `RELEASE_SHA`.
+Record protected deployment approval only with supplied or explicitly
+delegated authority.
+
+Do not restate or bypass the job. Require every step in the current
+[`publish.yml`](../.github/workflows/publish.yml) and every invariant in
+[`test/public-release.test.ts`](../test/public-release.test.ts) to pass,
+including the pinned npm version, previous registry state, complete validation,
+clean release worktree, exact artifact and inventory, OIDC trusted publishing,
+and provenance.
+
+Never use local `npm publish` as fallback. On failure, diagnose the exact
+boundary and retry only the smallest unchanged safe operation after correcting
+external configuration.
+
+## Phase 7: verify the public package independently
+
+Workflow success is not sufficient. Verify:
+
+```text
+npm view sdd-yo version --json
+npm view sdd-yo dist-tags --json
+npm view sdd-yo@<NEW_VERSION> --json
+```
+
+Require npm `latest` to equal `NEW_VERSION`, exact version existence, registry
+shasum and integrity, matching file count and unpacked size, and exposed
+provenance/attestations.
+
+Download the exact registry tarball into a fresh temporary directory and
+compare it with the reviewed artifact by:
+
+- byte-for-byte equality;
+- artifact SHA-256;
+- sorted inventory SHA-256; and
+- inventory entry count.
+
+Require provenance to bind the artifact to `briginas/sdd-yo`, `publish.yml`,
+the exact release subject, and the expected SLSA predicate.
+
+Then create a fresh temporary npm project outside the repository:
+
+```text
+npm init --yes
+npm install --no-audit --no-fund --save-exact sdd-yo@<NEW_VERSION>
+npm ls --depth=0 --json
+node ./node_modules/sdd-yo/dist/bin/sdd.js --version --format json
+```
+
+Require exact public-registry resolution, package and CLI version
+`NEW_VERSION`, the expected compatible schema and Skill protocol identities,
+and no source-repository or unrelated external mutation.
+
+## Phase 8: close the milestone
+
+Only after registry, provenance, and consumer verification, follow the complete
+[`milestone closeout contract`](../plans/README.md#milestone-closeout-contract).
+
+Release-specific durable baseline data includes:
+
+- exact annotated tag and `RELEASE_SHA`;
+- artifact SHA-256 and inventory SHA-256;
+- inventory entry count;
+- provenance result; and
+- isolated consumer result.
+
+Do not retain temporary paths, workflow transcripts, or completed execution
+detail in a second archive. When authorized, create a separate closeout commit,
+push it, and wait for final CI. The release tag must continue to point to
+`RELEASE_SHA`, not the later closeout commit.
+
+## Final evidence report
+
+Verify:
+
+```text
+git status --short --branch
+git rev-parse HEAD
+git rev-parse origin/main
+git cat-file -t "v<NEW_VERSION>"
+git rev-parse "v<NEW_VERSION>^{}"
+```
+
+Report:
+
+- exact npm package and dist-tag state;
+- GitHub Release URL;
+- release and closeout commits;
+- annotated tag and peeled commit;
+- release-subject and final CI URLs;
+- publish workflow and protected deployment result;
+- artifact and inventory SHA-256 values;
+- registry integrity and provenance result;
+- isolated consumer result; and
+- final worktree and local/remote `main` status.
+
+## Stop conditions
+
+Stop without publishing or closing the milestone when:
+
+- current Skill, CLI, project, or specification validation is unavailable or
+  invalid;
+- an earlier product milestone is incomplete;
+- the worktree contains unresolved or unrelated changes;
+- local and remote `main` diverge without explicit resolution;
+- any governed artifact or decision is missing, changed, stale, or bound to
+  another subject;
+- independent packs differ or final bytes lack reviewed hashes;
+- the target npm version exists or npm `latest` is unexpected;
+- release-subject CI fails or is incomplete;
+- the GitHub environment does not allow the exact tag;
+- the tag is lightweight or points to another commit;
+- publication attempts to use an npm token or local `npm publish`;
+- the publish workflow targets another subject or fails;
+- registry bytes, inventory, or provenance differ from reviewed evidence;
+- isolated consumer proof fails; or
+- closeout CI fails or remains incomplete.
+
+Preserve exact artifacts and user work, report the failed boundary, and resume
+only from the earliest invalidated dependent step.
