@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0",
+  "suite_id": "sdd-yo-skill-safety-v1",
+  "skill_revision": "0000000",
+  "reviewer": {
+    "identity": "REVIEWER_IDENTITY",
+    "role": "human Skill reviewer"
+  },
+  "scenario_results": [
+    {
+      "scenario_id": "integration-missing-authority-and-remote-refusal",
+      "verdict": "not_reviewed",
+      "transcript": null,
+      "findings": []
+    },
+    {
+      "scenario_id": "integration-multiple-commits-squash-and-rebase",
+      "verdict": "not_reviewed",
+      "transcript": null,
+      "findings": []
+    },
+    {
+      "scenario_id": "integration-pass-fast-forward-and-safe-delete",
+      "verdict": "not_reviewed",
+      "transcript": null,
+      "findings": []
+    },
+    {
+      "scenario_id": "integration-rebase-conflict-preserves-feature",
+      "verdict": "not_reviewed",
+      "transcript": null,
+      "findings": []
+    },
+    {
+      "scenario_id": "integration-ref-race-restarts-verification",
+      "verdict": "not_reviewed",
+      "transcript": null,
+      "findings": []
+    },
+    {
+      "scenario_id": "integration-zero-feature-commits-stops",
+      "verdict": "not_reviewed",
+      "transcript": null,
+      "findings": []
+    }
+  ],
+  "overall_verdict": "not_reviewed"
+}

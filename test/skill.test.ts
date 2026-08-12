@@ -177,6 +177,7 @@ test("REQ-E26A859E REQ-64DB876B REQ-26234DC8 skill package discloses the bounded
     "authoring.md",
     "branch-preparation.md",
     "diagnostics.md",
+    "integration.md",
     "modes.md",
     "object-model.md",
     "onboarding.md",
@@ -187,12 +188,51 @@ test("REQ-E26A859E REQ-64DB876B REQ-26234DC8 skill package discloses the bounded
   assert.deepEqual(templates.toSorted(), ["capability.md", "concept.md"]);
   assert.match(skill, /references\/modes\.md/u);
   assert.match(skill, /references\/authoring\.md/u);
-  assert.match(agentMetadata, /prepare, verify, or explain merge readiness/u);
+  assert.match(
+    agentMetadata,
+    /prepare, verify, explain merge readiness, or complete an explicitly authorized local integration/u,
+  );
   assert.match(skill, /references\/proposal-gate\.md/u);
   assert.match(skill, /references\/approval\.md/u);
   assert.match(skill, /references\/branch-preparation\.md/u);
   assert.match(skill, /references\/verification\.md/u);
+  assert.match(skill, /references\/integration\.md/u);
   assert.doesNotMatch(skill, /references\/semantic-review\.md/u);
+});
+
+test("REQ-89E78697 REQ-189D2CFA REQ-44068C1A Skill governs authorized local normalization and integration", async () => {
+  const skill = await readFile(join(skillRoot, "SKILL.md"), "utf8");
+  const integration = await readFile(join(skillRoot, "references/integration.md"), "utf8");
+
+  assert.match(integration, /explicit local feature-branch name/u);
+  assert.match(integration, /explicit local integration-branch name/u);
+  assert.match(integration, /clean worktree/u);
+  assert.match(integration, /Count\s+commits in `B\.\.F`/u);
+  assert.match(integration, /zero stops because there is no feature Change/u);
+  assert.match(integration, /one preserves the existing feature commit/u);
+  assert.match(
+    integration,
+    /more than one requires one non-empty final Change commit message and an\s+automatic squash/u,
+  );
+  assert.match(integration, /compare-and-swap update of the selected\s+feature ref/u);
+  assert.match(integration, /On conflict, capture the\s+conflicting paths, abort the rebase/u);
+  assert.match(
+    integration,
+    /invalidates every retained TestIndex, test-execution evidence, QA evidence,\s+VerificationReport, and MergeReport/u,
+  );
+  assert.match(integration, /current compatible `MergeReport` is\s+`PASS`/u);
+  assert.match(integration, /names the normalized feature head `H` and integration commit `M`/u);
+  assert.match(integration, /one `git update-ref --stdin` transaction/u);
+  assert.match(integration, /ordinary safe branch\s+deletion, never force deletion/u);
+  assert.match(
+    integration,
+    /They do not become `MergeReport`, test, QA, approval, finding, or\s+semantic-review evidence/u,
+  );
+  assert.match(integration, /Never push, modify a\s+remote ref, merge a pull request/u);
+
+  assert.match(skill, /This route never runs a CLI integration command/u);
+  assert.match(skill, /never runs a CLI integration command, creates a merge commit/u);
+  assert.doesNotMatch(skill, /`sdd integrate`/u);
 });
 
 test("REQ-E26A859E authoring route keeps modes distinct and candidates unapplied", async () => {

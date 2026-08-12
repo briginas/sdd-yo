@@ -29,14 +29,34 @@ reference:
   [branch preparation](../../skills/sdd-yo/references/branch-preparation.md);
 - test discovery, evidence validation, and merge readiness:
   [verification](../../skills/sdd-yo/references/verification.md);
+- feature normalization and explicitly authorized local integration:
+  [integration](../../skills/sdd-yo/references/integration.md);
 - stable failure interpretation:
   [diagnostics](../../skills/sdd-yo/references/diagnostics.md).
 
 These are separate routes with separate inputs and stops. Authoring does not
 imply Proposal Gate review; review does not imply approval; approval does not
 imply preparation or application; and none of those imply verification or Git
-side effects. Repository instructions select the active milestone and impose
-development discipline, but do not restate or override the Skill sequence.
+side effects. A current `PASS` does not imply local integration authority. The
+integration route additionally requires either advance authorization for the
+complete named local closeout or one explicit confirmation after current
+`PASS` when normalization required no Git mutation. Squash, rebase, or another
+pre-verification head movement requires the advance form before mutation.
+Repository instructions select the active milestone and impose development
+discipline, but do not restate or override the Skill sequence.
+
+The local integration route is intentionally outside the deterministic CLI.
+Before final evidence, the Skill resolves exact local feature and integration
+refs, requires a clean worktree, reduces the feature range to one Change commit,
+and rebases that commit onto the current integration commit when necessary.
+Every feature-head movement invalidates dependent test, QA, and merge-readiness
+inputs. After current `PASS`, one compare-and-swap Git ref transaction verifies
+both exact refs while fast-forwarding only the local integration branch. The
+Skill then verifies the resulting ref and clean worktree before ordinary safe
+deletion of the integrated local feature branch. Conflicts, ref races, missing
+authority, failed checks, and incomplete closeout preserve the feature branch.
+Remote refs, pull-request merge, branch protection, tags, releases, and
+publication remain separate and are never implied.
 
 For `spec-code` and `spec`, a candidate materialized by the Skill is an owned,
 transient input outside the selected repository. The Skill creates it through

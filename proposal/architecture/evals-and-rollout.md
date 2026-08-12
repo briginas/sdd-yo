@@ -64,7 +64,9 @@ repository is insufficient.
   changes mechanically; evaluate clean-text semantic candidates separately.
 - Reject stale before-hashes and result fingerprints.
 - Verify all-or-nothing create/replace/delete under injected failures.
-- Verify no command creates a branch, commit, tag, push, or merge.
+- Verify no deterministic CLI command creates a branch, commit, tag, push, or
+  merge. Separately exercise the authorized host-Skill local integration route
+  in isolated Git repositories.
 
 ### Tests and QA
 
@@ -193,6 +195,11 @@ Use scripted scenarios and human review to measure:
 - correct stale-evidence recovery;
 - isolation of adjacent SDD Projects;
 - accurate explanation of `PASS`, `REVIEW_REQUIRED`, and `BLOCKED`.
+- zero, one, and multiple feature-commit normalization, including automatic
+  squash, current-integration rebase, conflict stop, and evidence invalidation;
+- missing local-integration authority, exact ref races, fast-forward-only local
+  integration, safe local feature deletion, and refusal of every remote
+  operation.
 
 The skill fails an eval if it reports a gate result without a matching valid
 CLI artifact, even if its conclusion happens to be correct.

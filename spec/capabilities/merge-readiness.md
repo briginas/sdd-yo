@@ -265,10 +265,15 @@ verification: automated
 
 ### Statement <!-- sdd:statement -->
 
-SDD Yo shall report merge readiness but shall not create commits, push
-branches, apply merges, or modify branch protection.
+The deterministic SDD Yo CLI shall report merge readiness but shall not create
+commits, rebase, push branches, apply merges, delete branches, or modify branch
+protection. The `sdd-yo` Agent Skill may orchestrate ordinary host Git tools
+only in a separate explicitly authorized local integration phase.
 
 ### Acceptance criteria <!-- sdd:acceptance -->
 
 - External local, CI, or hosting workflows consume the exit code and report.
-- No readiness status grants the CLI additional Git mutation authority.
+- No readiness status grants the CLI or Agent Skill Git mutation authority.
+- Host Git operation results are not `MergeReport` evidence.
+- Skill-orchestrated local integration does not add a CLI integration command
+  or authorize remote Git or hosting operations.

@@ -73,6 +73,14 @@ const materializerPath = join(repositoryRoot, "evals/skill/scripts/materialize-p
 const fakeCliPath = join(repositoryRoot, "evals/skill/scripts/fake-sdd-cli");
 const checkerPath = join(repositoryRoot, "skills/sdd-yo/scripts/check-cli-compatibility");
 const changedAdapterScenarioId = "changed-adapter-configuration-trust-review";
+const integrationScenarioIds = [
+  "integration-missing-authority-and-remote-refusal",
+  "integration-multiple-commits-squash-and-rebase",
+  "integration-pass-fast-forward-and-safe-delete",
+  "integration-rebase-conflict-preserves-feature",
+  "integration-ref-race-restarts-verification",
+  "integration-zero-feature-commits-stops",
+] as const;
 
 async function loadSuite(): Promise<ScenarioSuite> {
   return JSON.parse(await readFile(scenarioPath, "utf8")) as ScenarioSuite;
@@ -110,12 +118,15 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
   assert.equal(suite.suite_id, "sdd-yo-skill-safety-v1");
   assert.deepEqual(suite.requirements, [
     "REQ-05CABE17",
+    "REQ-189D2CFA",
     "REQ-1DD46CA9",
     "REQ-20D8EC8C",
     "REQ-26234DC8",
     "REQ-2B00EE25",
     "REQ-32C76ED3",
+    "REQ-44068C1A",
     "REQ-5FFEC13F",
+    "REQ-89E78697",
     "REQ-C975AE17",
     "REQ-D17B2FB9",
   ]);
@@ -129,6 +140,7 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
     "diagnose",
     "discovery",
     "initialize",
+    "local-integration",
     "merge-readiness",
     "project-isolation",
     "proposal-review",
@@ -145,6 +157,7 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
       "references/authoring.md",
       "references/branch-preparation.md",
       "references/diagnostics.md",
+      "references/integration.md",
       "references/modes.md",
       "references/object-model.md",
       "references/onboarding.md",
@@ -171,6 +184,62 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
       "validate",
     ],
   );
+  assert.ok(operations.every((operation) => !operation.includes("integrat")));
+});
+
+test("REQ-89E78697 REQ-189D2CFA REQ-44068C1A local integration evals cover normalization, races, authority, and remote refusal", async () => {
+  const suite = await loadSuite();
+  const scenarios = new Map(suite.scenarios.map((scenario) => [scenario.id, scenario]));
+
+  assert.ok(integrationScenarioIds.every((id) => scenarios.has(id)));
+  for (const id of integrationScenarioIds) {
+    const scenario = scenarios.get(id);
+    assert.equal(scenario?.route, "local-integration", id);
+    assert.deepEqual(scenario?.expected_references, ["references/integration.md"], id);
+    assert.ok(
+      scenario?.required_guards.some(({ file }) => file.endsWith("references/integration.md")),
+      id,
+    );
+    assert.ok(scenario?.human_review.length, id);
+    assert.ok(
+      scenario?.forbidden_actions.every((action) => !action.includes("allow-remote")),
+      id,
+    );
+  }
+
+  assert.ok(
+    scenarios
+      .get("integration-zero-feature-commits-stops")
+      ?.forbidden_actions.some((action) => action.includes("empty-change")),
+  );
+  assert.ok(
+    scenarios
+      .get("integration-multiple-commits-squash-and-rebase")
+      ?.human_review.some((criterion) => /squash|rebase/u.test(criterion)),
+  );
+  assert.ok(
+    scenarios
+      .get("integration-rebase-conflict-preserves-feature")
+      ?.human_review.some((criterion) => /preserv|abort/u.test(criterion)),
+  );
+  assert.ok(
+    scenarios
+      .get("integration-pass-fast-forward-and-safe-delete")
+      ?.human_review.some((criterion) => /fast-forward|delet/u.test(criterion)),
+  );
+  assert.ok(
+    scenarios
+      .get("integration-ref-race-restarts-verification")
+      ?.human_review.some((criterion) => /race|fresh verification/u.test(criterion)),
+  );
+  assert.ok(
+    scenarios
+      .get("integration-missing-authority-and-remote-refusal")
+      ?.forbidden_actions.some((action) => /push|remote/u.test(action)),
+  );
+
+  const operations = integrationScenarioIds.flatMap((id) => scenarios.get(id)?.expected_operations ?? []);
+  assert.ok(operations.every((operation) => !operation.includes("integrat")));
 });
 
 test("REQ-20D8EC8C REQ-5FFEC13F REQ-32C76ED3 Milestone 19.5 composed routes cover freshness and authority stops", async () => {
@@ -612,6 +681,92 @@ test("REQ-26234DC8 approval-recording human review template is schema-valid and 
     template.scenario_results.every(({ verdict, transcript }) => verdict === "not_reviewed" && transcript === null),
   );
   assert.equal(template.overall_verdict, "not_reviewed");
+});
+
+test("REQ-89E78697 REQ-189D2CFA REQ-44068C1A local-integration review template is schema-valid and inert", async () => {
+  const suite = await loadSuite();
+  const schema = JSON.parse(
+    await readFile(join(repositoryRoot, "evals/skill/integration-review-result.schema.json"), "utf8"),
+  ) as object;
+  const template = JSON.parse(
+    await readFile(join(repositoryRoot, "evals/skill/integration-review-result.template.json"), "utf8"),
+  ) as {
+    readonly scenario_results: readonly {
+      readonly scenario_id: string;
+      readonly verdict: string;
+      readonly transcript: unknown;
+      readonly findings: readonly string[];
+    }[];
+    readonly overall_verdict: string;
+  };
+  const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
+  assert.equal(validate(template), true, JSON.stringify(validate.errors));
+  assert.deepEqual(
+    template.scenario_results.map(({ scenario_id }) => scenario_id),
+    integrationScenarioIds,
+  );
+  assert.deepEqual(
+    template.scenario_results.map(({ scenario_id }) => scenario_id),
+    suite.scenarios
+      .filter(({ route }) => route === "local-integration")
+      .map(({ id }) => id)
+      .toSorted(),
+  );
+  assert.ok(
+    template.scenario_results.every(
+      ({ verdict, transcript, findings }) => verdict === "not_reviewed" && transcript === null && findings.length === 0,
+    ),
+  );
+  assert.equal(template.overall_verdict, "not_reviewed");
+
+  const invalidPass = JSON.parse(JSON.stringify(template)) as {
+    scenario_results: { verdict: string; transcript: unknown }[];
+  };
+  const first = invalidPass.scenario_results[0];
+  assert.ok(first !== undefined);
+  first.verdict = "pass";
+  assert.equal(validate(invalidPass), false);
+});
+
+test("REQ-89E78697 REQ-189D2CFA REQ-44068C1A retains the identified local-integration human pass verdict", async () => {
+  const suite = await loadSuite();
+  const schema = JSON.parse(
+    await readFile(join(repositoryRoot, "evals/skill/integration-review-result.schema.json"), "utf8"),
+  ) as object;
+  const result = JSON.parse(
+    await readFile(join(repositoryRoot, "evals/skill/integration-review-result.json"), "utf8"),
+  ) as {
+    readonly skill_revision: string;
+    readonly reviewer: { readonly identity: string; readonly role: string };
+    readonly scenario_results: readonly {
+      readonly scenario_id: string;
+      readonly verdict: string;
+      readonly transcript: { readonly path: string; readonly sha256: string };
+      readonly findings: readonly string[];
+    }[];
+    readonly overall_verdict: string;
+  };
+  const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
+  assert.equal(validate(result), true, JSON.stringify(validate.errors));
+  assert.equal(result.skill_revision, "19513877e0aa5d5166d9426562424bd7066838bb");
+  assert.deepEqual(result.reviewer, { identity: "briginas", role: "human Skill reviewer" });
+  assert.deepEqual(
+    result.scenario_results.map(({ scenario_id }) => scenario_id),
+    suite.scenarios
+      .filter(({ route }) => route === "local-integration")
+      .map(({ id }) => id)
+      .toSorted(),
+  );
+  assert.ok(result.scenario_results.every(({ verdict, findings }) => verdict === "pass" && findings.length === 0));
+  assert.equal(result.overall_verdict, "pass");
+
+  const transcriptPaths = new Set(result.scenario_results.map(({ transcript }) => transcript.path));
+  assert.deepEqual([...transcriptPaths], ["transcripts/briginas-local-integration-verdict.md"]);
+  const transcript = await readFile(join(repositoryRoot, "evals/skill", [...transcriptPaths][0] ?? ""));
+  const fingerprint = `sha256:${createHash("sha256").update(transcript).digest("hex")}`;
+  assert.ok(result.scenario_results.every(({ transcript: binding }) => binding.sha256 === fingerprint));
+  assert.match(transcript.toString("utf8"), /Reviewer: `briginas`/u);
+  assert.match(transcript.toString("utf8"), /проверил все шесть local-integration сценариев: pass/u);
 });
 
 test("REQ-D17B2FB9 semantic-model human review template is schema-valid and explicitly pending", async () => {

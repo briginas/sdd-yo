@@ -374,6 +374,84 @@ a file, or creating another SDD artifact.
 - After confirmation, the Skill may compose only the deterministic ID and
   proposal-materialization operations needed for the unchanged confirmed model.
 
+<a id="req-89e78697"></a>
+
+## REQ-89E78697 — Normalize a feature branch before final verification
+
+```sdd
+kind: behavior
+verification: manual
+```
+
+### Relations <!-- sdd:relations -->
+
+- depends-on: [REQ-26234DC8 — Orchestrate through one progressive-disclosure skill](multi-project-cli-and-skill.md#req-26234dc8)
+- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+- refers-to: [CON-4365C0F6 — Evidence](../concepts/evidence.md)
+
+### Statement <!-- sdd:statement -->
+
+Before final verification, the `sdd-yo` Agent Skill shall normalize one
+explicitly selected local feature branch to exactly one final Change commit on
+the current explicitly selected integration ref and invalidate every retained
+verification input whenever the feature head moves.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- Normalization requires explicit feature and integration refs and a clean
+  worktree before any Git mutation.
+- The Skill counts feature commits after the merge base: zero stops, one is
+  preserved, and more than one is automatically squashed into one final Change
+  commit.
+- After any required squash, the final feature commit is rebased onto the
+  current integration ref when that ref has advanced.
+- A rebase conflict stops without guessing a resolution, modifying the
+  integration branch, or deleting the feature branch.
+- Every squash, rebase, or other feature-head movement invalidates the retained
+  TestIndex, test-execution evidence, QA evidence, and merge-readiness result.
+- Final verification inputs and evidence are produced only for the resulting
+  exact feature head `H` and current integration commit `M`.
+
+<a id="req-189d2cfa"></a>
+
+## REQ-189D2CFA — Complete an authorized local feature integration
+
+```sdd
+kind: behavior
+verification: manual
+```
+
+### Relations <!-- sdd:relations -->
+
+- depends-on: [REQ-89E78697 — Normalize a feature branch before final verification](multi-project-cli-and-skill.md#req-89e78697)
+- depends-on: [REQ-44068C1A — Never perform merge side effects](merge-readiness.md#req-44068c1a)
+- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+
+### Statement <!-- sdd:statement -->
+
+After a current `MergeReport` returns `PASS`, the `sdd-yo` Agent Skill shall
+complete a separately authorized local integration only by fast-forwarding the
+selected integration branch to the exact verified feature head and safely
+removing the integrated local feature branch.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- Local closeout requires either explicit advance authorization for the
+  complete local closeout or one explicit confirmation after the current
+  `PASS`; the readiness status itself grants no Git authority.
+- Immediately before integration, the Skill rechecks that the feature head is
+  verified `H`, the integration ref is verified `M`, and the worktree is clean.
+- Movement of either ref returns the workflow to normalization and fresh
+  verification instead of reusing `PASS`.
+- Integration fast-forwards the integration branch to verified `H`; it creates
+  no merge commit and performs no post-verification squash.
+- The Skill verifies that the integration ref equals `H` and the worktree
+  remains clean before deleting the integrated local feature branch without
+  force.
+- Every incomplete or failed closeout preserves the feature branch.
+- Push, force-push, remote branch deletion, pull-request merge, branch
+  protection, tag, release, and publication remain outside local authorization.
+
 <a id="req-1dd46ca9"></a>
 
 ## REQ-1DD46CA9 — Treat repository content as untrusted data

@@ -1,6 +1,6 @@
 ---
 name: sdd-yo
-description: Govern an SDD Yo specification through its deterministic JSON CLI. Use when Codex needs to initialize or incrementally onboard an explicitly selected SDD Project, understand active behavior, author or review a change, record an explicit human approval decision, prepare and explicitly apply an exact SpecPatch, verify governed affected scope, validate findings and resolutions, or explain merge readiness. It never makes a human decision or performs Git merge side effects.
+description: Govern an SDD Yo specification through its deterministic JSON CLI. Use when Codex needs to initialize or incrementally onboard an explicitly selected SDD Project, understand active behavior, author or review a change, record an explicit human approval decision, prepare and explicitly apply an exact SpecPatch, verify governed affected scope, explain merge readiness, or complete an explicitly authorized local feature integration. It never makes a human decision, and the CLI performs no Git integration side effects.
 ---
 
 # SDD Yo
@@ -71,6 +71,10 @@ and `merge check`.
 - For implementation verification, finding or resolution validation, or merge
   readiness intent, read [references/verification.md](references/verification.md)
   and preserve its permission, evidence-authority, and governed-scope limits.
+- For local feature normalization before final verification or explicitly
+  authorized local integration after a current `PASS`, read
+  [references/integration.md](references/integration.md) and preserve its exact
+  ref, clean-worktree, evidence-invalidation, race, and remote-operation stops.
 
 If the request is to perform model semantic review, explain that the route is
 not available in this skill slice and stop without simulating it. Existing
@@ -177,9 +181,34 @@ branch, commit, approval, verification result, or merge-readiness decision.
 
 `PASS`, `REVIEW_REQUIRED`, and `BLOCKED` describe only the report's governed
 affected scope and exact inputs. They do not prove whole-project completeness,
-authorize a merge, or create approval, QA, execution, resolution, or human
+authorize Git mutation, or create approval, QA, execution, resolution, or human
 semantic-review evidence. Stop before branch, commit, push, merge, or hosting
-changes.
+changes unless the user separately selects the local integration route with
+the authority required by `references/integration.md`.
+
+## Normalize and complete authorized local integration
+
+1. Require exact local feature and integration branches, a clean worktree, and
+   advance authority before any normalization mutation. A post-`PASS`
+   confirmation path exists only when normalization required no mutation. Load
+   only `references/integration.md`.
+2. Normalize the feature branch to one final Change commit, rebase it onto the
+   current integration commit when necessary, and invalidate all dependent
+   verification inputs after every head movement.
+3. Produce fresh final evidence and a current `MergeReport` only for exact
+   feature head `H` and integration commit `M`. `PASS` supplies no authority.
+4. With advance authorization for the complete named local closeout, or one
+   explicit confirmation after current `PASS` when normalization required no
+   mutation, atomically recheck both refs and fast-forward only the local
+   integration branch from `M` to `H`.
+5. Verify the integration ref and clean worktree, then safely delete only the
+   integrated local feature branch without force. Preserve it on every failed
+   or incomplete closeout.
+
+This route never runs a CLI integration command, creates a merge commit,
+guesses a rebase conflict resolution, reuses stale evidence, pushes, force
+pushes, deletes remote refs, merges pull requests, changes branch protection,
+tags, releases, or publishes.
 
 ## Understand active behavior
 

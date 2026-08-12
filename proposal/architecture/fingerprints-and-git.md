@@ -258,6 +258,41 @@ bytes therefore survive later ref movement without moving either ref backward;
 consumers re-resolve their declared current refs and apply normal freshness
 checks from the bundle.
 
+### Authorized local feature integration
+
+The deterministic CLI never mutates Git. A separately selected Agent Skill
+route may use ordinary host Git only for two explicit, distinct local
+`refs/heads/*` subjects: a feature branch and an integration branch. It requires
+a clean worktree and invokes Git with argv arrays rather than constructed shell
+source. Remote refs, pull-request merges, branch protection, tags, releases,
+and publication remain outside this route.
+
+For this host-only closeout, `F` is the initially resolved feature head, `M` is
+the current integration commit, and `B` is their merge base. Zero commits in
+`B..F` stop as an empty Change, one preserves the commit, and more than one is
+reduced to one commit whose tree is exactly `F^{tree}` and whose only parent is
+`B`. The feature ref is published with compare-and-swap rather than force. If
+`M` advanced beyond `B`, that single commit is rebased onto current `M`. A
+rebase conflict is never guessed: abort restores the pre-rebase feature head,
+the feature branch is preserved, and the integration branch is untouched.
+
+Any squash, rebase, retry, or other movement of the feature or integration
+subject invalidates the retained TestIndex, test-execution evidence, QA
+evidence, VerificationReport, and MergeReport. Fresh evidence and `merge check`
+must bind exact normalized feature head `H` and current integration commit `M`.
+Immediately before closeout, both refs and the clean worktree are rechecked. One
+compare-and-swap ref transaction verifies feature remains `H` while updating
+integration only from `M` to `H`; a race restarts normalization and fresh
+verification. Only after integration and `HEAD` equal `H` and the worktree is
+clean may ordinary safe local branch deletion remove the feature branch.
+Failures and incomplete closeout preserve it; force deletion is never used.
+
+Squash or rebase before final verification requires explicit advance
+authorization for the complete named local closeout. A separate confirmation
+after current `PASS` is sufficient only when normalization required no Git
+mutation. Git output and resulting ref state are operational proof of local
+actions, never MergeReport or human evidence.
+
 ## Branch preparation
 
 1. read `B` and `P` from the revalidated proposal bundle, `H` from the explicit

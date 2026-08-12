@@ -13,11 +13,11 @@
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "sha256:5d793bd1a7b4497207d7249fcebc262fad1f09610852bea9360377e34089d7bf"
+      "sha256": "sha256:d60101998aeeaee91f744474b2209c2df920751a7c47534c35f04bb276f67259"
     },
     {
       "path": "agents/openai.yaml",
-      "sha256": "sha256:c1546f837455ed28d490513b7b768d769105aa1ad348d01f9b60427d3c59916c"
+      "sha256": "sha256:fcd6d81220478ab5339ac4fa9e78823bb04980b077f41814130a1932aa031b60"
     },
     {
       "path": "references/approval.md",
@@ -34,6 +34,10 @@
     {
       "path": "references/diagnostics.md",
       "sha256": "sha256:5e4ff43375065f7675bfe1184073772bd446cb1c385641c9ef48992201ed9479"
+    },
+    {
+      "path": "references/integration.md",
+      "sha256": "sha256:1e248b0a1a0562c0712bfb5456cbae7f75894f0a63509d911d80092f400ba3f8"
     },
     {
       "path": "references/modes.md",

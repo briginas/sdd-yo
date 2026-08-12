@@ -55,11 +55,18 @@ the added `changed-adapter-configuration-trust-review` scenario, and
 approval-recording scenarios. `semantic-model-review-result.json` retains Ivan
 Briginas's completed review of the three Milestone 13 semantic-model scenarios,
 bound to the installed payload revision and identified verdict transcript. The
-matching `.template.json` remains the inert starting point for a future review:
-replace its revision and reviewer placeholders, retain the transcript beneath
-`transcripts/`, compute its SHA-256, and validate the result against the
-matching schema. A `pass` or `fail` requires a transcript; an unexecuted case
-stays `not_reviewed` with a null transcript.
+Milestone 23 adds six local-integration scenarios covering an empty feature,
+multi-commit squash and rebase, conflict preservation, current-`PASS`
+fast-forward and safe deletion, ref-race recovery, and missing authority plus
+remote-operation refusal. Its `integration-review-result.template.json`
+remains the inert starting point. `integration-review-result.json` retains
+briginas's completed review of all six scenarios, bound to reviewed Skill
+revision `1951387` and its identified verdict transcript. The matching
+`.template.json` files remain inert starting points for a future review: replace
+their revision and reviewer placeholders, retain the transcript beneath
+`transcripts/`, compute its SHA-256, and validate the result against the matching
+schema. A `pass` or `fail` requires a transcript; an unexecuted case stays
+`not_reviewed` with a null transcript.
 
 The scripted suite verifies that every public route has an explicit
 progressive-disclosure boundary, goes through the JSON compatibility wrapper,
@@ -85,3 +92,6 @@ consolidated chat verdict transcript and its SHA-256. Review templates remain
 inert `not_reviewed` starting points and must not be mistaken for completed
 results. The separate changed-adapter, approval, and semantic-model results
 retain Ivan Briginas's identified verdicts for their exact Skill revisions.
+The local-integration template is not a verdict and must stay `not_reviewed`
+until an identified human reviews all six cases against one exact Skill
+revision and binds every verdict to a retained transcript.
