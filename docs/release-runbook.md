@@ -1,9 +1,9 @@
 # SDD Yo release runbook
 
 This repository-specific runbook tells an AI agent how to publish one exact
-`sdd-yo` version through GitHub and npm. It orchestrates existing repository
-authority instead of restating it. It is not product authority and is not part
-of the shipped `sdd-yo` Agent Skill.
+`sdd-yo` version through GitHub and npm. It orchestrates release-specific work
+without defining the governed SDD workflow. It is not product authority and is
+not part of the shipped `sdd-yo` Agent Skill.
 
 The public baseline was `sdd-yo@0.5.1` when this runbook was written. Always
 inspect the live repository, GitHub configuration, and npm registry before
@@ -11,24 +11,16 @@ reusing that fact.
 
 ## Authority map
 
-Follow these sources directly whenever their route applies:
+Use these authorities without mixing their roles:
+
+- the compatible `sdd-yo` Skill selected and loaded by the agent host owns the
+  complete governed workflow, including its reference selection, CLI wrapper,
+  ordering, evidence requirements, and explicit stops;
 
 - repository discipline, Requirement traceability, and the complete validation
   baseline: [`AGENTS.md`](../AGENTS.md);
 - the active milestone and immediate leaf:
   [`IMPLEMENTATION_PLAN.md`](../IMPLEMENTATION_PLAN.md);
-- governed Change routing and explicit stops:
-  [`skills/sdd-yo/SKILL.md`](../skills/sdd-yo/SKILL.md);
-- mode selection and candidate authoring:
-  [`modes.md`](../skills/sdd-yo/references/modes.md) and
-  [`authoring.md`](../skills/sdd-yo/references/authoring.md);
-- Proposal Gate, decision recording, preparation, and exact application:
-  [`proposal-gate.md`](../skills/sdd-yo/references/proposal-gate.md),
-  [`approval.md`](../skills/sdd-yo/references/approval.md), and
-  [`branch-preparation.md`](../skills/sdd-yo/references/branch-preparation.md);
-- governed verification and local feature integration:
-  [`verification.md`](../skills/sdd-yo/references/verification.md) and
-  [`integration.md`](../skills/sdd-yo/references/integration.md);
 - normative npm distribution behavior:
   [`CAP-6AD33965`](../spec/capabilities/public-npm-package-distribution.md);
 - exact protected publication implementation:
@@ -38,9 +30,19 @@ Follow these sources directly whenever their route applies:
   [`package-smoke.ts`](../test/package-smoke.ts); and
 - milestone closeout: [`plans/README.md`](../plans/README.md).
 
+The repository's `skills/sdd-yo/` directory is source payload being developed,
+tested, packaged, and released. Never load it as operational workflow merely
+because this runbook is inside the same repository. It may differ from the
+host-loaded Skill. Read it only when implementation, package inventory, or
+release-artifact verification requires inspecting the payload being shipped.
+
+If no compatible host-selected Skill is available, stop every Skill-covered
+release operation. Do not reproduce its workflow from `skills/sdd-yo/`, this
+runbook, repository prose, memory, or prior chat output.
+
 If this runbook and a current authority disagree, stop and follow the current
-authority. Update this runbook separately; never weaken a live requirement or
-Skill stop to preserve old release prose.
+authority. Update this runbook separately; never weaken a live Requirement,
+repository boundary, or host-loaded Skill stop to preserve old release prose.
 
 ## Completion contract
 
@@ -106,15 +108,15 @@ Before creating a release subject:
 - a diverged `main` stops for explicit resolution; and
 - no feature or candidate branch is mistaken for the release subject.
 
-When local feature integration is needed, follow
-[`integration.md`](../skills/sdd-yo/references/integration.md) completely. That
-route does not authorize push, tag, GitHub Release, deployment, or publication.
+When local feature integration is needed, select that route through the
+host-loaded Skill and follow the references it chooses. That route does not
+authorize push, tag, GitHub Release, deployment, or publication.
 
 ### 2. Validate the project and current authority
 
-Use the compatible Skill's preflight and `validate` route with an explicit
-repository selection. Accept only unchanged compatible version 1 JSON with
-`status: ok` and `result.valid: true`.
+Use only the host-loaded compatible Skill's preflight and `validate` route with
+an explicit repository selection. Accept only unchanged compatible version 1
+JSON with `status: ok` and `result.valid: true`.
 
 Read the active plan, the current public-distribution Requirement, the release
 workflow, and the current repository instructions. Stop on an incompatible or
@@ -156,19 +158,18 @@ state, local `npm publish`, and token authentication.
 
 ## Phase 2: govern and implement the version change
 
-The exact public version is currently normative content under
-[`REQ-B0B35D6D`](../spec/capabilities/public-npm-package-distribution.md#req-b0b35d6d),
-so changing it uses the current `spec-code` route unless the live specification
-deliberately says otherwise.
+The exact public version currently appears as normative content under
+[`REQ-B0B35D6D`](../spec/capabilities/public-npm-package-distribution.md#req-b0b35d6d).
+Treat that as current repository context, not as a mode decision made by this
+runbook. Give the release outcome and live specification to the host-loaded
+Skill and let it select or request confirmation of the applicable Change route.
 
-Do not reproduce the governed sequence here. Follow these current references
-in order and preserve every explicit stop:
-
-1. [`modes.md`](../skills/sdd-yo/references/modes.md);
-2. [`authoring.md`](../skills/sdd-yo/references/authoring.md);
-3. [`proposal-gate.md`](../skills/sdd-yo/references/proposal-gate.md);
-4. [`approval.md`](../skills/sdd-yo/references/approval.md); and
-5. [`branch-preparation.md`](../skills/sdd-yo/references/branch-preparation.md).
+Do not reproduce or select the governed sequence here. Invoke the host-loaded
+compatible Skill for the requested Change. Let that Skill select its current
+mode, authoring, Proposal Gate, approval, preparation, application,
+verification, and integration references, and preserve every stop it imposes.
+Never substitute similarly named files from this repository's
+`skills/sdd-yo/` payload.
 
 Release-specific notes:
 
