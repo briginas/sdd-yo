@@ -24,12 +24,12 @@ repository is insufficient.
 ### IDs and history
 
 - Generate uppercase random `SDD`, `CAP`, `REQ`, and `CON` IDs.
-- Reject duplicates in a tree and reuse found anywhere in reachable configured
-  Git history.
-- Accept removal from active spec while continuing to reserve the old ID.
-- Report complete, incomplete, and projectless-unchecked history distinctly.
-- Exercise shallow history and multiple opaque non-empty Git object-ID shapes,
-  including SHA-1 and SHA-256, without branching on hash length.
+- Reject duplicate IDs in each selected active or candidate graph.
+- Permit reuse after removal from the active specification.
+- Report history as unchecked without resolving or enumerating reachable Git
+  history for identifier checks.
+- Exercise shallow history and opaque non-empty Git object-ID shapes for the
+  Git comparisons that still require explicit refs.
 
 ### Fingerprints and deltas
 

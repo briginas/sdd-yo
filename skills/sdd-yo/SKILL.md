@@ -99,8 +99,8 @@ Finding and FindingResolution artifacts may still be validated mechanically.
    updated model and require fresh explicit confirmation. Never carry an older
    confirmation forward.
 6. Only for an unchanged confirmed model, generate every new Capability,
-   Requirement, and Concept ID with `id` through the wrapper and require
-   project-aware complete-history output.
+   Requirement, and Concept ID with `id` through the wrapper and require the
+   project-aware unchecked-history response.
 7. Draft the complete virtual candidate described by the authoring reference.
    Present it for correction without writing it into the active specification
    or implementation.

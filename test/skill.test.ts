@@ -112,7 +112,7 @@ else {
     : command === "id"
       ? {
           candidates: mode === "wrong-id-prefix" ? ["CON-A1000001"] : mode === "duplicate-id" ? ["REQ-A1000001", "REQ-A1000001"] : candidates,
-          history: mode === "unchecked-id" ? { status: "unchecked", resolved_ref: null } : { status: "complete", resolved_ref: "abc123" },
+          history: mode === "complete-id" ? { status: "complete", resolved_ref: "abc123" } : { status: "unchecked", resolved_ref: null },
         }
       : operation === "approval.record"
         ? mode === "invalid-approval" ? { ...approvalRecord, evidence_path: "../outside.json" } : approvalRecord
@@ -443,7 +443,7 @@ test("REQ-2C8E8085 compatibility wrapper accepts only project-aware authoring ID
     "REQ-A1000002",
   ]);
 
-  for (const mode of ["unchecked-id", "wrong-id-prefix", "duplicate-id"] as const) {
+  for (const mode of ["complete-id", "wrong-id-prefix", "duplicate-id"] as const) {
     const result = await runChecker(cli, ["id", "requirement", "--count", "2", ...selector], mode);
     assert.equal(result.code, 3, mode);
     assert.match(result.stderr, /invalid project-aware ID result/u);

@@ -901,9 +901,8 @@ if (command === "id" && response.status === "ok") {
     ) ||
     new Set(response.result.candidates).size !== response.result.candidates.length ||
     !isRecord(response.result.history) ||
-    response.result.history.status !== "complete" ||
-    typeof response.result.history.resolved_ref !== "string" ||
-    response.result.history.resolved_ref.length === 0
+    response.result.history.status !== "unchecked" ||
+    response.result.history.resolved_ref !== null
   )
     fail("the sdd CLI returned an invalid project-aware ID result.");
 }

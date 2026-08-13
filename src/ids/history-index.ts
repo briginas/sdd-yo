@@ -1,7 +1,7 @@
 import { dirname, join, relative } from "node:path/posix";
 
 import { parseHistoricalProjectLocator } from "../config/parse-historical-project.ts";
-import type { ObjectId, ProjectId, ProjectPath } from "../contracts/identifiers.ts";
+import type { ProjectId, ProjectPath } from "../contracts/identifiers.ts";
 import { isProjectPath } from "../contracts/identifiers.ts";
 import { validateSpecificationGraph } from "../graph/validate-graph.ts";
 import type { ValidatedSpecificationGraph } from "../graph/validate-graph.ts";
@@ -9,14 +9,6 @@ import { parseSpecificationDocument } from "../markdown/parse-markdown.ts";
 import type { SpecificationDocument } from "../markdown/types.ts";
 import type { GitObjectId } from "../contracts/identifiers.ts";
 import type { GitReader, GitTreeEntry } from "../platform/git-reader.ts";
-
-export type CanonicalHistoryIndex = {
-  readonly historyTip: GitObjectId;
-  readonly status: "complete" | "incomplete";
-  readonly activeObjectIds: ReadonlySet<ObjectId>;
-  readonly reservedObjectIds: ReadonlySet<ObjectId>;
-  readonly reservedProjectIds: ReadonlySet<ProjectId>;
-};
 
 export class HistoryIndexError extends Error {
   constructor(message: string) {
@@ -92,61 +84,4 @@ export async function loadCanonicalProjectGraphAt(
   if (selected.length > 1) throw new HistoryIndexError("A reachable tree duplicates the selected project ID.");
   const project = selected[0];
   return project === undefined ? undefined : projectGraph(reader, entries, project);
-}
-
-export async function loadCanonicalProjectObjectIdsAt(
-  reader: GitReader,
-  revision: GitObjectId,
-  selectedProjectId: ProjectId,
-): Promise<ReadonlySet<ObjectId>> {
-  const graph = await loadCanonicalProjectGraphAt(reader, revision, selectedProjectId);
-  return graph === undefined ? new Set() : new Set(graph.objects.keys());
-}
-
-export async function buildCanonicalHistoryIndex(
-  reader: GitReader,
-  historyTip: GitObjectId,
-  selectedProjectId: ProjectId,
-): Promise<CanonicalHistoryIndex> {
-  const blobCache = new Map<GitObjectId, Uint8Array>();
-  const cachedReader: GitReader = {
-    ...reader,
-    readBlob: async (objectId) => {
-      const cached = blobCache.get(objectId);
-      if (cached !== undefined) return cached;
-      const bytes = await reader.readBlob(objectId);
-      blobCache.set(objectId, bytes);
-      return bytes;
-    },
-  };
-  const revisions = await cachedReader.listReachableRevisions(historyTip);
-  if (revisions[0] !== historyTip) throw new HistoryIndexError("Reachable history does not start at its resolved tip.");
-  const reservedObjectIds = new Set<ObjectId>();
-  const reservedProjectIds = new Set<ProjectId>();
-  let activeObjectIds: ReadonlySet<ObjectId> | undefined;
-
-  for (const [index, revision] of revisions.entries()) {
-    const entries = await cachedReader.listEntriesAt(revision);
-    const projects = await projectsAt(cachedReader, entries);
-    for (const project of projects) reservedProjectIds.add(project.projectId);
-    const selected = projects.filter((project) => project.projectId === selectedProjectId);
-    if (selected.length > 1) throw new HistoryIndexError("A reachable tree duplicates the selected project ID.");
-    if (selected.length === 0) {
-      if (index === 0) activeObjectIds = new Set();
-      continue;
-    }
-    const selectedProject = selected[0];
-    if (selectedProject === undefined) throw new HistoryIndexError("Selected project lookup failed.");
-    const objectIds = new Set((await projectGraph(cachedReader, entries, selectedProject)).objects.keys());
-    for (const objectId of objectIds) reservedObjectIds.add(objectId);
-    if (index === 0) activeObjectIds = objectIds;
-  }
-
-  return {
-    historyTip,
-    status: await cachedReader.historyStatus(),
-    activeObjectIds: activeObjectIds ?? new Set(),
-    reservedObjectIds,
-    reservedProjectIds,
-  };
 }

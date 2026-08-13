@@ -33,12 +33,7 @@ import { discoverProcessGitReader, GitReadError } from "../platform/process-git-
 import { initializeProject } from "../init/initialize-project.ts";
 import type { GeneratedId, IdKind } from "../ids/generate-id.ts";
 import { generateRandomIds, isIdKind, MAX_GENERATED_ID_COUNT } from "../ids/generate-id.ts";
-import {
-  buildCanonicalHistoryIndex,
-  HistoryIndexError,
-  loadCanonicalProjectGraphAt,
-  loadCanonicalProjectObjectIdsAt,
-} from "../ids/history-index.ts";
+import { HistoryIndexError, loadCanonicalProjectGraphAt } from "../ids/history-index.ts";
 import { buildCurrentProjectIdentityIndex, ProjectIdentityError } from "../ids/project-identity.ts";
 import { fingerprintValidatedObject } from "../fingerprint/object-fingerprint.ts";
 import type { ObjectDeltaEntry } from "../fingerprint/object-delta.ts";
@@ -218,8 +213,8 @@ export type InitResult = {
 export type IdResult = {
   readonly candidates: readonly GeneratedId[];
   readonly history: {
-    readonly status: "complete" | "incomplete" | "unchecked";
-    readonly resolved_ref: GitObjectId | null;
+    readonly status: "unchecked";
+    readonly resolved_ref: null;
   };
 };
 
@@ -227,8 +222,8 @@ export type ValidateResult = {
   readonly valid: true;
   readonly adoption: { readonly mode: "incremental" | "complete" };
   readonly history: {
-    readonly status: "complete" | "incomplete";
-    readonly resolved_ref: GitObjectId | null;
+    readonly status: "unchecked";
+    readonly resolved_ref: null;
   };
   readonly object_counts: { readonly capabilities: number; readonly requirements: number; readonly concepts: number };
   readonly fingerprints: readonly {
@@ -923,13 +918,13 @@ function parseInvocation(
         "Use ID-generation options only with sdd id.",
       ),
     };
-  if (command !== "id" && command !== "validate" && historyRef !== undefined)
+  if (command !== "validate" && historyRef !== undefined)
     return {
       ok: false,
       diagnostic: cliDiagnostic(
         "SDD_CONFIG_CLI_ARGUMENT_INVALID",
         "A history ref option was used with an unsupported command.",
-        "Use --history-ref only with sdd id or sdd validate.",
+        "Use --history-ref only with sdd validate.",
       ),
     };
   if (
@@ -1767,29 +1762,17 @@ function isNotFound(error: unknown): boolean {
   return typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT";
 }
 
-function historyTechnicalDiagnostic(error: unknown): Diagnostic {
-  if (error instanceof GitReadError && error.code === "GIT_REF_UNRESOLVED")
-    return cliDiagnostic(
-      "SDD_GIT_REF_UNRESOLVED",
-      "The configured Git history ref could not be resolved.",
-      "Fetch or correct the requested integration ref and run the command again.",
-    );
-  if (error instanceof HistoryIndexError)
-    return cliDiagnostic(
-      "SDD_ID_HISTORY_INVALID",
-      "Reachable canonical history could not be validated.",
-      "Repair the reachable project configuration and specification history before reserving IDs.",
-    );
+function projectIdentityTechnicalDiagnostic(error: unknown): Diagnostic {
   if (error instanceof ProjectIdentityError)
     return cliDiagnostic(
       "SDD_ID_PROJECT_IDENTITY_INVALID",
       "Current repository project identities could not be validated.",
-      "Repair repository .sdd/config.yaml files before reserving IDs.",
+      "Repair repository .sdd/config.yaml files before generating a project ID.",
     );
   return cliDiagnostic(
-    "SDD_ID_HISTORY_UNAVAILABLE",
-    "Canonical Git history is unavailable for ID reservation.",
-    "Run the command in a Git repository with the configured integration ref available.",
+    "SDD_ID_PROJECT_IDENTITY_UNAVAILABLE",
+    "Current repository project identities could not be read safely.",
+    "Run the command in the selected Git repository and correct any unsafe project configuration.",
   );
 }
 
@@ -1834,15 +1817,6 @@ function adapterTechnicalDiagnostic(error: unknown): Diagnostic {
   );
 }
 
-function historyIncompleteDiagnostic(severity: Diagnostic["severity"]): Diagnostic {
-  return cliDiagnostic(
-    "SDD_GIT_HISTORY_INCOMPLETE",
-    "Reachable canonical Git history is incomplete.",
-    "Fetch complete history before relying on identifier-reuse guarantees.",
-    severity,
-  );
-}
-
 function duplicateProjectIdDiagnostic(): Diagnostic {
   return cliDiagnostic(
     "SDD_ID_PROJECT_DUPLICATE",
@@ -1865,17 +1839,6 @@ function projectSnapshotInvalidDiagnostic(): Diagnostic {
     "A requested Git specification snapshot is invalid.",
     "Correct the project configuration and canonical graph at the requested ref.",
   );
-}
-
-function reusedObjectIdDiagnostic(objectId: ObjectId): Diagnostic {
-  return {
-    ...cliDiagnostic(
-      "SDD_ID_REUSED",
-      "A newly introduced canonical object ID was already defined in reachable project history.",
-      "Assign the object a new random ID and preserve the historical ID as permanently reserved.",
-    ),
-    object_id: objectId,
-  };
 }
 
 async function resolveSafeOutputTarget(
@@ -2166,25 +2129,11 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
             );
             return BLOCKED_EXIT_CODE;
           }
-          const resolvedRef = await reader.resolveRevision(
-            invocation.historyRef ?? project.configuration.git.default_target_ref,
-          );
-          const history = await buildCanonicalHistoryIndex(reader, resolvedRef, project.configuration.project_id);
-          if (history.status === "incomplete") {
-            emit(
-              runtime,
-              invocation.format,
-              response("id", project.configuration.project_id, "error", null, [historyIncompleteDiagnostic("error")]),
-            );
-            return TECHNICAL_FAILURE_EXIT_CODE;
-          }
           if (invocation.idKind === undefined || invocation.count === undefined) {
             throw new Error("Parsed ID invocation is missing required values.");
           }
           const forbidden = new Set<GeneratedId>(
-            invocation.idKind === "project"
-              ? [...history.reservedProjectIds, ...identities.projectIdsByPath.values()]
-              : history.reservedObjectIds,
+            invocation.idKind === "project" ? identities.projectIdsByPath.values() : [],
           );
           if (invocation.idKind !== "project") {
             const loaded = await loadSpecificationDocuments(
@@ -2213,12 +2162,12 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
           }
           const result: IdResult = {
             candidates: generateRandomIds(invocation.idKind, invocation.count, runtime.randomness, forbidden),
-            history: { status: "complete", resolved_ref: resolvedRef },
+            history: { status: "unchecked", resolved_ref: null },
           };
           emit(runtime, invocation.format, response("id", project.configuration.project_id, "ok", result, []));
           return VALID_EXIT_CODE;
         } catch (error) {
-          const diagnostic = historyTechnicalDiagnostic(error);
+          const diagnostic = projectIdentityTechnicalDiagnostic(error);
           emit(
             runtime,
             invocation.format,
@@ -2230,15 +2179,6 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
       const noProject = selected.diagnostics.every((diagnostic) => diagnostic.code === "SDD_CONFIG_NOT_FOUND");
       if (!noProject || invocation.configPath !== undefined) {
         emit(runtime, invocation.format, response("id", null, "error", null, selected.diagnostics));
-        return TECHNICAL_FAILURE_EXIT_CODE;
-      }
-      if (invocation.historyRef !== undefined) {
-        const diagnostic = cliDiagnostic(
-          "SDD_ID_HISTORY_REF_REQUIRES_PROJECT",
-          "A projectless ID cannot check a history ref.",
-          "Remove --history-ref or select an SDD Project after project-aware history support is implemented.",
-        );
-        emit(runtime, invocation.format, response("id", null, "error", null, [diagnostic]));
         return TECHNICAL_FAILURE_EXIT_CODE;
       }
       if (invocation.idKind === undefined || invocation.count === undefined) {
@@ -3286,16 +3226,52 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
       resolvedValidationRefs.set(ref, objectId);
       return objectId;
     };
-    const validationHistoryRef = invocation.historyRef ?? project.configuration.git.default_target_ref;
+    if (invocation.historyRef !== undefined) {
+      try {
+        await resolveValidationRef(invocation.historyRef);
+      } catch (error) {
+        emit(
+          runtime,
+          invocation.format,
+          response("validate", project.configuration.project_id, "error", null, [comparisonTechnicalDiagnostic(error)]),
+          outputTarget,
+        );
+        return TECHNICAL_FAILURE_EXIT_CODE;
+      }
+    }
+    try {
+      const identities = await buildCurrentProjectIdentityIndex(await getValidationReader(), runtime.fileSystem);
+      if (identities.duplicateProjectIds.size > 0) {
+        emit(
+          runtime,
+          invocation.format,
+          response(
+            "validate",
+            project.configuration.project_id,
+            "blocked",
+            { valid: false, adoption: { mode: project.configuration.adoption.mode } },
+            [duplicateProjectIdDiagnostic()],
+          ),
+          outputTarget,
+        );
+        return BLOCKED_EXIT_CODE;
+      }
+    } catch (error) {
+      if (!(error instanceof GitReadError && error.code === "GIT_REPOSITORY_UNAVAILABLE")) {
+        emit(
+          runtime,
+          invocation.format,
+          response("validate", project.configuration.project_id, "error", null, [comparisonTechnicalDiagnostic(error)]),
+          outputTarget,
+        );
+        return TECHNICAL_FAILURE_EXIT_CODE;
+      }
+    }
     let comparison: ValidateComparisonResult | undefined;
     if (invocation.changedFrom !== undefined) {
       try {
         const reader = await getValidationReader();
-        const [changedFromRef] = await Promise.all([
-          resolveValidationRef(invocation.changedFrom),
-          resolveValidationRef(validationHistoryRef),
-          resolveValidationRef("HEAD"),
-        ]);
+        const changedFromRef = await resolveValidationRef(invocation.changedFrom);
         const baseGraph = await loadCanonicalProjectGraphAt(reader, changedFromRef, project.configuration.project_id);
         if (baseGraph === undefined) {
           emit(
@@ -3321,93 +3297,6 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
         return TECHNICAL_FAILURE_EXIT_CODE;
       }
     }
-    let validationHistory: ValidateResult["history"] = { status: "incomplete", resolved_ref: null };
-    const historyDiagnostics: Diagnostic[] = [];
-    try {
-      const reader = await getValidationReader();
-      const identities = await buildCurrentProjectIdentityIndex(reader, runtime.fileSystem);
-      if (identities.duplicateProjectIds.size > 0) {
-        emit(
-          runtime,
-          invocation.format,
-          response(
-            "validate",
-            project.configuration.project_id,
-            "blocked",
-            { valid: false, adoption: { mode: project.configuration.adoption.mode } },
-            [duplicateProjectIdDiagnostic()],
-          ),
-          outputTarget,
-        );
-        return BLOCKED_EXIT_CODE;
-      }
-      const resolvedRef = await resolveValidationRef(validationHistoryRef);
-      const currentRevision = await resolveValidationRef("HEAD");
-      const mergeBase = await reader.findMergeBase(currentRevision, resolvedRef);
-      const historyStatus = await reader.historyStatus();
-      validationHistory = { status: mergeBase === undefined ? "incomplete" : historyStatus, resolved_ref: resolvedRef };
-      if (mergeBase === undefined) {
-        historyDiagnostics.push(historyIncompleteDiagnostic("warning"));
-      } else {
-        const integrationIds = await loadCanonicalProjectObjectIdsAt(
-          reader,
-          resolvedRef,
-          project.configuration.project_id,
-        );
-        const baselineIds = await loadCanonicalProjectObjectIdsAt(reader, mergeBase, project.configuration.project_id);
-        const newlyIntroducedIds = [...graph.value.objects.keys()].filter((objectId) => !baselineIds.has(objectId));
-        const parallelCollisions = newlyIntroducedIds.filter((objectId) => integrationIds.has(objectId));
-        let reusedIds: readonly ObjectId[] = parallelCollisions;
-        if (newlyIntroducedIds.length > 0) {
-          const history = await buildCanonicalHistoryIndex(reader, resolvedRef, project.configuration.project_id);
-          reusedIds = newlyIntroducedIds.filter((objectId) => history.reservedObjectIds.has(objectId));
-        }
-        const sortedReusedIds = [...new Set(reusedIds)].toSorted();
-        if (sortedReusedIds.length > 0) {
-          emit(
-            runtime,
-            invocation.format,
-            response(
-              "validate",
-              project.configuration.project_id,
-              "blocked",
-              { valid: false, adoption: { mode: project.configuration.adoption.mode } },
-              sortedReusedIds.map(reusedObjectIdDiagnostic),
-            ),
-            outputTarget,
-          );
-          return BLOCKED_EXIT_CODE;
-        }
-        if (historyStatus === "incomplete") historyDiagnostics.push(historyIncompleteDiagnostic("warning"));
-      }
-    } catch (error) {
-      if (error instanceof HistoryIndexError || error instanceof ProjectIdentityError) {
-        emit(
-          runtime,
-          invocation.format,
-          response(
-            "validate",
-            project.configuration.project_id,
-            "blocked",
-            { valid: false, adoption: { mode: project.configuration.adoption.mode } },
-            [historyTechnicalDiagnostic(error)],
-          ),
-          outputTarget,
-        );
-        return BLOCKED_EXIT_CODE;
-      }
-      if (error instanceof GitReadError && error.code === "GIT_REPOSITORY_UNAVAILABLE") {
-        historyDiagnostics.push(historyIncompleteDiagnostic("warning"));
-      } else {
-        emit(
-          runtime,
-          invocation.format,
-          response("validate", project.configuration.project_id, "error", null, [historyTechnicalDiagnostic(error)]),
-          outputTarget,
-        );
-        return TECHNICAL_FAILURE_EXIT_CODE;
-      }
-    }
     emit(
       runtime,
       invocation.format,
@@ -3415,8 +3304,13 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
         invocation.command,
         project.configuration.project_id,
         "ok",
-        validateResult(graph.value, project.configuration.adoption.mode, validationHistory, comparison),
-        [...graph.diagnostics, ...historyDiagnostics],
+        validateResult(
+          graph.value,
+          project.configuration.adoption.mode,
+          { status: "unchecked", resolved_ref: null },
+          comparison,
+        ),
+        graph.diagnostics,
       ),
       outputTarget,
     );

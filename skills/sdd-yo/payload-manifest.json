@@ -13,7 +13,7 @@
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "sha256:d60101998aeeaee91f744474b2209c2df920751a7c47534c35f04bb276f67259"
+      "sha256": "sha256:563114fc88f23c6b82fedbadae714ae3b81d7311d5edfa6f015652cc40eb4777"
     },
     {
       "path": "agents/openai.yaml",
@@ -25,7 +25,7 @@
     },
     {
       "path": "references/authoring.md",
-      "sha256": "sha256:8c744b193953d37247b8fda3e8934c29c794082a8228440006a633c298b1b3e6"
+      "sha256": "sha256:3ffbad58c1d006873bf812083dbc234f7a91218a9e61ae4842f545f9db4b2842"
     },
     {
       "path": "references/branch-preparation.md",
@@ -33,7 +33,7 @@
     },
     {
       "path": "references/diagnostics.md",
-      "sha256": "sha256:5e4ff43375065f7675bfe1184073772bd446cb1c385641c9ef48992201ed9479"
+      "sha256": "sha256:d79e8ab25ab8fbe8f0c2e775e4141cf0ec78906eec5e58ea39754db0603bbf9e"
     },
     {
       "path": "references/integration.md",
@@ -61,7 +61,7 @@
     },
     {
       "path": "scripts/check-cli-compatibility",
-      "sha256": "sha256:02cde95f9fb5798f65f23fc9069ea3b0b802937318252a7d2166ae6d10b34052"
+      "sha256": "sha256:c48c28692d9824a87fbf3d4207c40a52e53d986ad000634cdb23fe4771fbef9a"
     },
     {
       "path": "templates/capability.md",

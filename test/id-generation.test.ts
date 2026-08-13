@@ -47,7 +47,7 @@ test("REQ-2C8E8085 retries batch collisions and fails closed when uniqueness can
   assert.throws(() => generateRandomIds("requirement", 2, constant), /retry budget/u);
 });
 
-test("REQ-2C8E8085 retries candidates permanently reserved by canonical history", () => {
+test("REQ-2C8E8085 retries candidates already present in the selected graph", () => {
   const reservedValue: unknown = "CAP-00000001";
   assert.ok(isObjectId(reservedValue));
   const values = generateRandomIds(

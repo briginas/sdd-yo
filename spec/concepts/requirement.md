@@ -14,9 +14,11 @@ acceptance criteria, optional constraints, and active graph relations.
 
 ## Identity <!-- sdd:identity -->
 
-A Requirement has one stable random `REQ-XXXXXXXX` identifier that is never
-reused, including after the Requirement is removed from the active
-specification.
+A Requirement has one random `REQ-XXXXXXXX` identifier that remains stable
+while the Requirement is active. After the Requirement is removed from the
+active specification, the same identifier text may be assigned to a later
+Requirement. Historical artifacts distinguish their original subjects through
+Git objects and fingerprints rather than identifier text alone.
 
 ## States <!-- sdd:states -->
 

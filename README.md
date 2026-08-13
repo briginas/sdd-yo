@@ -186,7 +186,6 @@ state without falling back to a repository installation.
 | `SDD_INIT_TARGET_CONFLICT`                   | Preserve existing bytes and resolve the conflicting target.                     |
 | `SDD_INIT_ROOT_INVALID`                      | Select an existing directory.                                                   |
 | `SDD_INIT_TARGET_UNSAFE`                     | Stop and correct the unsafe target.                                             |
-| `SDD_GIT_HISTORY_INCOMPLETE`                 | Fetch complete history before relying on ID-reuse guarantees.                   |
 | `SDD_GIT_REF_UNRESOLVED`                     | Fetch or correct the exact requested Git ref.                                   |
 | `SDD_USER_SKILL_PLATFORM_UNSUPPORTED`        | Use user scope only on macOS; do not substitute a global install.               |
 | `SDD_USER_SKILL_PACKAGE_INVALID`             | Preserve both stores and select the reviewed exact package bytes.               |

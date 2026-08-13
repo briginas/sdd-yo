@@ -35,7 +35,7 @@ sdd:
 
 ## Purpose <!-- sdd:purpose -->
 
-Exercise historical identifier reservation.
+Exercise identifier reuse after removal.
 `;
 
 const indexWithCapability = emptyIndex.replace(
@@ -96,11 +96,8 @@ test("REQ-382BBBD6 REQ-BFC18F28 init creates a stable project without overwritin
     diagnostics: readonly { code: string; severity: string }[];
   };
   assert.equal(validatedValue.project_id, value.project_id);
-  assert.deepEqual(validatedValue.result.history, { status: "incomplete", resolved_ref: null });
-  assert.deepEqual(
-    validatedValue.diagnostics.map(({ code, severity }) => ({ code, severity })),
-    [{ code: "SDD_GIT_HISTORY_INCOMPLETE", severity: "warning" }],
-  );
+  assert.deepEqual(validatedValue.result.history, { status: "unchecked", resolved_ref: null });
+  assert.deepEqual(validatedValue.diagnostics, []);
 
   const repeated = await execute(["init", "--format", "json"], root);
   assert.equal(repeated.exitCode, 3);
@@ -234,7 +231,7 @@ test("REQ-778099C0 REQ-50351033 user scope is explicit and remains separate from
   assert.equal(userInstalls, 1);
 });
 
-test("REQ-2C8E8085 projectless id rejects invalid counts and history claims", async () => {
+test("REQ-2C8E8085 projectless id rejects invalid counts and unsupported history options", async () => {
   const root = await mkdtemp(join(tmpdir(), "sdd-cli-id-invalid-"));
   for (const count of ["0", "257", "1.5", "01"]) {
     const invalid = await execute(["id", "project", "--count", count, "--format", "json"], root);
@@ -249,11 +246,11 @@ test("REQ-2C8E8085 projectless id rejects invalid counts and history claims", as
   assert.equal(history.exitCode, 3);
   assert.equal(
     (JSON.parse(history.standardOutput) as { diagnostics: readonly { code: string }[] }).diagnostics[0]?.code,
-    "SDD_ID_HISTORY_REF_REQUIRES_PROJECT",
+    "SDD_CONFIG_CLI_ARGUMENT_INVALID",
   );
 });
 
-test("REQ-2C8E8085 REQ-8B656FC5 project-aware id reserves against complete history", async () => {
+test("REQ-2C8E8085 REQ-8B656FC5 project-aware id reports unchecked history", async () => {
   const generated = await execute(["id", "requirement", "--format", "json"]);
   assert.equal(generated.exitCode, 0, generated.standardOutput);
   const value = JSON.parse(generated.standardOutput) as {
@@ -261,12 +258,11 @@ test("REQ-2C8E8085 REQ-8B656FC5 project-aware id reserves against complete histo
     result: { candidates: readonly string[]; history: { status: string; resolved_ref: string | null } };
   };
   assert.equal(value.project_id, "SDD-17EF8B29");
-  assert.equal(value.result.history.status, "complete");
-  assert.equal(typeof value.result.history.resolved_ref, "string");
+  assert.deepEqual(value.result.history, { status: "unchecked", resolved_ref: null });
   assert.match(value.result.candidates[0] ?? "", /^REQ-[0-9A-F]{8}$/u);
 });
 
-test("REQ-2C8E8085 manual IDs cannot reuse a removed canonical history identity", async () => {
+test("REQ-2C8E8085 manual IDs may reuse a removed canonical history identity", async () => {
   const root = await mkdtemp(join(tmpdir(), "sdd-cli-id-reuse-"));
   await executeFile("git", ["init", "--quiet", "--initial-branch", "main"], { cwd: root });
   await executeFile("git", ["config", "user.name", "SDD Test"], { cwd: root });
@@ -284,19 +280,11 @@ test("REQ-2C8E8085 manual IDs cannot reuse a removed canonical history identity"
   await writeFile(join(root, "spec/README.md"), indexWithCapability);
   await writeFile(join(root, "spec/capabilities/historical.md"), reusedCapability);
   const validated = await execute(["validate", "--format", "json"], root);
-  assert.equal(validated.exitCode, 1, validated.standardOutput);
+  assert.equal(validated.exitCode, 0, validated.standardOutput);
   const value = JSON.parse(validated.standardOutput) as {
     diagnostics: readonly { code: string; object_id?: string }[];
   };
-  assert.deepEqual(value.diagnostics[0], {
-    code: "SDD_ID_REUSED",
-    severity: "error",
-    message: "A newly introduced canonical object ID was already defined in reachable project history.",
-    details: {
-      remediation: "Assign the object a new random ID and preserve the historical ID as permanently reserved.",
-    },
-    object_id: "CAP-A1000001",
-  });
+  assert.deepEqual(value.diagnostics, []);
 });
 
 test("REQ-BFC18F28 duplicate current project IDs block repository validation", async () => {
@@ -339,7 +327,7 @@ test("REQ-BFC18F28 deleted tracked configs are not current project identities", 
   assert.equal(validated.exitCode, 0, validated.standardOutput);
 });
 
-test("REQ-2C8E8085 rejects an ID independently introduced on the working and integration branches", async () => {
+test("REQ-2C8E8085 permits an ID independently introduced on a parallel branch", async () => {
   const root = await mkdtemp(join(tmpdir(), "sdd-cli-parallel-id-"));
   await executeFile("git", ["init", "--quiet", "--initial-branch", "main"], { cwd: root });
   await executeFile("git", ["config", "user.name", "SDD Test"], { cwd: root });
@@ -361,11 +349,7 @@ test("REQ-2C8E8085 rejects an ID independently introduced on the working and int
   await executeFile("git", ["switch", "--quiet", "feature"], { cwd: root });
 
   const validated = await execute(["validate", "--format", "json"], root);
-  assert.equal(validated.exitCode, 1, validated.standardOutput);
-  assert.equal(
-    (JSON.parse(validated.standardOutput) as { diagnostics: readonly { code: string }[] }).diagnostics[0]?.code,
-    "SDD_ID_REUSED",
-  );
+  assert.equal(validated.exitCode, 0, validated.standardOutput);
 });
 
 test("REQ-2C8E8085 unchanged IDs do not require scanning older malformed history", async () => {
@@ -388,11 +372,11 @@ test("REQ-2C8E8085 unchanged IDs do not require scanning older malformed history
   assert.equal(validated.exitCode, 0, validated.standardOutput);
   assert.equal(
     (JSON.parse(validated.standardOutput) as { result: { history: { status: string } } }).result.history.status,
-    "complete",
+    "unchecked",
   );
 });
 
-test("REQ-8B656FC5 unresolved configured integration refs are technical failures", async () => {
+test("REQ-8B656FC5 ordinary validation does not resolve the configured integration ref", async () => {
   const root = await mkdtemp(join(tmpdir(), "sdd-cli-ref-unresolved-"));
   await executeFile("git", ["init", "--quiet", "--initial-branch", "trunk"], { cwd: root });
   await executeFile("git", ["config", "user.name", "SDD Test"], { cwd: root });
@@ -402,14 +386,10 @@ test("REQ-8B656FC5 unresolved configured integration refs are technical failures
   await executeFile("git", ["commit", "--quiet", "-m", "trunk only"], { cwd: root });
 
   const validated = await execute(["validate", "--format", "json"], root);
-  assert.equal(validated.exitCode, 3, validated.standardOutput);
-  assert.equal(
-    (JSON.parse(validated.standardOutput) as { diagnostics: readonly { code: string }[] }).diagnostics[0]?.code,
-    "SDD_GIT_REF_UNRESOLVED",
-  );
+  assert.equal(validated.exitCode, 0, validated.standardOutput);
 });
 
-test("REQ-8B656FC5 validate accepts an explicit resolvable history ref", async () => {
+test("REQ-8B656FC5 validate checks an explicitly requested ref without claiming history validation", async () => {
   const root = await mkdtemp(join(tmpdir(), "sdd-cli-explicit-history-ref-"));
   await executeFile("git", ["init", "--quiet", "--initial-branch", "trunk"], { cwd: root });
   await executeFile("git", ["config", "user.name", "SDD Test"], { cwd: root });
@@ -420,11 +400,10 @@ test("REQ-8B656FC5 validate accepts an explicit resolvable history ref", async (
 
   const validated = await execute(["validate", "--history-ref", "trunk", "--format", "json"], root);
   assert.equal(validated.exitCode, 0, validated.standardOutput);
-  const resolved = (await executeFile("git", ["rev-parse", "trunk"], { cwd: root })).stdout.trim();
-  assert.equal(
-    (JSON.parse(validated.standardOutput) as { result: { history: { resolved_ref: string } } }).result.history
-      .resolved_ref,
-    resolved,
+  assert.deepEqual(
+    (JSON.parse(validated.standardOutput) as { result: { history: { status: string; resolved_ref: string | null } } })
+      .result.history,
+    { status: "unchecked", resolved_ref: null },
   );
 });
 
@@ -446,7 +425,7 @@ test("REQ-8B656FC5 history ref is rejected by unsupported commands", async () =>
   );
 });
 
-test("REQ-8B656FC5 incomplete history warns on validate and blocks reserved ID issuance", async () => {
+test("REQ-2C8E8085 REQ-8B656FC5 shallow history neither warns nor blocks ID generation", async () => {
   const origin = await mkdtemp(join(tmpdir(), "sdd-cli-shallow-origin-"));
   await executeFile("git", ["init", "--quiet", "--initial-branch", "main"], { cwd: origin });
   await executeFile("git", ["config", "user.name", "SDD Test"], { cwd: origin });
@@ -467,19 +446,11 @@ test("REQ-8B656FC5 incomplete history warns on validate and blocks reserved ID i
     result: { history: { status: string } };
     diagnostics: readonly { code: string; severity: string }[];
   };
-  assert.equal(validationValue.result.history.status, "incomplete");
-  assert.ok(
-    validationValue.diagnostics.some(
-      (diagnostic) => diagnostic.code === "SDD_GIT_HISTORY_INCOMPLETE" && diagnostic.severity === "warning",
-    ),
-  );
+  assert.equal(validationValue.result.history.status, "unchecked");
+  assert.deepEqual(validationValue.diagnostics, []);
 
   const generated = await execute(["id", "concept", "--format", "json"], clone);
-  assert.equal(generated.exitCode, 3, generated.standardOutput);
-  assert.equal(
-    (JSON.parse(generated.standardOutput) as { diagnostics: readonly { code: string }[] }).diagnostics[0]?.code,
-    "SDD_GIT_HISTORY_INCOMPLETE",
-  );
+  assert.equal(generated.exitCode, 0, generated.standardOutput);
 });
 
 test("REQ-0361538D REQ-7C848ED0 REQ-7FCCF943 validate emits deterministic versioned JSON and a human view", async () => {
@@ -506,8 +477,7 @@ test("REQ-0361538D REQ-7C848ED0 REQ-7FCCF943 validate emits deterministic versio
   assert.equal(value.project_id, "SDD-17EF8B29");
   assert.equal(value.status, "ok");
   assert.equal(value.result.valid, true);
-  assert.equal(value.result.history.status, "complete");
-  assert.equal(typeof value.result.history.resolved_ref, "string");
+  assert.deepEqual(value.result.history, { status: "unchecked", resolved_ref: null });
   assert.deepEqual(
     value.result.fingerprints.map((item) => item.id),
     value.result.fingerprints.map((item) => item.id).toSorted(),

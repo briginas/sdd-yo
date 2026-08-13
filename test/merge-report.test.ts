@@ -227,7 +227,7 @@ test("REQ-E85A06C3 REQ-3B9FC7FF REQ-8E2D9A5F REQ-BCFA15D8 blocks stale refs and 
   assert.equal(rejected.status, "BLOCKED");
 });
 
-test("REQ-41EDF9A3 REQ-220945C2 REQ-82256D82 REQ-44068C1A REQ-7FCCF943 merge check consumes a bundle rather than package and candidate paths", async () => {
+test("REQ-41EDF9A3 REQ-220945C2 REQ-82256D82 REQ-44068C1A REQ-7FCCF943 REQ-FDD51416 merge check consumes a bundle rather than package and candidate paths", async () => {
   const value = await fixture();
   const evidence = join(value.root, "evidence");
   await mkdir(evidence);

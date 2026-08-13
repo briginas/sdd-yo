@@ -403,44 +403,21 @@ filesystem failure prove that the original visible tree is restored without
 stage or backup debris. The production writer is the default instance of the
 same injected factory used by these tests.
 
-## Historical ID reservation
+## History-free object IDs
 
-The history tip is the object ID resolved from explicit `--history-ref`, or
-from the selected project's configured `git.default_target_ref` when the option
-is absent. `--ref` selects a validation snapshot only; it does not implicitly
-replace the history tip. Failure to resolve an explicitly requested ref is a
-technical failure.
+ID generation uses cryptographically random uppercase eight-hex values and
+checks only the selected active graph (or candidate graph during proposal
+operations). It does not resolve the configured integration ref, enumerate
+reachable commits, parse historical specification trees, or reserve removed
+object IDs. Current repository project-ID uniqueness remains a bounded working
+tree query over `.sdd/config.yaml` paths and does not follow symlinks.
 
-An object ID is newly introduced when it is active in the validation snapshot
-but absent from the active graph at the resolved history tip. Only newly
-introduced IDs require a history query. The query searches every commit
-reachable from the history tip for a typed canonical model definition belonging
-to the same stable project ID. At each commit, canonical roots are obtained from
-tracked `.sdd/config.yaml` files carrying that project ID, so moving a project
-directory or configured specification root does not reset reservation. Arbitrary
-prose, fixture, test, and noncanonical proposal occurrences do not count.
-For an `SDD` candidate, a prior definition is a tracked `.sdd/config.yaml`
-`project_id` declaration anywhere in the enclosing repository history rather
-than a model-object definition.
+Every project-aware ID and ordinary validation response reports
+`history.status: unchecked` with `resolved_ref: null`. This is an explicit
+statement that identifier history was not checked, not a degraded result.
 
-Parallel-branch collisions are found because the configured integration history
-tip is resolved at command start. Positive and negative results may be cached
-only for that resolved object ID. Repository-wide project-ID uniqueness is a
-bounded tree query over `.sdd/config.yaml` paths inside the enclosing repository;
-it does not follow symlinks or read outside the repository.
-
-New candidate objects use freshly generated IDs and become subject to normal
-historical non-reuse after canonical introduction.
-
-Git-backed command responses report one history status:
-
-```text
-complete | incomplete | unchecked
-```
-
-`unchecked` applies only when no project resolves. A shallow clone or another
-provably incomplete reachable history may run ordinary validation with status
-`incomplete` plus stable diagnostic `SDD_GIT_HISTORY_INCOMPLETE`. An unresolved
-requested ref produces `SDD_GIT_REF_UNRESOLVED` and a technical failure. Ordinary
-validation never turns history status into a merge-readiness conclusion. Strict
-merge validation later blocks unless the required history status is `complete`.
+Git-backed comparison operations still resolve only their explicit base,
+branch-head, integration, and comparison refs. An explicitly requested but
+unresolvable ref returns `SDD_GIT_REF_UNRESOLVED`. Merge readiness retains its
+three-way analysis and all evidence gates, but no longer scans history or
+blocks solely because an ID appeared in a removed historical object.

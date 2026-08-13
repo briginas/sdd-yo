@@ -11,7 +11,7 @@ import type {
   RequirementId,
 } from "../contracts/identifiers.ts";
 import { isFingerprint } from "../contracts/identifiers.ts";
-import { buildCanonicalHistoryIndex, loadCanonicalProjectGraphAt } from "../ids/history-index.ts";
+import { loadCanonicalProjectGraphAt } from "../ids/history-index.ts";
 import type { FileSystem } from "../platform/filesystem.ts";
 import type { GitReader } from "../platform/git-reader.ts";
 import { revalidateProposalBundle } from "../proposal/proposal-bundle.ts";
@@ -225,22 +225,12 @@ export async function runMergeGate(input: {
   if (integrationRef !== configuredIntegrationRef) {
     issues.push({ code: "SDD_MERGE_INTEGRATION_REF_NOT_CURRENT", disposition: "BLOCKED" });
   }
-  const [branchHistory, integrationHistory, baseGraph, headGraph] = await Promise.all([
-    buildCanonicalHistoryIndex(input.gitReader, branchHead, input.project.configuration.project_id),
-    buildCanonicalHistoryIndex(input.gitReader, integrationRef, input.project.configuration.project_id),
+  const [baseGraph, headGraph] = await Promise.all([
     loadCanonicalProjectGraphAt(input.gitReader, packageValue.base.git_ref, input.project.configuration.project_id),
     loadCanonicalProjectGraphAt(input.gitReader, branchHead, input.project.configuration.project_id),
   ]);
-  if (branchHistory.status !== "complete" || integrationHistory.status !== "complete") {
-    issues.push({ code: "SDD_MERGE_HISTORY_INCOMPLETE", disposition: "BLOCKED" });
-  }
   if (baseGraph === undefined || headGraph === undefined)
     throw new Error("A required versioned project graph is missing.");
-  for (const id of packageValue.object_delta.added) {
-    if (integrationHistory.reservedObjectIds.has(id)) {
-      issues.push({ code: "SDD_MERGE_HISTORICAL_ID_REUSE", disposition: "BLOCKED", details: { object_id: id } });
-    }
-  }
 
   const prepared = await prepareApprovedProposal({
     fileSystem: input.fileSystem,

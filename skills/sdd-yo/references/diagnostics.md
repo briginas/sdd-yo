@@ -31,11 +31,6 @@ do not create one implicitly.
 An initialization target is unsafe. Stop without inspecting or changing paths
 outside the selected root.
 
-## SDD_GIT_HISTORY_INCOMPLETE
-
-Git history is incomplete for checks that require identity history. Report the
-warning and its CLI remediation. Do not claim historical uniqueness.
-
 ## SDD_GIT_REF_UNRESOLVED
 
 The requested or configured Git ref did not resolve. Report the exact ref and

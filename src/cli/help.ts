@@ -27,13 +27,13 @@ export const CLI_HELP_ENTRIES: readonly CliHelpEntry[] = [
   },
   {
     path: "id",
-    usage: "sdd id project|capability|requirement|concept [--count <n>] [--history-ref <git-ref>]",
-    summary: "Generate checked SDD identifiers.",
+    usage: "sdd id project|capability|requirement|concept [--count <n>]",
+    summary: "Generate random SDD identifiers unique within the selected active graph.",
   },
   {
     path: "validate",
     usage: "sdd validate [--ref <git-ref>] [--history-ref <git-ref>] [--changed-from <git-ref>]",
-    summary: "Validate a selected specification and its identity history.",
+    summary: "Validate a selected specification graph and optional Git comparisons.",
   },
   {
     path: "inspect",

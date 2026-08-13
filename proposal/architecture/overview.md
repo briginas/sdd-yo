@@ -89,7 +89,7 @@ fingerprint
   Canonicalize semantic, structural, verification, and delta representations.
 
 git
-  Read refs, merge bases, historical ID use, and three-way file states.
+  Read explicit refs, merge bases, snapshots, and three-way file states.
 
 proposal
   Validate virtual candidate trees and prepare exact patches.

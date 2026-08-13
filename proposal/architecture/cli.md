@@ -132,15 +132,14 @@ specification contains no Capability, Requirement, or Domain Concept ID.
 ### `sdd id`
 
 ```text
-sdd id project|capability|requirement|concept [--count <n>] [--history-ref <git-ref>]
+sdd id project|capability|requirement|concept [--count <n>]
 ```
 
-Generates uppercase random IDs and checks the selected repository's complete
-Git history when a project resolves. Without a project it can generate
-candidates but marks historical uniqueness as unchecked. With a project,
-`--history-ref` selects the integration history tip; otherwise the resolved
-project's configured `git.default_target_ref` is used. `--count` defaults to
-`1`, accepts integers from `1` through `256`, and returns candidates unique
+Generates uppercase random IDs without resolving or enumerating Git history.
+When a project resolves, object IDs are additionally unique against its active
+graph and project IDs against current repository configurations. The response
+reports history as `unchecked` with no resolved history ref. `--count` defaults
+to `1`, accepts integers from `1` through `256`, and returns candidates unique
 within that invocation; a random collision is retried rather than returned.
 
 ### `sdd validate`
@@ -149,10 +148,10 @@ within that invocation; a random collision is retried rather than returned.
 sdd validate [--ref <git-ref>] [--history-ref <git-ref>] [--changed-from <git-ref>]
 ```
 
-Parses configuration and specification, resolves the graph, validates
-identities and links, checks historical reuse, and computes fingerprints.
-`--ref` selects the specification snapshot but does not change the history
-tip. `--history-ref` overrides the configured history tip. `--changed-from`
+Parses configuration and specification, validates active graph identities and
+links, and computes fingerprints. `--ref` selects the specification snapshot.
+An explicit `--history-ref` is resolved only as an explicitly requested Git
+input; it does not perform identifier-history validation. `--changed-from`
 additionally reports semantic and structural object deltas against the named
 ref.
 

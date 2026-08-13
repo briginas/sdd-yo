@@ -74,12 +74,11 @@ JUnit import is bound to exactly one configured JUnit adapter selected with
   applying them.
 - Config changes contribute to a config fingerprint.
 
-Active and candidate configurations use this strict parser. Readers of
-reachable Git history instead extract only the archival version 1 project
-locator: schema version, project ID, specification root, and entrypoint. This
-keeps ID reservation and proposal-base comparison available after a manual
-configuration migration without interpreting retired historical fields as
-current configuration or migrating any bytes.
+Active and candidate configurations use this strict parser. Git snapshot reads
+use the same bounded project locator when an explicit proposal or comparison
+ref must be loaded, without interpreting retired historical fields as current
+configuration or migrating any bytes. Identifier generation and ordinary
+validation do not scan reachable Git history.
 
 ## Trust-sensitive changes
 

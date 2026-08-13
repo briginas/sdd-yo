@@ -56,8 +56,7 @@ node scripts/check-cli-compatibility -- id concept --count <n> --cwd <directory>
 `--config <path>` may replace `--cwd <directory>`. Never use both. Accept IDs
 only when the unchanged version 1 response has `status: ok`, the selected
 project ID, unique correctly prefixed candidates, and `history.status:
-complete` with a resolved ref. Never invent, recycle, repair, or use a
-projectless unchecked ID. `code` generates no specification object IDs.
+unchecked` with `resolved_ref: null`. Never invent or repair an ID. `code` generates no specification object IDs.
 
 ## Draft by mode
 

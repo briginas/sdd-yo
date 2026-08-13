@@ -68,14 +68,17 @@ caller-selected staging path.
   fingerprint, mode, semantic and structural object deltas, affected scope,
   and empty code targets.
 - Before publishing the bundle, the CLI validates the complete candidate graph,
-  identifier history, selected base, and mode rules against the same inputs
-  used to produce the ProposalPackage.
+  selected base, and mode rules against the same inputs used to produce the
+  ProposalPackage.
 - The staging path is project-relative, Git-ignored, outside the configured
   specification root, free of traversal and symbolic-link escape, and absent
   before the operation.
 - Existing-target replacement, malformed or oversized candidate content,
-  duplicate or reused IDs, a stale or unresolved base, changed inputs, unsafe
-  filesystem entries, and publication failure stop without a partial bundle.
+  duplicate IDs within the candidate graph, a stale or unresolved base,
+  changed inputs, unsafe filesystem entries, and publication failure stop
+  without a partial bundle.
+- An ID that belongs only to an object removed from reachable canonical history
+  does not block bundle materialization.
 - Identical explicit inputs produce byte-identical candidate and
   ProposalPackage members.
 - The operation does not modify the active specification, Git state, approval,
@@ -112,6 +115,8 @@ ProposalPackage without modifying the working tree.
   claimed by this operation.
 - `code` requires empty semantic and structural deltas and one or more active
   Requirement targets bound to their semantic and structural fingerprints.
+- Duplicate IDs within the exact candidate graph block proposal generation;
+  reuse of an ID found only in older reachable history does not.
 - The package includes the selected mode, base and candidate tree
   fingerprints, object-delta fingerprints and object IDs, bound code targets,
   affected-scope fingerprint and IDs, and deterministic diagnostics.
