@@ -172,7 +172,7 @@ async function fixture() {
     base: baseGraph,
     candidate: headGraph,
     project_id: packageValue.project_id,
-    analyzer: { name: "semantic-review", version: "1.0" },
+    analyzer: { name: "human-semantic-review", version: "1.0" },
   });
   const input = {
     fileSystem: nodeFileSystem,

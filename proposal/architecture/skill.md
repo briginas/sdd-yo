@@ -25,6 +25,8 @@ reference:
   [proposal review](../../skills/sdd-yo/references/proposal-gate.md);
 - explicit human decision recording:
   [approval](../../skills/sdd-yo/references/approval.md);
+- informed human semantic review and immutable evidence recording:
+  [semantic review](../../skills/sdd-yo/references/semantic-review.md);
 - approved proposal preparation or exact patch application:
   [branch preparation](../../skills/sdd-yo/references/branch-preparation.md);
 - test discovery, evidence validation, and merge readiness:
@@ -68,6 +70,24 @@ directory. It preserves and reports the path on materialization failure, never
 removes caller-owned candidates, and creates no candidate for `code`. Retained
 bundles, approvals, patches, and evidence remain ignored project-relative
 artifacts; no candidate lifecycle state is stored in the repository.
+
+For the human semantic-review fallback, the Skill selects fresh safe manifest
+and evidence targets, asks the CLI to materialize the exact current review
+subject, and presents that subject together with its normative context,
+semantic candidates, refs, recorder identity, and every supplied Finding. One
+unchanged subject has one human pause for `reviewed`; missing issuer or actor
+values are collected in that same request. The recorder recomputes the subject
+after the pause, and the Skill accepts only an exact subject match. Subject
+drift requires a new review, while a target collision or transient publication
+failure retries with a fresh safe target without repeating an unchanged human
+decision.
+
+Within an already selected bounded outcome, compatible deterministic stages
+continue with retained inputs through materialization, recording, preparation,
+verification, and read-only readiness computation. This removes routine
+`continue` questions but does not combine semantic-model confirmation,
+proposal approval, exact-patch application, semantic review, normative
+ambiguity resolution, or new Git, merge, publication, and release authority.
 
 ## Packaging and execution boundary
 
@@ -134,12 +154,16 @@ The skill:
 - may invoke the deterministic ApprovalEvidence recorder only when the exact
   subject and target were displayed, every human input was supplied explicitly,
   and retained inputs still match after the human pause;
+- may invoke the deterministic human semantic-review recorder only after the
+  exact CLI-produced subject and every supplied Finding were displayed and the
+  human explicitly supplied `reviewed`, issuer, and actor for that subject;
 - does not report success if the CLI is missing, incompatible, interrupted, or
   returns malformed JSON.
 
-The current Skill payload does not provide a model semantic-review route. It
-may mechanically validate existing Finding and FindingResolution artifacts
-through the verification route.
+The Skill does not perform model semantic analysis or create Findings. It can
+orchestrate the equivalent human-review fallback and can mechanically validate
+existing Finding and FindingResolution artifacts through the verification
+route.
 
 ## Failure behavior
 
@@ -167,5 +191,9 @@ The skill must be evaluated for:
   failure preservation, caller ownership, and the `code`-mode exclusion;
 - explicit approval and rejection recording without inferred decisions or
   downstream authority;
+- exact semantic-review subject and Finding presentation, one unchanged-subject
+  pause, no inferred issuer or actor, post-pause subject comparison, technical
+  target retry without repeated human decision, and automatic continuation
+  only inside the selected bounded outcome;
 - cross-project isolation in monorepos;
 - clear distinction between governed scope and complete-project claims.

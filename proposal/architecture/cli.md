@@ -270,6 +270,46 @@ complete revalidated ProposalPackage subject so an orchestrator can compare it
 to what the human saw before the pause. A separate post-pause validation call
 is unnecessary and cannot substitute for recorder-owned freshness.
 
+Approval recording and the semantic-review artifact commands use the same
+safe ignored-artifact publisher. It accepts only a new project-relative target
+outside the specification root, rechecks Git-ignore and path safety around the
+operation, and publishes atomically without leaving a partial file.
+
+### `sdd semantic-review materialize`
+
+```text
+sdd semantic-review materialize --change <ChangeDescriptor-path> \
+  --bundle <project-relative-path> --manifest <project-relative-path> \
+  [--findings <path> ...]
+```
+
+Revalidates the exact Change and retained proposal bundle, resolves the
+proposal and configured integration refs, validates every explicitly supplied
+current Finding, and derives the fixed version 1 human-review analyzer input.
+It atomically publishes one new SemanticAnalysisInputManifest and returns its
+path plus a versioned machine-comparable review subject containing the resolved
+refs, merge base, proposal identity, analyzer identity, input fingerprint, and
+canonical Finding IDs. It performs no model analysis and makes no human
+decision.
+
+### `sdd semantic-review record`
+
+```text
+sdd semantic-review record --change <ChangeDescriptor-path> \
+  --bundle <project-relative-path> --input-manifest <path> \
+  [--findings <path> ...] --issuer <name> --actor <identity> \
+  --decision reviewed --evidence <project-relative-path>
+```
+
+Recomputes the current review subject inside the recorder invocation and
+requires the retained manifest to match it exactly. Only then does it publish
+immutable HumanSemanticReviewEvidence, deriving the candidate input
+fingerprint and sorted Finding IDs rather than accepting either as authored
+input. The response returns the evidence path, constant decision `reviewed`,
+and the exact recomputed review subject. Subject drift is blocking; an unsafe,
+occupied, or failed publication target is technical and creates no partial
+artifact.
+
 ### `sdd proposal prepare`
 
 ```text
@@ -362,6 +402,12 @@ from its fixed members rather than trusting hidden workflow state. The command
 resolves the current configured integration ref and declared proposal ref,
 recomputes conflict and affected scope, validates all evidence, and returns a
 `MergeReport`. It never modifies Git or hosting state.
+
+When human semantic-review evidence is supplied, `merge check` consumes the
+retained manifest and recomputes the same review subject used by
+`semantic-review materialize` and `semantic-review record`. Proposal-head,
+integration-ref, Change, bundle, manifest, analyzer, project, or supplied
+Finding drift invalidates the evidence rather than silently refreshing it.
 
 When recomputation produces an empty affected scope, the human view prints
 `NOT_APPLICABLE (empty affected scope)` for both test and QA summaries rather

@@ -92,11 +92,23 @@ import {
   importFindingResolutionFile,
   importHumanSemanticReviewEvidenceFile,
   importSemanticAnalysisInputManifestFile,
+  sortFindingsForReview,
 } from "../verification/findings.ts";
 import type { FindingAssessment } from "../verification/findings.ts";
 import { importChangeDescriptorFile, MergeInputError } from "../verification/change-descriptor.ts";
 import { runMergeGate } from "../verification/merge-report.ts";
 import type { MergeReport } from "../verification/merge-report.ts";
+import {
+  computeSemanticReviewSubject,
+  createHumanSemanticReviewEvidence,
+  sameSemanticReviewManifest,
+  SemanticReviewSubjectError,
+  serializeSemanticReviewArtifact,
+} from "../verification/semantic-review-subject.ts";
+import type { SemanticReviewSubject } from "../verification/semantic-review-subject.ts";
+import type { Finding, HumanSemanticReviewEvidence } from "../verification/findings.ts";
+import type { SemanticAnalysisInputManifest } from "../verification/semantic-review.ts";
+import { IgnoredArtifactOutputError, resolveIgnoredArtifactTarget } from "./ignored-artifact-output.ts";
 import { renderCliHelp } from "./help.ts";
 import { loadCliCompatibilityIdentity } from "./identity.ts";
 import type { CliCompatibilityIdentity } from "./identity.ts";
@@ -129,6 +141,8 @@ type Command =
   | "trace"
   | "diff"
   | "approval.record"
+  | "semantic-review.materialize"
+  | "semantic-review.record"
   | "tests.discover"
   | "findings.validate"
   | "merge.check"
@@ -187,7 +201,7 @@ type Invocation = {
   readonly bundlePath?: ProjectPath;
   readonly issuer?: string;
   readonly actor?: string;
-  readonly decision?: "approved" | "rejected";
+  readonly decision?: "approved" | "rejected" | "reviewed";
   readonly reasonPath?: ProjectPath;
   readonly evidencePath?: ProjectPath;
   readonly codeTargets: readonly RequirementId[];
@@ -199,6 +213,7 @@ type Invocation = {
   readonly worktreePath?: string;
   readonly changePath?: ProjectPath;
   readonly inputManifestPath?: ProjectPath;
+  readonly manifestPath?: ProjectPath;
   readonly findingPaths: readonly ProjectPath[];
   readonly resolutionPaths: readonly ProjectPath[];
   readonly testEvidencePaths: readonly ProjectPath[];
@@ -289,6 +304,19 @@ export type ProposalMaterializeResult = {
   readonly proposal: ProposalPackage;
 };
 
+export type SemanticReviewMaterializeResult = {
+  readonly manifest_path: ProjectPath;
+  readonly manifest: SemanticAnalysisInputManifest;
+  readonly findings: readonly Finding[];
+  readonly subject: SemanticReviewSubject;
+};
+
+export type SemanticReviewRecordResult = {
+  readonly evidence_path: ProjectPath;
+  readonly evidence: HumanSemanticReviewEvidence;
+  readonly subject: SemanticReviewSubject;
+};
+
 export type CliResponse =
   | CliResponseEnvelope<"version", "ok", CliCompatibilityIdentity>
   | CliResponseEnvelope<"init", "ok", InitResult>
@@ -305,6 +333,8 @@ export type CliResponse =
   | CliResponseEnvelope<"trace", "ok", TraceResult>
   | CliResponseEnvelope<"diff", "ok", DiffResult>
   | CliResponseEnvelope<"approval.record", "ok", ApprovalRecordResult>
+  | CliResponseEnvelope<"semantic-review.materialize", "ok", SemanticReviewMaterializeResult>
+  | CliResponseEnvelope<"semantic-review.record", "ok", SemanticReviewRecordResult>
   | CliResponseEnvelope<"tests.discover", "ok", TestIndex>
   | CliResponseEnvelope<"findings.validate", "ok" | "blocked", FindingAssessment>
   | CliResponseEnvelope<"merge.check", "ok" | "blocked" | "review_required", MergeReport>
@@ -340,16 +370,21 @@ function parseInvocation(
       ? `skill.${argv[1]}`
       : argv[0] === "tests" && argv[1] === "discover"
         ? "tests.discover"
-        : argv[0] === "approval" && argv[1] === "record"
-          ? "approval.record"
-          : argv[0] === "findings" && argv[1] === "validate"
-            ? "findings.validate"
-            : argv[0] === "merge" && argv[1] === "check"
-              ? "merge.check"
-              : argv[0] === "proposal" &&
-                  (argv[1] === "materialize" || argv[1] === "validate" || argv[1] === "prepare" || argv[1] === "apply")
-                ? `proposal.${argv[1]}`
-                : argv[0];
+        : argv[0] === "semantic-review" && (argv[1] === "materialize" || argv[1] === "record")
+          ? `semantic-review.${argv[1]}`
+          : argv[0] === "approval" && argv[1] === "record"
+            ? "approval.record"
+            : argv[0] === "findings" && argv[1] === "validate"
+              ? "findings.validate"
+              : argv[0] === "merge" && argv[1] === "check"
+                ? "merge.check"
+                : argv[0] === "proposal" &&
+                    (argv[1] === "materialize" ||
+                      argv[1] === "validate" ||
+                      argv[1] === "prepare" ||
+                      argv[1] === "apply")
+                  ? `proposal.${argv[1]}`
+                  : argv[0];
   if (
     command !== "init" &&
     command !== "skill.install" &&
@@ -361,6 +396,8 @@ function parseInvocation(
     command !== "trace" &&
     command !== "diff" &&
     command !== "approval.record" &&
+    command !== "semantic-review.materialize" &&
+    command !== "semantic-review.record" &&
     command !== "tests.discover" &&
     command !== "findings.validate" &&
     command !== "merge.check" &&
@@ -406,7 +443,7 @@ function parseInvocation(
   let bundlePath: ProjectPath | undefined;
   let issuer: string | undefined;
   let actor: string | undefined;
-  let decision: "approved" | "rejected" | undefined;
+  let decision: "approved" | "rejected" | "reviewed" | undefined;
   let reasonPath: ProjectPath | undefined;
   let evidencePath: ProjectPath | undefined;
   const codeTargets: RequirementId[] = [];
@@ -418,6 +455,7 @@ function parseInvocation(
   let worktreePath: string | undefined;
   let changePath: ProjectPath | undefined;
   let inputManifestPath: ProjectPath | undefined;
+  let manifestPath: ProjectPath | undefined;
   const findingPaths: ProjectPath[] = [];
   const resolutionPaths: ProjectPath[] = [];
   const testEvidencePaths: ProjectPath[] = [];
@@ -430,6 +468,8 @@ function parseInvocation(
       command === "skill.update" ||
       command === "skill.remove" ||
       command === "approval.record" ||
+      command === "semantic-review.materialize" ||
+      command === "semantic-review.record" ||
       command === "findings.validate" ||
       command === "merge.check" ||
       command === "proposal.validate" ||
@@ -479,6 +519,7 @@ function parseInvocation(
       argument === "--evidence" ||
       argument === "--change" ||
       argument === "--input-manifest" ||
+      argument === "--manifest" ||
       argument === "--findings" ||
       argument === "--resolutions" ||
       argument === "--test-evidence" ||
@@ -498,17 +539,22 @@ function parseInvocation(
           ),
         };
       index += 1;
-      if (argument === "--reason" || argument === "--evidence") {
+      if (argument === "--reason" || argument === "--evidence" || argument === "--manifest") {
         if (!isProjectPath(value))
           return {
             ok: false,
             diagnostic: cliDiagnostic(
-              argument === "--reason" ? "SDD_APPROVAL_REASON_PATH_INVALID" : "SDD_APPROVAL_TARGET_PATH_INVALID",
-              `The approval ${argument === "--reason" ? "reason" : "evidence target"} path is not project-relative and portable.`,
+              argument === "--reason"
+                ? "SDD_APPROVAL_REASON_PATH_INVALID"
+                : argument === "--manifest"
+                  ? "SDD_SEMANTIC_REVIEW_MANIFEST_PATH_INVALID"
+                  : "SDD_APPROVAL_TARGET_PATH_INVALID",
+              "The artifact path is not project-relative and portable.",
               "Supply a safe project-relative path inside the selected project.",
             ),
           };
         if (argument === "--reason") reasonPath = value;
+        else if (argument === "--manifest") manifestPath = value;
         else evidencePath = value;
       } else if (argument === "--issuer" || argument === "--actor") {
         if (value.length === 0 || value.includes("\0"))
@@ -523,13 +569,13 @@ function parseInvocation(
         if (argument === "--issuer") issuer = value;
         else actor = value;
       } else if (argument === "--decision") {
-        if (value !== "approved" && value !== "rejected")
+        if (value !== "approved" && value !== "rejected" && value !== "reviewed")
           return {
             ok: false,
             diagnostic: cliDiagnostic(
               "SDD_APPROVAL_DECISION_INVALID",
               "The approval decision is unsupported.",
-              "Use approved or rejected.",
+              "Use approved, rejected, or reviewed with the corresponding recorder.",
             ),
           };
         decision = value;
@@ -997,6 +1043,8 @@ function parseInvocation(
     command !== "proposal.materialize" &&
     command !== "proposal.validate" &&
     command !== "approval.record" &&
+    command !== "semantic-review.materialize" &&
+    command !== "semantic-review.record" &&
     command !== "proposal.prepare" &&
     command !== "merge.check" &&
     bundlePath !== undefined
@@ -1030,6 +1078,8 @@ function parseInvocation(
     command !== "proposal.validate" &&
     command !== "proposal.materialize" &&
     command !== "approval.record" &&
+    command !== "semantic-review.materialize" &&
+    command !== "semantic-review.record" &&
     (proposalMode !== undefined || candidatePath !== undefined || codeTargets.length > 0)
   )
     return {
@@ -1092,6 +1142,15 @@ function parseInvocation(
         "Supply the exact retained bundle and every explicit human decision input.",
       ),
     };
+  if (command === "approval.record" && decision !== "approved" && decision !== "rejected")
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_APPROVAL_DECISION_INVALID",
+        "The approval decision is unsupported.",
+        "Use approved or rejected.",
+      ),
+    };
   if (
     command === "approval.record" &&
     (proposalMode !== undefined ||
@@ -1111,11 +1170,8 @@ function parseInvocation(
     };
   if (
     command !== "approval.record" &&
-    (issuer !== undefined ||
-      actor !== undefined ||
-      decision !== undefined ||
-      reasonPath !== undefined ||
-      evidencePath !== undefined)
+    command !== "semantic-review.record" &&
+    (issuer !== undefined || actor !== undefined || decision !== undefined || evidencePath !== undefined)
   )
     return {
       ok: false,
@@ -1123,6 +1179,15 @@ function parseInvocation(
         "SDD_CONFIG_CLI_ARGUMENT_INVALID",
         "An approval recording option was used with another command.",
         "Use approval recording options only with sdd approval record.",
+      ),
+    };
+  if (command !== "approval.record" && reasonPath !== undefined)
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "An approval reason was used with another command.",
+        "Use --reason only with sdd approval record.",
       ),
     };
   if (command !== "proposal.prepare" && (branchHeadRef !== undefined || integrationRef !== undefined))
@@ -1232,6 +1297,45 @@ function parseInvocation(
       ),
     };
   if (
+    command === "semantic-review.materialize" &&
+    (changePath === undefined || bundlePath === undefined || manifestPath === undefined)
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_SEMANTIC_REVIEW_INPUTS_REQUIRED",
+        "semantic-review materialize requires change, bundle, and manifest inputs.",
+        "Supply --change, --bundle, and --manifest with optional --findings inputs.",
+      ),
+    };
+  if (
+    command === "semantic-review.record" &&
+    (changePath === undefined ||
+      bundlePath === undefined ||
+      inputManifestPath === undefined ||
+      issuer === undefined ||
+      actor === undefined ||
+      decision !== "reviewed" ||
+      evidencePath === undefined)
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_SEMANTIC_REVIEW_INPUTS_REQUIRED",
+        "semantic-review record requires the retained subject and an explicit reviewed decision.",
+        "Supply --change, --bundle, --input-manifest, issuer, actor, --decision reviewed, and --evidence.",
+      ),
+    };
+  if (command !== "semantic-review.materialize" && manifestPath !== undefined)
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "A semantic-review manifest target was used with another command.",
+        "Use --manifest only with sdd semantic-review materialize.",
+      ),
+    };
+  if (
     command === "merge.check" &&
     (changePath === undefined ||
       bundlePath === undefined ||
@@ -1261,6 +1365,8 @@ function parseInvocation(
   if (
     command !== "findings.validate" &&
     command !== "merge.check" &&
+    command !== "semantic-review.materialize" &&
+    command !== "semantic-review.record" &&
     (changePath !== undefined ||
       inputManifestPath !== undefined ||
       findingPaths.length > 0 ||
@@ -1275,6 +1381,24 @@ function parseInvocation(
         "SDD_CONFIG_CLI_ARGUMENT_INVALID",
         "A finding or merge gate option was used with another command.",
         "Use gate artifact options only with sdd findings validate or sdd merge check.",
+      ),
+    };
+  if (
+    (command === "semantic-review.materialize" || command === "semantic-review.record") &&
+    (resolutionPaths.length > 0 ||
+      testEvidencePaths.length > 0 ||
+      qaPaths.length > 0 ||
+      humanReviewPaths.length > 0 ||
+      approvalPaths.length > 0 ||
+      testIndex !== undefined ||
+      outputPath !== undefined)
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "An unsupported option was used with semantic review.",
+        "Use only the documented semantic-review inputs.",
       ),
     };
   if (
@@ -1368,6 +1492,7 @@ function parseInvocation(
       ...(worktreePath === undefined ? {} : { worktreePath }),
       ...(changePath === undefined ? {} : { changePath }),
       ...(inputManifestPath === undefined ? {} : { inputManifestPath }),
+      ...(manifestPath === undefined ? {} : { manifestPath }),
       findingPaths,
       resolutionPaths,
       testEvidencePaths,
@@ -1617,6 +1742,29 @@ function humanView(value: CliResponse): string {
       `base: ${result.subject.base.git_ref}`,
       `semantic: ${result.subject.object_delta.semantic_fingerprint}`,
       `structural: ${result.subject.object_delta.structural_fingerprint}`,
+    );
+  } else if (value.command === "semantic-review.materialize" && value.status === "ok") {
+    const result = value.result as SemanticReviewMaterializeResult;
+    lines.push(
+      `manifest: ${result.manifest_path}`,
+      `mode: ${result.subject.mode}`,
+      `proposal head: ${result.subject.proposal_head}`,
+      `integration: ${result.subject.integration_ref}`,
+      `merge base: ${result.subject.merge_base}`,
+      `changed objects: ${result.manifest.changed_objects.join(", ") || "none"}`,
+      `related objects: ${result.manifest.related_objects.join(", ") || "none"}`,
+      `semantic candidates: ${result.manifest.candidate_reasons.length}`,
+      `findings: ${result.findings.map((finding) => finding.finding_id).join(", ") || "none"}`,
+    );
+  } else if (value.command === "semantic-review.record" && value.status === "ok") {
+    const result = value.result as SemanticReviewRecordResult;
+    lines.push(
+      `evidence: ${result.evidence_path}`,
+      `decision: ${result.evidence.decision}`,
+      `mode: ${result.subject.mode}`,
+      `proposal head: ${result.subject.proposal_head}`,
+      `integration: ${result.subject.integration_ref}`,
+      `findings: ${result.subject.finding_ids.join(", ") || "none"}`,
     );
   } else if (value.command === "init" && value.status === "ok") {
     const result = value.result as InitResult;
@@ -2232,22 +2380,12 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
           invocation.evidencePath === undefined
         )
           throw new Error("Parsed approval record invocation is missing required inputs.");
-        if (
-          invocation.evidencePath === project.configuration.spec.root ||
-          invocation.evidencePath.startsWith(`${project.configuration.spec.root}/`)
-        )
-          throw new ApprovalEvidenceRecordError(
-            "SDD_APPROVAL_TARGET_IN_SPEC",
-            "The ApprovalEvidence target is inside the governed specification tree.",
-          );
-        const selectedEvidence = await resolveSafeOutputTarget(
-          runtime.fileSystem,
-          project.project_root,
-          invocation.evidencePath,
-        );
-        if (!selectedEvidence.ok)
-          throw new ApprovalEvidenceRecordError("SDD_APPROVAL_TARGET_UNSAFE", selectedEvidence.diagnostic.message);
-        await ensureApprovalTargetIgnored(runtime.processRunner, project.project_root, invocation.evidencePath);
+        const evidenceTarget = await resolveIgnoredArtifactTarget({
+          fileSystem: runtime.fileSystem,
+          processRunner: runtime.processRunner,
+          project,
+          path: invocation.evidencePath,
+        });
         const [reason, reader] = await Promise.all([
           readApprovalReason(runtime.fileSystem, project.project_root, invocation.reasonPath),
           discoverProcessGitReader(runtime.processRunner, project.project_root),
@@ -2269,9 +2407,14 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
           reason,
           producer: { name: cliIdentity.name, version: cliIdentity.version },
         });
-        await ensureApprovalTargetIgnored(runtime.processRunner, project.project_root, invocation.evidencePath);
+        await resolveIgnoredArtifactTarget({
+          fileSystem: runtime.fileSystem,
+          processRunner: runtime.processRunner,
+          project,
+          path: invocation.evidencePath,
+        });
         await runtime.projectWriter.replaceSpecificationFilesAtomically(project.project_root, [
-          { operation: "create", target: selectedEvidence.target, content: serializeApprovalEvidence(evidence) },
+          { operation: "create", target: evidenceTarget, content: serializeApprovalEvidence(evidence) },
         ]);
         const result: ApprovalRecordResult = {
           evidence_path: invocation.evidencePath,
@@ -2296,7 +2439,9 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
           (error instanceof ProposalInputError && !error.technical);
         const code =
           revalidationCode ??
-          (error instanceof ApprovalEvidenceRecordError || error instanceof ProposalInputError
+          (error instanceof ApprovalEvidenceRecordError ||
+          error instanceof ProposalInputError ||
+          error instanceof IgnoredArtifactOutputError
             ? error.code
             : error instanceof ProposalValidationError
               ? error.diagnostic.code
@@ -2321,6 +2466,150 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
           invocation.format,
           response("approval.record", project.configuration.project_id, blocked ? "blocked" : "error", null, [
             diagnostic,
+          ]),
+        );
+        return blocked ? BLOCKED_EXIT_CODE : TECHNICAL_FAILURE_EXIT_CODE;
+      }
+    }
+    if (invocation.command === "semantic-review.materialize" || invocation.command === "semantic-review.record") {
+      const command = invocation.command;
+      try {
+        if (invocation.changePath === undefined || invocation.bundlePath === undefined)
+          throw new Error("Parsed semantic-review invocation is missing required inputs.");
+        const [reader, change, findings] = await Promise.all([
+          discoverProcessGitReader(runtime.processRunner, project.project_root),
+          importChangeDescriptorFile(runtime.fileSystem, project.project_root, invocation.changePath),
+          Promise.all(
+            invocation.findingPaths.map((path) =>
+              importFindingFile(runtime.fileSystem, project.project_root, path, CLI_EVIDENCE_LIMITS),
+            ),
+          ),
+        ]);
+        const current = await computeSemanticReviewSubject({
+          fileSystem: runtime.fileSystem,
+          gitReader: reader,
+          project,
+          change,
+          bundlePath: invocation.bundlePath,
+          findings,
+        });
+        if (command === "semantic-review.materialize") {
+          if (invocation.manifestPath === undefined)
+            throw new Error("Parsed semantic-review materialization is missing its target.");
+          const target = await resolveIgnoredArtifactTarget({
+            fileSystem: runtime.fileSystem,
+            processRunner: runtime.processRunner,
+            project,
+            path: invocation.manifestPath,
+          });
+          await resolveIgnoredArtifactTarget({
+            fileSystem: runtime.fileSystem,
+            processRunner: runtime.processRunner,
+            project,
+            path: invocation.manifestPath,
+          });
+          await runtime.projectWriter.replaceSpecificationFilesAtomically(project.project_root, [
+            { operation: "create", target, content: serializeSemanticReviewArtifact(current.manifest) },
+          ]);
+          const result: SemanticReviewMaterializeResult = {
+            manifest_path: invocation.manifestPath,
+            manifest: current.manifest,
+            findings: sortFindingsForReview(findings),
+            subject: current.subject,
+          };
+          emit(runtime, invocation.format, response(command, project.configuration.project_id, "ok", result, []));
+          return VALID_EXIT_CODE;
+        }
+        if (
+          invocation.inputManifestPath === undefined ||
+          invocation.issuer === undefined ||
+          invocation.actor === undefined ||
+          invocation.evidencePath === undefined
+        )
+          throw new Error("Parsed semantic-review recording is missing required inputs.");
+        const retained = await importSemanticAnalysisInputManifestFile(
+          runtime.fileSystem,
+          project.project_root,
+          invocation.inputManifestPath,
+          CLI_EVIDENCE_LIMITS,
+        );
+        if (!sameSemanticReviewManifest(retained, current.manifest))
+          throw new SemanticReviewSubjectError(
+            "SDD_SEMANTIC_REVIEW_SUBJECT_CHANGED",
+            "The retained manifest no longer matches the current semantic-review subject.",
+          );
+        const evidence = createHumanSemanticReviewEvidence({
+          projectId: project.configuration.project_id,
+          subject: current.subject,
+          issuer: invocation.issuer,
+          actor: invocation.actor,
+          decision: invocation.decision,
+          producer: loadCliCompatibilityIdentity().cli,
+        });
+        const target = await resolveIgnoredArtifactTarget({
+          fileSystem: runtime.fileSystem,
+          processRunner: runtime.processRunner,
+          project,
+          path: invocation.evidencePath,
+        });
+        const rechecked = await computeSemanticReviewSubject({
+          fileSystem: runtime.fileSystem,
+          gitReader: reader,
+          project,
+          change,
+          bundlePath: invocation.bundlePath,
+          findings,
+        });
+        if (JSON.stringify(rechecked.subject) !== JSON.stringify(current.subject))
+          throw new SemanticReviewSubjectError(
+            "SDD_SEMANTIC_REVIEW_SUBJECT_CHANGED",
+            "The semantic-review subject changed before evidence publication.",
+          );
+        await resolveIgnoredArtifactTarget({
+          fileSystem: runtime.fileSystem,
+          processRunner: runtime.processRunner,
+          project,
+          path: invocation.evidencePath,
+        });
+        await runtime.projectWriter.replaceSpecificationFilesAtomically(project.project_root, [
+          { operation: "create", target, content: serializeSemanticReviewArtifact(evidence) },
+        ]);
+        const result: SemanticReviewRecordResult = {
+          evidence_path: invocation.evidencePath,
+          evidence,
+          subject: current.subject,
+        };
+        emit(runtime, invocation.format, response(command, project.configuration.project_id, "ok", result, []));
+        return VALID_EXIT_CODE;
+      } catch (error) {
+        const blocked =
+          (error instanceof SemanticReviewSubjectError && !error.technical) ||
+          error instanceof ProposalRevalidationError ||
+          error instanceof MergeInputError ||
+          error instanceof EvidenceInputError;
+        const code =
+          error instanceof SemanticReviewSubjectError || error instanceof IgnoredArtifactOutputError
+            ? error.code
+            : error instanceof ProposalRevalidationError
+              ? error.code.replace(/^SDD_PREPARE_/u, "SDD_SEMANTIC_REVIEW_")
+              : error instanceof MergeInputError || error instanceof EvidenceInputError
+                ? error.code
+                : error instanceof SpecificationWritePreconditionError
+                  ? error.code === "SDD_APPLY_TARGET_EXISTS"
+                    ? "SDD_ARTIFACT_TARGET_EXISTS"
+                    : "SDD_ARTIFACT_TARGET_UNSAFE"
+                  : "SDD_SEMANTIC_REVIEW_WRITE_FAILED";
+        emit(
+          runtime,
+          invocation.format,
+          response(command, project.configuration.project_id, blocked ? "blocked" : "error", null, [
+            cliDiagnostic(
+              code,
+              error instanceof Error ? error.message : "The semantic-review operation did not complete.",
+              blocked
+                ? "Restore the exact unchanged review subject and run the operation again."
+                : "Select a new safe ignored target or correct the technical failure and retry.",
+            ),
           ]),
         );
         return blocked ? BLOCKED_EXIT_CODE : TECHNICAL_FAILURE_EXIT_CODE;

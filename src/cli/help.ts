@@ -57,6 +57,18 @@ export const CLI_HELP_ENTRIES: readonly CliHelpEntry[] = [
     summary: "Record one explicit human decision as immutable ApprovalEvidence.",
   },
   {
+    path: "semantic-review materialize",
+    usage:
+      "sdd semantic-review materialize --change <path> --bundle <project-relative-path> [--findings <path> ...] --manifest <project-relative-path>",
+    summary: "Materialize the exact current human semantic-review subject without making a decision.",
+  },
+  {
+    path: "semantic-review record",
+    usage:
+      "sdd semantic-review record --change <path> --bundle <project-relative-path> --input-manifest <path> [--findings <path> ...] --issuer <name> --actor <identity> --decision reviewed --evidence <project-relative-path>",
+    summary: "Record one explicit human semantic-review decision for an unchanged subject.",
+  },
+  {
     path: "tests discover",
     usage:
       "sdd tests discover --head <git-ref> [--adapter <id> ...] [--import-junit <path> ...] [--import-jsonl <path> ...]",

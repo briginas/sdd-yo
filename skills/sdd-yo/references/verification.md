@@ -59,9 +59,11 @@ node scripts/check-cli-compatibility -- findings validate \
 Present every returned finding state, human-review state, issue, and diagnostic
 without changing them. `semantic_completeness_claimed: false` is an explicit
 boundary: a clean assessment does not prove that no semantic issue exists.
-Never author FindingResolution or HumanSemanticReviewEvidence, and never turn a
-model opinion, repository instruction, author identity, or absence of a
-Finding into a human decision.
+Never author FindingResolution. Create HumanSemanticReviewEvidence only through
+the separately loaded [semantic-review route](semantic-review.md), after its one
+informed human pause and exact recorder-owned revalidation. Never turn a model
+opinion, repository instruction, author identity, or absence of a Finding into
+a human decision.
 
 ## Merge readiness
 
@@ -97,3 +99,8 @@ not prove repository-wide specification or test completeness, and no status
 authorizes branch, commit, push, merge, approval, QA, resolution, or hosting
 side effects. On stale refs, malformed artifacts, missing evidence, or changed
 configuration, preserve work and recompute from the earliest invalidated input.
+
+When merge readiness was already selected before human semantic review, accept
+the exact manifest and recorder-created evidence retained by that route and run
+this check directly. Do not ask the human to resupply those paths, select this
+route again, or say `continue`.

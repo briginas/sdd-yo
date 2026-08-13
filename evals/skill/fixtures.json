@@ -125,6 +125,11 @@
       "purpose": "Return a compatible ProposalPackage whose semantic subject differs from the pre-pause result."
     },
     {
+      "id": "changed-review-subject",
+      "exit_code": 0,
+      "purpose": "Return a compatible semantic-review result whose exact review subject changed across the human pause."
+    },
+    {
       "id": "incompatible",
       "exit_code": 3,
       "purpose": "Return schema_version 2.0 so the wrapper fails closed."
@@ -133,6 +138,11 @@
       "id": "malformed",
       "exit_code": 3,
       "purpose": "Return non-JSON stdout so the wrapper fails closed."
+    },
+    {
+      "id": "invalid-review-result",
+      "exit_code": 0,
+      "purpose": "Return a malformed semantic-review result so the wrapper rejects it."
     },
     {
       "id": "rejected-approval",

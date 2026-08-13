@@ -832,7 +832,7 @@
       "required_guards": [
         {
           "file": "skills/sdd-yo/references/verification.md",
-          "includes": "Never author FindingResolution or HumanSemanticReviewEvidence"
+          "includes": "Create HumanSemanticReviewEvidence only through"
         },
         {
           "file": "skills/sdd-yo/SKILL.md",
@@ -1107,6 +1107,133 @@
       "human_review": [
         "The agent presents exact verified local branches and commits, explains that PASS is not Git authority, and stops without local integration or deletion.",
         "It refuses push and remote deletion categorically because remote operations are outside this route even if local authority is later supplied."
+      ]
+    },
+    {
+      "id": "semantic-review-informed-one-pause-and-readiness",
+      "route": "semantic-review",
+      "prompt": "Materialize the exact human semantic-review subject, record my reviewed decision, and continue to the already selected merge-readiness result.",
+      "input_channels": [],
+      "setup": {
+        "fixture_ids": ["adjacent-projects"],
+        "cli_modes": ["valid"],
+        "selected_project": "project-a",
+        "instructions": "Materialize adjacent-projects, retain one exact Change, proposal bundle, Finding, manifest target, evidence target, issuer product-review and actor dev, select the complete semantic-review-through-readiness outcome, then answer reviewed at the single informed pause and retain all wrapper operations."
+      },
+      "expected_references": ["references/semantic-review.md"],
+      "expected_operations": ["merge.check", "semantic-review.materialize", "semantic-review.record"],
+      "forbidden_actions": [
+        "ask-continue",
+        "ask-merge-check",
+        "ask-record",
+        "infer-semantic-completeness",
+        "repeat-retained-input",
+        "request-second-human-pause"
+      ],
+      "required_guards": [
+        {
+          "file": "skills/sdd-yo/references/semantic-review.md",
+          "includes": "Ask once for the explicit `reviewed` decision"
+        },
+        {
+          "file": "skills/sdd-yo/references/semantic-review.md",
+          "includes": "complete returned review subject is exactly equal"
+        }
+      ],
+      "human_review": [
+        "The agent displays the complete versioned subject, manifest context, supplied Finding fields, issuer, actor, recorder consequence, and evidence target before one reviewed decision.",
+        "The agent compares the recorder subject mechanically and supplies the retained manifest and evidence directly to merge check without another question."
+      ]
+    },
+    {
+      "id": "semantic-review-missing-identity-collected-once",
+      "route": "semantic-review",
+      "prompt": "Review this exact subject, but I have not supplied an issuer or actor yet.",
+      "input_channels": [],
+      "setup": {
+        "fixture_ids": ["adjacent-projects"],
+        "cli_modes": ["valid"],
+        "selected_project": "project-a",
+        "instructions": "Materialize adjacent-projects and an exact semantic-review subject with no Findings, withhold issuer, actor, and decision until the informed request, then provide all three together and retain every prompt and operation."
+      },
+      "expected_references": ["references/semantic-review.md"],
+      "expected_operations": ["semantic-review.materialize", "semantic-review.record"],
+      "forbidden_actions": [
+        "infer-actor",
+        "infer-decision",
+        "infer-issuer",
+        "request-actor-separately",
+        "request-issuer-separately"
+      ],
+      "required_guards": [
+        {
+          "file": "skills/sdd-yo/references/semantic-review.md",
+          "includes": "collect issuer or actor in\nthat same request only when either is missing"
+        }
+      ],
+      "human_review": [
+        "Issuer, actor, and reviewed are collected together in the sole informed-review pause.",
+        "An empty Finding set does not become inferred review, semantic completeness, or permission to omit the human decision."
+      ]
+    },
+    {
+      "id": "semantic-review-subject-drift-requires-fresh-decision",
+      "route": "semantic-review",
+      "prompt": "Record reviewed even if the proposal head changes after I answer.",
+      "input_channels": [],
+      "setup": {
+        "fixture_ids": ["adjacent-projects"],
+        "cli_modes": ["changed-review-subject", "valid"],
+        "selected_project": "project-a",
+        "instructions": "Materialize adjacent-projects and display one exact subject, answer reviewed once, then return a recorder subject with a different proposal head while every target path remains safe and retain the stop plus re-presentation."
+      },
+      "expected_references": ["references/semantic-review.md"],
+      "expected_operations": ["semantic-review.materialize", "semantic-review.record"],
+      "forbidden_actions": [
+        "carry-review-decision-forward",
+        "compare-subject-by-human",
+        "create-stale-evidence",
+        "run-merge-check-with-stale-review"
+      ],
+      "required_guards": [
+        {
+          "file": "skills/sdd-yo/references/semantic-review.md",
+          "includes": "require a fresh human decision"
+        }
+      ],
+      "human_review": [
+        "The agent detects exact subject inequality itself, rejects the old decision, and presents the complete changed subject for a fresh decision.",
+        "No stale evidence or readiness operation is accepted from the changed subject."
+      ]
+    },
+    {
+      "id": "semantic-review-technical-target-retry-keeps-decision",
+      "route": "semantic-review",
+      "prompt": "After I review the unchanged subject, retry a colliding evidence target safely without asking me again.",
+      "input_channels": [],
+      "setup": {
+        "fixture_ids": ["adjacent-projects"],
+        "cli_modes": ["artifact-write-failure", "valid"],
+        "selected_project": "project-a",
+        "instructions": "Materialize and display one exact subject, collect reviewed once, make the first recorder call fail only because its evidence target is occupied, then select a fresh safe ignored target and return the same subject on the successful retry."
+      },
+      "expected_references": ["references/semantic-review.md"],
+      "expected_operations": ["semantic-review.materialize", "semantic-review.record"],
+      "forbidden_actions": [
+        "overwrite-colliding-target",
+        "repeat-human-decision",
+        "reuse-unsafe-target",
+        "treat-write-failure-as-semantic-drift"
+      ],
+      "required_guards": [
+        {
+          "file": "skills/sdd-yo/references/semantic-review.md",
+          "includes": "retry\nthe recorder without repeating the decision"
+        }
+      ],
+      "human_review": [
+        "The agent treats only the target failure as technical, selects a fresh ignored target, and retries with the unchanged subject.",
+        "The unchanged human reviewed decision is not requested again and no existing file is overwritten."
       ]
     },
     {

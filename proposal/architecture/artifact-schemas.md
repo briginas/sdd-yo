@@ -440,6 +440,12 @@ objects, included normative section content, and the deterministic candidate
 reasons that caused each object set to be selected. The manifest is the only
 context contract for model-assisted or equivalent human semantic review.
 
+`semantic-review materialize` constructs this existing schema from an exact
+Change, retained proposal bundle, current refs, fixed human-review analyzer,
+and zero or more explicit current Findings. The command publishes the manifest
+to a new safe ignored path and returns a separate response-only review subject;
+the subject is not another retained artifact schema.
+
 ## Finding and FindingResolution
 
 ```json
@@ -500,6 +506,12 @@ candidate set:
 
 An empty `finding_ids` list records a performed review, not proof that no
 semantic problem exists.
+
+`semantic-review record` constructs these bytes only after recomputing the
+same current review subject and matching the retained manifest. The recorder
+derives `candidate_input_fingerprint` and canonical sorted `finding_ids`, and
+records explicit issuer, actor, and constant `reviewed` decision without an
+ambient timestamp. The existing version 1 artifact schema is unchanged.
 
 ## ConflictReport and MergeReport
 

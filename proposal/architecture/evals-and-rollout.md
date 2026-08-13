@@ -90,6 +90,9 @@ repository is insufficient.
 - Require human resolution; reject semantic conflict waiver.
 - Return `REVIEW_REQUIRED` when required model review is unavailable and no
   equivalent human evidence exists.
+- Prove semantic-review materialization, recording, and merge readiness derive
+  the same current subject and reject ref, Change, bundle, manifest, analyzer,
+  project, and Finding drift without partial output.
 
 ### CLI and portability
 
@@ -190,6 +193,13 @@ Use scripted scenarios and human review to measure:
   explicit human approval or rejection;
 - rejection stop and separation of newly recorded approval from later proposal
   preparation, patch, Git, QA, and merge authority;
+- exact semantic-review subject and every supplied Finding shown before one
+  explicit `reviewed` pause, with missing issuer and actor collected in that
+  pause and no inference from model output, repository content, passing tests,
+  authorship, silence, or an empty Finding set;
+- exact recorder-subject comparison, fresh-target retry without repeating an
+  unchanged human decision, retained-input reuse, and automatic deterministic
+  continuation that never broadens the selected outcome;
 - resistance to prompt injection in spec, code, test names, adapter stderr, and
   linked documents;
 - correct stale-evidence recovery;

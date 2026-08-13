@@ -27,7 +27,7 @@ const selectedCwdIndex = args.indexOf("--cwd");
 const selectedProjectId = selectedCwdIndex !== -1 && args[selectedCwdIndex + 1]?.endsWith("project-b")
   ? "SDD-B1000001"
   : "SDD-A1000001";
-const operation = ["approval", "proposal", "tests", "findings", "merge"].includes(command)
+const operation = ["approval", "proposal", "semantic-review", "tests", "findings", "merge"].includes(command)
   ? \`\${command}.\${args[1] ?? ""}\`
   : command;
 const mode = process.env.SDD_SKILL_FAKE_MODE ?? "valid";
@@ -77,6 +77,40 @@ else {
     mode: "spec-code",
     subject: proposalPackage,
   };
+  const semanticManifest = {
+    schema_version: "1.0", artifact_type: "semantic_analysis_input_manifest", project_id: "SDD-A1000001",
+    analyzer: { name: "human-semantic-review", version: "1.0" }, input_fingerprint: fingerprint,
+    changed_objects: ["REQ-A1000001"], related_objects: ["CAP-A1000001"],
+    normative_sections: [{ object_id: "REQ-A1000001", section: "statement", content: "Review this behavior." }],
+    candidate_reasons: [semanticCandidate],
+  };
+  const semanticFinding = {
+    schema_version: "1.0", artifact_type: "finding", project_id: "SDD-A1000001",
+    finding_id: "FND-A10000000001", analyzer: { name: "semantic-review", version: "1.0" },
+    kind: "semantic_conflict", severity: "blocking", input_fingerprint: fingerprint,
+    objects: ["REQ-A1000001"], sections: [{ object_id: "REQ-A1000001", section: "statement" }],
+    summary: "The reviewed behavior may conflict.", confidence: 1, waiver_eligible: false,
+  };
+  const semanticSubject = {
+    schema_version: "1.0", project_id: "SDD-A1000001", mode: "spec-code",
+    proposal_head: "branch123", integration_ref: "integration123", merge_base: "base123",
+    package_fingerprint: fingerprint, analyzer: { name: "human-semantic-review", version: "1.0" },
+    manifest_input_fingerprint: fingerprint, finding_ids: ["FND-A10000000001"],
+  };
+  const semanticMaterialization = {
+    manifest_path: ".sdd/staging/semantic-manifest.json", manifest: semanticManifest,
+    findings: [semanticFinding],
+    subject: mode === "changed-review-subject" ? { ...semanticSubject, proposal_head: "changed123" } : semanticSubject,
+  };
+  const semanticRecord = {
+    evidence_path: ".sdd/staging/semantic-review.json",
+    evidence: {
+      schema_version: "1.0", artifact_type: "human_semantic_review_evidence", project_id: "SDD-A1000001",
+      producer: { name: "sdd", version: "${version}" }, issuer: "product-review", actor: "dev",
+      decision: "reviewed", candidate_input_fingerprint: fingerprint, finding_ids: ["FND-A10000000001"],
+    },
+    subject: semanticSubject,
+  };
   const conflictReport = {
     schema_version: "1.0", artifact_type: "conflict_report", project_id: "SDD-A1000001",
     integration_ref: "integration123", branch_head: "branch123", merge_base: "base123",
@@ -118,6 +152,10 @@ else {
         ? mode === "invalid-approval" ? { ...approvalRecord, evidence_path: "../outside.json" } : approvalRecord
       : operation === "proposal.validate"
         ? mode === "invalid-proposal" ? { ...proposalPackage, semantic_candidates: null } : proposalPackage
+        : operation === "semantic-review.materialize"
+          ? mode === "invalid-review-result" ? { ...semanticMaterialization, manifest_path: "../outside.json" } : semanticMaterialization
+          : operation === "semantic-review.record"
+            ? mode === "invalid-review-result" ? { ...semanticRecord, evidence: { ...semanticRecord.evidence, decision: "approved" } } : semanticRecord
         : operation === "proposal.prepare"
           ? { conflict_report: conflictReport, spec_patch: mode === "review-required" ? null : mode === "invalid-patch" ? { ...specPatch, project_id: "SDD-B1000001" } : specPatch }
           : operation === "proposal.apply"
@@ -182,6 +220,7 @@ test("REQ-E26A859E REQ-64DB876B REQ-26234DC8 skill package discloses the bounded
     "object-model.md",
     "onboarding.md",
     "proposal-gate.md",
+    "semantic-review.md",
     "verification.md",
   ]);
   assert.deepEqual(scripts, ["check-cli-compatibility"]);
@@ -197,7 +236,7 @@ test("REQ-E26A859E REQ-64DB876B REQ-26234DC8 skill package discloses the bounded
   assert.match(skill, /references\/branch-preparation\.md/u);
   assert.match(skill, /references\/verification\.md/u);
   assert.match(skill, /references\/integration\.md/u);
-  assert.doesNotMatch(skill, /references\/semantic-review\.md/u);
+  assert.match(skill, /references\/semantic-review\.md/u);
 });
 
 test("REQ-89E78697 REQ-189D2CFA REQ-44068C1A Skill governs authorized local normalization and integration", async () => {
@@ -327,7 +366,7 @@ test("REQ-0361538D compatibility wrapper fails closed on unavailable or invalid 
 
   const unsupported = await runChecker(cli, ["semantic", "analyze", "--cwd", repositoryRoot]);
   assert.equal(unsupported.code, 3);
-  assert.match(unsupported.stderr, /tests discover, findings validate, or merge check/u);
+  assert.match(unsupported.stderr, /semantic-review materialize\/record/u);
 });
 
 test("REQ-CF3A1070 compatibility wrapper preflights the explicit CLI identity and never falls back to PATH", async () => {
@@ -529,6 +568,95 @@ test("REQ-32C76ED3 REQ-F7D39246 compatibility wrapper accepts only explicit appr
   assert.match(invalid.stderr, /invalid approval recording result/u);
 });
 
+test("REQ-2AF962EB REQ-32C76ED3 compatibility wrapper accepts only exact semantic-review subjects", async () => {
+  const cli = await fakeCli();
+  const materializeArgs = [
+    "semantic-review",
+    "materialize",
+    "--change",
+    ".sdd/staging/change.json",
+    "--bundle",
+    ".sdd/staging/proposal",
+    "--manifest",
+    ".sdd/staging/semantic-manifest.json",
+    "--findings",
+    ".sdd/staging/finding.json",
+    "--cwd",
+    repositoryRoot,
+  ] as const;
+  const materialized = await runChecker(cli, materializeArgs);
+  assert.equal(materialized.code, 0, materialized.stderr);
+  const materializedResult = (
+    JSON.parse(materialized.stdout) as {
+      result: { manifest_path: string; subject: { finding_ids: readonly string[] } };
+    }
+  ).result;
+  assert.equal(materializedResult.manifest_path, ".sdd/staging/semantic-manifest.json");
+  assert.deepEqual(materializedResult.subject.finding_ids, ["FND-A10000000001"]);
+
+  const changed = await runChecker(cli, materializeArgs, "changed-review-subject");
+  assert.equal(changed.code, 0, changed.stderr);
+
+  const invalidMaterialization = await runChecker(cli, materializeArgs, "invalid-review-result");
+  assert.equal(invalidMaterialization.code, 3);
+  assert.match(invalidMaterialization.stderr, /invalid semantic-review materialization result/u);
+
+  const recordArgs = [
+    "semantic-review",
+    "record",
+    "--change",
+    ".sdd/staging/change.json",
+    "--bundle",
+    ".sdd/staging/proposal",
+    "--input-manifest",
+    ".sdd/staging/semantic-manifest.json",
+    "--findings",
+    ".sdd/staging/finding.json",
+    "--issuer",
+    "product-review",
+    "--actor",
+    "dev",
+    "--decision",
+    "reviewed",
+    "--evidence",
+    ".sdd/staging/semantic-review.json",
+    "--cwd",
+    repositoryRoot,
+  ] as const;
+  const recorded = await runChecker(cli, recordArgs);
+  assert.equal(recorded.code, 0, recorded.stderr);
+  const recordedResult = (
+    JSON.parse(recorded.stdout) as {
+      result: { evidence_path: string; evidence: { decision: string }; subject: unknown };
+    }
+  ).result;
+  assert.equal(recordedResult.evidence_path, ".sdd/staging/semantic-review.json");
+  assert.equal(recordedResult.evidence.decision, "reviewed");
+  assert.deepEqual(recordedResult.subject, materializedResult.subject);
+
+  const ambiguous = await runChecker(cli, recordArgs.with(recordArgs.indexOf("reviewed"), "approved"));
+  assert.equal(ambiguous.code, 3);
+  assert.match(ambiguous.stderr, /requires --decision reviewed/u);
+
+  const invalidRecord = await runChecker(cli, recordArgs, "invalid-review-result");
+  assert.equal(invalidRecord.code, 3);
+  assert.match(invalidRecord.stderr, /invalid semantic-review recording result/u);
+});
+
+test("REQ-2AF962EB REQ-26234DC8 semantic-review route preserves one informed human pause", async () => {
+  const skill = await readFile(join(skillRoot, "SKILL.md"), "utf8");
+  const semanticReview = await readFile(join(skillRoot, "references/semantic-review.md"), "utf8");
+
+  assert.match(skill, /Pause exactly once/u);
+  assert.match(semanticReview, /Ask once for the explicit `reviewed` decision/u);
+  assert.match(semanticReview, /collect issuer or actor in\s+that same request only when either is missing/u);
+  assert.match(semanticReview, /complete returned review subject is exactly equal/u);
+  assert.match(semanticReview, /retry\s+the recorder without repeating the decision/u);
+  assert.match(semanticReview, /Do not ask a\s+separate `continue`, `record`, or `run merge check` question/u);
+  assert.match(semanticReview, /Never\s+bind a Finding that was not both supplied to materialization and displayed/u);
+  assert.doesNotMatch(semanticReview, /infer (?:issuer|actor|the decision) from authorship/u);
+});
+
 test("REQ-26234DC8 approval route preserves informed human authority and downstream stops", async () => {
   const approval = await readFile(join(skillRoot, "references/approval.md"), "utf8");
   assert.match(approval, /semantic and structural delta fingerprints/u);
@@ -641,7 +769,8 @@ test("REQ-12E19D70 REQ-F7CEE6D0 verification route accepts only compatible TestI
 test("REQ-A76942A0 REQ-ADF9965A finding route preserves human resolution authority", async () => {
   const cli = await fakeCli();
   const verification = await readFile(join(skillRoot, "references/verification.md"), "utf8");
-  assert.match(verification, /Never author FindingResolution or HumanSemanticReviewEvidence/u);
+  assert.match(verification, /Never author FindingResolution/u);
+  assert.match(verification, /only through\s+the separately loaded \[semantic-review route\]/u);
   assert.match(verification, /semantic_completeness_claimed: false/u);
 
   const args = [

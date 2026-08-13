@@ -4,7 +4,8 @@
   "contract_id": "artifact.human-semantic-review-evidence",
   "schema": "../../../../../contracts/v1/schemas/human-semantic-review-evidence.schema.json",
   "requirements": [
-    "REQ-2AF962EB"
+    "REQ-2AF962EB",
+    "REQ-32C76ED3"
   ],
   "context": {
     "project_id": "SDD-17EF8B29",

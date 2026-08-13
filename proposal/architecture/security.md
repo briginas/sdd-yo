@@ -119,6 +119,14 @@ or authorize an actor merely by naming an issuer in an artifact. Changes to
 adapter trust configuration produce a structural trust-review finding and
 invalidate dependent evidence.
 
+Approval, semantic-review manifest, and human-review evidence publication use
+one shared ignored-artifact boundary. It rejects traversal, specification-root
+targets, non-ignored paths, symbolic links, non-regular parents, occupied
+targets, and changed preconditions, and publishes each artifact atomically.
+Human semantic-review recording additionally recomputes the complete current
+subject after the conversational pause; ref, Change, bundle, manifest,
+analyzer, project, or Finding drift creates no evidence.
+
 ### Model overreach and data exfiltration
 
 AI is optional and never on the deterministic decision path. Context is the

@@ -832,7 +832,8 @@
       "materialized_schema": "contracts/v1/schemas/human-semantic-review-evidence.schema.json",
       "authority": "proposal/architecture/artifact-schemas.md#humansemanticreviewevidence",
       "requirements": [
-        "REQ-2AF962EB"
+        "REQ-2AF962EB",
+        "REQ-32C76ED3"
       ],
       "required_fields": [
         "schema_version",
@@ -865,6 +866,8 @@
       "authority": "proposal/architecture/artifact-schemas.md#semanticanalysisinputmanifest",
       "requirements": [
         "REQ-04F23007",
+        "REQ-2AF962EB",
+        "REQ-32C76ED3",
         "REQ-A76942A0",
         "REQ-ADF9965A"
       ],

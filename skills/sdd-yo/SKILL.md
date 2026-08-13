@@ -1,6 +1,6 @@
 ---
 name: sdd-yo
-description: Govern an SDD Yo specification through its deterministic JSON CLI. Use when Codex needs to initialize or incrementally onboard an explicitly selected SDD Project, understand active behavior, author or review a change, record an explicit human approval decision, prepare and explicitly apply an exact SpecPatch, verify governed affected scope, explain merge readiness, or complete an explicitly authorized local feature integration. It never makes a human decision, and the CLI performs no Git integration side effects.
+description: Govern an SDD Yo specification through its deterministic JSON CLI. Use when Codex needs to initialize or incrementally onboard an explicitly selected SDD Project, understand active behavior, author or review a change, record an explicit human approval or semantic-review decision, prepare and explicitly apply an exact SpecPatch, verify governed affected scope, explain merge readiness, or complete an explicitly authorized local feature integration. It never makes a human decision, and the CLI performs no Git integration side effects.
 ---
 
 # SDD Yo
@@ -39,8 +39,9 @@ node scripts/check-cli-compatibility [--cli <repository-sdd-path>] -- <command> 
 
 Before each operation the wrapper requires compatible `--version --format json`
 identity. It then adds `--format json`. This slice permits only `init`, `id`,
-`validate`, `inspect`, `trace`, `proposal materialize`, `proposal validate`, `proposal prepare`,
-`approval record`, `proposal apply`, `tests discover`, `findings validate`,
+`validate`, `inspect`, `trace`, `proposal materialize`, `proposal validate`,
+`proposal prepare`, `approval record`, `proposal apply`, `semantic-review
+materialize`, `semantic-review record`, `tests discover`, `findings validate`,
 and `merge check`.
 
 ## Route intent
@@ -71,14 +72,18 @@ and `merge check`.
 - For implementation verification, finding or resolution validation, or merge
   readiness intent, read [references/verification.md](references/verification.md)
   and preserve its permission, evidence-authority, and governed-scope limits.
+- For explicit human semantic review, read
+  [references/semantic-review.md](references/semantic-review.md) and preserve
+  its informed-review, one-pause, exact-subject, and technical-retry boundaries.
 - For local feature normalization before final verification or explicitly
   authorized local integration after a current `PASS`, read
   [references/integration.md](references/integration.md) and preserve its exact
   ref, clean-worktree, evidence-invalidation, race, and remote-operation stops.
 
-If the request is to perform model semantic review, explain that the route is
-not available in this skill slice and stop without simulating it. Existing
-Finding and FindingResolution artifacts may still be validated mechanically.
+If the request is to perform model semantic analysis, explain that the route is
+not available in this skill slice and stop without simulating it. The semantic
+review route records only an identified human's explicit `reviewed` decision on
+one deterministic subject; it does not perform analysis or create Findings.
 
 ## Select and author a change
 
@@ -152,6 +157,35 @@ JSON, changed inputs, or stale evidence. Preserve user work and begin any retry
 by recomputing dependent artifacts. Stop after application without creating a
 branch, commit, approval, verification result, or merge-readiness decision.
 
+## Record human semantic review
+
+1. Load only `references/semantic-review.md`. Require the exact current Change,
+   retained bundle, optional current Findings, and fresh safe ignored manifest
+   and evidence targets. Reuse every input already retained by the selected
+   workflow.
+2. Run `semantic-review materialize` through the wrapper. Present the returned
+   versioned subject, manifest context, every supplied Finding's review-relevant
+   fields, explicit issuer and actor when already supplied, recorder action,
+   and selected evidence target.
+3. Pause exactly once for an identified human's explicit `reviewed` decision.
+   Collect missing issuer or actor in that same request. Never infer any of the
+   three values or ask the human to copy a fingerprint, ref, path, Finding ID,
+   retained input, or JSON.
+4. Run `semantic-review record` through the wrapper. Accept success only when
+   its complete subject is exactly equal to the subject displayed before the
+   pause, its evidence path equals the selected target, and its decision is
+   `reviewed`. A changed subject requires a newly presented subject and fresh
+   decision. A target collision or transient write failure with an unchanged
+   subject is technical: choose a fresh safe target and retry without repeating
+   the human decision.
+5. If merge readiness is already part of the selected bounded outcome, supply
+   the retained manifest and recorder-created evidence directly to `merge
+check`. Do not ask whether to record, continue, or run the check.
+
+The route never creates a Finding or FindingResolution, performs model
+analysis, infers semantic completeness, authenticates issuer or actor, changes
+Git, or broadens the already selected outcome.
+
 ## Verify governed scope and explain readiness
 
 1. Require an explicit project, exact Git subject, and retained project-scoped
@@ -178,6 +212,15 @@ branch, commit, approval, verification result, or merge-readiness decision.
 7. Explain the exact affected Requirements and Capabilities, test and QA
    summaries, finding/evidence state, diagnostics, and top-level status. An
    empty affected scope is `NOT_APPLICABLE`, never zero-object proof.
+
+Within an already selected end-to-end outcome, deterministic operations compose
+through the next real human decision: materialization proceeds to proposal
+presentation, recorded approval proceeds to preparation and patch presentation,
+and recorded semantic review proceeds to read-only merge readiness. Do not ask
+the human to repeat retained inputs or reselect a stage already contained in the
+bounded outcome. Semantic-model confirmation, proposal approval, exact-patch
+application, semantic review, normative ambiguity resolution, and new Git,
+merge, publication, or release authority remain distinct decisions.
 
 `PASS`, `REVIEW_REQUIRED`, and `BLOCKED` describe only the report's governed
 affected scope and exact inputs. They do not prove whole-project completeness,

@@ -13,11 +13,11 @@
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "sha256:563114fc88f23c6b82fedbadae714ae3b81d7311d5edfa6f015652cc40eb4777"
+      "sha256": "sha256:ea82cf878c5c68fbfb1afedc315a4b7a5df997d5f13dfc3584dd3497cac7374c"
     },
     {
       "path": "agents/openai.yaml",
-      "sha256": "sha256:fcd6d81220478ab5339ac4fa9e78823bb04980b077f41814130a1932aa031b60"
+      "sha256": "sha256:705f2947a471eca1b0ba9d1f67176d7e4f7fd84b76de525f68926bc2854a744c"
     },
     {
       "path": "references/approval.md",
@@ -56,12 +56,16 @@
       "sha256": "sha256:44f271a8ac8fc1c52c397011e8572a0990bb95c56c12d5aefd506ffac3ce7145"
     },
     {
+      "path": "references/semantic-review.md",
+      "sha256": "sha256:1e4f469e732fd4f7108a67738b52bfac69e5cddba7dba46092f55711e7acf95e"
+    },
+    {
       "path": "references/verification.md",
-      "sha256": "sha256:6a122930bb4b0750989d8e268fde4e00730b8781b616593e45efcc0611271849"
+      "sha256": "sha256:e55c3bba89efd0c37df72bd945d1aab120f62718385b9caae733726fcb72c7a6"
     },
     {
       "path": "scripts/check-cli-compatibility",
-      "sha256": "sha256:c48c28692d9824a87fbf3d4207c40a52e53d986ad000634cdb23fe4771fbef9a"
+      "sha256": "sha256:987e140c41e7616ac8340c1c48da2f1fa4432e43554025c2db962262070596af"
     },
     {
       "path": "templates/capability.md",

@@ -5,7 +5,7 @@ import { join } from "node:path";
 
 const args = process.argv.slice(2);
 const command = args[0];
-const operation = ["approval", "proposal", "tests", "findings", "merge"].includes(command)
+const operation = ["approval", "proposal", "semantic-review", "tests", "findings", "merge"].includes(command)
   ? `${command}.${args[1] ?? ""}`
   : command;
 const mode = process.env.SDD_SKILL_FAKE_MODE ?? "valid";
@@ -121,6 +121,65 @@ const approvalRecord = {
   mode: proposalPackage.mode,
   subject: proposalPackage,
 };
+const semanticManifest = {
+  schema_version: "1.0",
+  artifact_type: "semantic_analysis_input_manifest",
+  project_id: projectId,
+  analyzer: { name: "human-semantic-review", version: "1.0" },
+  input_fingerprint: fingerprint,
+  changed_objects: ["REQ-A1000001"],
+  related_objects: ["CAP-A1000001"],
+  normative_sections: [{ object_id: "REQ-A1000001", section: "statement", content: "Review this behavior." }],
+  candidate_reasons: [semanticCandidate],
+};
+const semanticFinding = {
+  schema_version: "1.0",
+  artifact_type: "finding",
+  project_id: projectId,
+  finding_id: "FND-A10000000001",
+  analyzer: { name: "semantic-review", version: "1.0" },
+  kind: "semantic_conflict",
+  severity: "blocking",
+  input_fingerprint: fingerprint,
+  objects: ["REQ-A1000001"],
+  sections: [{ object_id: "REQ-A1000001", section: "statement" }],
+  summary: "The reviewed behavior may conflict.",
+  confidence: 1,
+  waiver_eligible: false,
+};
+const semanticSubject = {
+  schema_version: "1.0",
+  project_id: projectId,
+  mode: "spec-code",
+  proposal_head: "branch123",
+  integration_ref: "integration123",
+  merge_base: "base123",
+  package_fingerprint: fingerprint,
+  analyzer: { name: "human-semantic-review", version: "1.0" },
+  manifest_input_fingerprint: fingerprint,
+  finding_ids: ["FND-A10000000001"],
+};
+const semanticMaterialization = {
+  manifest_path: argumentValue("--manifest") ?? ".sdd/staging/semantic-manifest.json",
+  manifest: semanticManifest,
+  findings: [semanticFinding],
+  subject: mode === "changed-review-subject" ? { ...semanticSubject, proposal_head: "changed123" } : semanticSubject,
+};
+const semanticRecord = {
+  evidence_path: argumentValue("--evidence") ?? ".sdd/staging/semantic-review.json",
+  evidence: {
+    schema_version: "1.0",
+    artifact_type: "human_semantic_review_evidence",
+    project_id: projectId,
+    producer: { name: "sdd", version: "0.2.0" },
+    issuer: argumentValue("--issuer") ?? "product-review",
+    actor: argumentValue("--actor") ?? "dev",
+    decision: "reviewed",
+    candidate_input_fingerprint: fingerprint,
+    finding_ids: ["FND-A10000000001"],
+  },
+  subject: semanticSubject,
+};
 const conflictReport = {
   schema_version: "1.0",
   artifact_type: "conflict_report",
@@ -223,20 +282,28 @@ const result =
           ? materializationResult
           : operation === "proposal.validate"
             ? proposalPackage
-            : operation === "proposal.prepare"
-              ? { conflict_report: conflictReport, spec_patch: mode === "review-required" ? null : specPatch }
-              : operation === "proposal.apply"
-                ? {
-                    result_tree_fingerprint: fingerprint,
-                    applied_paths: ["spec/capabilities/example.md"],
-                  }
-                : operation === "tests.discover"
-                  ? testIndex
-                  : operation === "findings.validate"
-                    ? findingAssessment
-                    : operation === "merge.check"
-                      ? mergeReport
-                      : { valid: true, fingerprints: [] };
+            : operation === "semantic-review.materialize"
+              ? mode === "invalid-review-result"
+                ? { ...semanticMaterialization, manifest_path: "../outside.json" }
+                : semanticMaterialization
+              : operation === "semantic-review.record"
+                ? mode === "invalid-review-result"
+                  ? { ...semanticRecord, evidence: { ...semanticRecord.evidence, decision: "approved" } }
+                  : semanticRecord
+                : operation === "proposal.prepare"
+                  ? { conflict_report: conflictReport, spec_patch: mode === "review-required" ? null : specPatch }
+                  : operation === "proposal.apply"
+                    ? {
+                        result_tree_fingerprint: fingerprint,
+                        applied_paths: ["spec/capabilities/example.md"],
+                      }
+                    : operation === "tests.discover"
+                      ? testIndex
+                      : operation === "findings.validate"
+                        ? findingAssessment
+                        : operation === "merge.check"
+                          ? mergeReport
+                          : { valid: true, fingerprints: [] };
 
 const status =
   mode === "artifact-write-failure"

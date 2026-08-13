@@ -34,6 +34,11 @@ import type {
   HumanSemanticReviewEvidence,
   ParsedSemanticAnalysisInputManifest,
 } from "./findings.ts";
+import {
+  computeSemanticReviewSubject,
+  HUMAN_SEMANTIC_REVIEW_ANALYZER,
+  sameSemanticReviewManifest,
+} from "./semantic-review-subject.ts";
 import { buildSemanticAnalysisInputManifest } from "./semantic-review.ts";
 import { buildVerificationReport } from "./verification-report.ts";
 import type { ReadinessStatus, VerificationReport } from "./verification-report.ts";
@@ -268,14 +273,36 @@ export async function runMergeGate(input: {
     }
   }
   if (input.semantic_review !== undefined) {
-    const currentManifest = buildSemanticAnalysisInputManifest({
-      base: baseGraph,
-      candidate: headGraph,
-      comparison: prepared.integration_tree.graph,
-      project_id: input.project.configuration.project_id,
-      analyzer: input.semantic_review.manifest.artifact.analyzer,
-    });
-    if (currentManifest.input_fingerprint !== input.semantic_review.manifest.artifact.input_fingerprint) {
+    let currentManifestMatches = false;
+    if (
+      input.change !== undefined &&
+      input.semantic_review.manifest.artifact.analyzer.name === HUMAN_SEMANTIC_REVIEW_ANALYZER.name &&
+      input.semantic_review.manifest.artifact.analyzer.version === HUMAN_SEMANTIC_REVIEW_ANALYZER.version
+    ) {
+      try {
+        const current = await computeSemanticReviewSubject({
+          fileSystem: input.fileSystem,
+          gitReader: input.gitReader,
+          project: input.project,
+          change: input.change.artifact,
+          bundlePath: input.bundlePath,
+          findings: input.semantic_review.findings.map((item) => item.artifact),
+        });
+        currentManifestMatches = sameSemanticReviewManifest(input.semantic_review.manifest.artifact, current.manifest);
+      } catch {
+        currentManifestMatches = false;
+      }
+    } else {
+      const current = buildSemanticAnalysisInputManifest({
+        base: baseGraph,
+        candidate: headGraph,
+        comparison: prepared.integration_tree.graph,
+        project_id: input.project.configuration.project_id,
+        analyzer: input.semantic_review.manifest.artifact.analyzer,
+      });
+      currentManifestMatches = current.input_fingerprint === input.semantic_review.manifest.artifact.input_fingerprint;
+    }
+    if (!currentManifestMatches) {
       issues.push({ code: "SDD_MERGE_SEMANTIC_INPUT_STALE", disposition: "BLOCKED" });
     }
   }

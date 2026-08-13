@@ -48,9 +48,11 @@ The external workflow:
 2. obtains authenticated evidence through the systems named in the
    authorization record and materializes the exact retained bytes under an
    ignored project-local staging root;
-3. invokes `sdd merge check` with explicit ChangeDescriptor, ProposalPackage,
-   candidate, approval, TestIndex, test-execution, QA, and applicable finding
-   inputs;
+3. invokes `sdd merge check` with the explicit ChangeDescriptor, retained
+   proposal bundle, approval, TestIndex, test-execution, QA, applicable finding
+   inputs, and, when model analysis is unavailable, the CLI-materialized
+   SemanticAnalysisInputManifest plus recorder-created
+   HumanSemanticReviewEvidence;
 4. treats only a complete, schema-compatible MergeReport whose top-level status
    is `PASS` and whose process exit code is `0` as merge-ready;
 5. fails closed on `BLOCKED`, `REVIEW_REQUIRED`, exit code `3`, timeout, crash,

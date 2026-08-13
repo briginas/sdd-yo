@@ -5,6 +5,8 @@
   "schema": "../../../../../contracts/v1/schemas/semantic-analysis-input-manifest.schema.json",
   "requirements": [
     "REQ-04F23007",
+    "REQ-2AF962EB",
+    "REQ-32C76ED3",
     "REQ-A76942A0",
     "REQ-ADF9965A"
   ],

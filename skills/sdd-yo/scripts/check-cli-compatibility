@@ -19,6 +19,8 @@ const SUPPORTED_OPERATIONS = new Set([
   "proposal.materialize",
   "proposal.prepare",
   "proposal.apply",
+  "semantic-review.materialize",
+  "semantic-review.record",
   "tests.discover",
   "findings.validate",
   "merge.check",
@@ -74,6 +76,205 @@ function verifyApprovalRecordResult(result, projectId) {
     ["spec-code", "spec", "code"].includes(result.mode) &&
     result.subject.mode === result.mode &&
     verifyProposalPackage(result.subject, projectId) === undefined
+  );
+}
+
+function isAnalyzer(value) {
+  return (
+    hasExactKeys(value, ["name", "version"]) &&
+    typeof value.name === "string" &&
+    value.name.length > 0 &&
+    typeof value.version === "string" &&
+    value.version.length > 0
+  );
+}
+
+function isProducer(value) {
+  return isAnalyzer(value);
+}
+
+function isSectionName(value) {
+  return ["statement", "acceptance", "constraints", "definition", "identity", "states", "relations"].includes(
+    value,
+  );
+}
+
+function verifySemanticManifest(value, projectId) {
+  return (
+    hasExactKeys(
+      value,
+      [
+        "schema_version",
+        "artifact_type",
+        "project_id",
+        "analyzer",
+        "input_fingerprint",
+        "changed_objects",
+        "related_objects",
+        "normative_sections",
+        "candidate_reasons",
+      ],
+      ["created_at", "producer"],
+    ) &&
+    value.schema_version === "1.0" &&
+    value.artifact_type === "semantic_analysis_input_manifest" &&
+    value.project_id === projectId &&
+    isAnalyzer(value.analyzer) &&
+    isFingerprint(value.input_fingerprint) &&
+    isSortedUniqueStrings(value.changed_objects, isObjectId) &&
+    isSortedUniqueStrings(value.related_objects, isObjectId) &&
+    Array.isArray(value.normative_sections) &&
+    value.normative_sections.every(
+      (section, index) =>
+        hasExactKeys(section, ["object_id", "section", "content"]) &&
+        isObjectId(section.object_id) &&
+        isSectionName(section.section) &&
+        typeof section.content === "string" &&
+        (index === 0 ||
+          `${value.normative_sections[index - 1].object_id}\0${value.normative_sections[index - 1].section}` <
+            `${section.object_id}\0${section.section}`),
+    ) &&
+    Array.isArray(value.candidate_reasons) &&
+    value.candidate_reasons.every(isSemanticCandidate) &&
+    (value.created_at === undefined || typeof value.created_at === "string") &&
+    (value.producer === undefined || isProducer(value.producer))
+  );
+}
+
+function verifyFinding(value, projectId) {
+  return (
+    hasExactKeys(
+      value,
+      [
+        "schema_version",
+        "artifact_type",
+        "project_id",
+        "finding_id",
+        "analyzer",
+        "kind",
+        "severity",
+        "input_fingerprint",
+        "objects",
+        "sections",
+        "summary",
+        "confidence",
+        "waiver_eligible",
+      ],
+      ["created_at", "producer"],
+    ) &&
+    value.schema_version === "1.0" &&
+    value.artifact_type === "finding" &&
+    value.project_id === projectId &&
+    isFindingId(value.finding_id) &&
+    isAnalyzer(value.analyzer) &&
+    ["semantic_conflict", "quality"].includes(value.kind) &&
+    ["blocking", "review"].includes(value.severity) &&
+    isFingerprint(value.input_fingerprint) &&
+    isSortedUniqueStrings(value.objects, isObjectId) &&
+    value.objects.length > 0 &&
+    Array.isArray(value.sections) &&
+    value.sections.length > 0 &&
+    value.sections.every(
+      (section, index) =>
+        hasExactKeys(section, ["object_id", "section"]) &&
+        isObjectId(section.object_id) &&
+        isSectionName(section.section) &&
+        (index === 0 ||
+          `${value.sections[index - 1].object_id}\0${value.sections[index - 1].section}` <
+            `${section.object_id}\0${section.section}`),
+    ) &&
+    typeof value.summary === "string" &&
+    value.summary.length > 0 &&
+    typeof value.confidence === "number" &&
+    value.confidence >= 0 &&
+    value.confidence <= 1 &&
+    typeof value.waiver_eligible === "boolean" &&
+    (value.kind !== "semantic_conflict" || value.waiver_eligible === false) &&
+    (value.created_at === undefined || typeof value.created_at === "string") &&
+    (value.producer === undefined || isProducer(value.producer))
+  );
+}
+
+function verifySemanticReviewSubject(value, projectId) {
+  return (
+    hasExactKeys(value, [
+      "schema_version",
+      "project_id",
+      "mode",
+      "proposal_head",
+      "integration_ref",
+      "merge_base",
+      "package_fingerprint",
+      "analyzer",
+      "manifest_input_fingerprint",
+      "finding_ids",
+    ]) &&
+    value.schema_version === "1.0" &&
+    value.project_id === projectId &&
+    ["spec-code", "spec", "code"].includes(value.mode) &&
+    [value.proposal_head, value.integration_ref, value.merge_base].every(
+      (ref) => typeof ref === "string" && ref.length > 0,
+    ) &&
+    isFingerprint(value.package_fingerprint) &&
+    hasExactKeys(value.analyzer, ["name", "version"]) &&
+    value.analyzer.name === "human-semantic-review" &&
+    value.analyzer.version === "1.0" &&
+    isFingerprint(value.manifest_input_fingerprint) &&
+    isSortedUniqueStrings(value.finding_ids, isFindingId)
+  );
+}
+
+function verifySemanticReviewMaterialization(result, projectId) {
+  if (
+    !hasExactKeys(result, ["manifest_path", "manifest", "findings", "subject"]) ||
+    !isProjectPath(result.manifest_path) ||
+    !verifySemanticManifest(result.manifest, projectId) ||
+    !verifySemanticReviewSubject(result.subject, projectId) ||
+    result.subject.manifest_input_fingerprint !== result.manifest.input_fingerprint ||
+    !Array.isArray(result.findings) ||
+    result.findings.some((finding) => !verifyFinding(finding, projectId)) ||
+    result.findings.some(
+      (finding, index) =>
+        index > 0 &&
+        (result.findings[index - 1].confidence < finding.confidence ||
+          (result.findings[index - 1].confidence === finding.confidence &&
+            result.findings[index - 1].finding_id >= finding.finding_id)),
+    ) ||
+    JSON.stringify(result.subject.finding_ids) !==
+      JSON.stringify(result.findings.map((finding) => finding.finding_id).sort())
+  )
+    return false;
+  return true;
+}
+
+function verifySemanticReviewRecord(result, projectId) {
+  return (
+    hasExactKeys(result, ["evidence_path", "evidence", "subject"]) &&
+    isProjectPath(result.evidence_path) &&
+    verifySemanticReviewSubject(result.subject, projectId) &&
+    hasExactKeys(result.evidence, [
+      "schema_version",
+      "artifact_type",
+      "project_id",
+      "producer",
+      "issuer",
+      "actor",
+      "decision",
+      "candidate_input_fingerprint",
+      "finding_ids",
+    ]) &&
+    result.evidence.schema_version === "1.0" &&
+    result.evidence.artifact_type === "human_semantic_review_evidence" &&
+    result.evidence.project_id === projectId &&
+    isProducer(result.evidence.producer) &&
+    result.evidence.producer.name === "sdd" &&
+    typeof result.evidence.issuer === "string" &&
+    result.evidence.issuer.length > 0 &&
+    typeof result.evidence.actor === "string" &&
+    result.evidence.actor.length > 0 &&
+    result.evidence.decision === "reviewed" &&
+    result.evidence.candidate_input_fingerprint === result.subject.manifest_input_fingerprint &&
+    JSON.stringify(result.evidence.finding_ids) === JSON.stringify(result.subject.finding_ids)
   );
 }
 
@@ -699,12 +900,12 @@ if (wrapperArguments.length > 0) {
 
 const commandArguments = process.argv.slice(separator + 1);
 const command = commandArguments[0];
-const operation = ["approval", "proposal", "tests", "findings", "merge"].includes(command)
+const operation = ["approval", "proposal", "semantic-review", "tests", "findings", "merge"].includes(command)
   ? `${command}.${commandArguments[1] ?? ""}`
   : command;
 if (command === undefined || !SUPPORTED_OPERATIONS.has(operation))
   fail(
-    "this skill slice permits only init, id, validate, inspect, trace, proposal materialize/validate/prepare/apply, approval record, tests discover, findings validate, or merge check.",
+    "this skill slice permits only init, id, validate, inspect, trace, proposal materialize/validate/prepare/apply, approval record, semantic-review materialize/record, tests discover, findings validate, or merge check.",
   );
 if (commandArguments.includes("--output")) fail("--output is unavailable because JSON must remain on stdout.");
 if (commandArguments.includes("--format")) fail("omit --format; the compatibility wrapper always selects JSON.");
@@ -798,6 +999,28 @@ if (operation === "proposal.prepare") {
   requireOption(commandArguments, "--integration-ref", operation);
 }
 if (operation === "proposal.apply") requireOption(commandArguments, "--patch", operation);
+if (operation === "semantic-review.materialize") {
+  for (const option of ["--change", "--bundle", "--manifest"])
+    requireOption(commandArguments, option, operation);
+  if (optionValue(commandArguments, "--input-manifest") !== undefined)
+    fail("semantic-review.materialize accepts --manifest, not --input-manifest.");
+}
+if (operation === "semantic-review.record") {
+  for (const option of [
+    "--change",
+    "--bundle",
+    "--input-manifest",
+    "--issuer",
+    "--actor",
+    "--decision",
+    "--evidence",
+  ])
+    requireOption(commandArguments, option, operation);
+  if (optionValue(commandArguments, "--manifest") !== undefined)
+    fail("semantic-review.record accepts --input-manifest, not --manifest.");
+  if (optionValue(commandArguments, "--decision") !== "reviewed")
+    fail("semantic-review.record requires --decision reviewed.");
+}
 if (operation === "tests.discover") requireOption(commandArguments, "--head", operation);
 if (operation === "findings.validate") {
   requireOption(commandArguments, "--input-manifest", operation);
@@ -962,6 +1185,23 @@ if (operation === "proposal.apply" && response.status === "ok") {
     new Set(response.result.applied_paths).size !== response.result.applied_paths.length
   )
     fail("the sdd CLI returned an invalid proposal apply result.");
+}
+if (operation === "semantic-review.materialize" && response.status === "ok") {
+  if (
+    !verifySemanticReviewMaterialization(response.result, response.project_id) ||
+    response.result.manifest_path !== optionValue(commandArguments, "--manifest")
+  )
+    fail("the sdd CLI returned an invalid semantic-review materialization result.");
+}
+if (operation === "semantic-review.record" && response.status === "ok") {
+  if (
+    !verifySemanticReviewRecord(response.result, response.project_id) ||
+    response.result.evidence_path !== optionValue(commandArguments, "--evidence") ||
+    response.result.evidence.issuer !== optionValue(commandArguments, "--issuer") ||
+    response.result.evidence.actor !== optionValue(commandArguments, "--actor") ||
+    response.result.evidence.decision !== optionValue(commandArguments, "--decision")
+  )
+    fail("the sdd CLI returned an invalid semantic-review recording result.");
 }
 if (operation === "tests.discover" && response.status === "ok") {
   if (!verifyTestIndex(response.result, response.project_id)) fail("the sdd CLI returned an invalid TestIndex result.");

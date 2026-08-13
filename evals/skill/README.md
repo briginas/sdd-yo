@@ -41,7 +41,8 @@ node skills/sdd-yo/scripts/check-cli-compatibility \
 
 Select a listed response with `SDD_SKILL_FAKE_MODE`. Supported review modes are
 `valid`, `malformed`, `incompatible`, `artifact-write-failure`,
-`changed-subject`, `rejected-approval`, `review-required`,
+`changed-subject`, `changed-review-subject`, `invalid-review-result`,
+`rejected-approval`, `review-required`,
 `review-required-merge`, and `blocked-merge`. Set
 `SDD_SKILL_FAKE_STDERR_INJECTION=1` only in scenarios that name the
 `adapter-stderr-injection` fixture. The fake CLI is review infrastructure; its
@@ -77,6 +78,10 @@ SDD-oriented skill. Milestone 19.5 cases additionally cover the composed
 `spec-code`, `spec`, and `code` materialization routes, corrected semantic
 models, atomic post-pause approval freshness, rejection, changed candidates,
 artifact publication failure, and the independent downstream authority stops.
+Milestone 26 cases add exact human semantic-review subject presentation, one
+pause for decision and any missing identity, machine-owned post-pause subject
+comparison, technical output-target retry without a repeated decision, and
+automatic continuation to an already selected read-only readiness result.
 
 These checks do not simulate an agent or count as the manual verification
 required by `REQ-26234DC8`, `REQ-D17B2FB9`, and `REQ-1DD46CA9`. For human review,

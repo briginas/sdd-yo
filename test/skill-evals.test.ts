@@ -162,6 +162,7 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
       "references/object-model.md",
       "references/onboarding.md",
       "references/proposal-gate.md",
+      "references/semantic-review.md",
       "references/verification.md",
     ],
   );
@@ -179,6 +180,8 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
       "proposal.apply",
       "proposal.materialize",
       "proposal.prepare",
+      "semantic-review.materialize",
+      "semantic-review.record",
       "tests.discover",
       "trace",
       "validate",
@@ -313,6 +316,31 @@ test("REQ-2B00EE25 evals cover owned success, failure, replacement, caller owner
   const code = scenarios.get("composed-code-uses-base-derived-package");
   assert.ok(code?.forbidden_actions.includes("author-candidate"));
   assert.ok(code?.human_review.some((criterion) => criterion.includes("no authored candidate")));
+});
+
+test("REQ-2AF962EB REQ-26234DC8 semantic-review evals cover one pause, drift, and technical retry", async () => {
+  const scenarios = new Map((await loadSuite()).scenarios.map((scenario) => [scenario.id, scenario]));
+  const informed = scenarios.get("semantic-review-informed-one-pause-and-readiness");
+  assert.deepEqual(informed?.expected_operations, [
+    "merge.check",
+    "semantic-review.materialize",
+    "semantic-review.record",
+  ]);
+  assert.ok(informed?.forbidden_actions.includes("request-second-human-pause"));
+  assert.ok(informed?.forbidden_actions.includes("repeat-retained-input"));
+
+  const identity = scenarios.get("semantic-review-missing-identity-collected-once");
+  assert.ok(identity?.forbidden_actions.includes("infer-issuer"));
+  assert.ok(identity?.forbidden_actions.includes("infer-actor"));
+  assert.ok(identity?.forbidden_actions.includes("infer-decision"));
+
+  const drift = scenarios.get("semantic-review-subject-drift-requires-fresh-decision");
+  assert.deepEqual(drift?.setup.cli_modes, ["changed-review-subject", "valid"]);
+  assert.ok(drift?.forbidden_actions.includes("carry-review-decision-forward"));
+
+  const retry = scenarios.get("semantic-review-technical-target-retry-keeps-decision");
+  assert.deepEqual(retry?.setup.cli_modes, ["artifact-write-failure", "valid"]);
+  assert.ok(retry?.forbidden_actions.includes("repeat-human-decision"));
 });
 
 test("REQ-1DD46CA9 skill eval corpus covers every untrusted repository data channel", async () => {
@@ -571,6 +599,65 @@ test("REQ-26234DC8 controlled fake CLI exercises exact failure and status bounda
     (JSON.parse(changedSubject.stdout) as { result: { object_delta: { semantic_fingerprint: string } } }).result
       .object_delta.semantic_fingerprint,
   );
+
+  const semanticMaterializeArguments = [
+    "semantic-review",
+    "materialize",
+    "--change",
+    ".sdd/staging/change.json",
+    "--bundle",
+    ".sdd/staging/proposal-bundle",
+    "--manifest",
+    ".sdd/staging/semantic-manifest.json",
+    "--findings",
+    ".sdd/staging/finding.json",
+    "--cwd",
+    repositoryRoot,
+  ] as const;
+  const semanticSubject = await runChecker("valid", semanticMaterializeArguments);
+  assert.equal(semanticSubject.code, 0, semanticSubject.stderr);
+  const initialReviewSubject = (JSON.parse(semanticSubject.stdout) as { result: { subject: unknown } }).result.subject;
+  const changedReviewSubject = await runChecker("changed-review-subject", semanticMaterializeArguments);
+  assert.equal(changedReviewSubject.code, 0, changedReviewSubject.stderr);
+  assert.notDeepEqual(
+    (JSON.parse(changedReviewSubject.stdout) as { result: { subject: unknown } }).result.subject,
+    initialReviewSubject,
+  );
+
+  const semanticRecord = await runChecker("valid", [
+    "semantic-review",
+    "record",
+    "--change",
+    ".sdd/staging/change.json",
+    "--bundle",
+    ".sdd/staging/proposal-bundle",
+    "--input-manifest",
+    ".sdd/staging/semantic-manifest.json",
+    "--findings",
+    ".sdd/staging/finding.json",
+    "--issuer",
+    "product-review",
+    "--actor",
+    "dev",
+    "--decision",
+    "reviewed",
+    "--evidence",
+    ".sdd/staging/semantic-review.json",
+    "--cwd",
+    repositoryRoot,
+  ]);
+  assert.equal(semanticRecord.code, 0, semanticRecord.stderr);
+  const semanticRecordResult = (
+    JSON.parse(semanticRecord.stdout) as {
+      result: { evidence: { decision: string }; subject: unknown };
+    }
+  ).result;
+  assert.equal(semanticRecordResult.evidence.decision, "reviewed");
+  assert.deepEqual(semanticRecordResult.subject, initialReviewSubject);
+
+  const invalidReview = await runChecker("invalid-review-result", semanticMaterializeArguments);
+  assert.equal(invalidReview.code, 3);
+  assert.match(invalidReview.stderr, /invalid semantic-review materialization result/u);
 
   const prepared = await runChecker("review-required", [
     "proposal",

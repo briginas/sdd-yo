@@ -424,6 +424,8 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-0163273A REQ-3F19778B REQ-CF3A1
       "skill remove",
       "validate",
       "proposal prepare",
+      "semantic-review materialize",
+      "semantic-review record",
       "tests discover",
       "merge check",
     ])
