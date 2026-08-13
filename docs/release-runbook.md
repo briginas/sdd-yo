@@ -160,22 +160,25 @@ Typical exclusions are unrelated runtime behavior, unrequested protocol or
 schema-major changes, new operating-system support, a Codex plugin, hosted
 state, local `npm publish`, and token authentication.
 
-## Phase 2: govern and implement the version change
+## Phase 2: govern any product change included in the release
 
-The exact public version currently appears as normative content under
-[`REQ-B0B35D6D`](../spec/capabilities/public-npm-package-distribution.md#req-b0b35d6d).
-Treat that as current repository context, not as a mode decision made by this
-runbook. Give the release outcome and live specification to the host-loaded
-Skill and let it select or request confirmation of the applicable Change route.
+[`REQ-B0B35D6D`](../spec/capabilities/public-npm-package-distribution.md#req-b0b35d6d)
+requires the current package identity and its materialized copies to agree with
+the source manifest; it does not contain a literal release version. Changing
+only the version in `package.json` and synchronizing the release surfaces in
+Phase 3 does not change canonical Requirement meaning. Do not create a
+candidate, ProposalPackage, ApprovalEvidence, or SpecPatch solely for that
+metadata transition.
 
-Do not reproduce or select the governed sequence here. Invoke the host-loaded
-compatible Skill for the requested Change. Let that Skill select its current
-mode, authoring, Proposal Gate, approval, preparation, application,
-verification, and integration references, and preserve every stop it imposes.
-Never substitute similarly named files from this repository's
-`skills/sdd-yo/` payload.
+If the release includes a product-behavior change that is not already governed
+and integrated, give its semantic outcome and the live specification to the
+host-loaded compatible Skill. Do not reproduce or select the governed sequence
+here. Let the Skill select its current mode, authoring, Proposal Gate, approval,
+preparation, application, verification, and integration references, and
+preserve every stop it imposes. Never substitute similarly named files from
+this repository's `skills/sdd-yo/` payload.
 
-Release-specific notes:
+For such a governed product change:
 
 - create the selected ignored staging parent before proposal materialization;
 - retain exact CLI-created candidate, ProposalPackage, ApprovalEvidence, and
@@ -184,31 +187,32 @@ Release-specific notes:
   approved candidate Git subject;
 - do not push the candidate branch unless separately required and authorized;
   and
-- semantic confirmation, approval, patch application, implementation, Git,
-  publication, and release remain separate authority boundaries.
+- keep semantic confirmation, approval, patch application, implementation,
+  Git, publication, and release as separate authority boundaries.
 
-After exact patch application, update the implementation and tests required by
-the approved version identity.
+Complete and integrate every included product change before binding the release
+identity and artifact. A metadata-only release proceeds directly to Phase 3.
 
 ## Phase 3: bind the release identity and artifact
 
-### 1. Update every current version surface
+### 1. Update the source identity and synchronize release surfaces
 
-Inspect the complete repository rather than relying on a fixed list. The
-The current package version is declared once in `package.json`. A release
-version change updates or verifies:
+Inspect the complete repository rather than relying on a fixed list. The current
+package version is declared once in `package.json`. A release version change:
 
-- `package.json` as the source identity and the root `package-lock.json` entry
-  as its required materialized copy;
-- `skills/sdd-yo/payload-manifest.json` as the packaged Skill's required
-  materialized identity;
-- the canonical public-distribution Requirement;
-- current-version user and repository documentation;
-- the active release milestone;
-- `.github/workflows/publish.yml` reviewed artifact, inventory, npm, and
+- updates `package.json` as the source identity;
+- synchronizes the root `package-lock.json` entry and
+  `skills/sdd-yo/payload-manifest.json` as required materialized copies;
+- verifies that the canonical public-distribution Requirement remains accurate,
+  changing it through the normal governed workflow only when product behavior
+  changes;
+- updates current-version user and repository documentation and the active
+  release milestone;
+- updates `.github/workflows/publish.yml` reviewed artifact, inventory, npm, and
   previous-public-version values; and
-- CLI identity, package smoke, Skill installation, user Skill lifecycle,
-  ApprovalEvidence, and release contract tests.
+- verifies CLI identity, package smoke, Skill installation, user Skill
+  lifecycle, ApprovalEvidence, and release contract tests that derive the
+  current identity, changing only intentionally version-specific fixtures.
 
 The release workflow derives `PACKAGE_NAME` and `PACKAGE_VERSION` from the
 checked-out immutable `package.json`; do not add independent current-name or
