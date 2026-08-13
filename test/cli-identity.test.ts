@@ -11,6 +11,7 @@ import { nodeFileSystem } from "../src/platform/node-filesystem.ts";
 import { nodeProcessRunner } from "../src/platform/node-process-runner.ts";
 import { nodeProjectWriter } from "../src/platform/node-project-writer.ts";
 import { nodeRandomness } from "../src/platform/node-randomness.ts";
+import { currentPackageIdentity } from "./current-package-identity.ts";
 
 async function execute(argv: readonly string[], workingDirectory: string) {
   const standardOutput: string[] = [];
@@ -32,23 +33,19 @@ async function execute(argv: readonly string[], workingDirectory: string) {
 }
 
 test("REQ-D9CF3A46 loads the exact CLI version from the corresponding package manifest", async () => {
-  const manifest = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8")) as {
-    name: string;
-    version: string;
-  };
   const identity = loadCliCompatibilityIdentity();
 
-  assert.equal(identity.package.name, manifest.name);
-  assert.equal(identity.package.version, manifest.version);
-  assert.equal(identity.cli.version, manifest.version);
+  assert.equal(identity.package.name, currentPackageIdentity.name);
+  assert.equal(identity.package.version, currentPackageIdentity.version);
+  assert.equal(identity.cli.version, currentPackageIdentity.version);
 });
 
 test("REQ-97D96950 builds the exact version 1 compatibility identity", () => {
   const identity = loadCliCompatibilityIdentity();
 
   assert.deepEqual(identity, {
-    package: { name: "sdd-yo", version: "0.5.2" },
-    cli: { name: "sdd", version: "0.5.2" },
+    package: currentPackageIdentity,
+    cli: { name: "sdd", version: currentPackageIdentity.version },
     json_schema: { version: "1.0", compatible_major: 1 },
     skill: { name: "sdd-yo", protocol_version: "1.0", compatible_major: 1 },
   });
@@ -65,7 +62,11 @@ test("REQ-D9CF3A46 reports the package version without selecting or mutating an 
     const first = await execute(["--version"], directory);
     const second = await execute(["--version"], directory);
 
-    assert.deepEqual(first, { exitCode: 0, standardOutput: "0.5.2\n", standardError: "" });
+    assert.deepEqual(first, {
+      exitCode: 0,
+      standardOutput: `${currentPackageIdentity.version}\n`,
+      standardError: "",
+    });
     assert.deepEqual(second, first);
     assert.deepEqual(await readdir(directory), []);
   } finally {
@@ -88,8 +89,8 @@ test("REQ-97D96950 reports deterministic machine-readable compatibility identity
       project_id: null,
       status: "ok",
       result: {
-        package: { name: "sdd-yo", version: "0.5.2" },
-        cli: { name: "sdd", version: "0.5.2" },
+        package: currentPackageIdentity,
+        cli: { name: "sdd", version: currentPackageIdentity.version },
         json_schema: { version: "1.0", compatible_major: 1 },
         skill: { name: "sdd-yo", protocol_version: "1.0", compatible_major: 1 },
       },

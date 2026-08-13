@@ -2,9 +2,9 @@
 
 ## Status
 
-- Active: no milestone selected; the next bounded milestone requires explicit
-  selection from the candidate backlog or a new proposal
-- Complete: Milestones 0–26; public `sdd-yo@0.5.2`
+- Active: no selected milestone; choose one bounded candidate before further
+  implementation
+- Complete: Milestones 0–27; public `sdd-yo@0.5.2`
 - Last updated: 2026-08-13
 
 ## Authority and navigation
@@ -62,6 +62,19 @@ and 2,139 entries. npm trusted publishing records SLSA provenance for the
 GitHub Actions `publish.yml` subject. The public package, CLI identity, library,
 schemas, repository Skill, macOS user-scoped private CLI and wrapper, and an
 isolated exact consumer installation are verified.
+
+The source `package.json` is the primary current package identity. CLI and
+release automation derive its name and version from that immutable manifest;
+package smoke derives current-product expectations from it and verifies the
+required root lockfile and packaged Skill payload identity copies against it.
+Exact installation commands remain synchronized for user safety, while
+protocol versions and historical release evidence remain independent records.
+
+## Current planning state
+
+No further milestone is selected. Choose one candidate below, define its
+Requirement traceability, boundaries, validation, done condition, and first
+incomplete leaf before implementation begins.
 
 ## Candidate backlog
 

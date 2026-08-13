@@ -4,9 +4,11 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
+import { currentPackageIdentity } from "./current-package-identity.ts";
+
 const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
 
-test("REQ-ABFFEAF2 REQ-9CE36B68 REQ-0163273A permits only the exact protected trusted-publisher release", async () => {
+test("REQ-B0B35D6D REQ-ABFFEAF2 REQ-9CE36B68 REQ-0163273A derives identity and permits only the exact protected trusted-publisher release", async () => {
   const workflow = await readFile(join(repositoryRoot, ".github/workflows/publish.yml"), "utf8");
   const ordinaryCi = await readFile(join(repositoryRoot, ".github/workflows/ci.yml"), "utf8");
 
@@ -26,8 +28,14 @@ test("REQ-ABFFEAF2 REQ-9CE36B68 REQ-0163273A permits only the exact protected tr
   assert.match(workflow, /node-version: 24/u);
   assert.match(workflow, /registry-url: https:\/\/registry\.npmjs\.org/u);
   assert.match(workflow, /package-manager-cache: false/u);
-  assert.match(workflow, /PACKAGE_NAME: sdd-yo/u);
-  assert.match(workflow, /PACKAGE_VERSION: 0\.5\.2/u);
+  assert.doesNotMatch(workflow, /^\s+PACKAGE_(?:NAME|VERSION):/mu);
+  assert.match(workflow, /Derive package identity from the immutable source manifest/u);
+  assert.match(workflow, /import manifest from "\.\/package\.json" with \{ type: "json" \}/u);
+  assert.match(workflow, /printf 'PACKAGE_NAME=%s\\nPACKAGE_VERSION=%s\\n'.*>> "\$GITHUB_ENV"/u);
+  assert.doesNotMatch(
+    workflow,
+    new RegExp(`PACKAGE_VERSION: ${currentPackageIdentity.version.replaceAll(".", "\\.")}`, "u"),
+  );
   assert.match(workflow, /NPM_VERSION: 11\.16\.0/u);
   assert.match(workflow, /PREVIOUS_PUBLIC_VERSION: 0\.5\.1/u);
   assert.match(workflow, /EXPECTED_ARTIFACT_SHA256: 2129c9ec55e0095aaff96554a2cd120641fa9338e408419a223cdab0c836beba/u);
@@ -44,6 +52,7 @@ test("REQ-ABFFEAF2 REQ-9CE36B68 REQ-0163273A permits only the exact protected tr
   assert.match(workflow, /test "\$GITHUB_REF" = "refs\/tags\/\$RELEASE_TAG"/u);
   assert.match(workflow, /git rev-parse "\$RELEASE_TAG\^\{commit\}"/u);
   assert.match(workflow, /test "\$RELEASE_TAG" = "v\$\(node/u);
+  assert.match(workflow, /test "\$package_name" = "sdd-yo"/u);
   assert.match(workflow, /Require the exact existing-package registry state/u);
   assert.match(workflow, /npm view "\$PACKAGE_NAME" version --json/u);
   assert.match(workflow, /npm view "\$PACKAGE_NAME@\$PACKAGE_VERSION" version --json/u);

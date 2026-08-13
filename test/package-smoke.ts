@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 import test from "node:test";
 
+import { currentPackageIdentity } from "./current-package-identity.ts";
+
 type CommandResult = {
   readonly exitCode: number | null;
   readonly signal: NodeJS.Signals | null;
@@ -33,17 +35,17 @@ type PackResult = {
 
 const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
 const documentedQuickstartCommands = [
-  "npm exec --package=sdd-yo@0.5.2 -- sdd skill install --scope user --format json",
+  `npm exec --package=${currentPackageIdentity.name}@${currentPackageIdentity.version} -- sdd skill install --scope user --format json`,
   "node ~/.agents/skills/sdd-yo/scripts/check-cli-compatibility -- init --root /absolute/path/to/repository --adoption incremental",
   "node ~/.agents/skills/sdd-yo/scripts/check-cli-compatibility -- validate --cwd /absolute/path/to/repository",
   "cd /absolute/path/to/repository",
-  "npm install --save-dev --save-exact sdd-yo@0.5.2",
+  `npm install --save-dev --save-exact ${currentPackageIdentity.name}@${currentPackageIdentity.version}`,
   "npm exec -- sdd --version --format json",
   "node ./node_modules/sdd-yo/dist/bin/sdd.js skill install --root /absolute/path/to/repository --format json",
   "node ./.agents/skills/sdd-yo/scripts/check-cli-compatibility -- init --root /absolute/path/to/repository --adoption incremental",
   "node ./.agents/skills/sdd-yo/scripts/check-cli-compatibility -- validate --cwd /absolute/path/to/repository",
-  "npm exec --package=sdd-yo@0.5.2 -- sdd --version --format json",
-  "npm exec --package=sdd-yo@0.5.2 -- sdd validate --cwd /absolute/path/to/repository --format json",
+  `npm exec --package=${currentPackageIdentity.name}@${currentPackageIdentity.version} -- sdd --version --format json`,
+  `npm exec --package=${currentPackageIdentity.name}@${currentPackageIdentity.version} -- sdd validate --cwd /absolute/path/to/repository --format json`,
   "npm install --offline --no-audit --no-fund --save-exact <tarball-path>",
   "node ./node_modules/sdd-yo/dist/bin/sdd.js --version --format json",
   "mkdir .sdd-tooling",
@@ -264,8 +266,21 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-0163273A REQ-3F19778B REQ-CF3A1
       sourceManifest.description,
       "Repository-native specification governance with a deterministic CLI and optional Agent Skill.",
     );
-    assert.equal(sourceManifest.name, "sdd-yo");
-    assert.equal(sourceManifest.version, "0.5.2");
+    assert.deepEqual({ name: sourceManifest.name, version: sourceManifest.version }, currentPackageIdentity);
+    const sourceLock = JSON.parse(await readFile(join(repositoryRoot, "package-lock.json"), "utf8")) as {
+      readonly name: string;
+      readonly version: string;
+      readonly packages: Readonly<Record<string, { readonly name?: string; readonly version?: string }>>;
+    };
+    assert.deepEqual({ name: sourceLock.name, version: sourceLock.version }, currentPackageIdentity);
+    assert.deepEqual(
+      { name: sourceLock.packages[""]?.name, version: sourceLock.packages[""]?.version },
+      currentPackageIdentity,
+    );
+    const sourceSkillPayloadManifest = JSON.parse(
+      await readFile(join(repositoryRoot, "skills/sdd-yo/payload-manifest.json"), "utf8"),
+    ) as { readonly package: { readonly name: string; readonly version: string } };
+    assert.deepEqual(sourceSkillPayloadManifest.package, currentPackageIdentity);
     assert.equal(sourceManifest.private, false);
     assert.deepEqual(sourceManifest.publishConfig, { access: "public", provenance: true });
     assert.equal(sourceManifest.license, "Apache-2.0");

@@ -13,8 +13,6 @@ jobs:
     runs-on: macos-latest
     environment: release
     env:
-      PACKAGE_NAME: sdd-yo
-      PACKAGE_VERSION: 0.5.2
       NPM_VERSION: 11.16.0
       PREVIOUS_PUBLIC_VERSION: 0.5.1
       EXPECTED_ARTIFACT_SHA256: 2129c9ec55e0095aaff96554a2cd120641fa9338e408419a223cdab0c836beba
@@ -40,6 +38,18 @@ jobs:
           set -euo pipefail
           git update-ref refs/heads/main "$RELEASE_SHA"
           test "$(git rev-parse "main^{commit}")" = "$RELEASE_SHA"
+
+      - name: Derive package identity from the immutable source manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          package_name="$(node --input-type=module --eval 'import manifest from "./package.json" with { type: "json" }; process.stdout.write(manifest.name)')"
+          package_version="$(node --input-type=module --eval 'import manifest from "./package.json" with { type: "json" }; process.stdout.write(manifest.version)')"
+          test "$package_name" = "sdd-yo"
+          test -n "$package_version"
+          test "${package_name//$'\n'/}" = "$package_name"
+          test "${package_version//$'\n'/}" = "$package_version"
+          printf 'PACKAGE_NAME=%s\nPACKAGE_VERSION=%s\n' "$package_name" "$package_version" >> "$GITHUB_ENV"
 
       - name: Set up Node.js and npm trusted publishing
         uses: actions/setup-node@v7

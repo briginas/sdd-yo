@@ -19,6 +19,14 @@ versions are locked in the package manifest and lockfile. A dependency is not
 part of the product contract unless a Requirement explicitly makes it
 observable.
 
+The source `package.json` is the primary current package identity. CLI identity,
+release automation, package checks, and current-product tests derive its name
+and version from that manifest. The root lockfile and packaged Skill payload
+manifest remain explicit materialized copies because their consumers cannot
+derive the source value at runtime; package verification checks both copies
+against the source manifest. Protocol and schema versions remain separate
+compatibility dimensions.
+
 ## Why this preserves language independence
 
 Language independence belongs at the project boundary:

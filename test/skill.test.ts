@@ -7,6 +7,7 @@ import { promisify } from "node:util";
 import test from "node:test";
 
 import { createNodeUserSkillInstaller } from "../src/platform/node-user-skill-installer.ts";
+import { currentCompatibilityIdentity, currentPackageIdentity } from "./current-package-identity.ts";
 
 const executeFile = promisify(execFile);
 const repositoryRoot = resolve(import.meta.dirname, "..");
@@ -403,16 +404,11 @@ test("REQ-C975AE17 REQ-05CABE17 user wrapper invokes only its verified private C
     await cp(skillRoot, join(packageRoot, "skills", "sdd-yo"), { recursive: true });
     await writeFile(
       join(packageRoot, "package.json"),
-      `${JSON.stringify({ name: "sdd-yo", version: "0.5.2", type: "module", bin: { sdd: "./dist/bin/sdd.js" } }, null, 2)}\n`,
+      `${JSON.stringify({ ...currentPackageIdentity, type: "module", bin: { sdd: "./dist/bin/sdd.js" } }, null, 2)}\n`,
     );
-    await cp(await fakeCli("0.5.2"), privateCli);
+    await cp(await fakeCli(currentPackageIdentity.version), privateCli);
     await chmod(privateCli, 0o755);
-    const compatibility = {
-      package: { name: "sdd-yo", version: "0.5.2" },
-      cli: { name: "sdd", version: "0.5.2" },
-      json_schema: { version: "1.0", compatible_major: 1 },
-      skill: { name: "sdd-yo", protocol_version: "1.0", compatible_major: 1 },
-    } as const;
+    const compatibility = currentCompatibilityIdentity;
     const installed = await createNodeUserSkillInstaller().install({
       packageRoot,
       cliPath: privateCli,

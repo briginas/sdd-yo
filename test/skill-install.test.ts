@@ -9,15 +9,11 @@ import test from "node:test";
 
 import { createNodeSkillInstaller, nodeSkillInstaller } from "../src/platform/node-skill-installer.ts";
 import { SkillInstallationError } from "../src/skill-install/installer.ts";
+import { currentCompatibilityIdentity } from "./current-package-identity.ts";
 
 const executeFile = promisify(execFile);
 const repositoryRoot = resolve(import.meta.dirname, "..");
-const compatibility = {
-  package: { name: "sdd-yo", version: "0.5.2" },
-  cli: { name: "sdd", version: "0.5.2" },
-  json_schema: { version: "1.0", compatible_major: 1 },
-  skill: { name: "sdd-yo", protocol_version: "1.0", compatible_major: 1 },
-} as const;
+const compatibility = currentCompatibilityIdentity;
 
 async function fixture(): Promise<{
   readonly root: string;

@@ -195,21 +195,26 @@ the approved version identity.
 ### 1. Update every current version surface
 
 Inspect the complete repository rather than relying on a fixed list. The
-`0.5.1` release changed:
+The current package version is declared once in `package.json`. A release
+version change updates or verifies:
 
-- `package.json` and the root `package-lock.json` entry;
-- `skills/sdd-yo/payload-manifest.json`;
+- `package.json` as the source identity and the root `package-lock.json` entry
+  as its required materialized copy;
+- `skills/sdd-yo/payload-manifest.json` as the packaged Skill's required
+  materialized identity;
 - the canonical public-distribution Requirement;
 - current-version user and repository documentation;
 - the active release milestone;
-- `.github/workflows/publish.yml`; and
+- `.github/workflows/publish.yml` reviewed artifact, inventory, npm, and
+  previous-public-version values; and
 - CLI identity, package smoke, Skill installation, user Skill lifecycle,
   ApprovalEvidence, and release contract tests.
 
-Set these workflow values:
+The release workflow derives `PACKAGE_NAME` and `PACKAGE_VERSION` from the
+checked-out immutable `package.json`; do not add independent current-name or
+current-version values. Set these remaining workflow values:
 
 ```text
-PACKAGE_VERSION: <NEW_VERSION>
 PREVIOUS_PUBLIC_VERSION: <CURRENT_VERSION>
 NPM_VERSION: <PINNED_NPM_VERSION>
 EXPECTED_ARTIFACT_SHA256: <REVIEWED_ARTIFACT_SHA256>
@@ -220,9 +225,10 @@ EXPECTED_INVENTORY_ENTRY_COUNT: "<REVIEWED_ENTRY_COUNT>"
 Do not fill the expected artifact values until the reviewed artifact exists.
 
 Search globally for current, new, previous, and future fixture versions. Update
-current identity, retain intentional previous-version evidence, advance
-future-upgrade fixtures beyond `NEW_VERSION`, and preserve historical examples.
-Never use an unrestricted global replacement.
+the manifest-derived current identity, verify the required lock and Skill
+copies, retain intentional previous-version evidence, use deliberately neutral
+versions in version-independent fixtures, advance future-upgrade fixtures, and
+preserve historical examples. Never use an unrestricted global replacement.
 
 ### 2. Produce the reviewed artifact reproducibly
 
