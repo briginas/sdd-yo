@@ -95,6 +95,48 @@ version `0.5.3`, and compatible JSON-schema and Skill protocol major `1`. Do
 not rely on a global `sdd` executable or Skill. User-scoped installation and
 its public consumer proof are macOS-only.
 
+## View workflow progress
+
+The observer turns a workflow-event journal into a temporary local web page.
+It is useful when you want to see the current run, its steps, and its separate
+approval, readiness, freshness, and integration states without reading logs.
+
+Use this guide after installing an npm package version that includes the
+observer in the selected repository. The currently public `sdd-yo@0.5.3`
+package does not include it yet.
+
+Create a JSONL file inside the selected SDD Project. Each line is one event.
+The `project_id` must match `.sdd/config.yaml`, and every event in one run must
+use the same `change_id`, `run_id`, and `producer_id`:
+
+```jsonl
+{"schema_version":"1.0","artifact_type":"workflow_event","project_id":"SDD-17EF8B29","change_id":"demo","run_id":"run-1","producer_id":"manual","sequence":0,"event_type":"run_started"}
+{"schema_version":"1.0","artifact_type":"workflow_event","project_id":"SDD-17EF8B29","change_id":"demo","run_id":"run-1","producer_id":"manual","sequence":1,"event_type":"step_started","step_id":"validate","label":"Validate project"}
+{"schema_version":"1.0","artifact_type":"workflow_event","project_id":"SDD-17EF8B29","change_id":"demo","run_id":"run-1","producer_id":"manual","sequence":2,"event_type":"step_completed","step_id":"validate"}
+{"schema_version":"1.0","artifact_type":"workflow_event","project_id":"SDD-17EF8B29","change_id":"demo","run_id":"run-1","producer_id":"manual","sequence":3,"event_type":"run_completed"}
+```
+
+Save it, for example, as `.sdd/staging/workflow-events.jsonl`. From the selected
+repository, start its installed SDD Yo CLI with:
+
+```text
+npm exec -- sdd observe --cwd /absolute/path/to/repository --journal .sdd/staging/workflow-events.jsonl
+```
+
+You do not need to choose a port. SDD Yo asks the operating system for an
+available local port and prints the complete `http://127.0.0.1:...` URL. Keep
+the command running while the page is open, and press `Ctrl-C` when you are
+done. The URL contains a private session capability; do not share it.
+
+The CLI reads the journal once when it starts. After changing the file, restart
+the command to see the new snapshot. Applications that need one-way live
+updates can use `replayWorkflowEvents`, `startWorkflowObserver`, and the
+session's `publish` method from the library.
+
+The observer is read-only. It cannot approve a proposal, run a gate, change
+Git, publish, or release. Its journal and snapshot are removable display data,
+not approval or merge evidence.
+
 ## Use as a library
 
 The npm package provides an ESM library, TypeScript declarations, the `sdd`
@@ -108,28 +150,6 @@ console.log(JSON_SCHEMA_VERSION_V1); // "1.0"
 
 Versioned schemas are available through paths such as
 `sdd-yo/schemas/v1/common.schema.json`.
-
-### Observe workflow progress
-
-The library can replay allowlisted workflow events into a deterministic
-read-only snapshot and serve a temporary capability-protected loopback view:
-
-```js
-import { replayWorkflowEvents, startWorkflowObserver } from "sdd-yo";
-
-const snapshot = replayWorkflowEvents(events, "SDD-17EF8B29");
-const observer = await startWorkflowObserver({ projectRoot, snapshot });
-console.log(observer.url);
-
-// Stop the on-demand observer when the interactive session ends.
-await observer.close();
-```
-
-Execution completion, CLI outcome, approval, merge readiness, artifact
-freshness, and integration are displayed independently. The observer may open
-only exact referenced project artifacts; it cannot approve, run a gate, mutate
-Git, publish, or release. Events and snapshots are removable observation data,
-not decision evidence or hidden workflow state.
 
 ## Offline installation
 
