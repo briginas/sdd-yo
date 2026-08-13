@@ -2,7 +2,7 @@
 
 ## Status
 
-- Active: none
+- Active: Milestone 29 — release `sdd-yo@0.5.3`
 - Complete: Milestones 0–28; public `sdd-yo@0.5.2`
 - Last updated: 2026-08-13
 
@@ -14,6 +14,28 @@
 - Execution-planning and closeout procedure:
   [`plans/README.md`](plans/README.md)
 - Repository work discipline and validation: [`AGENTS.md`](AGENTS.md)
+
+## Milestone 29 — release `sdd-yo@0.5.3`
+
+**Outcome:** publish the exact immutable `main` release subject as public
+`sdd-yo@0.5.3` through the protected GitHub release workflow and npm trusted
+publishing, then independently verify the registry artifact, provenance, and
+an isolated consumer.
+
+**Requirement traceability:** `REQ-B0B35D6D`, `REQ-ABFFEAF2`,
+`REQ-9CE36B68`, `REQ-0163273A`.
+
+**Immediate leaf:** bind and validate the `0.5.3` source identity, reproducible
+artifact, and exact workflow inventory from clean `main`.
+
+**Done condition:** the annotated `v0.5.3` tag, GitHub Release, protected
+trusted-publisher workflow, npm registry bytes and provenance, isolated
+consumer, and final CI bind to the verified release subject; then compact this
+plan through the milestone closeout contract.
+
+**Exclusions:** unrelated runtime or specification behavior; new protocol or
+schema major versions; non-macOS support; a Codex plugin; hosted state; local
+`npm publish`; and token authentication.
 
 ## Product baseline
 

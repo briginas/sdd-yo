@@ -5,7 +5,7 @@ Evaluator: `Codex fresh-context evaluator`
 **Subject:** current packaged candidate Skill under `skills/sdd-yo/`
 **Base revision:** `85e85c4672aa860f06e971c40bb786324367db5e`
 **Review basis:** base revision plus current working-tree bytes were reviewed.
-**Packaged Skill manifest SHA-256:** `e32f0c3964fefe2de90cf02112b6cfe0ec0585bc4faa4f49d3bc0828a280f5b6`
+**Packaged Skill manifest SHA-256:** `2b2f25e81daf5a9395ef4eed1a469aa7aa0d2c9cacfcbe48825e8db5bac3caa7`
 **Installed user Skill:** intentionally excluded by Milestone 28; unchanged installed `0.5.2` bytes do not affect this verdict.
 
 No actual scenario Git mutation or scenario CLI workflow was performed. This

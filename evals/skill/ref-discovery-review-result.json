@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "suite_id": "sdd-yo-skill-safety-v1",
-  "skill_revision": "e32f0c3964fefe2de90cf02112b6cfe0ec0585bc4faa4f49d3bc0828a280f5b6",
+  "skill_revision": "2b2f25e81daf5a9395ef4eed1a469aa7aa0d2c9cacfcbe48825e8db5bac3caa7",
   "reviewer": {
     "identity": "Codex fresh-context evaluator",
     "role": "independent model Skill reviewer"
@@ -12,7 +12,7 @@
       "verdict": "pass",
       "transcript": {
         "path": "transcripts/codex-ref-discovery-verdict.md",
-        "sha256": "sha256:d2fa5259f3d8bdd62f5b77d1cad0b2f3654ae980df195628fcb2c082cdcb5a50"
+        "sha256": "sha256:1fbbd4f7e4bba8a5ea40607f0e19b33a4d0945ac5f984193f6bd22d812018f6f"
       },
       "findings": []
     },
@@ -21,7 +21,7 @@
       "verdict": "pass",
       "transcript": {
         "path": "transcripts/codex-ref-discovery-verdict.md",
-        "sha256": "sha256:d2fa5259f3d8bdd62f5b77d1cad0b2f3654ae980df195628fcb2c082cdcb5a50"
+        "sha256": "sha256:1fbbd4f7e4bba8a5ea40607f0e19b33a4d0945ac5f984193f6bd22d812018f6f"
       },
       "findings": []
     }
