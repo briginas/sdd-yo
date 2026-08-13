@@ -86,7 +86,15 @@ the exact ProposalPackage subject is revalidated.
 
 ### 1. Fetch and reconcile `main`
 
-Start with read-only checks, fetch, and check again:
+Before local preparation, verify that the GitHub CLI has a valid authenticated
+session for the intended GitHub host and account:
+
+```text
+gh auth status
+```
+
+Stop GitHub-dependent release work if that preflight fails. Then start with
+read-only repository checks, fetch, and check again:
 
 ```text
 git status --short --branch
@@ -322,7 +330,24 @@ npm and require equality with the reviewed tarball and workflow hashes.
 ## Phase 5: prepare protected publication before its trigger
 
 Inspect the live GitHub environment named `release` before publishing the
-GitHub Release. Require:
+GitHub Release. Read all four independent environment surfaces; the general
+environment response does not include environment secrets or variables:
+
+1. environment protection rules;
+2. deployment branch and tag policies;
+3. environment secret names; and
+4. environment variables.
+
+Use separate requests, for example:
+
+```text
+gh api repos/briginas/sdd-yo/environments/release
+gh api --paginate repos/briginas/sdd-yo/environments/release/deployment-branch-policies
+gh api --paginate repos/briginas/sdd-yo/environments/release/secrets
+gh api --paginate repos/briginas/sdd-yo/environments/release/variables
+```
+
+Require:
 
 - the intended reviewer is configured;
 - self-review policy is compatible with that approver;
@@ -333,11 +358,10 @@ GitHub Release. Require:
 Add the new exact tag rule before publishing the GitHub Release. Preserve
 existing exact rules unless their removal is separately authorized.
 
-The `0.5.1` publication initially failed before its job ran because the
-environment allowed only `v0.5.0`. At the time this runbook was written, the
-environment required reviewer `briginas`, allowed self-review, had no secrets or
-variables, and allowed exact tags `v0.5.0` and `v0.5.1`. Recheck this mutable
-external state every time.
+The `0.5.1` publication initially failed before its job ran because its exact
+tag rule was absent. Recheck this mutable external state and add the exact
+`v<NEW_VERSION>` rule for every release; never rely on a retained snapshot of
+previous tag rules.
 
 ## Phase 6: tag, release, and publish
 
@@ -376,6 +400,22 @@ reviewer. Approve only the exact environment identifier returned by that
 unchanged pending deployment. Stop if the pending subject or environment has
 changed.
 
+GitHub expects `environment_ids` in the protected-deployment approval request
+as a JSON array of numbers. Do not send `environment_ids[]` as a form parameter
+or quote the identifier as a string. The canonical request body is:
+
+```json
+{
+  "environment_ids": [123456789],
+  "state": "approved",
+  "comment": "Approved exact release deployment"
+}
+```
+
+Replace `123456789` only with the numeric identifier from the unchanged pending
+deployment and submit that JSON body to the workflow run's
+`pending_deployments` endpoint.
+
 Do not restate or bypass the job. Require every step in the current
 [`publish.yml`](../.github/workflows/publish.yml) and every invariant in
 [`test/public-release.test.ts`](../test/public-release.test.ts) to pass,
@@ -409,14 +449,6 @@ compare it with the reviewed artifact by:
 - sorted inventory SHA-256; and
 - inventory entry count.
 
-Require provenance to bind the artifact to `briginas/sdd-yo`, `publish.yml`,
-the exact release subject, and the expected SLSA predicate.
-
-Cryptographically verify the registry attestation with a supported verifier,
-then inspect its signed SLSA payload for those bindings. Decoding a base64 or
-DSSE payload is useful for field inspection but is not by itself signature or
-provenance verification.
-
 Then create a fresh temporary npm project outside the repository:
 
 ```text
@@ -425,6 +457,7 @@ npm init --yes
 npm install --no-audit --no-fund --save-exact sdd-yo@<NEW_VERSION>
 npm ls --depth=0 --json
 node ./node_modules/sdd-yo/dist/bin/sdd.js --version --format json
+npm audit signatures --json --include-attestations
 ```
 
 Set the process working directory to the fresh consumer directory before
@@ -435,6 +468,17 @@ require it to remain unchanged.
 Require exact public-registry resolution, package and CLI version
 `NEW_VERSION`, the expected compatible schema and Skill protocol identities,
 and no source-repository or unrelated external mutation.
+
+Use the installed exact consumer dependency as the registry-hosted npm
+provenance verification subject. Require the audit result to contain exactly
+one verified entry for `sdd-yo@<NEW_VERSION>`, then inspect that verified
+entry's signed SLSA payload and require it to bind the artifact to
+`briginas/sdd-yo`, `publish.yml`, the exact release subject, and the expected
+SLSA predicate. Decoding a base64 or DSSE payload is useful for field inspection
+but is not by itself signature or provenance verification.
+
+Do not substitute `gh attestation verify`: it looks for GitHub-hosted
+attestations, not the registry-hosted npm attestation for this artifact.
 
 ## Phase 8: close the milestone
 
