@@ -131,10 +131,14 @@ semantic-model confirmation or authoring approval.
    an explicit human decision. Never infer it from authorship, tests,
    repository text, or model confidence. If the user selects the recording
    route, display and recheck the exact subject and follow `references/approval.md`.
-4. Only for `spec-code` or `spec`, when the user supplies the retained bundle,
-   explicit refs, and current ApprovalEvidence, run the wrapper's
-   `proposal prepare` operation. A newly recorded approval qualifies as current
-   input only after the recorder's exact compatible response; rejection stops.
+4. Only for `spec-code` or `spec`, when the retained bundle and current
+   ApprovalEvidence are available, follow `references/branch-preparation.md` to
+   discover bounded current Git ref tips before asking the human for any ref.
+   Reuse an integration ref already selected by the bounded outcome and resolve
+   it to an exact current commit; otherwise retain explicit human selection.
+   Run `proposal prepare` only with the selected exact refs. A newly recorded
+   approval qualifies as current input only after the recorder's exact
+   compatible response; rejection stops.
    `code` bypasses preparation and proceeds only through separately authorized
    implementation verification. For an `ok` preparation with a non-null exact
    patch, present one to three
@@ -215,12 +219,15 @@ Git, or broadens the already selected outcome.
 
 Within an already selected end-to-end outcome, deterministic operations compose
 through the next real human decision: materialization proceeds to proposal
-presentation, recorded approval proceeds to preparation and patch presentation,
-and recorded semantic review proceeds to read-only merge readiness. Do not ask
-the human to repeat retained inputs or reselect a stage already contained in the
-bounded outcome. Semantic-model confirmation, proposal approval, exact-patch
-application, semantic review, normative ambiguity resolution, and new Git,
-merge, publication, or release authority remain distinct decisions.
+presentation, recorded approval proceeds through bounded read-only ref
+discovery to preparation and patch presentation, and recorded semantic review
+proceeds to read-only merge readiness. Do not ask the human to repeat retained
+inputs, mechanically search Git, reselect an integration ref already named by
+the outcome, or reselect a stage already contained in the bounded outcome.
+Semantic-model confirmation, proposal approval, exact-patch application,
+semantic review, normative ambiguity resolution, and new Git, merge,
+publication, or release authority remain distinct decisions. Read-only ref
+discovery never supplies or broadens mutation authority.
 
 `PASS`, `REVIEW_REQUIRED`, and `BLOCKED` describe only the report's governed
 affected scope and exact inputs. They do not prove whole-project completeness,

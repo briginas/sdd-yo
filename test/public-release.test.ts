@@ -11,6 +11,7 @@ const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
 test("REQ-B0B35D6D REQ-ABFFEAF2 REQ-9CE36B68 REQ-0163273A derives identity and permits only the exact protected trusted-publisher release", async () => {
   const workflow = await readFile(join(repositoryRoot, ".github/workflows/publish.yml"), "utf8");
   const ordinaryCi = await readFile(join(repositoryRoot, ".github/workflows/ci.yml"), "utf8");
+  const runbook = await readFile(join(repositoryRoot, "docs/release-runbook.md"), "utf8");
 
   assert.match(workflow, /^on:\n  release:\n    types: \[published\]$/mu);
   assert.doesNotMatch(workflow, /\b(?:push|pull_request|workflow_dispatch|workflow_call):/u);
@@ -70,4 +71,11 @@ test("REQ-B0B35D6D REQ-ABFFEAF2 REQ-9CE36B68 REQ-0163273A derives identity and p
   assert.doesNotMatch(workflow, /NPM_TOKEN|NODE_AUTH_TOKEN|NPM_BOOTSTRAP_TOKEN|secrets\./u);
 
   assert.doesNotMatch(ordinaryCi, /id-token: write|npm publish/u);
+
+  assert.match(runbook, /named integration branch, normally `main`, as already\s+selected/u);
+  assert.match(runbook, /resolve and recheck its exact current commit/u);
+  assert.match(runbook, /bounded current local and remote-tracking ref tips/u);
+  assert.match(runbook, /bounded named release may authorize the Git mutations it explicitly lists/u);
+  assert.match(runbook, /Inspect, plan, prepare, test, or review requests do not/u);
+  assert.match(runbook, /Read-only ref\s+discovery never broadens/u);
 });

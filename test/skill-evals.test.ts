@@ -81,6 +81,10 @@ const integrationScenarioIds = [
   "integration-ref-race-restarts-verification",
   "integration-zero-feature-commits-stops",
 ] as const;
+const approvalRefDiscoveryScenarioIds = [
+  "approval-ref-discovery-no-match-needs-authority",
+  "release-selected-main-reuses-advance-authority",
+] as const;
 
 async function loadSuite(): Promise<ScenarioSuite> {
   return JSON.parse(await readFile(scenarioPath, "utf8")) as ScenarioSuite;
@@ -180,6 +184,7 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
       "proposal.apply",
       "proposal.materialize",
       "proposal.prepare",
+      "proposal.validate",
       "semantic-review.materialize",
       "semantic-review.record",
       "tests.discover",
@@ -188,6 +193,27 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
     ],
   );
   assert.ok(operations.every((operation) => !operation.includes("integrat")));
+});
+
+test("REQ-26234DC8 REQ-32C76ED3 ref-discovery evals cover no-match and named-release authority", async () => {
+  const scenarios = new Map((await loadSuite()).scenarios.map((scenario) => [scenario.id, scenario]));
+  assert.ok(approvalRefDiscoveryScenarioIds.every((id) => scenarios.has(id)));
+
+  const noMatch = scenarios.get("approval-ref-discovery-no-match-needs-authority");
+  assert.equal(noMatch?.route, "branch-preparation");
+  assert.deepEqual(noMatch?.expected_operations, ["proposal.validate"]);
+  assert.ok(noMatch?.forbidden_actions.includes("ask-human-to-search-git"));
+  assert.ok(noMatch?.forbidden_actions.includes("perform-unbounded-history-search"));
+  assert.ok(noMatch?.forbidden_actions.includes("create-candidate-commit"));
+  assert.ok(noMatch?.human_review.some((criterion) => /no existing ref matches/u.test(criterion)));
+
+  const release = scenarios.get("release-selected-main-reuses-advance-authority");
+  assert.equal(release?.route, "composed-workflow");
+  assert.deepEqual(release?.expected_operations, ["proposal.prepare", "proposal.validate"]);
+  assert.ok(release?.forbidden_actions.includes("ask-for-integration-branch"));
+  assert.ok(release?.forbidden_actions.includes("ask-for-preauthorized-commit"));
+  assert.ok(release?.forbidden_actions.includes("push-remote-ref"));
+  assert.ok(release?.human_review.some((criterion) => /reuses main without asking/u.test(criterion)));
 });
 
 test("REQ-89E78697 REQ-189D2CFA REQ-44068C1A local integration evals cover normalization, races, authority, and remote refusal", async () => {
@@ -813,6 +839,82 @@ test("REQ-89E78697 REQ-189D2CFA REQ-44068C1A local-integration review template i
   assert.ok(first !== undefined);
   first.verdict = "pass";
   assert.equal(validate(invalidPass), false);
+});
+
+test("REQ-26234DC8 REQ-32C76ED3 ref-discovery review template is schema-valid and inert", async () => {
+  const schema = JSON.parse(
+    await readFile(join(repositoryRoot, "evals/skill/ref-discovery-review-result.schema.json"), "utf8"),
+  ) as object;
+  const template = JSON.parse(
+    await readFile(join(repositoryRoot, "evals/skill/ref-discovery-review-result.template.json"), "utf8"),
+  ) as {
+    readonly scenario_results: readonly {
+      readonly scenario_id: string;
+      readonly verdict: string;
+      readonly transcript: unknown;
+    }[];
+    readonly overall_verdict: string;
+  };
+  const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
+  assert.equal(validate(template), true, JSON.stringify(validate.errors));
+  assert.deepEqual(
+    template.scenario_results.map(({ scenario_id }) => scenario_id),
+    [...approvalRefDiscoveryScenarioIds],
+  );
+  assert.ok(
+    template.scenario_results.every(({ verdict, transcript }) => verdict === "not_reviewed" && transcript === null),
+  );
+  assert.equal(template.overall_verdict, "not_reviewed");
+
+  const invalidPass = JSON.parse(JSON.stringify(template)) as {
+    scenario_results: { verdict: string; transcript: unknown }[];
+  };
+  const first = invalidPass.scenario_results[0];
+  assert.ok(first !== undefined);
+  first.verdict = "pass";
+  assert.equal(validate(invalidPass), false);
+});
+
+test("REQ-26234DC8 REQ-32C76ED3 retains the fresh-context ref-discovery pass verdict", async () => {
+  const schema = JSON.parse(
+    await readFile(join(repositoryRoot, "evals/skill/ref-discovery-review-result.schema.json"), "utf8"),
+  ) as object;
+  const result = JSON.parse(
+    await readFile(join(repositoryRoot, "evals/skill/ref-discovery-review-result.json"), "utf8"),
+  ) as {
+    readonly skill_revision: string;
+    readonly reviewer: { readonly identity: string; readonly role: string };
+    readonly scenario_results: readonly {
+      readonly scenario_id: string;
+      readonly verdict: string;
+      readonly transcript: { readonly path: string; readonly sha256: string };
+      readonly findings: readonly string[];
+    }[];
+    readonly overall_verdict: string;
+  };
+  const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
+  assert.equal(validate(result), true, JSON.stringify(validate.errors));
+  assert.deepEqual(
+    result.scenario_results.map(({ scenario_id }) => scenario_id),
+    [...approvalRefDiscoveryScenarioIds],
+  );
+  assert.deepEqual(result.reviewer, {
+    identity: "Codex fresh-context evaluator",
+    role: "independent model Skill reviewer",
+  });
+  assert.ok(result.scenario_results.every(({ verdict, findings }) => verdict === "pass" && findings.length === 0));
+  assert.equal(result.overall_verdict, "pass");
+
+  const manifest = await readFile(join(repositoryRoot, "skills/sdd-yo/payload-manifest.json"));
+  assert.equal(result.skill_revision, createHash("sha256").update(manifest).digest("hex"));
+  const transcriptPaths = new Set(result.scenario_results.map(({ transcript }) => transcript.path));
+  assert.deepEqual([...transcriptPaths], ["transcripts/codex-ref-discovery-verdict.md"]);
+  const transcript = await readFile(join(repositoryRoot, "evals/skill", [...transcriptPaths][0] ?? ""));
+  const fingerprint = `sha256:${createHash("sha256").update(transcript).digest("hex")}`;
+  assert.ok(result.scenario_results.every(({ transcript: binding }) => binding.sha256 === fingerprint));
+  assert.match(transcript.toString("utf8"), /approval-ref-discovery-no-match-needs-authority/u);
+  assert.match(transcript.toString("utf8"), /release-selected-main-reuses-advance-authority/u);
+  assert.match(transcript.toString("utf8"), /Overall verdict: \*\*PASS\*\*/u);
 });
 
 test("REQ-89E78697 REQ-189D2CFA REQ-44068C1A retains the identified local-integration human pass verdict", async () => {

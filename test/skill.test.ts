@@ -666,6 +666,29 @@ test("REQ-26234DC8 approval route preserves informed human authority and downstr
   assert.doesNotMatch(approval, /infer (?:an )?approv/u);
 });
 
+test("REQ-26234DC8 REQ-32C76ED3 approval-to-preparation discovers refs without broadening Git authority", async () => {
+  const skill = await readFile(join(skillRoot, "SKILL.md"), "utf8");
+  const approval = await readFile(join(skillRoot, "references/approval.md"), "utf8");
+  const preparation = await readFile(join(skillRoot, "references/branch-preparation.md"), "utf8");
+  const surfaces = `${skill}\n${approval}\n${preparation}`;
+
+  assert.match(preparation, /Before Git discovery, run `proposal validate`/u);
+  assert.match(preparation, /ApprovalEvidence to name the same project, mode, base\s+object, candidate tree/u);
+  assert.match(preparation, /current local and remote-tracking ref tips/u);
+  assert.match(preparation, /Do not perform an unbounded history\s+search/u);
+  assert.match(preparation, /delegate this mechanically discoverable Git inspection/u);
+  assert.match(preparation, /Reuse an integration ref already explicitly named/u);
+  assert.match(preparation, /resolve it to its exact current commit instead of asking for its name again/u);
+  assert.match(preparation, /more than\s+one suitable candidate ref.*require explicit selection/su);
+  assert.match(preparation, /never choose a replacement ref\s+silently/u);
+  assert.match(preparation, /no current ref resolves to a commit/u);
+  assert.match(preparation, /Propose one\s+concrete local branch name and one candidate commit/u);
+  assert.match(preparation, /only when it was not already supplied in\s+advance/u);
+  assert.match(surfaces, /Read-only ref\s+discovery never (?:supplies or )?broadens/u);
+  assert.match(surfaces, /never implies push/u);
+  assert.doesNotMatch(approval, /supplies its branch-head and integration refs/u);
+});
+
 test("REQ-AFD65A03 REQ-A8739118 REQ-7341DBB7 REQ-964B9F80 preparation preserves approval authority and exact patches", async () => {
   const cli = await fakeCli();
   const args = [

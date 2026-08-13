@@ -82,6 +82,14 @@ Milestone 26 cases add exact human semantic-review subject presentation, one
 pause for decision and any missing identity, machine-owned post-pause subject
 comparison, technical output-target retry without a repeated decision, and
 automatic continuation to an already selected read-only readiness result.
+Milestone 28 adds two separate fresh-context forward-eval cases for bounded
+approval-to-preparation ref discovery: one with no matching ref and withheld
+Git authority, and one named-release interaction with selected `main` and
+advance authority for exactly one local candidate branch and commit. Their
+`ref-discovery-review-result.template.json` is inert. A completed result must
+bind both verdicts to one retained transcript and the exact reviewed packaged
+Skill manifest SHA-256; static scenario text and scripted guards are not review
+evidence.
 
 These checks do not simulate an agent or count as the manual verification
 required by `REQ-26234DC8`, `REQ-D17B2FB9`, and `REQ-1DD46CA9`. For human review,

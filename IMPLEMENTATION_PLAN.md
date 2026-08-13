@@ -2,9 +2,8 @@
 
 ## Status
 
-- Active: no selected milestone; choose one bounded candidate before further
-  implementation
-- Complete: Milestones 0–27; public `sdd-yo@0.5.2`
+- Active: none
+- Complete: Milestones 0–28; public `sdd-yo@0.5.2`
 - Last updated: 2026-08-13
 
 ## Authority and navigation
@@ -70,11 +69,15 @@ required root lockfile and packaged Skill payload identity copies against it.
 Exact installation commands remain synchronized for user safety, while
 protocol versions and historical release evidence remain independent records.
 
-## Current planning state
-
-No further milestone is selected. Choose one candidate below, define its
-Requirement traceability, boundaries, validation, done condition, and first
-incomplete leaf before implementation begins.
+After an exact recorded approval for `spec-code` or `spec`, the Skill validates
+the retained subject and performs bounded read-only discovery across current
+local and remote-tracking ref tips before asking the human about refs. It reuses
+an integration ref already selected by the bounded outcome, resolves and
+rechecks exact commits before preparation, requires explicit selection for
+multiple matching candidates, and proposes one concrete local branch and commit
+when no match exists. Read-only discovery, approval, and preparation never
+supply Git mutation or push authority; advance authority applies only to the
+exact mutations named by the selected outcome.
 
 ## Candidate backlog
 

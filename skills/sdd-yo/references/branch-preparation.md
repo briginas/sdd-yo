@@ -5,24 +5,55 @@ approved proposal or explicitly apply the resulting exact SpecPatch.
 
 ## Prepare without writing
 
-Require all of these explicit retained inputs for `spec-code` or `spec`:
+Require these retained inputs for `spec-code` or `spec`:
 
 - the exact retained proposal bundle;
-- branch-head and integration Git refs;
-- current project-relative ApprovalEvidence when approval is expected.
+- current project-relative ApprovalEvidence when approval is expected; and
+- any integration ref already explicitly selected by the bounded outcome.
 
-Before preparation, verify that the explicit branch-head ref resolves to a
-commit whose configured specification tree contains the exact approved
-candidate. A dedicated feature branch is the normal development arrangement,
-but it is not a protocol requirement: commit identity, not the branch name, is
-authoritative. If no suitable branch or commit exists, stop and request
-separate user authorization to create the branch or commit. Never create either
-as an implied preparation side effect.
+Before Git discovery, run `proposal validate` through the compatibility wrapper
+against the exact retained bundle and stop unless its unchanged response is
+`ok`. Require the current ApprovalEvidence to name the same project, mode, base
+object, candidate tree, object-ID delta, code targets, and semantic and
+structural delta fingerprints returned by that validation. Do not reconstruct
+or repair either subject. The later `proposal prepare` invocation remains the
+authority that atomically revalidates the approval and current refs together.
+
+Before asking the human for a ref, inspect only the selected repository's
+current local and remote-tracking ref tips without changing the index,
+worktree, refs, or retained artifacts. Resolve each discovered tip to one exact
+commit and compare that commit's configured specification tree with the exact
+approved candidate retained in the bundle. Do not perform an unbounded history
+search or delegate this mechanically discoverable Git inspection to the human.
+
+Reuse an integration ref already explicitly named by the selected outcome and
+resolve it to its exact current commit instead of asking for its name again. If
+the outcome did not select one, present the bounded discovered refs and retain
+the human's explicit integration-ref selection. When exactly one suitable
+candidate ref remains, retain it as the proposed branch head. When more than
+one suitable candidate ref remains, present their exact ref names and resolved
+commits and require explicit selection; never choose a replacement ref
+silently.
+
+When no current ref resolves to a commit whose configured specification tree
+equals the exact approved candidate, state that exact outcome. Propose one
+concrete local branch name and one candidate commit, then request authorization
+for that exact branch and commit only when it was not already supplied in
+advance. Approval, preparation, and read-only inspection do not authorize this
+mutation. Advance authority for a bounded named outcome may cover only its
+listed Git mutations; it never implies push. Never create a branch or commit as
+an implicit preparation side effect.
+
+Immediately before preparation, re-resolve the selected branch-head and
+integration refs to exact commits and verify again that the branch-head's
+configured specification tree contains the exact approved candidate. A
+dedicated feature branch is the normal development arrangement, but it is not
+a protocol requirement: commit identity, not the branch name, is authoritative.
 
 Never infer a human decision, synthesize ApprovalEvidence, change the approved
-mode, or choose replacement refs. ApprovalEvidence recorded by the separate
-explicit decision route is acceptable only when it is current for this exact
-bundle. Invoke preparation only through:
+mode, choose replacement refs, or broaden Git authority. ApprovalEvidence
+recorded by the separate explicit decision route is acceptable only when it is
+current for this exact bundle. Invoke preparation only through:
 
 ```text
 node scripts/check-cli-compatibility -- proposal prepare --bundle <project-relative-path> --branch-head <git-ref> --integration-ref <git-ref> [--approval <project-relative-path> ...] --cwd <directory>

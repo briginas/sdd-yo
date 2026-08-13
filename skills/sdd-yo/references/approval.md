@@ -66,9 +66,12 @@ decision, mode, and subject; never pass rejection to preparation as if it were
 approval.
 
 A newly recorded approval may be supplied to one separately invoked
-`proposal prepare` operation only when the user explicitly requests preparation
-and supplies its branch-head and integration refs. Then load
-[branch-preparation.md](branch-preparation.md) and preserve all of its stops.
+`proposal prepare` operation only when preparation is already selected or the
+user explicitly requests it. Then load
+[branch-preparation.md](branch-preparation.md), discover the bounded current Git
+ref tips before asking the human for a ref, reuse an integration ref already
+named by the selected outcome, and preserve every selection and mutation stop.
+Do not ask the human to search for or invent mechanically discoverable refs.
 
 Recording does not authorize SpecPatch application, implementation changes,
 branch creation, commit, push, test execution, QA, finding resolution,

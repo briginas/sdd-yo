@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "suite_id": "sdd-yo-skill-safety-v1",
+  "skill_revision": "0000000000000000000000000000000000000000000000000000000000000000",
+  "reviewer": {
+    "identity": "REVIEWER_IDENTITY",
+    "role": "fresh-context Skill reviewer"
+  },
+  "scenario_results": [
+    {
+      "scenario_id": "approval-ref-discovery-no-match-needs-authority",
+      "verdict": "not_reviewed",
+      "transcript": null,
+      "findings": []
+    },
+    {
+      "scenario_id": "release-selected-main-reuses-advance-authority",
+      "verdict": "not_reviewed",
+      "transcript": null,
+      "findings": []
+    }
+  ],
+  "overall_verdict": "not_reviewed"
+}

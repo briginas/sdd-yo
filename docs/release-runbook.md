@@ -183,12 +183,21 @@ For such a governed product change:
 - create the selected ignored staging parent before proposal materialization;
 - retain exact CLI-created candidate, ProposalPackage, ApprovalEvidence, and
   SpecPatch bytes;
-- create a local candidate commit only when preparation requires the exact
-  approved candidate Git subject;
+- treat the request's named integration branch, normally `main`, as already
+  selected: let the Skill resolve and recheck its exact current commit instead
+  of asking for the branch name again;
+- let the Skill inspect bounded current local and remote-tracking ref tips before
+  asking for a branch-head ref, and create its one proposed local candidate
+  branch and commit only when preparation requires the exact approved candidate
+  Git subject and that mutation is covered by the bounded release authority;
 - do not push the candidate branch unless separately required and authorized;
   and
 - keep semantic confirmation, approval, patch application, implementation,
   Git, publication, and release as separate authority boundaries.
+
+A bounded named release may authorize the Git mutations it explicitly lists in
+advance. Inspect, plan, prepare, test, or review requests do not. Read-only ref
+discovery never broadens either authority set.
 
 Complete and integrate every included product change before binding the release
 identity and artifact. A metadata-only release proceeds directly to Phase 3.
