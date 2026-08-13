@@ -265,8 +265,9 @@ artifacts rather than requiring a hidden durable workflow database.
 
 ### Acceptance criteria <!-- sdd:acceptance -->
 
-- Proposal bundles, approval, test, QA, finding, and
-  merge artifacts are explicit versioned inputs and outputs.
+- Proposal bundles, approval, semantic-review manifests, human semantic-review
+  evidence, test, QA, finding, and merge artifacts are explicit versioned
+  inputs and outputs.
 - A specification-changing proposal bundle retains its complete candidate and
   exact ProposalPackage together; a package-only code proposal bundle derives
   its unchanged subject from the selected base and exact Requirement targets.

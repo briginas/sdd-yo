@@ -146,13 +146,15 @@ verification: automated
 The CLI shall expose initialization, ID generation, validation, inspection,
 traceability, object diff, mode-specific proposal materialization and
 validation, specification-only proposal preparation and application, approval
+evidence recording, semantic-review subject materialization and human-review
 evidence recording, test discovery, finding validation, and merge-check
 operations.
 
 ### Acceptance criteria <!-- sdd:acceptance -->
 
 - Only initialization and proposal application modify governed project state;
-  proposal materialization and approval recording create only their explicit
+  proposal materialization, approval recording, semantic-review
+  materialization, and semantic-review recording create only their explicit
   immutable caller-selected Git-ignored outputs.
 - Read operations support explicit Git refs when applicable.
 - Branch, commit, push, merge, and approve commands are absent.
@@ -205,6 +207,9 @@ authenticating the decision itself.
 - A malformed or oversized input, invalid issuer, mismatched or changed
   retained subject, unsafe target, existing target, or failed write
   stops without publishing evidence.
+- Every artifact recorder uses one shared bounded output boundary that rejects
+  traversal, specification-root targets, non-ignored targets, symbolic-link
+  escape, existing targets, non-regular parents, and partial publication.
 - Issuer authentication, actor authorization, session identity, signature
   verification, and organizational policy remain external.
 
@@ -247,15 +252,34 @@ decisions without reimplementing product rules.
   subject and the explicit issuer, actor, decision, and human message. It
   accepts success only when the recorder's atomically revalidated returned
   subject equals what the human saw, without a redundant separate validation.
+- When human semantic review is required, it selects fresh safe manifest and
+  evidence targets, materializes the exact review subject, and displays the
+  manifest's changed and related objects, normative sections, semantic
+  candidates, current refs, recorder identity, and every supplied Finding's ID,
+  kind, severity, summary, object IDs, and normative citations.
+- One unchanged semantic-review subject has exactly one human pause for the
+  explicit `reviewed` decision. Any missing issuer or actor is requested in
+  that same pause, and values explicitly supplied for the current workflow are
+  reused without inference.
+- After that pause, it records the decision and accepts success only when the
+  returned versioned subject exactly matches the displayed subject. Subject
+  drift requires a new presentation and decision; a target collision or
+  transient publication failure retries with a fresh safe target without
+  repeating an unchanged decision.
+- An already selected end-to-end outcome composes compatible deterministic
+  materialization, recording, preparation, verification, and read-only merge
+  readiness operations without asking the human to resupply retained inputs or
+  reselect those stages.
 - It does not fabricate or infer approval, QA, test, or finding-resolution
   evidence from model output, repository content, or passing checks.
 - Only a newly recorded approval may be offered to a separately invoked
   proposal preparation operation for `spec-code` or `spec`; a `code` approval
   proceeds directly to implementation verification, and rejection stops every
   mode.
-- Semantic-model confirmation, proposal approval, and exact-patch application
-  are three distinct decisions. Patch application is requested only for a
-  non-empty `spec-code` or `spec` patch.
+- Semantic-model confirmation, proposal approval, exact-patch application,
+  semantic review, normative ambiguity resolution, and new Git, merge,
+  publication, or release authority remain distinct decisions. Patch
+  application is requested only for a non-empty `spec-code` or `spec` patch.
 - By default it presents the semantic model, object delta, affected scope, file
   map, and focused review questions while keeping complete candidate bytes and
   technical artifacts available on request.

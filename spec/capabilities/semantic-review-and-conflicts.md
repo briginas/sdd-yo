@@ -228,12 +228,33 @@ verification: manual
 
 ### Statement <!-- sdd:statement -->
 
-When semantic review is required and no model analysis is available, the gate
-shall return `REVIEW_REQUIRED` until a human provides equivalent review
-evidence.
+When semantic review is required and no model analysis is available, the CLI
+shall materialize the exact current human-review subject before the decision
+and shall keep the gate at `REVIEW_REQUIRED` until a human explicitly reviews
+that unchanged subject and the CLI records current review evidence.
 
 ### Acceptance criteria <!-- sdd:acceptance -->
 
 - AI unavailability is not treated as a structural failure.
 - The core does not silently skip required semantic review.
-- Human review evidence names the candidate input fingerprint.
+- Materialization derives a `SemanticAnalysisInputManifest` from one exact
+  Change, its retained mode-correct proposal bundle, resolved proposal and
+  integration refs, the fixed human-review analyzer identity, and zero or more
+  explicit current Findings, then atomically publishes it only to a new safe
+  caller-selected Git-ignored path outside the specification root.
+- Materialization returns a versioned machine-comparable review subject that
+  contains the project and mode, resolved proposal head, integration ref and
+  merge base, retained package identity, analyzer identity, manifest input
+  fingerprint, and canonical sorted Finding IDs.
+- Recording requires the retained manifest and the same explicit inputs,
+  re-resolves every ref, and publishes immutable
+  `HumanSemanticReviewEvidence` only for an unchanged review subject and an
+  explicit non-empty issuer, identified actor, and `reviewed` decision.
+- The recorder derives the candidate input fingerprint and canonical Finding
+  IDs, records CLI producer identity without an ambient timestamp, and returns
+  the exact review subject with the published evidence path.
+- Subject drift stops without evidence; an existing or unsafe target or failed
+  write publishes no partial manifest or evidence.
+- The CLI does not perform model analysis, select Findings, make or infer the
+  human decision, authenticate the issuer, authorize the actor, or claim
+  semantic completeness.

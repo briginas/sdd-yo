@@ -28,7 +28,8 @@ verification: automated
 ### Statement <!-- sdd:statement -->
 
 Merge Gate shall derive its result from explicit project, mode, Git ref,
-proposal, approval, test, QA, finding, and resolution artifacts.
+proposal, approval, test, QA, semantic-review manifest, human-review evidence,
+finding, and resolution artifacts.
 
 ### Acceptance criteria <!-- sdd:acceptance -->
 
@@ -36,6 +37,9 @@ proposal, approval, test, QA, finding, and resolution artifacts.
 - Artifact references may be provided by file or standard input.
 - Hidden workflow state is not required.
 - Missing required input is reported explicitly.
+- Human semantic-review evidence is accepted only with its retained manifest
+  and the explicit Change, proposal bundle, refs, and Findings from which the
+  current review subject is recomputed.
 
 <a id="req-bcfa15d8"></a>
 
@@ -88,6 +92,9 @@ configuration, indexes, and object fingerprints to which it is bound.
 - Adapter configuration changes invalidate dependent test artifacts.
 - Semantic or structural delta changes invalidate approval.
 - Integration-ref movement invalidates conflict and merge reports.
+- Proposal-head or integration-ref movement, a changed Change or proposal
+  bundle, manifest drift, analyzer mismatch, or a changed supplied Finding set
+  invalidates human semantic-review evidence.
 - Stale evidence is never silently reused.
 
 <a id="req-8e2d9a5f"></a>

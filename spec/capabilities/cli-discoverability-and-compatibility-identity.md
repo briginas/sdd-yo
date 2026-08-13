@@ -38,7 +38,8 @@ an SDD Project.
 - `sdd <command-path> --help` exits `0` and describes the syntax and options of
   the selected supported command.
 - Supported compound paths include commands such as `proposal prepare`,
-  `tests discover`, and `merge check`.
+  `semantic-review materialize`, `semantic-review record`, `tests discover`,
+  and `merge check`.
 - The same CLI identity produces byte-for-byte identical help output.
 - Help does not execute the selected command, resolve an SDD Project, or read
   or modify project configuration, specification, or Git state.
