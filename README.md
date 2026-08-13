@@ -9,7 +9,7 @@ You can add SDD Yo to an existing project and build the specification step by
 step. Every change to the specification or code carries its own context, so
 several changes can be developed at the same time without confusion.
 
-Version `0.5.4` is being prepared for npm and requires Node.js `22.18.0` or newer.
+Exact version `0.5.4` is public on npm and requires Node.js `22.18.0` or newer.
 Public availability is established only by the npm registry, not by source or
 README state. The project is pre-1.0, and installing the package does not
 install or publish a Codex plugin.
@@ -102,8 +102,8 @@ It is useful when you want to see the current run, its steps, and its separate
 approval, readiness, freshness, and integration states without reading logs.
 
 Use this guide after installing an npm package version that includes the
-observer in the selected repository. The release candidate `sdd-yo@0.5.4`
-package does not include it yet.
+observer in the selected repository. The public `sdd-yo@0.5.4` package
+includes it.
 
 Create a JSONL file inside the selected SDD Project. Each line is one event.
 The `project_id` must match `.sdd/config.yaml`, and every event in one run must

@@ -5,7 +5,7 @@ This repository-specific runbook tells an AI agent how to publish one exact
 without defining the governed SDD workflow. It is not product authority and is
 not part of the shipped `sdd-yo` Agent Skill.
 
-This runbook was last exercised successfully for `sdd-yo@0.5.3`. Always inspect
+This runbook was last exercised successfully for `sdd-yo@0.5.4`. Always inspect
 the live repository, GitHub configuration, and npm registry before reusing that
 fact.
 
