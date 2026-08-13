@@ -2,8 +2,8 @@
 
 ## Status
 
-- Active: Milestone 29 — release `sdd-yo@0.5.3`
-- Complete: Milestones 0–28; public `sdd-yo@0.5.2`
+- Active: none
+- Complete: Milestones 0–29; public `sdd-yo@0.5.3`
 - Last updated: 2026-08-13
 
 ## Authority and navigation
@@ -14,28 +14,6 @@
 - Execution-planning and closeout procedure:
   [`plans/README.md`](plans/README.md)
 - Repository work discipline and validation: [`AGENTS.md`](AGENTS.md)
-
-## Milestone 29 — release `sdd-yo@0.5.3`
-
-**Outcome:** publish the exact immutable `main` release subject as public
-`sdd-yo@0.5.3` through the protected GitHub release workflow and npm trusted
-publishing, then independently verify the registry artifact, provenance, and
-an isolated consumer.
-
-**Requirement traceability:** `REQ-B0B35D6D`, `REQ-ABFFEAF2`,
-`REQ-9CE36B68`, `REQ-0163273A`.
-
-**Immediate leaf:** bind and validate the `0.5.3` source identity, reproducible
-artifact, and exact workflow inventory from clean `main`.
-
-**Done condition:** the annotated `v0.5.3` tag, GitHub Release, protected
-trusted-publisher workflow, npm registry bytes and provenance, isolated
-consumer, and final CI bind to the verified release subject; then compact this
-plan through the milestone closeout contract.
-
-**Exclusions:** unrelated runtime or specification behavior; new protocol or
-schema major versions; non-macOS support; a Codex plugin; hosted state; local
-`npm publish`; and token authentication.
 
 ## Product baseline
 
@@ -73,16 +51,17 @@ asking for retained inputs again. The CLI and Skill never make or infer the
 human decision, create Findings, claim semantic completeness, or broaden Git,
 merge, publication, or release authority.
 
-Exact `sdd-yo@0.5.2` is public on npm from annotated tag `v0.5.2` at commit
-`15f7a33c290ddd742ff57470af35480645ce03fb`. Its registry tarball matches the
+Exact `sdd-yo@0.5.3` is public on npm from annotated tag `v0.5.3` at commit
+`a1bffd3c054afc9cae097187ab8089b7dbab0241`. Its registry tarball matches the
 reviewed release subject byte-for-byte with SHA-256
-`2129c9ec55e0095aaff96554a2cd120641fa9338e408419a223cdab0c836beba`,
+`24b8baaad5043fd6a81a98a942cffefcba1fdec70a5a017af7b410991abd2bbb`,
 inventory SHA-256
-`7d2e69d75debc2639fcc0a9470df3b9494a378b45c831db5e803f47235448079`,
-and 2,139 entries. npm trusted publishing records SLSA provenance for the
-GitHub Actions `publish.yml` subject. The public package, CLI identity, library,
-schemas, repository Skill, macOS user-scoped private CLI and wrapper, and an
-isolated exact consumer installation are verified.
+`ccff994aec406169d798981763c6d2cd81fecaec209cddf7bec7fab942ef3558`,
+and 2,148 entries. npm trusted publishing records cryptographically verified
+SLSA provenance for the GitHub Actions `publish.yml` release subject. The public
+package, CLI identity, library, schemas, repository Skill, macOS user-scoped
+private CLI and wrapper, and an isolated exact consumer installation are
+verified.
 
 The source `package.json` is the primary current package identity. CLI and
 release automation derive its name and version from that immutable manifest;

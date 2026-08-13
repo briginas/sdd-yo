@@ -70,7 +70,7 @@ the full specification when a small Capability or Requirement set is enough.
 - Optional Agent Skill: `sdd-yo`, a progressive-disclosure orchestrator over
   compatible deterministic CLI JSON; it does not replace CLI authority or human
   evidence.
-- Distribution state: version `0.5.3` is the release subject; the exact offline
+- Distribution state: version `0.5.3` is public on npm; the exact offline
   tarball route is retained, the user-scoped lifecycle is macOS-only, and no
   Codex plugin is published.
 
