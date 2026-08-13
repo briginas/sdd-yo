@@ -5,9 +5,9 @@ This repository-specific runbook tells an AI agent how to publish one exact
 without defining the governed SDD workflow. It is not product authority and is
 not part of the shipped `sdd-yo` Agent Skill.
 
-The public baseline was `sdd-yo@0.5.1` when this runbook was written. Always
-inspect the live repository, GitHub configuration, and npm registry before
-reusing that fact.
+This runbook was last exercised successfully for `sdd-yo@0.5.2`. Always inspect
+the live repository, GitHub configuration, and npm registry before reusing that
+fact.
 
 ## Authority map
 
@@ -131,6 +131,10 @@ npm view sdd-yo dist-tags --json
 npm view sdd-yo@<NEW_VERSION> version --json
 ```
 
+Run the target-version absence check separately from checks that must succeed.
+Its expected not-found exit must be captured and classified as evidence rather
+than allowed to abort or obscure the remaining readiness checks.
+
 Require:
 
 - npm `latest` equals `CURRENT_VERSION`;
@@ -225,12 +229,23 @@ Never use an unrestricted global replacement.
 Use the exact `NPM_VERSION` declared by `publish.yml`, not the ambient local npm
 version. Verify it before packing.
 
+Create a fresh writable npm cache outside the repository and use it for every
+local pack, registry download, and consumer-install command in this release.
+Do not depend on or repair ownership of the user's shared npm cache as a release
+step.
+
 Run at least two independent packs into separate new temporary directories:
 
 ```text
-npm pack --json --pack-destination <FIRST_DIRECTORY>
-npm pack --json --pack-destination <SECOND_DIRECTORY>
+npm_config_cache=<RELEASE_CACHE> npm pack --json --pack-destination <FIRST_DIRECTORY>
+npm_config_cache=<RELEASE_CACHE> npm pack --json --pack-destination <SECOND_DIRECTORY>
 ```
+
+Capture each complete `npm pack --json` result in a temporary evidence file;
+do not stream its full package-file inventory into an agent transcript. Report
+only the selected filename, npm shasum and integrity, sizes, file count, and the
+independently computed artifact and inventory values. A truncated transcript is
+not retained evidence.
 
 For each exact tarball compute:
 
@@ -336,6 +351,12 @@ Confirm that the run binds to the exact release event, tag, and `RELEASE_SHA`.
 Record protected deployment approval only with supplied or explicitly
 delegated authority.
 
+Immediately before approval, read the pending deployment again and verify its
+workflow run, release event, tag, `RELEASE_SHA`, environment, and permitted
+reviewer. Approve only the exact environment identifier returned by that
+unchanged pending deployment. Stop if the pending subject or environment has
+changed.
+
 Do not restate or bypass the job. Require every step in the current
 [`publish.yml`](../.github/workflows/publish.yml) and every invariant in
 [`test/public-release.test.ts`](../test/public-release.test.ts) to pass,
@@ -372,14 +393,25 @@ compare it with the reviewed artifact by:
 Require provenance to bind the artifact to `briginas/sdd-yo`, `publish.yml`,
 the exact release subject, and the expected SLSA predicate.
 
+Cryptographically verify the registry attestation with a supported verifier,
+then inspect its signed SLSA payload for those bindings. Decoding a base64 or
+DSSE payload is useful for field inspection but is not by itself signature or
+provenance verification.
+
 Then create a fresh temporary npm project outside the repository:
 
 ```text
+# working directory: <CONSUMER_DIRECTORY>, never the source repository
 npm init --yes
 npm install --no-audit --no-fund --save-exact sdd-yo@<NEW_VERSION>
 npm ls --depth=0 --json
 node ./node_modules/sdd-yo/dist/bin/sdd.js --version --format json
 ```
+
+Set the process working directory to the fresh consumer directory before
+running `npm init`; do not rely on `npm init --prefix` to isolate its writes.
+Record the source repository status immediately before and after this proof and
+require it to remain unchanged.
 
 Require exact public-registry resolution, package and CLI version
 `NEW_VERSION`, the expected compatible schema and Skill protocol identities,
