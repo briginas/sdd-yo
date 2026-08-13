@@ -38,13 +38,13 @@ test("REQ-B0B35D6D REQ-ABFFEAF2 REQ-9CE36B68 REQ-0163273A derives identity and p
     new RegExp(`PACKAGE_VERSION: ${currentPackageIdentity.version.replaceAll(".", "\\.")}`, "u"),
   );
   assert.match(workflow, /NPM_VERSION: 11\.16\.0/u);
-  assert.match(workflow, /PREVIOUS_PUBLIC_VERSION: 0\.5\.2/u);
-  assert.match(workflow, /EXPECTED_ARTIFACT_SHA256: 24b8baaad5043fd6a81a98a942cffefcba1fdec70a5a017af7b410991abd2bbb/u);
+  assert.match(workflow, /PREVIOUS_PUBLIC_VERSION: 0\.5\.3/u);
+  assert.match(workflow, /EXPECTED_ARTIFACT_SHA256: 12c9e2805189c383c43021c6e39f0fab97b551c1fc1a3c37773644aeef127167/u);
   assert.match(
     workflow,
-    /EXPECTED_INVENTORY_SHA256: ccff994aec406169d798981763c6d2cd81fecaec209cddf7bec7fab942ef3558/u,
+    /EXPECTED_INVENTORY_SHA256: fb8bd8867afbcab6492ff2a94a5f6b25780d738d1b1b8db56c2e565bb8e740f1/u,
   );
-  assert.match(workflow, /EXPECTED_INVENTORY_ENTRY_COUNT: "2148"/u);
+  assert.match(workflow, /EXPECTED_INVENTORY_ENTRY_COUNT: "2170"/u);
   assert.match(workflow, /Require npm provenance support/u);
   assert.match(workflow, /npm install --global "npm@\$NPM_VERSION"/u);
   assert.match(workflow, /test "\$\(npm --version\)" = "\$NPM_VERSION"/u);

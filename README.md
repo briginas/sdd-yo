@@ -9,7 +9,7 @@ You can add SDD Yo to an existing project and build the specification step by
 step. Every change to the specification or code carries its own context, so
 several changes can be developed at the same time without confusion.
 
-Exact version `0.5.3` is public on npm and requires Node.js `22.18.0` or newer.
+Version `0.5.4` is being prepared for npm and requires Node.js `22.18.0` or newer.
 Public availability is established only by the npm registry, not by source or
 README state. The project is pre-1.0, and installing the package does not
 install or publish a Codex plugin.
@@ -37,7 +37,7 @@ Install the Skill once for your macOS user. This does not add `sdd-yo` to a
 project or create a global `sdd` command.
 
 ```text
-npm exec --package=sdd-yo@0.5.3 -- sdd skill install --scope user --format json
+npm exec --package=sdd-yo@0.5.4 -- sdd skill install --scope user --format json
 ```
 
 In Codex, use `$sdd-yo` to initialize and validate the selected repository.
@@ -61,7 +61,7 @@ Install SDD Yo and its Skill in the selected Git repository:
 
 ```text
 cd /absolute/path/to/repository
-npm install --save-dev --save-exact sdd-yo@0.5.3
+npm install --save-dev --save-exact sdd-yo@0.5.4
 npm exec -- sdd --version --format json
 node ./node_modules/sdd-yo/dist/bin/sdd.js skill install --root /absolute/path/to/repository --format json
 ```
@@ -83,15 +83,15 @@ Validate an existing SDD Project from the terminal without adding the package
 or Skill to its repository:
 
 ```text
-npm exec --package=sdd-yo@0.5.3 -- sdd --version --format json
-npm exec --package=sdd-yo@0.5.3 -- sdd validate --cwd /absolute/path/to/repository --format json
+npm exec --package=sdd-yo@0.5.4 -- sdd --version --format json
+npm exec --package=sdd-yo@0.5.4 -- sdd validate --cwd /absolute/path/to/repository --format json
 ```
 
 After installing the package in a repository, use `npm exec -- sdd ...` to run
 its local CLI.
 
 The version check should return exit code `0`, `status: "ok"`, package and CLI
-version `0.5.3`, and compatible JSON-schema and Skill protocol major `1`. Do
+version `0.5.4`, and compatible JSON-schema and Skill protocol major `1`. Do
 not rely on a global `sdd` executable or Skill. User-scoped installation and
 its public consumer proof are macOS-only.
 
@@ -102,7 +102,7 @@ It is useful when you want to see the current run, its steps, and its separate
 approval, readiness, freshness, and integration states without reading logs.
 
 Use this guide after installing an npm package version that includes the
-observer in the selected repository. The currently public `sdd-yo@0.5.3`
+observer in the selected repository. The release candidate `sdd-yo@0.5.4`
 package does not include it yet.
 
 Create a JSONL file inside the selected SDD Project. Each line is one event.

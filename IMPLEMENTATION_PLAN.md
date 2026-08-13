@@ -2,7 +2,7 @@
 
 ## Status
 
-- Active: none; the next milestone has not been selected
+- Active: Milestone 31 — release `sdd-yo@0.5.4`
 - Complete: Milestones 0–30; public `sdd-yo@0.5.3`
 - Last updated: 2026-08-13
 
@@ -68,6 +68,29 @@ reviewed release subject byte-for-byte with SHA-256
 trusted publishing records cryptographically verified SLSA provenance. The
 source `package.json` remains the primary package identity; publication and
 release remain separately authorized operations.
+
+## Milestone 31 — release `sdd-yo@0.5.4`
+
+Outcome: publish the already integrated `main` subject as an independently
+verifiable public patch release. Requirement traceability: `REQ-B0B35D6D`.
+
+Leaves:
+
+1. Bind source, lockfile, packaged Skill manifest, user documentation, release
+   workflow inventory, and reviewed package artifact to `0.5.4`.
+2. Validate the exact release subject, push `main`, and wait for successful CI.
+3. Create the exact protected tag, GitHub Release, trusted publication, and
+   independent registry, provenance, and clean-consumer proof.
+4. Record durable release facts, compact the plan, push closeout, and wait for
+   final CI.
+
+Done condition: annotated `v0.5.4`, GitHub Release, trusted npm publication,
+matching artifact/inventory/provenance, clean-consumer proof, and a separately
+validated closeout commit all bind to the intended immutable subjects.
+
+Exclusions: product behavior or specification changes, protocol/schema-major
+changes, new platform support, Codex plugin publication, local `npm publish`,
+or token authentication.
 
 ## Candidate backlog
 

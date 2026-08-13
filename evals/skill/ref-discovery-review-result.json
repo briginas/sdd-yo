@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "suite_id": "sdd-yo-skill-safety-v1",
-  "skill_revision": "cfa5a2821a2af551fcf561e213eaa679992ffa778eb80437eae5d01ecad0e636",
+  "skill_revision": "f7261d99e7f09bafc11702ec8330db9fed3a41c63b737278c2f0e6c21187046a",
   "reviewer": {
     "identity": "Codex fresh-context evaluator",
     "role": "independent model Skill reviewer"

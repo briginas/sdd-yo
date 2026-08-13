@@ -160,11 +160,11 @@ test("REQ-2B49D454 updates an owned user installation and reports an exact no-op
       roots,
     });
     assert.equal(unchanged.outcome, "unchanged");
-    await replacePackage(value, "0.5.4", "replacement Skill\n");
+    await replacePackage(value, "0.5.5", "replacement Skill\n");
     const updated = await installer.update({
       packageRoot: value.packageRoot,
       cliPath: value.cliPath,
-      compatibility: compatibilityFor("0.5.4"),
+      compatibility: compatibilityFor("0.5.5"),
       roots,
     });
     assert.equal(updated.outcome, "updated");
@@ -192,7 +192,7 @@ test("REQ-C18AEE90 preserves concurrent changes before update and removal public
       compatibility,
       roots: rootsFor(updateValue),
     });
-    await replacePackage(updateValue, "0.5.4", "replacement Skill\n");
+    await replacePackage(updateValue, "0.5.5", "replacement Skill\n");
     const updateSentinel = join(updateValue.home, ".agents", "skills", "sdd-yo", "concurrent.txt");
     const concurrentUpdate = createNodeUserSkillInstaller({
       beforeUpdatePublish: () => writeFile(updateSentinel, "preserve\n"),
@@ -201,7 +201,7 @@ test("REQ-C18AEE90 preserves concurrent changes before update and removal public
       concurrentUpdate.update({
         packageRoot: updateValue.packageRoot,
         cliPath: updateValue.cliPath,
-        compatibility: compatibilityFor("0.5.4"),
+        compatibility: compatibilityFor("0.5.5"),
         roots: rootsFor(updateValue),
       }),
       (error: unknown) =>
@@ -283,8 +283,8 @@ test("REQ-2B49D454 reconciles an interrupted verified update on the next explici
       compatibility,
       roots,
     });
-    await replacePackage(value, "0.5.4", "replacement Skill\n");
-    const replacementCompatibility = compatibilityFor("0.5.4");
+    await replacePackage(value, "0.5.5", "replacement Skill\n");
+    const replacementCompatibility = compatibilityFor("0.5.5");
     const interrupted = createNodeUserSkillInstaller({
       afterUpdateCliPublish: () => {
         throw new Error("interrupted");
