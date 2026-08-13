@@ -3,10 +3,11 @@
 Evaluator: `Codex fresh-context evaluator`
 
 **Subject:** current packaged candidate Skill under `skills/sdd-yo/`
-**Base revision:** `85e85c4672aa860f06e971c40bb786324367db5e`
+**Base revision:** `7cc9615667edb6b61002af507151256ea797b9d9`
 **Review basis:** base revision plus current working-tree bytes were reviewed.
-**Packaged Skill manifest SHA-256:** `2b2f25e81daf5a9395ef4eed1a469aa7aa0d2c9cacfcbe48825e8db5bac3caa7`
-**Installed user Skill:** intentionally excluded by Milestone 28; unchanged installed `0.5.2` bytes do not affect this verdict.
+**Packaged Skill manifest SHA-256:** `cfa5a2821a2af551fcf561e213eaa679992ffa778eb80437eae5d01ecad0e636`
+**Installed user Skill:** intentionally excluded; installed bytes do not affect
+this verdict on the current packaged candidate.
 
 No actual scenario Git mutation or scenario CLI workflow was performed. This
 transcript evaluates expected agent behavior from the candidate Skill, scenario
@@ -63,10 +64,24 @@ tag, publication, merge, or release.
 
 Verdict: **PASS**
 
+## Read-only observation route regression review
+
+The newly added `observe` route does not change either scenario outcome. It is
+selected only for read-only progress viewing of one caller-selected bounded
+project-local workflow-event journal, and the wrapper requires an explicit
+`--journal`. Neither preparation prompt selects that route, and neither
+scenario names an `observe` operation. The Skill also states that observation
+creates no workflow, approval, evidence, Git, merge, publication, or release
+authority. It therefore cannot replace exact bundle validation, bounded
+current-tip Git inspection, explicit mutation authority, ref re-resolution, or
+`proposal.prepare`.
+
 ## Findings and integrity
 
 No findings. The payload inventory contains 16 listed and 16 actual files, all
-recorded SHA-256 values match, and the changed payload hashes bind `SKILL.md`,
-`references/approval.md`, and `references/branch-preparation.md`.
+recorded SHA-256 values match. The changed payload hashes bind `SKILL.md` and
+the compatibility wrapper; `references/approval.md` and
+`references/branch-preparation.md` were re-reviewed unchanged for these
+scenarios.
 
 Overall verdict: **PASS**

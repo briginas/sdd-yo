@@ -17,7 +17,7 @@
   },
   "metadata": {
     "owner": "SDD Yo maintainers",
-    "last_reviewed": "2026-08-01",
+    "last_reviewed": "2026-08-13",
     "source_of_truth": "Canonical product Requirements constrain behavior; checked-in versioned schemas and this inventory define maintained wire and fixture contracts.",
     "verification_status": "contract-verified",
     "known_staleness_risks": [
@@ -434,6 +434,84 @@
       "fixture_families": [
         "workflow-artifacts",
         "mode-and-gate-truth-tables",
+        "compatibility"
+      ]
+    },
+    {
+      "contract_id": "artifact.workflow-event",
+      "category": "artifact",
+      "wire_name": "workflow_event",
+      "wire_format": "json",
+      "version": "1.0",
+      "definition_status": "specified",
+      "materialized_schema": "contracts/v1/schemas/workflow-event.schema.json",
+      "authority": "proposal/architecture/artifact-schemas.md#workflow-observation-records",
+      "requirements": [
+        "REQ-61673C24",
+        "REQ-291769E4",
+        "REQ-B2001FED"
+      ],
+      "required_fields": [
+        "schema_version",
+        "artifact_type",
+        "project_id",
+        "change_id",
+        "run_id",
+        "producer_id",
+        "sequence",
+        "event_type"
+      ],
+      "optional_provenance_profile": "none",
+      "ordering_profile": "deterministic-json",
+      "limit_profile": "artifact-input",
+      "compatibility_profile": "json-v1-strict",
+      "fixture_families": [
+        "workflow-artifacts",
+        "security-path-process",
+        "compatibility"
+      ]
+    },
+    {
+      "contract_id": "artifact.workflow-snapshot",
+      "category": "artifact",
+      "wire_name": "workflow_snapshot",
+      "wire_format": "json",
+      "version": "1.0",
+      "definition_status": "specified",
+      "materialized_schema": "contracts/v1/schemas/workflow-snapshot.schema.json",
+      "authority": "proposal/architecture/artifact-schemas.md#workflow-observation-records",
+      "requirements": [
+        "REQ-02F9FAB3",
+        "REQ-1FD47FF6",
+        "REQ-291769E4"
+      ],
+      "required_fields": [
+        "schema_version",
+        "artifact_type",
+        "project_id",
+        "change_id",
+        "run_id",
+        "producer_id",
+        "last_sequence",
+        "execution",
+        "current_step_id",
+        "cli_status",
+        "merge_readiness",
+        "artifact_freshness",
+        "approval_state",
+        "integration_state",
+        "interruption_reason",
+        "observer_diagnostic",
+        "steps",
+        "artifacts"
+      ],
+      "optional_provenance_profile": "none",
+      "ordering_profile": "deterministic-json",
+      "limit_profile": "artifact-input",
+      "compatibility_profile": "json-v1-strict",
+      "fixture_families": [
+        "workflow-artifacts",
+        "freshness-and-subjects",
         "compatibility"
       ]
     },

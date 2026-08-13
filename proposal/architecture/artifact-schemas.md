@@ -20,6 +20,8 @@ The complete version 1 artifact schema set is:
 | Artifact | Materialized schema |
 | --- | --- |
 | ChangeDescriptor | [`change-descriptor.schema.json`](../../contracts/v1/schemas/change-descriptor.schema.json) |
+| WorkflowEvent | [`workflow-event.schema.json`](../../contracts/v1/schemas/workflow-event.schema.json) |
+| WorkflowSnapshot | [`workflow-snapshot.schema.json`](../../contracts/v1/schemas/workflow-snapshot.schema.json) |
 | CandidateTreeManifest | [`candidate-tree-manifest.schema.json`](../../contracts/v1/schemas/candidate-tree-manifest.schema.json) |
 | ProposalPackage | [`proposal-package.schema.json`](../../contracts/v1/schemas/proposal-package.schema.json) |
 | SpecPatch | [`spec-patch.schema.json`](../../contracts/v1/schemas/spec-patch.schema.json) |
@@ -77,6 +79,28 @@ Rules:
   be retained in explicitly extensible diagnostic objects.
 
 Artifacts are immutable values. A correction creates a new artifact.
+
+## Workflow observation records
+
+`WorkflowEvent` is the versioned provider-neutral input to read-only workflow
+observation. Each event names one project, Change, run, producer, and monotonic
+sequence value. Its discriminated event type permits only the fields for one
+explicit run, step, governed-status, authoritative-artifact, or observer
+boundary. Sequence, rather than the optional display timestamp, determines
+replay order.
+
+`WorkflowSnapshot` is the deterministic derived result of replaying one run's
+validated events. It keeps execution, exact CLI status, merge readiness,
+artifact freshness, approval, and integration as independent fields. Ordered
+step state and allowlisted project-relative artifact references support a
+read-only renderer without turning the snapshot into approval, evidence,
+readiness, or Git authority.
+
+Neither record is decision-bearing. Observation failure does not change the
+underlying CLI response or referenced artifact, and removing an event journal
+or snapshot removes only derived visibility. Runtime validation additionally
+enforces byte, event-count, project, producer, sequence, transition, and
+project-path containment limits before reduction.
 
 ## Retention topology
 

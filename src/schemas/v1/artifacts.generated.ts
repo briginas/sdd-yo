@@ -5,6 +5,8 @@
 
 export type Version1Artifact =
   | SDDYoChangeDescriptor
+  | SDDYoWorkflowEvent
+  | SDDYoWorkflowSnapshot
   | SDDYoUserSkillInstallation
   | SDDYoCandidateTreeManifest
   | SDDYoProposalPackage
@@ -35,6 +37,27 @@ export type SDDYoChangeDescriptor = ArtifactEnvelope & {
   code_targets: CodeTarget[];
   [k: string]: unknown | undefined;
 };
+/**
+ * Version 1 allowlisted read-only workflow observation event.
+ */
+export type SDDYoWorkflowEvent = EventBase &
+  (
+    | RunStarted
+    | StepStarted
+    | StepWaiting
+    | StepCompleted
+    | StepFailed
+    | RunInterrupted
+    | RunFailed
+    | RunCompleted
+    | CliStatusObserved
+    | ReadinessStatusObserved
+    | FreshnessStatusObserved
+    | ApprovalStatusObserved
+    | IntegrationStatusObserved
+    | ArtifactReferenced
+    | ObserverFailed
+  );
 /**
  * @minItems 1
  */
@@ -394,6 +417,142 @@ export interface CodeTarget {
   requirement_id: string;
   semantic_fingerprint: string;
   structural_fingerprint: string;
+}
+export interface EventBase {
+  schema_version: "1.0";
+  artifact_type: "workflow_event";
+  project_id: string;
+  change_id: string;
+  run_id: string;
+  producer_id: string;
+  sequence: number;
+  timestamp?: string;
+  [k: string]: unknown | undefined;
+}
+export interface RunStarted {
+  event_type: "run_started";
+  [k: string]: unknown | undefined;
+}
+export interface StepStarted {
+  event_type: "step_started";
+  step_id: string;
+  label: string;
+  [k: string]: unknown | undefined;
+}
+export interface StepWaiting {
+  event_type: "step_waiting";
+  step_id: string;
+  reason: string;
+  [k: string]: unknown | undefined;
+}
+export interface StepCompleted {
+  event_type: "step_completed";
+  step_id: string;
+  [k: string]: unknown | undefined;
+}
+export interface StepFailed {
+  event_type: "step_failed";
+  step_id: string;
+  diagnostic_code: string;
+  [k: string]: unknown | undefined;
+}
+export interface RunInterrupted {
+  event_type: "run_interrupted";
+  reason: string;
+  [k: string]: unknown | undefined;
+}
+export interface RunFailed {
+  event_type: "run_failed";
+  diagnostic_code: string;
+  [k: string]: unknown | undefined;
+}
+export interface RunCompleted {
+  event_type: "run_completed";
+  [k: string]: unknown | undefined;
+}
+export interface CliStatusObserved {
+  event_type: "status_observed";
+  axis: "cli";
+  value: "ok" | "blocked" | "review_required" | "error";
+  [k: string]: unknown | undefined;
+}
+export interface ReadinessStatusObserved {
+  event_type: "status_observed";
+  axis: "readiness";
+  value: "PASS" | "REVIEW_REQUIRED" | "BLOCKED";
+  [k: string]: unknown | undefined;
+}
+export interface FreshnessStatusObserved {
+  event_type: "status_observed";
+  axis: "freshness";
+  value: "current" | "stale" | "missing" | "unknown";
+  [k: string]: unknown | undefined;
+}
+export interface ApprovalStatusObserved {
+  event_type: "status_observed";
+  axis: "approval";
+  value: "unavailable" | "pending" | "approved" | "rejected";
+  [k: string]: unknown | undefined;
+}
+export interface IntegrationStatusObserved {
+  event_type: "status_observed";
+  axis: "integration";
+  value: "unavailable" | "not_integrated" | "integrated";
+  [k: string]: unknown | undefined;
+}
+export interface ArtifactReferenced {
+  event_type: "artifact_referenced";
+  artifact: ArtifactReference;
+  [k: string]: unknown | undefined;
+}
+export interface ArtifactReference {
+  kind:
+    | "proposal_package"
+    | "approval_evidence"
+    | "test_index"
+    | "test_execution_evidence"
+    | "qa_evidence"
+    | "finding"
+    | "verification_report"
+    | "merge_report";
+  path: string;
+  fingerprint?: string;
+  git_object_id?: string;
+}
+export interface ObserverFailed {
+  event_type: "observer_failed";
+  diagnostic_code: string;
+  [k: string]: unknown | undefined;
+}
+/**
+ * Version 1 deterministic derived read-only workflow observation snapshot.
+ */
+export interface SDDYoWorkflowSnapshot {
+  schema_version: "1.0";
+  artifact_type: "workflow_snapshot";
+  project_id: string;
+  change_id: string;
+  run_id: string;
+  producer_id: string;
+  last_sequence: number;
+  execution: "active" | "waiting" | "interrupted" | "failed" | "completed";
+  current_step_id: string | null;
+  cli_status: ("ok" | "blocked" | "review_required" | "error") | null;
+  merge_readiness: ("PASS" | "REVIEW_REQUIRED" | "BLOCKED") | null;
+  artifact_freshness: ("current" | "stale" | "missing" | "unknown") | null;
+  approval_state: "unavailable" | "pending" | "approved" | "rejected";
+  integration_state: "unavailable" | "not_integrated" | "integrated";
+  interruption_reason: string | null;
+  observer_diagnostic: string | null;
+  steps: StepSnapshot[];
+  artifacts: ArtifactReference[];
+}
+export interface StepSnapshot {
+  step_id: string;
+  label: string;
+  state: "active" | "waiting" | "failed" | "completed";
+  waiting_reason: string | null;
+  diagnostic_code: string | null;
 }
 /**
  * Version 1 owned macOS user-scoped Skill and private CLI installation binding.

@@ -103,6 +103,11 @@ export const CLI_HELP_ENTRIES: readonly CliHelpEntry[] = [
     summary: "Prepare a ConflictReport and exact SpecPatch without writing the worktree.",
   },
   {
+    path: "observe",
+    usage: "sdd observe --journal <project-relative-jsonl>",
+    summary: "Serve one temporary read-only loopback view from explicit workflow events.",
+  },
+  {
     path: "proposal apply",
     usage: "sdd proposal apply --patch <path> [--worktree <path>]",
     summary: "Apply one exact SpecPatch atomically without creating a commit.",

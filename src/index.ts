@@ -11,4 +11,5 @@ export * from "./markdown/index.ts";
 export * from "./platform/index.ts";
 export * from "./tests/index.ts";
 export * from "./verification/index.ts";
+export * from "./observation/index.ts";
 export type * from "./schemas/index.ts";

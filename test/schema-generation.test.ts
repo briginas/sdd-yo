@@ -8,7 +8,13 @@ import {
   generateArtifactTypes,
   inventoryArtifactSchemaPaths,
 } from "../scripts/generate-schema-types.ts";
-import type { SDDYoApprovalEvidence, SDDYoSpecPatch, Version1Artifact } from "../src/schemas/index.ts";
+import type {
+  SDDYoApprovalEvidence,
+  SDDYoSpecPatch,
+  SDDYoWorkflowEvent,
+  SDDYoWorkflowSnapshot,
+  Version1Artifact,
+} from "../src/schemas/index.ts";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "..");
 const expectedArtifactSchemas = [
@@ -29,6 +35,8 @@ const expectedArtifactSchemas = [
   "test-index.schema.json",
   "user-skill-installation.schema.json",
   "verification-report.schema.json",
+  "workflow-event.schema.json",
+  "workflow-snapshot.schema.json",
 ] as const;
 
 test("schema generation covers every inventory-materialized artifact schema", async () => {
@@ -86,7 +94,41 @@ test("generated artifact types expose representative version 1 shapes", () => {
     before_sha256: `sha256:${"2".repeat(64)}`,
   } satisfies SDDYoSpecPatch["operations"][number];
   const artifact: Version1Artifact = approval;
+  const workflowEvent = {
+    schema_version: "1.0",
+    artifact_type: "workflow_event",
+    project_id: "SDD-17EF8B29",
+    change_id: "change-30",
+    run_id: "run-1",
+    producer_id: "cli",
+    sequence: 1,
+    event_type: "status_observed",
+    axis: "readiness",
+    value: "PASS",
+  } satisfies SDDYoWorkflowEvent;
+  const workflowSnapshot = {
+    schema_version: "1.0",
+    artifact_type: "workflow_snapshot",
+    project_id: "SDD-17EF8B29",
+    change_id: "change-30",
+    run_id: "run-1",
+    producer_id: "cli",
+    last_sequence: 1,
+    execution: "active",
+    current_step_id: null,
+    cli_status: null,
+    merge_readiness: "PASS",
+    artifact_freshness: null,
+    approval_state: "unavailable",
+    integration_state: "unavailable",
+    interruption_reason: null,
+    observer_diagnostic: null,
+    steps: [],
+    artifacts: [],
+  } satisfies SDDYoWorkflowSnapshot;
 
   assert.equal(artifact.artifact_type, "approval_evidence");
   assert.equal(patchOperation.operation, "delete");
+  assert.equal(workflowEvent.axis, "readiness");
+  assert.equal(workflowSnapshot.merge_readiness, "PASS");
 });

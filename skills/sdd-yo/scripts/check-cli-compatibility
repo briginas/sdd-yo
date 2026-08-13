@@ -24,6 +24,7 @@ const SUPPORTED_OPERATIONS = new Set([
   "tests.discover",
   "findings.validate",
   "merge.check",
+  "observe",
 ]);
 const AUTHORING_ID_KINDS = new Map([
   ["capability", "CAP"],
@@ -905,7 +906,7 @@ const operation = ["approval", "proposal", "semantic-review", "tests", "findings
   : command;
 if (command === undefined || !SUPPORTED_OPERATIONS.has(operation))
   fail(
-    "this skill slice permits only init, id, validate, inspect, trace, proposal materialize/validate/prepare/apply, approval record, semantic-review materialize/record, tests discover, findings validate, or merge check.",
+    "this skill slice permits only init, id, validate, inspect, trace, proposal materialize/validate/prepare/apply, approval record, semantic-review materialize/record, tests discover, findings validate, merge check, or observe.",
   );
 if (commandArguments.includes("--output")) fail("--output is unavailable because JSON must remain on stdout.");
 if (commandArguments.includes("--format")) fail("omit --format; the compatibility wrapper always selects JSON.");
@@ -1022,6 +1023,7 @@ if (operation === "semantic-review.record") {
     fail("semantic-review.record requires --decision reviewed.");
 }
 if (operation === "tests.discover") requireOption(commandArguments, "--head", operation);
+if (operation === "observe") requireOption(commandArguments, "--journal", operation);
 if (operation === "findings.validate") {
   requireOption(commandArguments, "--input-manifest", operation);
   requireOption(commandArguments, "--findings", operation);
@@ -1205,6 +1207,19 @@ if (operation === "semantic-review.record" && response.status === "ok") {
 }
 if (operation === "tests.discover" && response.status === "ok") {
   if (!verifyTestIndex(response.result, response.project_id)) fail("the sdd CLI returned an invalid TestIndex result.");
+}
+if (operation === "observe" && response.status === "ok") {
+  if (
+    !isRecord(response.result) ||
+    !hasExactKeys(response.result, ["url", "snapshot"]) ||
+    typeof response.result.url !== "string" ||
+    !/^http:\/\/127\.0\.0\.1:[0-9]+\/\?cap=.+$/u.test(response.result.url) ||
+    !isRecord(response.result.snapshot) ||
+    response.result.snapshot.schema_version !== "1.0" ||
+    response.result.snapshot.artifact_type !== "workflow_snapshot" ||
+    response.result.snapshot.project_id !== response.project_id
+  )
+    fail("the sdd CLI returned an invalid workflow observation result.");
 }
 if (operation === "findings.validate" && (response.status === "ok" || response.status === "blocked")) {
   if (!verifyFindingAssessment(response.result)) fail("the sdd CLI returned an invalid finding assessment result.");

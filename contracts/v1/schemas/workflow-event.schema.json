@@ -1,0 +1,334 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "workflow-event.schema.json",
+  "title": "SDD Yo WorkflowEvent",
+  "description": "Version 1 allowlisted read-only workflow observation event.",
+  "type": "object",
+  "unevaluatedProperties": false,
+  "allOf": [
+    {
+      "$ref": "#/$defs/eventBase"
+    }
+  ],
+  "oneOf": [
+    {
+      "$ref": "#/$defs/runStarted"
+    },
+    {
+      "$ref": "#/$defs/stepStarted"
+    },
+    {
+      "$ref": "#/$defs/stepWaiting"
+    },
+    {
+      "$ref": "#/$defs/stepCompleted"
+    },
+    {
+      "$ref": "#/$defs/stepFailed"
+    },
+    {
+      "$ref": "#/$defs/runInterrupted"
+    },
+    {
+      "$ref": "#/$defs/runFailed"
+    },
+    {
+      "$ref": "#/$defs/runCompleted"
+    },
+    {
+      "$ref": "#/$defs/cliStatusObserved"
+    },
+    {
+      "$ref": "#/$defs/readinessStatusObserved"
+    },
+    {
+      "$ref": "#/$defs/freshnessStatusObserved"
+    },
+    {
+      "$ref": "#/$defs/approvalStatusObserved"
+    },
+    {
+      "$ref": "#/$defs/integrationStatusObserved"
+    },
+    {
+      "$ref": "#/$defs/artifactReferenced"
+    },
+    {
+      "$ref": "#/$defs/observerFailed"
+    }
+  ],
+  "$defs": {
+    "eventBase": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "artifact_type",
+        "project_id",
+        "change_id",
+        "run_id",
+        "producer_id",
+        "sequence",
+        "event_type"
+      ],
+      "properties": {
+        "schema_version": {
+          "$ref": "common.schema.json#/$defs/schemaVersion"
+        },
+        "artifact_type": {
+          "const": "workflow_event"
+        },
+        "project_id": {
+          "$ref": "common.schema.json#/$defs/projectId"
+        },
+        "change_id": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "run_id": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "producer_id": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "timestamp": {
+          "$ref": "common.schema.json#/$defs/utcTimestamp"
+        }
+      }
+    },
+    "cliStatus": {
+      "enum": ["ok", "blocked", "review_required", "error"]
+    },
+    "readinessState": {
+      "enum": ["PASS", "REVIEW_REQUIRED", "BLOCKED"]
+    },
+    "freshnessState": {
+      "enum": ["current", "stale", "missing", "unknown"]
+    },
+    "approvalState": {
+      "enum": ["unavailable", "pending", "approved", "rejected"]
+    },
+    "integrationState": {
+      "enum": ["unavailable", "not_integrated", "integrated"]
+    },
+    "artifactKind": {
+      "enum": [
+        "proposal_package",
+        "approval_evidence",
+        "test_index",
+        "test_execution_evidence",
+        "qa_evidence",
+        "finding",
+        "verification_report",
+        "merge_report"
+      ]
+    },
+    "artifactReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "path"],
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/artifactKind"
+        },
+        "path": {
+          "$ref": "common.schema.json#/$defs/projectPath"
+        },
+        "fingerprint": {
+          "$ref": "common.schema.json#/$defs/fingerprint"
+        },
+        "git_object_id": {
+          "$ref": "common.schema.json#/$defs/gitObjectId"
+        }
+      }
+    },
+    "runStarted": {
+      "required": ["event_type"],
+      "properties": {
+        "event_type": {
+          "const": "run_started"
+        }
+      }
+    },
+    "stepStarted": {
+      "required": ["event_type", "step_id", "label"],
+      "properties": {
+        "event_type": {
+          "const": "step_started"
+        },
+        "step_id": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "label": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "stepWaiting": {
+      "required": ["event_type", "step_id", "reason"],
+      "properties": {
+        "event_type": {
+          "const": "step_waiting"
+        },
+        "step_id": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "reason": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "stepCompleted": {
+      "required": ["event_type", "step_id"],
+      "properties": {
+        "event_type": {
+          "const": "step_completed"
+        },
+        "step_id": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "stepFailed": {
+      "required": ["event_type", "step_id", "diagnostic_code"],
+      "properties": {
+        "event_type": {
+          "const": "step_failed"
+        },
+        "step_id": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "diagnostic_code": {
+          "type": "string",
+          "pattern": "^SDD_[A-Z0-9_]+$"
+        }
+      }
+    },
+    "runInterrupted": {
+      "required": ["event_type", "reason"],
+      "properties": {
+        "event_type": {
+          "const": "run_interrupted"
+        },
+        "reason": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "runFailed": {
+      "required": ["event_type", "diagnostic_code"],
+      "properties": {
+        "event_type": {
+          "const": "run_failed"
+        },
+        "diagnostic_code": {
+          "type": "string",
+          "pattern": "^SDD_[A-Z0-9_]+$"
+        }
+      }
+    },
+    "runCompleted": {
+      "required": ["event_type"],
+      "properties": {
+        "event_type": {
+          "const": "run_completed"
+        }
+      }
+    },
+    "cliStatusObserved": {
+      "required": ["event_type", "axis", "value"],
+      "properties": {
+        "event_type": {
+          "const": "status_observed"
+        },
+        "axis": {
+          "const": "cli"
+        },
+        "value": {
+          "$ref": "#/$defs/cliStatus"
+        }
+      }
+    },
+    "readinessStatusObserved": {
+      "required": ["event_type", "axis", "value"],
+      "properties": {
+        "event_type": {
+          "const": "status_observed"
+        },
+        "axis": {
+          "const": "readiness"
+        },
+        "value": {
+          "$ref": "#/$defs/readinessState"
+        }
+      }
+    },
+    "freshnessStatusObserved": {
+      "required": ["event_type", "axis", "value"],
+      "properties": {
+        "event_type": {
+          "const": "status_observed"
+        },
+        "axis": {
+          "const": "freshness"
+        },
+        "value": {
+          "$ref": "#/$defs/freshnessState"
+        }
+      }
+    },
+    "approvalStatusObserved": {
+      "required": ["event_type", "axis", "value"],
+      "properties": {
+        "event_type": {
+          "const": "status_observed"
+        },
+        "axis": {
+          "const": "approval"
+        },
+        "value": {
+          "$ref": "#/$defs/approvalState"
+        }
+      }
+    },
+    "integrationStatusObserved": {
+      "required": ["event_type", "axis", "value"],
+      "properties": {
+        "event_type": {
+          "const": "status_observed"
+        },
+        "axis": {
+          "const": "integration"
+        },
+        "value": {
+          "$ref": "#/$defs/integrationState"
+        }
+      }
+    },
+    "artifactReferenced": {
+      "required": ["event_type", "artifact"],
+      "properties": {
+        "event_type": {
+          "const": "artifact_referenced"
+        },
+        "artifact": {
+          "$ref": "#/$defs/artifactReference"
+        }
+      }
+    },
+    "observerFailed": {
+      "required": ["event_type", "diagnostic_code"],
+      "properties": {
+        "event_type": {
+          "const": "observer_failed"
+        },
+        "diagnostic_code": {
+          "type": "string",
+          "pattern": "^SDD_[A-Z0-9_]+$"
+        }
+      }
+    }
+  }
+}

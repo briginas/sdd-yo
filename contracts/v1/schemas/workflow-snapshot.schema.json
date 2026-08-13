@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "workflow-snapshot.schema.json",
+  "title": "SDD Yo WorkflowSnapshot",
+  "description": "Version 1 deterministic derived read-only workflow observation snapshot.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_type",
+    "project_id",
+    "change_id",
+    "run_id",
+    "producer_id",
+    "last_sequence",
+    "execution",
+    "current_step_id",
+    "cli_status",
+    "merge_readiness",
+    "artifact_freshness",
+    "approval_state",
+    "integration_state",
+    "interruption_reason",
+    "observer_diagnostic",
+    "steps",
+    "artifacts"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "artifact_type": {
+      "const": "workflow_snapshot"
+    },
+    "project_id": {
+      "$ref": "common.schema.json#/$defs/projectId"
+    },
+    "change_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "run_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "producer_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "last_sequence": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "execution": {
+      "enum": ["active", "waiting", "interrupted", "failed", "completed"]
+    },
+    "current_step_id": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "cli_status": {
+      "anyOf": [
+        {
+          "$ref": "workflow-event.schema.json#/$defs/cliStatus"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "merge_readiness": {
+      "anyOf": [
+        {
+          "$ref": "workflow-event.schema.json#/$defs/readinessState"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "artifact_freshness": {
+      "anyOf": [
+        {
+          "$ref": "workflow-event.schema.json#/$defs/freshnessState"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "approval_state": {
+      "$ref": "workflow-event.schema.json#/$defs/approvalState"
+    },
+    "integration_state": {
+      "$ref": "workflow-event.schema.json#/$defs/integrationState"
+    },
+    "interruption_reason": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "observer_diagnostic": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^SDD_[A-Z0-9_]+$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/stepSnapshot"
+      },
+      "x-sdd-ordering": "first-observed"
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "workflow-event.schema.json#/$defs/artifactReference"
+      },
+      "uniqueItems": true,
+      "x-sdd-ordering": "first-observed"
+    }
+  },
+  "$defs": {
+    "stepSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["step_id", "label", "state", "waiting_reason", "diagnostic_code"],
+      "properties": {
+        "step_id": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "label": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "state": {
+          "enum": ["active", "waiting", "failed", "completed"]
+        },
+        "waiting_reason": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/nonEmptyString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "diagnostic_code": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^SDD_[A-Z0-9_]+$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

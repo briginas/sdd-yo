@@ -11,6 +11,7 @@ import { writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { startWorkflowObserver } from "../observation/server.js";
 
 const cliPath = fileURLToPath(import.meta.url);
 const packageRoot = fileURLToPath(new URL("../..", import.meta.url));
@@ -45,4 +46,5 @@ process.exitCode = await runCli({
   writeOutputFile: (path: string, message: string): void => {
     writeFileSync(path, message, "utf8");
   },
+  startWorkflowObserver: async (projectRoot, snapshot) => startWorkflowObserver({ projectRoot, snapshot }),
 });

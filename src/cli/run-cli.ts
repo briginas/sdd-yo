@@ -112,6 +112,7 @@ import { IgnoredArtifactOutputError, resolveIgnoredArtifactTarget } from "./igno
 import { renderCliHelp } from "./help.ts";
 import { loadCliCompatibilityIdentity } from "./identity.ts";
 import type { CliCompatibilityIdentity } from "./identity.ts";
+import { replayWorkflowEvents, type WorkflowSnapshot } from "../observation/workflow.ts";
 
 export const VALID_EXIT_CODE = 0 as const;
 export const BLOCKED_EXIT_CODE = 1 as const;
@@ -149,7 +150,8 @@ type Command =
   | "proposal.validate"
   | "proposal.materialize"
   | "proposal.prepare"
-  | "proposal.apply";
+  | "proposal.apply"
+  | "observe";
 type ResponseCommand = Command | "version" | "unknown";
 
 export type CliRuntime = {
@@ -168,6 +170,10 @@ export type CliRuntime = {
   readonly writeStandardOutput: (message: string) => void;
   readonly writeStandardError: (message: string) => void;
   readonly writeOutputFile: (path: string, message: string) => void;
+  readonly startWorkflowObserver?: (
+    projectRoot: string,
+    snapshot: WorkflowSnapshot,
+  ) => Promise<{ readonly url: string }>;
 };
 
 type Invocation = {
@@ -219,6 +225,7 @@ type Invocation = {
   readonly testEvidencePaths: readonly ProjectPath[];
   readonly qaPaths: readonly ProjectPath[];
   readonly humanReviewPaths: readonly ProjectPath[];
+  readonly journalPath?: ProjectPath;
 };
 
 export type InitResult = {
@@ -304,6 +311,11 @@ export type ProposalMaterializeResult = {
   readonly proposal: ProposalPackage;
 };
 
+export type ObserveResult = {
+  readonly url: string;
+  readonly snapshot: WorkflowSnapshot;
+};
+
 export type SemanticReviewMaterializeResult = {
   readonly manifest_path: ProjectPath;
   readonly manifest: SemanticAnalysisInputManifest;
@@ -340,6 +352,7 @@ export type CliResponse =
   | CliResponseEnvelope<"merge.check", "ok" | "blocked" | "review_required", MergeReport>
   | CliResponseEnvelope<"proposal.validate", "ok", ProposalPackage>
   | CliResponseEnvelope<"proposal.materialize", "ok", ProposalMaterializeResult>
+  | CliResponseEnvelope<"observe", "ok", ObserveResult>
   | CliResponseEnvelope<"proposal.apply", "ok", import("../proposal/index.ts").ProposalApplyResult>
   | CliResponseEnvelope<
       "proposal.prepare",
@@ -404,7 +417,8 @@ function parseInvocation(
     command !== "proposal.validate" &&
     command !== "proposal.materialize" &&
     command !== "proposal.prepare" &&
-    command !== "proposal.apply"
+    command !== "proposal.apply" &&
+    command !== "observe"
   )
     return {
       ok: false,
@@ -461,6 +475,7 @@ function parseInvocation(
   const testEvidencePaths: ProjectPath[] = [];
   const qaPaths: ProjectPath[] = [];
   const humanReviewPaths: ProjectPath[] = [];
+  let journalPath: ProjectPath | undefined;
   for (
     let index =
       command === "tests.discover" ||
@@ -526,7 +541,8 @@ function parseInvocation(
       argument === "--qa" ||
       argument === "--human-semantic-review" ||
       argument === "--patch" ||
-      argument === "--worktree"
+      argument === "--worktree" ||
+      argument === "--journal"
     ) {
       const value = argv[index + 1];
       if (value === undefined)
@@ -539,7 +555,18 @@ function parseInvocation(
           ),
         };
       index += 1;
-      if (argument === "--reason" || argument === "--evidence" || argument === "--manifest") {
+      if (argument === "--journal") {
+        if (command !== "observe" || !isProjectPath(value))
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+              "The observation journal path is invalid.",
+              "Use --journal with one safe project-relative JSONL path on sdd observe.",
+            ),
+          };
+        journalPath = value;
+      } else if (argument === "--reason" || argument === "--evidence" || argument === "--manifest") {
         if (!isProjectPath(value))
           return {
             ok: false,
@@ -1221,6 +1248,24 @@ function parseInvocation(
         "Use --patch and --worktree only with sdd proposal apply.",
       ),
     };
+  if (command === "observe" && journalPath === undefined)
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "observe requires one explicit workflow journal.",
+        "Supply --journal with a safe project-relative JSONL path.",
+      ),
+    };
+  if (command !== "observe" && journalPath !== undefined)
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "--journal was used with another command.",
+        "Use --journal only with sdd observe.",
+      ),
+    };
   if (command !== "trace" && traceRef !== undefined)
     return {
       ok: false,
@@ -1498,6 +1543,7 @@ function parseInvocation(
       testEvidencePaths,
       qaPaths,
       humanReviewPaths,
+      ...(journalPath === undefined ? {} : { journalPath }),
     },
   };
 }
@@ -1850,6 +1896,14 @@ function humanView(value: CliResponse): string {
     lines.push(
       `result tree: ${result.result_tree_fingerprint}`,
       ...result.applied_paths.map((path) => `applied: ${path}`),
+    );
+  } else if (value.command === "observe" && value.status === "ok") {
+    const result = value.result as ObserveResult;
+    lines.push(
+      `observer: ${result.url}`,
+      `run: ${result.snapshot.run_id}`,
+      `execution: ${result.snapshot.execution}`,
+      "authority: read-only observation only",
     );
   } else if (value.command === "findings.validate" && (value.status === "ok" || value.status === "blocked")) {
     const result = value.result as FindingAssessment;
@@ -2356,6 +2410,47 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
       return TECHNICAL_FAILURE_EXIT_CODE;
     }
     const project = selected.value;
+    if (invocation.command === "observe") {
+      try {
+        if (invocation.journalPath === undefined || runtime.startWorkflowObserver === undefined)
+          throw new Error("This sdd executable cannot start the local observer.");
+        const requested = resolveConfiguredPath(project.project_root, invocation.journalPath);
+        const metadata = await runtime.fileSystem.metadata(requested);
+        if (metadata.kind !== "file" || metadata.size > 16 * 1024 * 1024)
+          throw new Error("The workflow journal is not a bounded regular file.");
+        const resolvedJournal = await runtime.fileSystem.realPath(requested);
+        const journalRelative = relative(project.project_root, resolvedJournal);
+        if (journalRelative === "" || journalRelative === ".." || journalRelative.startsWith(`..${sep}`))
+          throw new Error("The workflow journal escapes the selected project.");
+        const source = new TextDecoder("utf-8", { fatal: true }).decode(
+          await runtime.fileSystem.readFile(resolvedJournal),
+        );
+        const events = source
+          .split(/\r?\n/u)
+          .filter((line) => line.length > 0)
+          .map((line) => JSON.parse(line) as unknown);
+        const snapshot = replayWorkflowEvents(events, project.configuration.project_id);
+        const session = await runtime.startWorkflowObserver(project.project_root, snapshot);
+        const result: ObserveResult = { url: session.url, snapshot };
+        emit(runtime, invocation.format, response("observe", project.configuration.project_id, "ok", result, []));
+        return VALID_EXIT_CODE;
+      } catch (error) {
+        const candidateCode =
+          error instanceof Error && "code" in error && typeof error.code === "string" ? error.code : undefined;
+        const code = candidateCode?.startsWith("SDD_") === true ? candidateCode : "SDD_OBSERVATION_JOURNAL_INVALID";
+        const diagnostic = cliDiagnostic(
+          code,
+          error instanceof Error ? error.message : "The workflow observer could not start.",
+          "Select one bounded regular JSONL journal for the explicit project and retry without changing authoritative artifacts.",
+        );
+        emit(
+          runtime,
+          invocation.format,
+          response("observe", project.configuration.project_id, "error", null, [diagnostic]),
+        );
+        return TECHNICAL_FAILURE_EXIT_CODE;
+      }
+    }
     const selectedOutput =
       invocation.outputPath === undefined
         ? undefined

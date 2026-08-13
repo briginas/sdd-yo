@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { mkdir, mkdtemp, readFile, symlink, unlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, realpath, symlink, unlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
@@ -119,6 +119,53 @@ test("REQ-382BBBD6 init honors portable spec paths and adoption mode", async () 
   assert.match(config, /root: "docs\/specification"\n  entrypoint: "docs\/specification\/README\.md"/u);
   assert.match(config, /mode: complete/u);
   assert.match(await readFile(join(root, "docs/specification/README.md"), "utf8"), /sdd:capabilities/u);
+});
+
+test("REQ-61673C24 REQ-2F5B2571 sdd observe starts only from one explicit bounded journal", async () => {
+  const root = await mkdtemp(join(tmpdir(), "sdd-cli-observe-"));
+  assert.equal((await execute(["init", "--format", "json"], root)).exitCode, 0);
+  const config = await readFile(join(root, ".sdd/config.yaml"), "utf8");
+  const projectId = /^project_id: (SDD-[0-9A-F]{8})$/mu.exec(config)?.[1];
+  assert.ok(projectId !== undefined);
+  const journal = {
+    schema_version: "1.0",
+    artifact_type: "workflow_event",
+    project_id: projectId,
+    change_id: "test-change",
+    run_id: "test-run",
+    producer_id: "cli-test",
+    sequence: 0,
+    event_type: "run_started",
+  };
+  await mkdir(join(root, ".sdd/staging"), { recursive: true });
+  await writeFile(join(root, ".sdd/staging/observe.jsonl"), `${JSON.stringify(journal)}\n`);
+  const standardOutput: string[] = [];
+  let observed = false;
+  const exitCode = await runCli({
+    argv: ["observe", "--journal", ".sdd/staging/observe.jsonl", "--format", "json"],
+    workingDirectory: root,
+    fileSystem: nodeFileSystem,
+    projectWriter: nodeProjectWriter,
+    randomness: nodeRandomness,
+    processRunner: nodeProcessRunner,
+    startWorkflowObserver: async (projectRoot, snapshot) => {
+      observed = true;
+      assert.equal(projectRoot, await realpath(root));
+      assert.equal(snapshot.run_id, "test-run");
+      return { url: "http://127.0.0.1:49152/?cap=test" };
+    },
+    writeStandardOutput: (message) => standardOutput.push(message),
+    writeStandardError: () => undefined,
+    writeOutputFile: () => {
+      throw new Error("unexpected output write");
+    },
+  });
+  assert.equal(exitCode, 0, standardOutput.join(""));
+  assert.equal(observed, true);
+  const response = JSON.parse(standardOutput.join("")) as { command: string; status: string; result: { url: string } };
+  assert.equal(response.command, "observe");
+  assert.equal(response.status, "ok");
+  assert.match(response.result.url, /^http:\/\/127\.0\.0\.1:/u);
 });
 
 test("REQ-382BBBD6 init rejects a symbolic-link path component before writing", async () => {

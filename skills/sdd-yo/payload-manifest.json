@@ -13,7 +13,7 @@
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "sha256:d5a56180b187e6b50ac63a9b018beba3db504d5d9e485f9ba77734c3cc556d4a"
+      "sha256": "sha256:15b5d60088cde78e8fd4e1d9c89f400e4b942b68f6cf8a1a1143c3f8510cf75e"
     },
     {
       "path": "agents/openai.yaml",
@@ -65,7 +65,7 @@
     },
     {
       "path": "scripts/check-cli-compatibility",
-      "sha256": "sha256:987e140c41e7616ac8340c1c48da2f1fa4432e43554025c2db962262070596af"
+      "sha256": "sha256:6db6cc2a853f3fe9be7ef1fd7ba97facd0a31074ef2060babef2125de82a6606"
     },
     {
       "path": "templates/capability.md",

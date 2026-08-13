@@ -42,7 +42,7 @@ identity. It then adds `--format json`. This slice permits only `init`, `id`,
 `validate`, `inspect`, `trace`, `proposal materialize`, `proposal validate`,
 `proposal prepare`, `approval record`, `proposal apply`, `semantic-review
 materialize`, `semantic-review record`, `tests discover`, `findings validate`,
-and `merge check`.
+`merge check`, and `observe`.
 
 ## Route intent
 
@@ -79,6 +79,10 @@ and `merge check`.
   authorized local integration after a current `PASS`, read
   [references/integration.md](references/integration.md) and preserve its exact
   ref, clean-worktree, evidence-invalidation, race, and remote-operation stops.
+- For read-only progress viewing, accept only a caller-selected bounded
+  project-local workflow-event JSONL journal, invoke `observe` through the
+  wrapper, display its temporary loopback URL, and explain that it creates no
+  workflow, approval, evidence, Git, merge, publication, or release authority.
 
 If the request is to perform model semantic analysis, explain that the route is
 not available in this skill slice and stop without simulating it. The semantic

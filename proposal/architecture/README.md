@@ -15,6 +15,7 @@ implementation choices into hidden product requirements.
 - [Test adapters](test-adapters.md)
 - [CLI](cli.md)
 - [Agent Skill](skill.md)
+- [Read-only workflow observation](workflow-observation.md)
 - [Security and trust](security.md)
 - [Enforced governed scope operations](../../docs/enforced-governed-scope.md)
 - [Evals and rollout](evals-and-rollout.md)

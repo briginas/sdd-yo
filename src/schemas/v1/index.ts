@@ -15,5 +15,7 @@ export type {
   SDDYoTestExecutionEvidence,
   SDDYoTestIndex,
   SDDYoVerificationReport,
+  SDDYoWorkflowEvent,
+  SDDYoWorkflowSnapshot,
   Version1Artifact,
 } from "./artifacts.generated.ts";

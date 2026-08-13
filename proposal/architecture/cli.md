@@ -189,6 +189,23 @@ resolved Git subject, and active Requirement identities. For a worktree trace,
 `HEAD` and the worktree graph must have equal semantic and structural
 fingerprints before the HEAD-bound index is accepted.
 
+### `sdd observe`
+
+```text
+sdd observe --journal <project-relative-jsonl>
+```
+
+Validates and deterministically replays one explicit bounded workflow-event
+journal, then starts a temporary capability-protected renderer on
+`127.0.0.1` and an operating-system-selected port. The selected journal must
+be a contained regular file no larger than 16 MiB. The command returns the
+observer URL and current snapshot; the CLI process owns the listener lifetime.
+
+The observer is read-only. It exposes no approval, gate, patch, evidence, Git,
+publication, or release mutation and serves only exact contained regular
+artifact paths referenced by the snapshot. Its journal and snapshot are
+removable observation data, not workflow state or decision evidence.
+
 ### `sdd diff`
 
 ```text

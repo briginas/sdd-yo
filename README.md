@@ -109,6 +109,28 @@ console.log(JSON_SCHEMA_VERSION_V1); // "1.0"
 Versioned schemas are available through paths such as
 `sdd-yo/schemas/v1/common.schema.json`.
 
+### Observe workflow progress
+
+The library can replay allowlisted workflow events into a deterministic
+read-only snapshot and serve a temporary capability-protected loopback view:
+
+```js
+import { replayWorkflowEvents, startWorkflowObserver } from "sdd-yo";
+
+const snapshot = replayWorkflowEvents(events, "SDD-17EF8B29");
+const observer = await startWorkflowObserver({ projectRoot, snapshot });
+console.log(observer.url);
+
+// Stop the on-demand observer when the interactive session ends.
+await observer.close();
+```
+
+Execution completion, CLI outcome, approval, merge readiness, artifact
+freshness, and integration are displayed independently. The observer may open
+only exact referenced project artifacts; it cannot approve, run a gate, mutate
+Git, publish, or release. Events and snapshots are removable observation data,
+not decision evidence or hidden workflow state.
+
 ## Offline installation
 
 Install an approved exact tarball without registry fallback:
