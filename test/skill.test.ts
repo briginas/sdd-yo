@@ -216,6 +216,7 @@ test("REQ-E26A859E REQ-64DB876B REQ-26234DC8 skill package discloses the bounded
     "authoring.md",
     "branch-preparation.md",
     "diagnostics.md",
+    "initiative-planning.md",
     "integration.md",
     "modes.md",
     "object-model.md",
@@ -228,16 +229,34 @@ test("REQ-E26A859E REQ-64DB876B REQ-26234DC8 skill package discloses the bounded
   assert.deepEqual(templates.toSorted(), ["capability.md", "concept.md"]);
   assert.match(skill, /references\/modes\.md/u);
   assert.match(skill, /references\/authoring\.md/u);
-  assert.match(
-    agentMetadata,
-    /prepare, verify, explain merge readiness, or complete an explicitly authorized local integration/u,
-  );
+  assert.match(skill, /references\/initiative-planning\.md/u);
+  assert.match(agentMetadata, /plan a broad initiative without requiring a project/u);
   assert.match(skill, /references\/proposal-gate\.md/u);
   assert.match(skill, /references\/approval\.md/u);
   assert.match(skill, /references\/branch-preparation\.md/u);
   assert.match(skill, /references\/verification\.md/u);
   assert.match(skill, /references\/integration\.md/u);
   assert.match(skill, /references\/semantic-review\.md/u);
+});
+
+test("REQ-CF21ED6E REQ-26234DC8 initiative planning stays advisory until one slice is selected", async () => {
+  const skill = await readFile(join(skillRoot, "SKILL.md"), "utf8");
+  const planning = await readFile(join(skillRoot, "references/initiative-planning.md"), "utf8");
+  const genericPreflight = skill.indexOf("Generic initiative planning is the only project-selection preflight");
+  const projectPreflight = skill.indexOf("For every CLI-backed route, select one project explicitly");
+
+  assert.ok(genericPreflight >= 0 && genericPreflight < projectPreflight);
+  assert.match(skill, /broad outcome spanning multiple Capabilities/u);
+  assert.match(skill, /Keep\s+generic planning CLI-free/u);
+  assert.match(planning, /\*\*Light\*\*.*\*\*Standard\*\*.*\*\*Deep\*\*/su);
+  assert.match(planning, /Produce one ID-free initiative map/u);
+  assert.match(planning, /Each slice must include/u);
+  assert.match(planning, /independently valuable/u);
+  assert.match(planning, /Invoke no SDD\s+CLI operation/u);
+  assert.match(planning, /only when the human explicitly requests that exact file/u);
+  assert.match(planning, /explicitly selects exactly one unchanged slice/u);
+  assert.match(planning, /\[the mode-selection reference\]\(modes\.md\)/u);
+  assert.doesNotMatch(planning, /automatically (?:write|create)/u);
 });
 
 test("REQ-89E78697 REQ-189D2CFA REQ-44068C1A Skill governs authorized local normalization and integration", async () => {

@@ -85,6 +85,10 @@ const approvalRefDiscoveryScenarioIds = [
   "approval-ref-discovery-no-match-needs-authority",
   "release-selected-main-reuses-advance-authority",
 ] as const;
+const initiativePlanningScenarioIds = [
+  "initiative-planning-generic-no-project",
+  "initiative-planning-selected-project-and-slice",
+] as const;
 
 async function loadSuite(): Promise<ScenarioSuite> {
   return JSON.parse(await readFile(scenarioPath, "utf8")) as ScenarioSuite;
@@ -132,6 +136,7 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
     "REQ-5FFEC13F",
     "REQ-89E78697",
     "REQ-C975AE17",
+    "REQ-CF21ED6E",
     "REQ-D17B2FB9",
   ]);
   assert.equal(new Set(suite.scenarios.map(({ id }) => id)).size, suite.scenarios.length);
@@ -144,6 +149,7 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
     "diagnose",
     "discovery",
     "initialize",
+    "initiative-planning",
     "local-integration",
     "merge-readiness",
     "project-isolation",
@@ -161,6 +167,7 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
       "references/authoring.md",
       "references/branch-preparation.md",
       "references/diagnostics.md",
+      "references/initiative-planning.md",
       "references/integration.md",
       "references/modes.md",
       "references/object-model.md",
@@ -193,6 +200,104 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
     ],
   );
   assert.ok(operations.every((operation) => !operation.includes("integrat")));
+});
+
+test("REQ-CF21ED6E REQ-26234DC8 initiative evals preserve generic and bounded project routes", async () => {
+  const scenarios = new Map((await loadSuite()).scenarios.map((scenario) => [scenario.id, scenario]));
+  assert.ok(initiativePlanningScenarioIds.every((id) => scenarios.has(id)));
+
+  const generic = scenarios.get("initiative-planning-generic-no-project");
+  assert.deepEqual(generic?.expected_references, ["references/initiative-planning.md"]);
+  assert.deepEqual(generic?.expected_operations, []);
+  assert.ok(generic?.forbidden_actions.includes("invoke-cli-operation"));
+  assert.ok(generic?.forbidden_actions.includes("write-initiative-file"));
+
+  const selected = scenarios.get("initiative-planning-selected-project-and-slice");
+  assert.deepEqual(selected?.expected_references, ["references/initiative-planning.md", "references/modes.md"]);
+  assert.deepEqual(selected?.expected_operations, ["inspect", "validate"]);
+  assert.ok(selected?.forbidden_actions.includes("scan-whole-specification"));
+  assert.ok(selected?.forbidden_actions.includes("generate-future-object-id"));
+  assert.ok(selected?.human_review.some((criterion) => /exactly one slice/u.test(criterion)));
+});
+
+test("REQ-CF21ED6E initiative-planning review template is schema-valid and inert", async () => {
+  const schema = JSON.parse(
+    await readFile(join(repositoryRoot, "evals/skill/initiative-planning-review-result.schema.json"), "utf8"),
+  ) as object;
+  const template = JSON.parse(
+    await readFile(join(repositoryRoot, "evals/skill/initiative-planning-review-result.template.json"), "utf8"),
+  ) as {
+    readonly scenario_results: readonly {
+      readonly scenario_id: string;
+      readonly verdict: string;
+      readonly transcript: unknown;
+      readonly findings: readonly string[];
+    }[];
+    readonly overall_verdict: string;
+  };
+  const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
+  assert.equal(validate(template), true, JSON.stringify(validate.errors));
+  assert.deepEqual(
+    template.scenario_results.map(({ scenario_id }) => scenario_id),
+    [...initiativePlanningScenarioIds],
+  );
+  assert.ok(
+    template.scenario_results.every(
+      ({ verdict, transcript, findings }) => verdict === "not_reviewed" && transcript === null && findings.length === 0,
+    ),
+  );
+  assert.equal(template.overall_verdict, "not_reviewed");
+
+  const invalidPass = JSON.parse(JSON.stringify(template)) as {
+    scenario_results: { verdict: string; transcript: unknown }[];
+  };
+  const first = invalidPass.scenario_results[0];
+  assert.ok(first !== undefined);
+  first.verdict = "pass";
+  assert.equal(validate(invalidPass), false);
+});
+
+test("REQ-CF21ED6E retains the identified initiative-planning human pass verdict", async () => {
+  const suite = await loadSuite();
+  const schema = JSON.parse(
+    await readFile(join(repositoryRoot, "evals/skill/initiative-planning-review-result.schema.json"), "utf8"),
+  ) as object;
+  const result = JSON.parse(
+    await readFile(join(repositoryRoot, "evals/skill/initiative-planning-review-result.json"), "utf8"),
+  ) as {
+    readonly skill_revision: string;
+    readonly reviewer: { readonly identity: string; readonly role: string };
+    readonly scenario_results: readonly {
+      readonly scenario_id: string;
+      readonly verdict: string;
+      readonly transcript: { readonly path: string; readonly sha256: string };
+      readonly findings: readonly string[];
+    }[];
+    readonly overall_verdict: string;
+  };
+  const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
+  assert.equal(validate(result), true, JSON.stringify(validate.errors));
+  assert.equal(result.skill_revision, "13382e0d7a30abd950b59b2220617d9f81ffe88f3b183940016f0d1649956338");
+  assert.deepEqual(result.reviewer, { identity: "dev", role: "human Skill reviewer" });
+  assert.deepEqual(
+    result.scenario_results.map(({ scenario_id }) => scenario_id),
+    suite.scenarios
+      .filter(({ route }) => route === "initiative-planning")
+      .map(({ id }) => id)
+      .toSorted(),
+  );
+  assert.ok(result.scenario_results.every(({ verdict, findings }) => verdict === "pass" && findings.length === 0));
+  assert.equal(result.overall_verdict, "pass");
+
+  const manifest = await readFile(join(repositoryRoot, "skills/sdd-yo/payload-manifest.json"));
+  assert.equal(result.skill_revision, createHash("sha256").update(manifest).digest("hex"));
+  const transcriptPaths = new Set(result.scenario_results.map(({ transcript }) => transcript.path));
+  assert.deepEqual([...transcriptPaths], ["transcripts/dev-initiative-planning-verdict.md"]);
+  const transcript = await readFile(join(repositoryRoot, "evals/skill", [...transcriptPaths][0] ?? ""));
+  const fingerprint = `sha256:${createHash("sha256").update(transcript).digest("hex")}`;
+  assert.ok(result.scenario_results.every(({ transcript: binding }) => binding.sha256 === fingerprint));
+  assert.match(transcript.toString("utf8"), /Reviewer: `dev`/u);
+  assert.match(transcript.toString("utf8"), /regarding 32\.3, reviewed by me, it's ok/u);
 });
 
 test("REQ-26234DC8 REQ-32C76ED3 ref-discovery evals cover no-match and named-release authority", async () => {
@@ -875,7 +980,7 @@ test("REQ-26234DC8 REQ-32C76ED3 ref-discovery review template is schema-valid an
   assert.equal(validate(invalidPass), false);
 });
 
-test("REQ-26234DC8 REQ-32C76ED3 retains the fresh-context ref-discovery pass verdict", async () => {
+test("REQ-26234DC8 REQ-32C76ED3 retains the historical fresh-context ref-discovery pass verdict", async () => {
   const schema = JSON.parse(
     await readFile(join(repositoryRoot, "evals/skill/ref-discovery-review-result.schema.json"), "utf8"),
   ) as object;
@@ -906,7 +1011,8 @@ test("REQ-26234DC8 REQ-32C76ED3 retains the fresh-context ref-discovery pass ver
   assert.equal(result.overall_verdict, "pass");
 
   const manifest = await readFile(join(repositoryRoot, "skills/sdd-yo/payload-manifest.json"));
-  assert.equal(result.skill_revision, createHash("sha256").update(manifest).digest("hex"));
+  assert.equal(result.skill_revision, "f7261d99e7f09bafc11702ec8330db9fed3a41c63b737278c2f0e6c21187046a");
+  assert.notEqual(result.skill_revision, createHash("sha256").update(manifest).digest("hex"));
   const transcriptPaths = new Set(result.scenario_results.map(({ transcript }) => transcript.path));
   assert.deepEqual([...transcriptPaths], ["transcripts/codex-ref-discovery-verdict.md"]);
   const transcript = await readFile(join(repositoryRoot, "evals/skill", [...transcriptPaths][0] ?? ""));

@@ -15,6 +15,8 @@ The packaged [Skill entrypoint](../../skills/sdd-yo/SKILL.md) is the single
 agent-facing workflow. It selects an intent route and loads only the applicable
 reference:
 
+- broad-outcome decomposition before governed Change authoring:
+  [initiative planning](../../skills/sdd-yo/references/initiative-planning.md);
 - project creation or adoption: [onboarding](../../skills/sdd-yo/references/onboarding.md);
 - active behavior and object relationships:
   [object model](../../skills/sdd-yo/references/object-model.md);
@@ -179,6 +181,9 @@ The skill must be evaluated for:
 - unambiguous discovery and explicit invocation alongside another installed
   SDD-oriented skill with a generic name;
 - correct mode selection and ambiguity escalation;
+- advisory initiative depth selection, ID-free mapping, vertical slicing,
+  CLI-free generic planning, bounded project inspection, and explicit
+  single-slice handoff to mode selection;
 - ID-free semantic-model presentation, format selection, correction
   invalidation, explicit confirmation before identity generation, and `code`
   bypass;

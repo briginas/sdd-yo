@@ -308,6 +308,55 @@ decisions without reimplementing product rules.
   conversational context, derive deterministic artifact content, or retain a
   hidden workflow database.
 
+<a id="req-cf21ed6e"></a>
+
+## REQ-CF21ED6E — Plan broad initiatives before governed Change authoring
+
+```sdd
+kind: behavior
+verification: manual
+```
+
+### Relations <!-- sdd:relations -->
+
+- depends-on: [REQ-26234DC8 — Orchestrate through one progressive-disclosure skill](multi-project-cli-and-skill.md#req-26234dc8)
+- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+
+### Statement <!-- sdd:statement -->
+
+For an outcome that spans multiple Capabilities or independently deliverable
+Changes, the `sdd-yo` Agent Skill shall provide an advisory
+initiative-planning route that chooses proportionate design depth, produces a
+non-normative ID-free initiative map, decomposes the outcome into vertical
+delivery slices, and stops before governed Change authoring until the human
+explicitly selects one bounded slice.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- Generic initiative planning without a selected SDD Project invokes no SDD
+  CLI operation and does not claim knowledge of an active specification.
+- Initiative planning for a selected SDD Project validates that project and
+  inspects only the smallest active specification slice relevant to the
+  outcome.
+- The route chooses and explains a light, standard, or deep design depth from
+  the outcome's uncertainty, architectural reach, risk, and number of
+  independently deliverable slices.
+- The initiative map remains advisory and ID-free, distinguishes goals,
+  boundaries, dependencies, risks, open decisions, and success signals, and
+  does not create a Capability, Requirement, Domain Concept, Change,
+  ProposalPackage, approval, evidence, or other SDD artifact.
+- Every proposed delivery slice is vertical, independently valuable and
+  verifiable, names its intended outcome and dependencies, and avoids assigning
+  future SDD object IDs before the existing governed authoring route generates
+  them.
+- The route keeps the initiative conversational by default. It writes a
+  project-local initiative document only when the human explicitly requests
+  that file, and the document remains non-canonical planning material rather
+  than workflow state or authority.
+- After the human explicitly selects exactly one slice, the route hands that
+  bounded slice to the existing mode-selection reference and preserves every
+  semantic-model, proposal, approval, exact-patch, verification, and Git stop.
+
 <a id="req-2b00ee25"></a>
 
 ## REQ-2B00EE25 — Use an external temporary authored candidate

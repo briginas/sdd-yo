@@ -2,9 +2,9 @@
 
 ## Status
 
-- Active: none; the next milestone has not been selected
-- Complete: Milestones 0–31; public `sdd-yo@0.5.4`
-- Last updated: 2026-08-13
+- Active: no milestone selected
+- Complete: Milestones 0–32; public `sdd-yo@0.5.4`
+- Last updated: 2026-08-14
 
 ## Authority and navigation
 
@@ -51,6 +51,15 @@ preparation, requires explicit selection among multiple matches, and proposes
 one concrete local branch and commit when none exists. Discovery, approval, and
 preparation never supply Git mutation or push authority.
 
+For broad outcomes, the Skill has an advisory initiative-planning route. It
+selects proportionate Light, Standard, or Deep design depth, produces an
+ID-free initiative map, decomposes it into independently valuable and
+verifiable vertical slices, and stops before governed authoring until exactly
+one slice is explicitly selected. Generic planning invokes no CLI operation;
+selected-project planning validates the project and inspects only the smallest
+relevant active specification slice. The map stays conversational unless a
+noncanonical project-local planning document is explicitly requested.
+
 Workflow progress observation is implemented as versioned allowlisted events,
 a pure deterministic reducer, injected producers, and a temporary read-only
 loopback renderer. Execution, CLI outcome, approval, merge readiness, artifact
@@ -66,10 +75,9 @@ Exact `sdd-yo@0.5.4` is public on npm from annotated tag `v0.5.4` at commit
 reviewed release subject byte-for-byte with SHA-256
 `12c9e2805189c383c43021c6e39f0fab97b551c1fc1a3c37773644aeef127167`, inventory
 SHA-256 `fb8bd8867afbcab6492ff2a94a5f6b25780d738d1b1b8db56c2e565bb8e740f1`, and
-2,170 entries. npm
-trusted publishing records cryptographically verified SLSA provenance. The
-source `package.json` remains the primary package identity; publication and
-release remain separately authorized operations.
+2,170 entries. npm trusted publishing records cryptographically verified SLSA
+provenance. The source `package.json` remains the primary package identity;
+publication and release remain separately authorized operations.
 
 ## Candidate backlog
 

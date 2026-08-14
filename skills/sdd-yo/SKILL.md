@@ -1,6 +1,6 @@
 ---
 name: sdd-yo
-description: Govern an SDD Yo specification through its deterministic JSON CLI. Use when Codex needs to initialize or incrementally onboard an explicitly selected SDD Project, understand active behavior, author or review a change, record an explicit human approval or semantic-review decision, prepare and explicitly apply an exact SpecPatch, verify governed affected scope, explain merge readiness, or complete an explicitly authorized local feature integration. It never makes a human decision, and the CLI performs no Git integration side effects.
+description: Plan broad SDD initiatives or govern an SDD Yo specification through its deterministic JSON CLI. Use when Codex needs to decompose a broad outcome into delivery slices, initialize or incrementally onboard an explicitly selected SDD Project, understand active behavior, author or review a change, record an explicit human approval or semantic-review decision, prepare and explicitly apply an exact SpecPatch, verify governed affected scope, explain merge readiness, or complete an explicitly authorized local feature integration. It never makes a human decision, and the CLI performs no Git integration side effects.
 ---
 
 # SDD Yo
@@ -11,12 +11,17 @@ selected SDD Project.
 
 ## Preflight
 
-1. Select one project explicitly:
+1. Generic initiative planning is the only project-selection preflight
+   exception. When broad-outcome planning is requested without an explicitly
+   selected SDD Project, load `references/initiative-planning.md` without
+   searching for a project or invoking the CLI, and skip the remaining
+   preflight steps.
+2. For every CLI-backed route, select one project explicitly:
    - for an existing project, use `--cwd <directory>` or
      `--config <path-to-.sdd/config.yaml>`;
    - for initialization, obtain an explicit root and adoption mode from the
      user.
-2. Run every supported CLI operation through
+3. Run every supported CLI operation through
    `node scripts/check-cli-compatibility`. Do not parse human output or invoke
    `sdd` directly.
    - A repository-installed Skill resolves only the packaged CLI path recorded
@@ -26,9 +31,9 @@ selected SDD Project.
      `installation.json` binding.
    - `--cli` selects one explicit absolute path only for repository or unpacked
      package use. User installation rejects it. No mode falls back to `PATH`.
-3. Stop if the wrapper reports a missing, interrupted, malformed, incompatible,
+4. Stop if the wrapper reports a missing, interrupted, malformed, incompatible,
    or unsupported CLI operation. Do not install or repair the CLI.
-4. Accept only the wrapper's unchanged version 1 JSON response. Treat a
+5. Accept only the wrapper's unchanged version 1 JSON response. Treat a
    non-`ok` status as a failed operation even if the response is well formed.
 
 Use this invocation shape:
@@ -46,6 +51,12 @@ materialize`, `semantic-review record`, `tests discover`, `findings validate`,
 
 ## Route intent
 
+- For a broad outcome spanning multiple Capabilities or independently
+  deliverable Changes, read
+  [references/initiative-planning.md](references/initiative-planning.md). Keep
+  generic planning CLI-free; for an explicitly selected project, validate and
+  inspect only the smallest relevant active slice. Stop before Change
+  authoring until the human selects exactly one bounded delivery slice.
 - For initialize or onboard intent, read
   [references/onboarding.md](references/onboarding.md) and follow it exactly.
 - For understand intent, read

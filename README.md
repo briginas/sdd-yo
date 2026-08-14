@@ -195,6 +195,22 @@ the API; do not parse English output. Exit codes are `0` for a completed
 non-blocking result, `1` for blocked, `2` for human review, and `3` for an
 invocation, configuration, I/O, protocol, or internal failure.
 
+## Planning broad work with the Skill
+
+Ask `$sdd-yo` to plan an initiative when the desired outcome spans several
+Capabilities or needs multiple independently deliverable Changes. The expected
+result is an advisory ID-free map with proportionate design depth, explicit
+boundaries and risks, and an ordered set of independently valuable vertical
+slices.
+
+No project is required for generic planning, and that path invokes no SDD CLI
+operation. When you explicitly select an SDD Project, the Skill validates it
+and inspects only the smallest relevant active specification slice. The map
+stays conversational unless you explicitly request a project-local planning
+file. Select one slice to enter the existing governed `spec-code`, `spec`, or
+`code` workflow; planning itself creates no specification object, approval,
+evidence, patch, or Git authority.
+
 ## Skill lifecycle
 
 After installing the selected exact package, update or remove its verified

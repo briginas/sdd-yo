@@ -1,4 +1,4 @@
 interface:
   display_name: "SDD Yo"
-  short_description: "Govern specifications through the SDD Yo CLI"
-  default_prompt: "Use $sdd-yo to understand, author, review, record an explicit approval or semantic-review decision, prepare, verify, explain merge readiness, or complete an explicitly authorized local integration for this SDD Project."
+  short_description: "Plan initiatives and govern specifications with SDD Yo"
+  default_prompt: "Use $sdd-yo to plan a broad initiative without requiring a project, or for an explicitly selected SDD Project to understand, author, review, record an explicit approval or semantic-review decision, prepare, verify, explain merge readiness, or complete an explicitly authorized local integration."

@@ -91,6 +91,15 @@ bind both verdicts to one retained transcript and the exact reviewed packaged
 Skill manifest SHA-256; static scenario text and scripted guards are not review
 evidence.
 
+Milestone 32 adds a generic initiative-planning case with no selected project
+or CLI operation and a selected-project case that permits only bounded
+validation and inspection before one explicit slice enters mode selection.
+Both require an advisory ID-free map, proportionate design depth, vertical
+slices, no automatic planning file, and no invented SDD artifact or authority.
+`initiative-planning-review-result.json` retains dev's completed review of both
+scenarios, bound to the exact reviewed packaged Skill manifest and the explicit
+verdict transcript. Its matching template remains an inert starting point.
+
 These checks do not simulate an agent or count as the manual verification
 required by `REQ-26234DC8`, `REQ-D17B2FB9`, and `REQ-1DD46CA9`. For human review,
 run each current or explicitly selected new case
