@@ -2,32 +2,9 @@
 
 ## Status
 
-- Active: Milestone 33 — release `0.5.5`
-- Complete: Milestones 0–32; public `sdd-yo@0.5.4`
+- Active: no milestone selected
+- Complete: Milestones 0–33; public `sdd-yo@0.5.5`
 - Last updated: 2026-08-14
-
-## Milestone 33 — release `0.5.5`
-
-- Outcome: publish the exact `sdd-yo@0.5.5` package from one reviewed,
-  immutable `main` subject through the protected GitHub release workflow, then
-  independently verify the registry artifact, provenance, clean consumer, and
-  final CI closeout.
-- Requirement traceability: `REQ-B0B35D6D`, `REQ-A2199BC2`, `REQ-ABFFEAF2`,
-  `REQ-0163273A`.
-- Leaves:
-  - 33.1 bind the `0.5.5` package identity and all materialized release
-    surfaces.
-  - 33.2 produce and review reproducible package bytes and inventory hashes.
-  - 33.3 create the release commit on synchronized `main` and pass subject CI.
-  - 33.4 prepare the protected `release` environment, annotated tag, and
-    GitHub Release.
-  - 33.5 verify protected publication, registry bytes, provenance, and an
-    isolated exact consumer.
-  - 33.6 close the milestone and verify final CI.
-- Immediate leaf: 33.1 bind the `0.5.5` package identity and release surfaces.
-- Exclusions: unrelated runtime behavior, protocol or schema-major changes,
-  new operating-system support, a Codex plugin, hosted state, local
-  publication, token authentication, and any release of a different version.
 
 ## Authority and navigation
 
@@ -93,11 +70,14 @@ Journals and snapshots are removable observation data rather than hidden
 workflow state or authoritative evidence. Additional terminal, IDE, CI, or
 hosted adapters remain deferred renderers over the same observation contract.
 
-Exact `sdd-yo@0.5.4` is public on npm from annotated tag `v0.5.4` at commit
-`ba0cb1cb1e49bfe8ebe73620a8d79c2d9a22c8b5`. The registry tarball matches the
+Exact `sdd-yo@0.5.5` is public on npm from annotated tag `v0.5.5` at commit
+`41780f7ff578c01548ad785db2ce336d816097cd`. The registry tarball matches the
 reviewed release subject byte-for-byte with SHA-256
-`12c9e2805189c383c43021c6e39f0fab97b551c1fc1a3c37773644aeef127167`, inventory
-SHA-256 `fb8bd8867afbcab6492ff2a94a5f6b25780d738d1b1b8db56c2e565bb8e740f1`, and
-2,170 entries. npm trusted publishing records cryptographically verified SLSA
-provenance. The source `package.json` remains the primary package identity;
-publication and release remain separately authorized operations.
+`132318087a99862381d5c9d244d7ae2c1694194c1c127065831e5bbc669ad2d0`, inventory
+SHA-256 `14d9d4904e2587376e1e5e79568e1f9caa66e048f8dc4832399149b4935f23c2`, and
+2,171 entries. npm trusted publishing records a cryptographically verified
+SLSA provenance subject bound to `briginas/sdd-yo`, `publish.yml`, `v0.5.5`,
+and the release commit. An isolated consumer installed the exact package and
+verified its CLI, schema, Skill identity, and one valid npm attestation. The
+source `package.json` remains the primary package identity; publication and
+release remain separately authorized operations.
