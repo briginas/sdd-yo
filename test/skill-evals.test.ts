@@ -277,7 +277,7 @@ test("REQ-CF21ED6E retains the identified initiative-planning human pass verdict
   };
   const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
   assert.equal(validate(result), true, JSON.stringify(validate.errors));
-  assert.equal(result.skill_revision, "13382e0d7a30abd950b59b2220617d9f81ffe88f3b183940016f0d1649956338");
+  assert.equal(result.skill_revision, "e94dfaf83a9bf7ede8482c05c057015e9f2352b8384cb7130dec6a6dc8c652f2");
   assert.deepEqual(result.reviewer, { identity: "dev", role: "human Skill reviewer" });
   assert.deepEqual(
     result.scenario_results.map(({ scenario_id }) => scenario_id),

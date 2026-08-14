@@ -2,7 +2,7 @@
 
 - Suite: `sdd-yo-skill-safety-v1`
 - Reviewed packaged Skill manifest SHA-256:
-  `13382e0d7a30abd950b59b2220617d9f81ffe88f3b183940016f0d1649956338`
+  `e94dfaf83a9bf7ede8482c05c057015e9f2352b8384cb7130dec6a6dc8c652f2`
 - Reviewer: `dev`
 - Role: `human Skill reviewer`
 - Scope: both Milestone 32.3 initiative-planning scenarios in

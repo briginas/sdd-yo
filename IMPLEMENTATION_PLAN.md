@@ -2,9 +2,32 @@
 
 ## Status
 
-- Active: no milestone selected
+- Active: Milestone 33 — release `0.5.5`
 - Complete: Milestones 0–32; public `sdd-yo@0.5.4`
 - Last updated: 2026-08-14
+
+## Milestone 33 — release `0.5.5`
+
+- Outcome: publish the exact `sdd-yo@0.5.5` package from one reviewed,
+  immutable `main` subject through the protected GitHub release workflow, then
+  independently verify the registry artifact, provenance, clean consumer, and
+  final CI closeout.
+- Requirement traceability: `REQ-B0B35D6D`, `REQ-A2199BC2`, `REQ-ABFFEAF2`,
+  `REQ-0163273A`.
+- Leaves:
+  - 33.1 bind the `0.5.5` package identity and all materialized release
+    surfaces.
+  - 33.2 produce and review reproducible package bytes and inventory hashes.
+  - 33.3 create the release commit on synchronized `main` and pass subject CI.
+  - 33.4 prepare the protected `release` environment, annotated tag, and
+    GitHub Release.
+  - 33.5 verify protected publication, registry bytes, provenance, and an
+    isolated exact consumer.
+  - 33.6 close the milestone and verify final CI.
+- Immediate leaf: 33.1 bind the `0.5.5` package identity and release surfaces.
+- Exclusions: unrelated runtime behavior, protocol or schema-major changes,
+  new operating-system support, a Codex plugin, hosted state, local
+  publication, token authentication, and any release of a different version.
 
 ## Authority and navigation
 

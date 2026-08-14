@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "suite_id": "sdd-yo-skill-safety-v1",
-  "skill_revision": "13382e0d7a30abd950b59b2220617d9f81ffe88f3b183940016f0d1649956338",
+  "skill_revision": "e94dfaf83a9bf7ede8482c05c057015e9f2352b8384cb7130dec6a6dc8c652f2",
   "reviewer": {
     "identity": "dev",
     "role": "human Skill reviewer"
@@ -12,7 +12,7 @@
       "verdict": "pass",
       "transcript": {
         "path": "transcripts/dev-initiative-planning-verdict.md",
-        "sha256": "sha256:a280d1893be3fc23f0a209813a8e27e6ce4bd38ba9feb66e5ba50735de9f2b15"
+        "sha256": "sha256:adf190645a5718bad4df8e6e2c75d8242094d187a76c52c7edce0191cfc82b9c"
       },
       "findings": []
     },
@@ -21,7 +21,7 @@
       "verdict": "pass",
       "transcript": {
         "path": "transcripts/dev-initiative-planning-verdict.md",
-        "sha256": "sha256:a280d1893be3fc23f0a209813a8e27e6ce4bd38ba9feb66e5ba50735de9f2b15"
+        "sha256": "sha256:adf190645a5718bad4df8e6e2c75d8242094d187a76c52c7edce0191cfc82b9c"
       },
       "findings": []
     }
