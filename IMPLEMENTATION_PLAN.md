@@ -78,17 +78,3 @@ SHA-256 `fb8bd8867afbcab6492ff2a94a5f6b25780d738d1b1b8db56c2e565bb8e740f1`, and
 2,170 entries. npm trusted publishing records cryptographically verified SLSA
 provenance. The source `package.json` remains the primary package identity;
 publication and release remain separately authorized operations.
-
-## Candidate backlog
-
-Other possible future milestones remain deliberately uncommitted:
-
-- Linux or Windows support;
-- a published Codex plugin;
-- hosted workflow state or integrations;
-- additional workflow renderers such as a TUI or Codex/IDE panel;
-- Markdown-dialect changes unrelated to the implemented normal Change
-  workflow.
-
-Selecting future work requires a new bounded milestone with an immediate leaf,
-explicit exclusions, Requirement traceability, and proportionate validation.
