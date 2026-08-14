@@ -86,15 +86,47 @@ the exact ProposalPackage subject is revalidated.
 
 ### 1. Fetch and reconcile `main`
 
-Before local preparation, verify that the GitHub CLI has a valid authenticated
-session for the intended GitHub host and account:
+Before local preparation, verify separately that the release process can read
+the GitHub CLI token and that GitHub accepts it for the intended host and
+account. Never print the token or use `--show-token`:
 
 ```text
-gh auth status
+gh auth token --hostname github.com >/dev/null
+gh api user --jq '.login'
+gh auth status --hostname github.com
 ```
 
-Stop GitHub-dependent release work if that preflight fails. Then start with
-read-only repository checks, fetch, and check again:
+Classify a failed preflight before changing authentication:
+
+- `no oauth token found` means the release process cannot read a token. Run the
+  same non-printing `gh auth token` check in the user's interactive terminal.
+  If the terminal can read the credential but the release process cannot, the
+  macOS credential store is unavailable to the agent process.
+- An API connection or DNS error is a network-permission failure, not proof of
+  an invalid token. Request the required host network permission and retry the
+  unchanged API check instead of repeating login.
+- An authenticated API response that rejects the credential means the token is
+  invalid and requires reauthentication.
+
+When the interactive terminal can read its credential but the release process
+cannot, `--insecure-storage` is an explicit fallback, not the default. Use it
+only after the user accepts that the token will be stored unencrypted in the
+GitHub CLI configuration:
+
+```text
+gh auth login --hostname github.com --git-protocol ssh --web --insecure-storage
+gh auth token --hostname github.com >/dev/null
+gh api user --jq '.login'
+gh auth status --hostname github.com
+```
+
+Require the resulting `hosts.yml` to remain user-readable only (`0600`). Never
+display, copy into chat, log, commit, or retain the plaintext token in release
+evidence. Stop GitHub-dependent release work unless the non-printing token
+check succeeds and the live API returns the intended account after any
+permitted network retry.
+
+Then start with read-only repository checks, fetch, and check again:
 
 ```text
 git status --short --branch
@@ -537,6 +569,8 @@ Stop without publishing or closing the milestone when:
 - independent packs differ or final bytes lack reviewed hashes;
 - the target npm version exists or npm `latest` is unexpected;
 - release-subject CI fails or is incomplete;
+- the release process cannot read the GitHub token, GitHub rejects it, or API
+  connectivity remains unavailable after the permitted network retry;
 - the GitHub environment does not allow the exact tag;
 - the tag is lightweight or points to another commit;
 - publication attempts to use an npm token or local `npm publish`;
