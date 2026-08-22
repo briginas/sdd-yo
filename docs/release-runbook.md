@@ -353,8 +353,9 @@ Create one release-subject commit, for example:
 chore: prepare <NEW_VERSION> patch release
 ```
 
-Push `main`, wait for ordinary CI on that exact commit, and record its full SHA
-as `RELEASE_SHA`. Do not tag pending or failing CI.
+Push `main`, manually dispatch ordinary CI on that exact commit, wait for it to
+succeed, and record its full SHA as `RELEASE_SHA`. Do not tag pending or failing
+CI. A push to `main` does not start ordinary CI automatically.
 
 After CI succeeds, rebuild from the clean committed `RELEASE_SHA` with pinned
 npm and require equality with the reviewed tarball and workflow hashes.
@@ -527,8 +528,9 @@ Release-specific durable baseline data includes:
 
 Do not retain temporary paths, workflow transcripts, or completed execution
 detail in a second archive. When authorized, create a separate closeout commit,
-push it, and wait for final CI. The release tag must continue to point to
-`RELEASE_SHA`, not the later closeout commit.
+push it, manually dispatch final CI on that commit, and wait for success. The
+release tag must continue to point to `RELEASE_SHA`, not the later closeout
+commit.
 
 ## Final evidence report
 

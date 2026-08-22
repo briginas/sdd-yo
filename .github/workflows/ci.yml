@@ -2,8 +2,7 @@ name: CI
 
 on:
   pull_request:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -56,6 +55,11 @@ jobs:
 
       - name: Check diff whitespace
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.sha }}
-        run: git diff --check "$BASE_SHA...$HEAD_SHA"
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            git diff --check "$BASE_SHA...$HEAD_SHA"
+          else
+            git diff-tree --check --root -r "$HEAD_SHA"
+          fi

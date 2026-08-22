@@ -71,6 +71,8 @@ test("REQ-B0B35D6D REQ-ABFFEAF2 REQ-9CE36B68 REQ-0163273A derives identity and p
   assert.doesNotMatch(workflow, /NPM_TOKEN|NODE_AUTH_TOKEN|NPM_BOOTSTRAP_TOKEN|secrets\./u);
 
   assert.doesNotMatch(ordinaryCi, /id-token: write|npm publish/u);
+  assert.match(ordinaryCi, /^  pull_request:\n  workflow_dispatch:$/mu);
+  assert.doesNotMatch(ordinaryCi, /^  push:/mu);
 
   assert.match(runbook, /named integration branch, normally `main`, as already\s+selected/u);
   assert.match(runbook, /resolve and recheck its exact current commit/u);
