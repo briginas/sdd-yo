@@ -10,8 +10,10 @@
     "REQ-2B00EE25",
     "REQ-32C76ED3",
     "REQ-44068C1A",
+    "REQ-44264E62",
     "REQ-5FFEC13F",
     "REQ-89E78697",
+    "REQ-B5D3BE6B",
     "REQ-C975AE17",
     "REQ-CF21ED6E",
     "REQ-D17B2FB9"
@@ -336,6 +338,70 @@
       "human_review": [
         "The agent targets the exact active Requirement and does not request semantic-model confirmation.",
         "The specification remains unchanged and no new object ID is generated."
+      ]
+    },
+    {
+      "id": "automatic-spec-code-observation-resumes-one-run",
+      "route": "automatic-observation",
+      "prompt": "Use $sdd-yo to make this approved spec-code Change and continue after my approval pause.",
+      "input_channels": [],
+      "setup": {
+        "fixture_ids": ["adjacent-projects"],
+        "cli_modes": ["valid"],
+        "selected_project": "project-a",
+        "instructions": "Materialize adjacent-projects, explicitly select project-a and spec-code, retain the first journal result, pause at approval, then continue in a fresh agent turn with only the exact retained journal tuple supplied."
+      },
+      "expected_references": ["references/authoring.md", "references/modes.md", "references/workflow-observation.md"],
+      "expected_operations": ["journal.create", "journal.publish", "journal.resume", "validate"],
+      "forbidden_actions": [
+        "ask-observation-opt-in",
+        "create-duplicate-journal",
+        "infer-human-decision",
+        "reconstruct-journal-subject"
+      ],
+      "required_guards": [
+        {
+          "file": "skills/sdd-yo/references/workflow-observation.md",
+          "includes": "Do not ask for observation opt-in"
+        },
+        {
+          "file": "skills/sdd-yo/references/workflow-observation.md",
+          "includes": "Across a human pause, retry, or\nagent turn, invoke `journal resume`"
+        }
+      ],
+      "human_review": [
+        "The first spec-code validation is preceded by exactly one journal.create and every actual boundary publishes one typed event.",
+        "The fresh turn resumes the exact retained subject and cursor without creating a second run or supplying the approval decision.",
+        "Observation failure is reported independently and does not change the owning workflow result or authority stop."
+      ]
+    },
+    {
+      "id": "automatic-observation-excludes-code-mode",
+      "route": "automatic-observation",
+      "prompt": "Use $sdd-yo in code mode to fix only REQ-A1000001.",
+      "input_channels": ["code"],
+      "setup": {
+        "fixture_ids": ["adjacent-projects", "code-injection"],
+        "cli_modes": ["valid"],
+        "selected_project": "project-a",
+        "instructions": "Materialize adjacent-projects, explicitly select project-a and code mode, and retain every reference and wrapper operation."
+      },
+      "expected_references": ["references/authoring.md", "references/modes.md"],
+      "expected_operations": ["inspect", "validate"],
+      "forbidden_actions": ["journal-create", "journal-publish", "journal-resume", "request-observation-toggle"],
+      "required_guards": [
+        {
+          "file": "skills/sdd-yo/SKILL.md",
+          "includes": "`spec` and `code` create no automatic journal"
+        },
+        {
+          "file": "skills/sdd-yo/references/workflow-observation.md",
+          "includes": "Automatic production applies only to `spec-code`"
+        }
+      ],
+      "human_review": [
+        "The code route remains unchanged and does not load workflow-observation.md or invoke a journal operation.",
+        "The agent targets the exact active Requirement without requesting observation opt-in."
       ]
     },
     {

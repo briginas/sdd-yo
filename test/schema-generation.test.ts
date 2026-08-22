@@ -113,9 +113,12 @@ test("generated artifact types expose representative version 1 shapes", () => {
     change_id: "change-30",
     run_id: "run-1",
     producer_id: "cli",
+    mode: null,
+    observation_start: null,
     last_sequence: 1,
     execution: "active",
     current_step_id: null,
+    current_stage_id: null,
     cli_status: null,
     merge_readiness: "PASS",
     artifact_freshness: null,
@@ -124,6 +127,7 @@ test("generated artifact types expose representative version 1 shapes", () => {
     interruption_reason: null,
     observer_diagnostic: null,
     steps: [],
+    stages: [],
     artifacts: [],
   } satisfies SDDYoWorkflowSnapshot;
 

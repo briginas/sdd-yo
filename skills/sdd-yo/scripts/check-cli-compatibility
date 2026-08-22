@@ -24,6 +24,9 @@ const SUPPORTED_OPERATIONS = new Set([
   "tests.discover",
   "findings.validate",
   "merge.check",
+  "journal.create",
+  "journal.resume",
+  "journal.publish",
   "observe",
 ]);
 const AUTHORING_ID_KINDS = new Map([
@@ -77,6 +80,47 @@ function verifyApprovalRecordResult(result, projectId) {
     ["spec-code", "spec", "code"].includes(result.mode) &&
     result.subject.mode === result.mode &&
     verifyProposalPackage(result.subject, projectId) === undefined
+  );
+}
+
+function verifyWorkflowJournalResult(result, projectId, publication = false) {
+  const keys = [
+    "journal_path",
+    "project_id",
+    "mode",
+    "run_id",
+    "producer_id",
+    "change_id",
+    "next_sequence",
+    "journal_fingerprint",
+    "snapshot",
+  ];
+  if (publication) keys.push("publication");
+  return (
+    hasExactKeys(result, keys) &&
+    isProjectPath(result.journal_path) &&
+    result.project_id === projectId &&
+    result.mode === "spec-code" &&
+    typeof result.run_id === "string" &&
+    result.run_id.length > 0 &&
+    typeof result.producer_id === "string" &&
+    result.producer_id.length > 0 &&
+    typeof result.change_id === "string" &&
+    result.change_id.length > 0 &&
+    Number.isSafeInteger(result.next_sequence) &&
+    result.next_sequence > 0 &&
+    isFingerprint(result.journal_fingerprint) &&
+    isRecord(result.snapshot) &&
+    result.snapshot.schema_version === "1.0" &&
+    result.snapshot.artifact_type === "workflow_snapshot" &&
+    result.snapshot.project_id === projectId &&
+    result.snapshot.mode === "spec-code" &&
+    result.snapshot.run_id === result.run_id &&
+    result.snapshot.producer_id === result.producer_id &&
+    result.snapshot.change_id === result.change_id &&
+    Number.isSafeInteger(result.snapshot.last_sequence) &&
+    result.next_sequence === result.snapshot.last_sequence + 1 &&
+    (!publication || ["published", "duplicate"].includes(result.publication))
   );
 }
 
@@ -901,12 +945,12 @@ if (wrapperArguments.length > 0) {
 
 const commandArguments = process.argv.slice(separator + 1);
 const command = commandArguments[0];
-const operation = ["approval", "proposal", "semantic-review", "tests", "findings", "merge"].includes(command)
+const operation = ["approval", "proposal", "semantic-review", "tests", "findings", "merge", "journal"].includes(command)
   ? `${command}.${commandArguments[1] ?? ""}`
   : command;
 if (command === undefined || !SUPPORTED_OPERATIONS.has(operation))
   fail(
-    "this skill slice permits only init, id, validate, inspect, trace, proposal materialize/validate/prepare/apply, approval record, semantic-review materialize/record, tests discover, findings validate, merge check, or observe.",
+    "this skill slice permits only init, id, validate, inspect, trace, proposal materialize/validate/prepare/apply, approval record, semantic-review materialize/record, tests discover, findings validate, merge check, journal create/resume/publish, or observe.",
   );
 if (commandArguments.includes("--output")) fail("--output is unavailable because JSON must remain on stdout.");
 if (commandArguments.includes("--format")) fail("omit --format; the compatibility wrapper always selects JSON.");
@@ -1024,6 +1068,27 @@ if (operation === "semantic-review.record") {
 }
 if (operation === "tests.discover") requireOption(commandArguments, "--head", operation);
 if (operation === "observe") requireOption(commandArguments, "--journal", operation);
+if (operation === "journal.create") {
+  requireOption(commandArguments, "--producer", operation);
+  if (optionValue(commandArguments, "--workflow-mode") !== "spec-code")
+    fail("journal.create requires --workflow-mode spec-code.");
+}
+if (operation === "journal.resume") {
+  for (const option of ["--journal", "--run", "--producer", "--change-id", "--expected-fingerprint"])
+    requireOption(commandArguments, option, operation);
+}
+if (operation === "journal.publish") {
+  for (const option of [
+    "--journal",
+    "--run",
+    "--producer",
+    "--change-id",
+    "--expected-sequence",
+    "--expected-fingerprint",
+    "--event-type",
+  ])
+    requireOption(commandArguments, option, operation);
+}
 if (operation === "findings.validate") {
   requireOption(commandArguments, "--input-manifest", operation);
   requireOption(commandArguments, "--findings", operation);
@@ -1220,6 +1285,25 @@ if (operation === "observe" && response.status === "ok") {
     response.result.snapshot.project_id !== response.project_id
   )
     fail("the sdd CLI returned an invalid workflow observation result.");
+}
+if (operation.startsWith("journal.") && response.status === "ok") {
+  const publication = operation === "journal.publish";
+  if (!verifyWorkflowJournalResult(response.result, response.project_id, publication))
+    fail("the sdd CLI returned an invalid workflow journal result.");
+  if (operation === "journal.create") {
+    if (
+      response.result.producer_id !== optionValue(commandArguments, "--producer") ||
+      !response.result.journal_path.startsWith(".sdd/staging/workflow-observation/spec-code/")
+    )
+      fail("the sdd CLI journal initializer changed its selected producer or generated path.");
+  } else if (
+    response.result.journal_path !== optionValue(commandArguments, "--journal") ||
+    response.result.run_id !== optionValue(commandArguments, "--run") ||
+    response.result.producer_id !== optionValue(commandArguments, "--producer") ||
+    response.result.change_id !== optionValue(commandArguments, "--change-id")
+  ) {
+    fail("the sdd CLI journal operation changed its retained subject.");
+  }
 }
 if (operation === "findings.validate" && (response.status === "ok" || response.status === "blocked")) {
   if (!verifyFindingAssessment(response.result)) fail("the sdd CLI returned an invalid finding assessment result.");

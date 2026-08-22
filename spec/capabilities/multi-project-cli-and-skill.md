@@ -308,6 +308,54 @@ decisions without reimplementing product rules.
   conversational context, derive deterministic artifact content, or retain a
   hidden workflow database.
 
+<a id="req-44264e62"></a>
+
+## REQ-44264E62 — Observe every selected spec-code workflow automatically
+
+```sdd
+kind: behavior
+verification: manual
+```
+
+### Relations <!-- sdd:relations -->
+
+- depends-on: [REQ-26234DC8 — Orchestrate through one progressive-disclosure skill](multi-project-cli-and-skill.md#req-26234dc8)
+- depends-on: [REQ-B5D3BE6B — Publish resumable project-local workflow journals](read-only-workflow-progress-observation.md#req-b5d3be6b)
+- depends-on: [REQ-6A40513D — Project one stable observed spec-code stage model](read-only-workflow-progress-observation.md#req-6a40513d)
+- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+
+### Statement <!-- sdd:statement -->
+
+For every newly selected `spec-code` workflow, the `sdd-yo` Agent Skill shall
+automatically initialize and retain exactly one observed run and publish
+allowlisted events at the actual orchestration boundaries without requiring an
+observation opt-in.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- After one project and `spec-code` outcome are selected, the Skill invokes the
+  compatible CLI journal initializer, returns the exact generated ignored
+  project-local path and run identity, and creates no duplicate journal for the
+  same retained run.
+- The run uses a pre-Change identity until a versioned Change exists, preserves
+  its exact journal, subject, producer, and next sequence across human pauses,
+  compatible retries, and agent turns, and resumes only through the compatible
+  CLI operation.
+- The Skill publishes events only after or while waiting at the owning typed
+  boundary, including compatible CLI results, retained artifacts,
+  implementation and verification progress, interruption, failure, rejection,
+  completion, and optional local integration.
+- Starting observation for an already-running unobserved workflow creates a
+  new explicitly partial run at the supplied checkpoint and never backfills
+  earlier work.
+- An observation initialization or publication failure is reported separately
+  and does not change an authoring, approval, patch, implementation,
+  verification, Git, merge, publication, or release result or authority stop.
+- Automatic observation applies only to `spec-code`; `code`, `spec`,
+  onboarding, planning, understand, diagnose, release, and repository
+  maintenance routes remain unchanged until separately governed behavior is
+  delivered.
+
 <a id="req-cf21ed6e"></a>
 
 ## REQ-CF21ED6E — Plan broad initiatives before governed Change authoring

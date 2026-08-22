@@ -4,6 +4,7 @@ import path from "node:path";
 
 import type { Randomness } from "../platform/randomness.ts";
 import { nodeRandomness } from "../platform/node-randomness.ts";
+import { followWorkflowJournal, type WorkflowJournalFollower } from "./journal-follower.ts";
 import { renderWorkflowObserver } from "./renderer.ts";
 import type { WorkflowSnapshot } from "./workflow.ts";
 
@@ -14,6 +15,11 @@ export type WorkflowObserverSession = {
   close(): Promise<void>;
 };
 
+type ObserverClient = {
+  readonly response: import("node:http").ServerResponse;
+  cursor: number;
+};
+
 function capability(randomness: Randomness): string {
   return Buffer.from(randomness.randomBytes(32)).toString("base64url");
 }
@@ -22,12 +28,51 @@ export async function startWorkflowObserver(options: {
   readonly projectRoot: string;
   readonly snapshot: WorkflowSnapshot;
   readonly randomness?: Randomness;
+  readonly follow?: {
+    readonly journalPath: string;
+    readonly readSnapshot: () => Promise<WorkflowSnapshot>;
+  };
 }): Promise<WorkflowObserverSession> {
   let current = options.snapshot;
+  let currentBytes = JSON.stringify(current);
+  let observerCondition: string | null = null;
   const token = capability(options.randomness ?? nodeRandomness);
-  const clients = new Set<import("node:http").ServerResponse>();
+  const clients = new Set<ObserverClient>();
   const root = await realpath(options.projectRoot);
   let allowedOrigin = "";
+  let follower: WorkflowJournalFollower | undefined;
+
+  const subjectMatches = (snapshot: WorkflowSnapshot): boolean =>
+    snapshot.project_id === current.project_id &&
+    snapshot.change_id === current.change_id &&
+    snapshot.run_id === current.run_id &&
+    snapshot.producer_id === current.producer_id;
+
+  const sendSnapshot = (client: ObserverClient, snapshot: WorkflowSnapshot): void => {
+    client.response.write(`id: ${snapshot.last_sequence}\nevent: snapshot\ndata: ${JSON.stringify(snapshot)}\n\n`);
+    client.cursor = snapshot.last_sequence;
+  };
+
+  const reportCondition = (condition: string | null): void => {
+    if (condition === observerCondition) return;
+    observerCondition = condition;
+    const data = JSON.stringify({ diagnostic_code: condition });
+    for (const client of clients) client.response.write(`event: observer_condition\ndata: ${data}\n\n`);
+  };
+
+  const publish = (snapshot: WorkflowSnapshot): void => {
+    if (!subjectMatches(snapshot)) throw new Error("Observer snapshot subject changed.");
+    const bytes = JSON.stringify(snapshot);
+    if (snapshot.last_sequence < current.last_sequence) throw new Error("Observer snapshot sequence moved backwards.");
+    if (snapshot.last_sequence === current.last_sequence) {
+      if (bytes !== currentBytes) throw new Error("Observer snapshot conflicts at the current sequence.");
+      return;
+    }
+    current = snapshot;
+    currentBytes = bytes;
+    for (const client of clients) if (client.cursor < snapshot.last_sequence) sendSnapshot(client, snapshot);
+  };
+
   const server = createServer(async (request, response) => {
     const originBase = allowedOrigin;
     let url: URL;
@@ -71,15 +116,33 @@ export async function startWorkflowObserver(options: {
       return;
     }
     if (url.pathname === "/events") {
+      const suppliedCursor = request.headers["last-event-id"] ?? url.searchParams.get("after") ?? "-1";
+      const cursorText = Array.isArray(suppliedCursor) ? suppliedCursor[0] : suppliedCursor;
+      if (cursorText === undefined || !/^-?\d+$/u.test(cursorText)) {
+        response.writeHead(400).end();
+        return;
+      }
+      const cursor = Number(cursorText);
+      if (!Number.isSafeInteger(cursor) || cursor < -1 || cursor > current.last_sequence) {
+        response.writeHead(400).end();
+        return;
+      }
       response.writeHead(200, {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-store",
         Connection: "keep-alive",
         "X-Accel-Buffering": "no",
       });
-      response.write(`event: snapshot\ndata: ${JSON.stringify(current)}\n\n`);
-      clients.add(response);
-      request.on("close", () => clients.delete(response));
+      response.flushHeaders();
+      const client: ObserverClient = { response, cursor };
+      clients.add(client);
+      if (cursor < current.last_sequence) sendSnapshot(client, current);
+      if (observerCondition !== null) {
+        response.write(
+          `event: observer_condition\ndata: ${JSON.stringify({ diagnostic_code: observerCondition })}\n\n`,
+        );
+      }
+      request.on("close", () => clients.delete(client));
       return;
     }
     if (url.pathname === "/artifact") {
@@ -123,17 +186,24 @@ export async function startWorkflowObserver(options: {
   const address = server.address();
   if (address === null || typeof address === "string") throw new Error("Observer did not bind a TCP port.");
   allowedOrigin = `http://127.0.0.1:${address.port}`;
+  if (options.follow !== undefined) {
+    follower = followWorkflowJournal({
+      journalPath: options.follow.journalPath,
+      readSnapshot: options.follow.readSnapshot,
+      publish,
+      reportCondition,
+    });
+  }
+  let closed = false;
   return {
     url: `${allowedOrigin}/?cap=${encodeURIComponent(token)}`,
     capability: token,
-    publish: (snapshot) => {
-      if (snapshot.project_id !== current.project_id || snapshot.run_id !== current.run_id)
-        throw new Error("Observer snapshot subject changed.");
-      current = snapshot;
-      for (const client of clients) client.write(`event: snapshot\ndata: ${JSON.stringify(snapshot)}\n\n`);
-    },
+    publish,
     close: async () => {
-      for (const client of clients) client.end();
+      if (closed) return;
+      closed = true;
+      follower?.close();
+      for (const { response } of clients) response.end();
       clients.clear();
       await new Promise<void>((resolve, reject) =>
         server.close((error) => (error === undefined ? resolve() : reject(error))),

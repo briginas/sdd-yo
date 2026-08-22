@@ -5,6 +5,33 @@
   "description": "Version 1 deterministic derived read-only workflow observation snapshot.",
   "type": "object",
   "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "spec-code"
+          }
+        },
+        "required": ["mode"]
+      },
+      "then": {
+        "properties": {
+          "stages": {
+            "minItems": 9,
+            "maxItems": 9
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "stages": {
+            "maxItems": 0
+          }
+        }
+      }
+    }
+  ],
   "required": [
     "schema_version",
     "artifact_type",
@@ -12,9 +39,12 @@
     "change_id",
     "run_id",
     "producer_id",
+    "mode",
+    "observation_start",
     "last_sequence",
     "execution",
     "current_step_id",
+    "current_stage_id",
     "cli_status",
     "merge_readiness",
     "artifact_freshness",
@@ -23,6 +53,7 @@
     "interruption_reason",
     "observer_diagnostic",
     "steps",
+    "stages",
     "artifacts"
   ],
   "properties": {
@@ -44,6 +75,26 @@
     "producer_id": {
       "$ref": "common.schema.json#/$defs/nonEmptyString"
     },
+    "mode": {
+      "anyOf": [
+        {
+          "const": "spec-code"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "observation_start": {
+      "anyOf": [
+        {
+          "enum": ["complete", "partial"]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "last_sequence": {
       "type": "integer",
       "minimum": 0
@@ -55,6 +106,16 @@
       "anyOf": [
         {
           "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "current_stage_id": {
+      "anyOf": [
+        {
+          "$ref": "workflow-event.schema.json#/$defs/specCodeStageId"
         },
         {
           "type": "null"
@@ -125,6 +186,15 @@
       },
       "x-sdd-ordering": "first-observed"
     },
+    "stages": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 9,
+      "items": {
+        "$ref": "#/$defs/stageSnapshot"
+      },
+      "x-sdd-ordering": "stable-stage-model"
+    },
     "artifacts": {
       "type": "array",
       "items": {
@@ -135,6 +205,32 @@
     }
   },
   "$defs": {
+    "stageSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stage_id", "label", "state", "reason"],
+      "properties": {
+        "stage_id": {
+          "$ref": "workflow-event.schema.json#/$defs/specCodeStageId"
+        },
+        "label": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "state": {
+          "$ref": "workflow-event.schema.json#/$defs/workflowStageState"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/nonEmptyString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
     "stepSnapshot": {
       "type": "object",
       "additionalProperties": false,

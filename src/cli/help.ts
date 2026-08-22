@@ -97,6 +97,23 @@ export const CLI_HELP_ENTRIES: readonly CliHelpEntry[] = [
     summary: "Revalidate an exact retained proposal subject without writing.",
   },
   {
+    path: "journal create",
+    usage: "sdd journal create --workflow-mode spec-code --producer <id> [--partial-from <stage>]",
+    summary: "Create one safe ignored resumable workflow observation journal.",
+  },
+  {
+    path: "journal resume",
+    usage:
+      "sdd journal resume --journal <path> --run <id> --producer <id> --change-id <id> [--expected-fingerprint <sha256>]",
+    summary: "Resume one exact workflow journal subject and cursor.",
+  },
+  {
+    path: "journal publish",
+    usage:
+      "sdd journal publish --journal <path> --run <id> --producer <id> --change-id <id> --expected-sequence <n> --expected-fingerprint <sha256> --event-type <type> [typed event options]",
+    summary: "Publish one sequence-checked allowlisted workflow event atomically.",
+  },
+  {
     path: "proposal prepare",
     usage:
       "sdd proposal prepare --bundle <project-relative-path> --branch-head <git-ref> --integration-ref <git-ref> [--approval <project-relative-path> ...]",

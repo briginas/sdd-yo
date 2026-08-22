@@ -96,6 +96,14 @@ step state and allowlisted project-relative artifact references support a
 read-only renderer without turning the snapshot into approval, evidence,
 readiness, or Git authority.
 
+A resumable `spec-code` snapshot also carries its observation start and the
+stable nine-stage projection: workflow initialization, semantic model,
+specification candidate, proposal decision, exact specification patch,
+implementation, verification and review, local integration, and terminal
+outcome. Stage state changes only through the allowlisted `stage_updated`
+event; partial starts mark earlier stages unobserved rather than inferring or
+backfilling them.
+
 Neither record is decision-bearing. Observation failure does not change the
 underlying CLI response or referenced artifact, and removing an event journal
 or snapshot removes only derived visibility. Runtime validation additionally

@@ -643,6 +643,43 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-0163273A REQ-3F19778B REQ-CF3A1
     assert.equal(automationResponse.result.adoption.mode, "incremental");
     assert.deepEqual(automationResponse.diagnostics, []);
 
+    await writeFile(join(consumerRoot, ".gitignore"), "/.sdd/staging/\n");
+    const consumerGit = await runCommand("git", ["init"], consumerRoot);
+    assert.equal(consumerGit.exitCode, 0, consumerGit.standardError || consumerGit.standardOutput);
+    const journalCreate = await runCommand(
+      process.execPath,
+      [
+        repositoryWrapper,
+        "--",
+        "journal",
+        "create",
+        "--workflow-mode",
+        "spec-code",
+        "--producer",
+        "package-smoke",
+        "--cwd",
+        consumerRoot,
+      ],
+      consumerRoot,
+    );
+    assert.equal(journalCreate.exitCode, 0, journalCreate.standardError || journalCreate.standardOutput);
+    const journalResponse = JSON.parse(journalCreate.standardOutput) as {
+      readonly command: string;
+      readonly project_id: string;
+      readonly result: {
+        readonly journal_path: string;
+        readonly producer_id: string;
+        readonly next_sequence: number;
+        readonly journal_fingerprint: string;
+      };
+    };
+    assert.equal(journalResponse.command, "journal.create");
+    assert.equal(journalResponse.project_id, firstValidateResponse.project_id);
+    assert.equal(journalResponse.result.producer_id, "package-smoke");
+    assert.equal(journalResponse.result.next_sequence, 1);
+    assert.match(journalResponse.result.journal_path, /^\.sdd\/staging\/workflow-observation\/spec-code\//u);
+    assert.match(journalResponse.result.journal_fingerprint, /^sha256:[0-9a-f]{64}$/u);
+
     const skillRemoval = await runCommand(
       process.execPath,
       [binTarget, "skill", "remove", "--root", consumerRoot, "--format", "json"],

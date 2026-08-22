@@ -15,6 +15,9 @@
       "$ref": "#/$defs/runStarted"
     },
     {
+      "$ref": "#/$defs/stageUpdated"
+    },
+    {
       "$ref": "#/$defs/stepStarted"
     },
     {
@@ -113,6 +116,22 @@
     "integrationState": {
       "enum": ["unavailable", "not_integrated", "integrated"]
     },
+    "specCodeStageId": {
+      "enum": [
+        "workflow-initialization",
+        "semantic-model",
+        "specification-candidate",
+        "proposal-decision",
+        "exact-specification-patch",
+        "implementation",
+        "verification-and-review",
+        "local-integration",
+        "terminal-outcome"
+      ]
+    },
+    "workflowStageState": {
+      "enum": ["pending", "active", "waiting", "completed", "skipped", "interrupted", "failed"]
+    },
     "artifactKind": {
       "enum": [
         "proposal_package",
@@ -146,9 +165,78 @@
     },
     "runStarted": {
       "required": ["event_type"],
+      "dependentRequired": {
+        "mode": ["observation_start", "current_stage_id"],
+        "observation_start": ["mode", "current_stage_id"],
+        "current_stage_id": ["mode", "observation_start"]
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "observation_start": {
+                "const": "complete"
+              }
+            },
+            "required": ["observation_start"]
+          },
+          "then": {
+            "properties": {
+              "current_stage_id": {
+                "const": "workflow-initialization"
+              }
+            }
+          }
+        }
+      ],
       "properties": {
         "event_type": {
           "const": "run_started"
+        },
+        "mode": {
+          "const": "spec-code"
+        },
+        "observation_start": {
+          "enum": ["complete", "partial"]
+        },
+        "current_stage_id": {
+          "$ref": "#/$defs/specCodeStageId"
+        }
+      }
+    },
+    "stageUpdated": {
+      "required": ["event_type", "stage_id", "state"],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "waiting"
+              }
+            }
+          },
+          "then": {
+            "required": ["reason"]
+          },
+          "else": {
+            "not": {
+              "required": ["reason"]
+            }
+          }
+        }
+      ],
+      "properties": {
+        "event_type": {
+          "const": "stage_updated"
+        },
+        "stage_id": {
+          "$ref": "#/$defs/specCodeStageId"
+        },
+        "state": {
+          "$ref": "#/$defs/workflowStageState"
+        },
+        "reason": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
         }
       }
     },

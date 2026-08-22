@@ -91,6 +91,11 @@ preparation completed semantic review. Never offer a patch copied from prose,
 human output, an earlier response, or a response whose current status is not
 `ok`.
 
+For an observed `spec-code` route, preparation starts exact specification
+patch, its compatible status updates only the CLI axis, and an application wait
+is published only when the unchanged non-null patch is presented. Complete the
+stage only from the exact successful `proposal apply` response.
+
 ## Explicit application stop
 
 Before any write, present only the prepared semantic behavior-and-consequence

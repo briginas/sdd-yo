@@ -10,6 +10,7 @@ import { nodeFileSystem } from "../src/platform/node-filesystem.ts";
 import { nodeProjectWriter } from "../src/platform/node-project-writer.ts";
 import { nodeRandomness } from "../src/platform/node-randomness.ts";
 import { nodeProcessRunner } from "../src/platform/node-process-runner.ts";
+import { createNodeWorkflowJournalStore } from "../src/platform/node-workflow-journal-store.ts";
 import { runCli } from "../src/cli/run-cli.ts";
 
 const executeFile = promisify(execFile);
@@ -166,6 +167,97 @@ test("REQ-61673C24 REQ-2F5B2571 sdd observe starts only from one explicit bounde
   assert.equal(response.command, "observe");
   assert.equal(response.status, "ok");
   assert.match(response.result.url, /^http:\/\/127\.0\.0\.1:/u);
+});
+
+test("REQ-B5D3BE6B journal CLI creates, resumes, and publishes one exact retained run", async () => {
+  const root = await mkdtemp(join(tmpdir(), "sdd-cli-journal-"));
+  assert.equal((await execute(["init", "--format", "json"], root)).exitCode, 0);
+  const invoke = async (argv: readonly string[]) => {
+    const standardOutput: string[] = [];
+    const exitCode = await runCli({
+      argv: [...argv, "--format", "json"],
+      workingDirectory: root,
+      fileSystem: nodeFileSystem,
+      projectWriter: nodeProjectWriter,
+      randomness: { randomBytes: (length) => new Uint8Array(length).fill(0xab) },
+      processRunner: {
+        run: async (request) =>
+          request.executable === "git" && request.arguments[0] === "check-ignore"
+            ? { exitCode: 0, signal: null, standardOutput: new Uint8Array(), standardError: new Uint8Array() }
+            : nodeProcessRunner.run(request),
+      },
+      createWorkflowJournalStore: createNodeWorkflowJournalStore,
+      writeStandardOutput: (message) => standardOutput.push(message),
+      writeStandardError: () => undefined,
+      writeOutputFile: () => {
+        throw new Error("unexpected output write");
+      },
+    });
+    return { exitCode, value: JSON.parse(standardOutput.join("")) as Record<string, unknown> };
+  };
+
+  const created = await invoke(["journal", "create", "--workflow-mode", "spec-code", "--producer", "cli-test"]);
+  assert.equal(created.exitCode, 0);
+  const initial = created.value.result as {
+    journal_path: string;
+    run_id: string;
+    producer_id: string;
+    change_id: string;
+    next_sequence: number;
+    journal_fingerprint: string;
+  };
+  assert.equal(initial.run_id, "ab".repeat(16));
+  assert.equal(initial.next_sequence, 1);
+  assert.match(initial.journal_path, /^\.sdd\/staging\/workflow-observation\/spec-code\//u);
+
+  const subject = [
+    "--journal",
+    initial.journal_path,
+    "--run",
+    initial.run_id,
+    "--producer",
+    initial.producer_id,
+    "--change-id",
+    initial.change_id,
+    "--expected-fingerprint",
+    initial.journal_fingerprint,
+  ] as const;
+  const resumed = await invoke(["journal", "resume", ...subject]);
+  assert.equal(resumed.exitCode, 0);
+  assert.equal((resumed.value.result as { next_sequence: number }).next_sequence, 1);
+
+  const published = await invoke([
+    "journal",
+    "publish",
+    ...subject,
+    "--expected-sequence",
+    "1",
+    "--event-type",
+    "stage_updated",
+    "--stage",
+    "workflow-initialization",
+    "--stage-state",
+    "completed",
+  ]);
+  assert.equal(published.exitCode, 0, JSON.stringify(published.value));
+  assert.equal((published.value.result as { publication: string; next_sequence: number }).publication, "published");
+  assert.equal((published.value.result as { next_sequence: number }).next_sequence, 2);
+
+  const stale = await invoke([
+    "journal",
+    "publish",
+    ...subject,
+    "--expected-sequence",
+    "2",
+    "--event-type",
+    "stage_updated",
+    "--stage",
+    "workflow-initialization",
+    "--stage-state",
+    "failed",
+  ]);
+  assert.equal(stale.exitCode, 3);
+  assert.equal((stale.value.diagnostics as readonly { code: string }[])[0]?.code, "SDD_OBSERVATION_STALE_WRITER");
 });
 
 test("REQ-382BBBD6 init rejects a symbolic-link path component before writing", async () => {

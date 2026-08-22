@@ -189,6 +189,22 @@ resolved Git subject, and active Requirement identities. For a worktree trace,
 `HEAD` and the worktree graph must have equal semantic and structural
 fingerprints before the HEAD-bound index is accepted.
 
+### `sdd journal create|resume|publish`
+
+```text
+sdd journal create --workflow-mode spec-code --producer <id> [--partial-from <stage>]
+sdd journal resume --journal <path> --run <id> --producer <id> --change-id <id> --expected-fingerprint <sha256>
+sdd journal publish --journal <path> --run <id> --producer <id> --change-id <id> --expected-sequence <n> --expected-fingerprint <sha256> --event-type <type> [typed fields]
+```
+
+These commands create one generated ignored project-local journal, resume only
+its explicit subject, and atomically publish one allowlisted event using a
+sequence and whole-journal fingerprint cursor. Results return the exact subject,
+next sequence, fingerprint, and deterministic snapshot. Exact retries are
+idempotent; stale, competing, malformed, unsafe, or oversized writes fail
+without changing the last complete journal. Observation results never replace
+the result or authority of the workflow being observed.
+
 ### `sdd observe`
 
 ```text
@@ -200,6 +216,11 @@ journal, then starts a temporary capability-protected renderer on
 `127.0.0.1` and an operating-system-selected port. The selected journal must
 be a contained regular file no larger than 16 MiB. The command returns the
 observer URL and current snapshot; the CLI process owns the listener lifetime.
+For a resumable `spec-code` journal it revalidates later atomic replacements
+and sends only strictly later snapshots over capability-protected SSE. Invalid
+updates preserve the last valid snapshot and surface a separate observer
+condition. Reconnect uses the last delivered sequence, and shutdown releases
+the watcher, clients, and listener.
 
 The observer is read-only. It exposes no approval, gate, patch, evidence, Git,
 publication, or release mutation and serves only exact contained regular

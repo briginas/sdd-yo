@@ -449,7 +449,9 @@
       "requirements": [
         "REQ-61673C24",
         "REQ-291769E4",
-        "REQ-B2001FED"
+        "REQ-B2001FED",
+        "REQ-B5D3BE6B",
+        "REQ-6A40513D"
       ],
       "required_fields": [
         "schema_version",
@@ -483,7 +485,9 @@
       "requirements": [
         "REQ-02F9FAB3",
         "REQ-1FD47FF6",
-        "REQ-291769E4"
+        "REQ-291769E4",
+        "REQ-B5D3BE6B",
+        "REQ-6A40513D"
       ],
       "required_fields": [
         "schema_version",
@@ -492,9 +496,12 @@
         "change_id",
         "run_id",
         "producer_id",
+        "mode",
+        "observation_start",
         "last_sequence",
         "execution",
         "current_step_id",
+        "current_stage_id",
         "cli_status",
         "merge_readiness",
         "artifact_freshness",
@@ -503,6 +510,7 @@
         "interruption_reason",
         "observer_diagnostic",
         "steps",
+        "stages",
         "artifacts"
       ],
       "optional_provenance_profile": "none",

@@ -35,6 +35,11 @@ and contain only event-type-specific allowlisted fields.
 
 - Event order is determined by sequence within a run; timestamps are optional
   display metadata and never determine replay order.
+- Event types identify actual orchestration boundaries, human-decision waits,
+  compatible CLI outcomes, retained artifact references, implementation and
+  verification progress, interruption, failure, rejection, and completion;
+  they never derive a boundary from prose, logs, prompts, reasoning, or elapsed
+  time.
 - Event and identifier size, supported major version, project containment, and
   event-type payload shape are validated before the event changes a snapshot.
 - Raw stdout, stderr, prompts, model reasoning, unrestricted environment state,
@@ -165,6 +170,50 @@ underlying command result, workflow artifact, or authorized side effect.
 - Producer ownership is explicit for each run; events from another producer,
   project, or run cannot update that snapshot.
 - Observation APIs do not grant permission to execute a command or Git action.
+- A stale or competing writer fails before publication and cannot renumber,
+  merge, repair, or replace events produced by the current run owner.
+
+<a id="req-b5d3be6b"></a>
+
+## REQ-B5D3BE6B — Publish resumable project-local workflow journals
+
+```sdd
+kind: behavior
+verification: automated
+```
+
+### Relations <!-- sdd:relations -->
+
+- depends-on: [REQ-61673C24 — Emit versioned workflow events](read-only-workflow-progress-observation.md#req-61673c24)
+- depends-on: [REQ-02F9FAB3 — Replay events deterministically](read-only-workflow-progress-observation.md#req-02f9fab3)
+- depends-on: [REQ-B2001FED — Isolate observation producers](read-only-workflow-progress-observation.md#req-b2001fed)
+- depends-on: [REQ-A3C3B779 — Keep CLI workflow state external](proposal-modes-and-workflow-gates.md#req-a3c3b779)
+
+### Statement <!-- sdd:statement -->
+
+The deterministic CLI shall create and publish one contained project-local
+workflow journal for an explicit run through sequence-checked operations that
+support compatible resume without hidden workflow state.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- Initialization validates the selected project, pre-Change run identity,
+  producer, workflow mode, generated ignored path, and absence of an existing
+  journal before atomically publishing sequence zero.
+- Publication validates the selected project, run, producer, expected next
+  sequence, current complete journal, allowlisted event payload, path
+  containment, symbolic-link boundaries, size limits, and writer freshness
+  before one atomic replacement.
+- Resume requires the retained journal plus an explicit current workflow
+  subject, continues from the next sequence, and treats an exact completed
+  boundary as idempotent without duplicating it.
+- A mismatched subject, stale writer, conflicting duplicate, missing sequence,
+  malformed or oversized journal, traversal-bearing path, cross-project input,
+  or incompatible version fails with stable diagnostics and preserves the last
+  complete journal bytes.
+- Journal initialization and publication report observation outcomes
+  separately and never change the result or authorized side effect of the
+  workflow operation being observed.
 
 <a id="req-627f78a2"></a>
 
@@ -197,6 +246,9 @@ failure represented explicitly rather than inferred as an SDD gate decision.
   visibility and leaves every authoritative SDD input and result unchanged.
 - Retained paths reject traversal and symbolic-link escape and contain no
   secret, raw-log, prompt, reasoning, or unrestricted environment content.
+- A workflow that starts observation after work has already occurred records an
+  explicit partial checkpoint and never fabricates or reconstructs earlier
+  events from chat, logs, repository state, or retained artifact names.
 
 <a id="req-2f5b2571"></a>
 
@@ -228,6 +280,10 @@ without exposing workflow mutation operations.
   reconnect and exact duplicate delivery preserve the same derived snapshot.
 - Observer failure or client disconnect does not change producer execution or
   authoritative state, and shutdown releases listeners and resources cleanly.
+- One running session follows later complete atomic publications for its exact
+  journal, revalidates the entire publication, and sends only valid later
+  snapshots; malformed, stale, conflicting, or failed updates preserve the
+  last valid view.
 - The transport exposes no endpoint that records approval, applies a patch,
   creates evidence, runs a gate, mutates Git, publishes, or releases.
 
@@ -265,3 +321,76 @@ person to read logs.
   landmarks, and live-update announcements remain usable without color alone.
 - The renderer contains no workflow mutation control and does not infer state
   from missing events or elapsed time.
+
+<a id="req-6a40513d"></a>
+
+## REQ-6A40513D — Project one stable observed spec-code stage model
+
+```sdd
+kind: behavior
+verification: automated
+```
+
+### Relations <!-- sdd:relations -->
+
+- depends-on: [REQ-02F9FAB3 — Replay events deterministically](read-only-workflow-progress-observation.md#req-02f9fab3)
+- depends-on: [REQ-1FD47FF6 — Keep workflow status axes independent](read-only-workflow-progress-observation.md#req-1fd47ff6)
+- depends-on: [REQ-0837358D — Render accessible workflow progress](read-only-workflow-progress-observation.md#req-0837358d)
+- depends-on: [REQ-B5D3BE6B — Publish resumable project-local workflow journals](read-only-workflow-progress-observation.md#req-b5d3be6b)
+
+### Statement <!-- sdd:statement -->
+
+An observed `spec-code` run shall project allowlisted workflow events into one
+stable ordered stage model that identifies the current stage and next real
+decision boundary without implying independent authority or unobserved work.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- The ordered stages are workflow initialization, semantic model,
+  specification candidate, proposal decision, exact specification patch,
+  implementation, verification and review, local integration, and terminal
+  outcome.
+- A stage changes only when an allowlisted event supplies `pending`, `active`,
+  `waiting`, `completed`, `skipped`, `interrupted`, or `failed`; optional and
+  inapplicable branches remain visible as skipped or not requested.
+- Waiting distinguishes semantic confirmation, proposal decision, patch
+  application, semantic review, adapter trust review, and local Git authority
+  without supplying or inferring the requested decision.
+- Terminal completed, interrupted, failed, or rejected remains separate from
+  approval, merge readiness, artifact freshness, and local integration state.
+- A partial run marks earlier unobserved stages explicitly and begins only from
+  the supplied current checkpoint.
+
+<a id="req-5a23a618"></a>
+
+## REQ-5A23A618 — Follow valid journal publications live
+
+```sdd
+kind: behavior
+verification: automated
+```
+
+### Relations <!-- sdd:relations -->
+
+- depends-on: [REQ-B5D3BE6B — Publish resumable project-local workflow journals](read-only-workflow-progress-observation.md#req-b5d3be6b)
+- depends-on: [REQ-2F5B2571 — Serve one protected loopback view](read-only-workflow-progress-observation.md#req-2f5b2571)
+- depends-on: [REQ-6A40513D — Project one stable observed spec-code stage model](read-only-workflow-progress-observation.md#req-6a40513d)
+
+### Statement <!-- sdd:statement -->
+
+One running protected loopback observer shall follow valid later publications
+of its selected workflow journal and deliver the current deterministic snapshot
+and stable stage projection without restart.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- File notification triggers complete-journal revalidation and replay and is
+  never treated as event order, workflow state, or authority.
+- Only a strictly valid later snapshot is published to connected clients;
+  malformed, stale, conflicting, truncated, or unreadable updates preserve the
+  last valid snapshot and expose an observer condition separately.
+- Reconnect delivers the current snapshot without duplicating a completed
+  boundary, and shutdown releases file watchers, SSE clients, and the loopback
+  listener.
+- Live refresh never records a decision, runs a workflow operation, mutates an
+  authoritative artifact, changes Git, or broadens loopback access.

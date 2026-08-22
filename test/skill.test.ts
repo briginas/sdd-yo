@@ -28,7 +28,7 @@ const selectedCwdIndex = args.indexOf("--cwd");
 const selectedProjectId = selectedCwdIndex !== -1 && args[selectedCwdIndex + 1]?.endsWith("project-b")
   ? "SDD-B1000001"
   : "SDD-A1000001";
-const operation = ["approval", "proposal", "semantic-review", "tests", "findings", "merge"].includes(command)
+const operation = ["approval", "proposal", "semantic-review", "tests", "findings", "merge", "journal"].includes(command)
   ? \`\${command}.\${args[1] ?? ""}\`
   : command;
 const mode = process.env.SDD_SKILL_FAKE_MODE ?? "valid";
@@ -142,6 +142,18 @@ else {
     adoption: { mode: "incremental", project_scope_fingerprint: fingerprint }, diagnostics: [], status: "PASS",
     input_manifest: [{ artifact_type: "approval_evidence", fingerprint, source: ".sdd/staging/approval.json" }],
   };
+  const journalSnapshot = {
+    schema_version: "1.0", artifact_type: "workflow_snapshot", project_id: selectedProjectId,
+    change_id: "pre-change:run-a", run_id: "run-a", producer_id: "sdd-yo-skill", mode: "spec-code",
+    observation_start: "complete", current_stage_id: "workflow-initialization", last_sequence: 0,
+    lifecycle: "active", steps: [], statuses: {}, artifacts: [], stages: [], diagnostics: [],
+  };
+  const journalResult = {
+    journal_path: ".sdd/staging/workflow-observation/spec-code/run-a.jsonl",
+    project_id: selectedProjectId, mode: "spec-code", run_id: "run-a", producer_id: "sdd-yo-skill",
+    change_id: "pre-change:run-a", next_sequence: 1, journal_fingerprint: fingerprint,
+    snapshot: journalSnapshot,
+  };
   const result = command === "init"
     ? { created_paths: [".sdd/config.yaml", "spec/README.md", "spec/capabilities", "spec/concepts"] }
     : command === "id"
@@ -151,6 +163,12 @@ else {
         }
       : operation === "approval.record"
         ? mode === "invalid-approval" ? { ...approvalRecord, evidence_path: "../outside.json" } : approvalRecord
+      : operation === "journal.create"
+        ? mode === "invalid-journal-result" ? { ...journalResult, journal_path: "../outside.json" } : journalResult
+      : operation === "journal.resume"
+        ? mode === "invalid-journal-result" ? { ...journalResult, run_id: "another-run" } : journalResult
+      : operation === "journal.publish"
+        ? mode === "invalid-journal-result" ? { ...journalResult, publication: "rewritten" } : { ...journalResult, publication: "published" }
       : operation === "proposal.validate"
         ? mode === "invalid-proposal" ? { ...proposalPackage, semantic_candidates: null } : proposalPackage
         : operation === "semantic-review.materialize"
@@ -224,6 +242,7 @@ test("REQ-E26A859E REQ-64DB876B REQ-26234DC8 skill package discloses the bounded
     "proposal-gate.md",
     "semantic-review.md",
     "verification.md",
+    "workflow-observation.md",
   ]);
   assert.deepEqual(scripts, ["check-cli-compatibility"]);
   assert.deepEqual(templates.toSorted(), ["capability.md", "concept.md"]);
@@ -237,6 +256,91 @@ test("REQ-E26A859E REQ-64DB876B REQ-26234DC8 skill package discloses the bounded
   assert.match(skill, /references\/verification\.md/u);
   assert.match(skill, /references\/integration\.md/u);
   assert.match(skill, /references\/semantic-review\.md/u);
+  assert.match(skill, /references\/workflow-observation\.md/u);
+});
+
+test("REQ-44264E62 Skill makes spec-code observation automatic and authority-neutral", async () => {
+  const skill = await readFile(join(skillRoot, "SKILL.md"), "utf8");
+  const modes = await readFile(join(skillRoot, "references/modes.md"), "utf8");
+  const observation = await readFile(join(skillRoot, "references/workflow-observation.md"), "utf8");
+
+  assert.match(skill, /automatic observed run/u);
+  assert.match(modes, /one automatic observed run/u);
+  assert.match(observation, /Initialize or resume exactly one run/u);
+  assert.match(observation, /Do not ask for observation opt-in/u);
+  assert.match(observation, /Across a human pause, retry, or\s+agent turn, invoke `journal resume`/u);
+  assert.match(observation, /never backfill/u);
+  assert.match(observation, /observation failure/u);
+  assert.match(observation, /grants no authority/u);
+  assert.match(observation, /verification-and-review/u);
+});
+
+test("REQ-B5D3BE6B compatibility wrapper accepts only exact workflow journal results", async () => {
+  const cli = await fakeCli();
+  const selector = ["--cwd", repositoryRoot] as const;
+  const fingerprint = `sha256:${"a".repeat(64)}`;
+  const created = await runChecker(cli, [
+    "journal",
+    "create",
+    "--workflow-mode",
+    "spec-code",
+    "--producer",
+    "sdd-yo-skill",
+    ...selector,
+  ]);
+  assert.equal(created.code, 0, created.stderr);
+  assert.equal((JSON.parse(created.stdout) as { command: string }).command, "journal.create");
+
+  const retained = [
+    "--journal",
+    ".sdd/staging/workflow-observation/spec-code/run-a.jsonl",
+    "--run",
+    "run-a",
+    "--producer",
+    "sdd-yo-skill",
+    "--change-id",
+    "pre-change:run-a",
+    "--expected-fingerprint",
+    fingerprint,
+  ] as const;
+  const resumed = await runChecker(cli, ["journal", "resume", ...retained, ...selector]);
+  assert.equal(resumed.code, 0, resumed.stderr);
+  const published = await runChecker(cli, [
+    "journal",
+    "publish",
+    ...retained,
+    "--expected-sequence",
+    "1",
+    "--event-type",
+    "stage_updated",
+    "--stage",
+    "semantic-model",
+    "--stage-state",
+    "active",
+    ...selector,
+  ]);
+  assert.equal(published.code, 0, published.stderr);
+  assert.equal((JSON.parse(published.stdout) as { result: { publication: string } }).result.publication, "published");
+
+  for (const args of [
+    ["journal", "create", "--workflow-mode", "spec", "--producer", "sdd-yo-skill", ...selector],
+    [
+      "journal",
+      "resume",
+      ...retained.filter((value) => value !== "--expected-fingerprint" && value !== fingerprint),
+      ...selector,
+    ],
+  ]) {
+    const rejected = await runChecker(cli, args);
+    assert.equal(rejected.code, 3);
+  }
+  const invalid = await runChecker(
+    cli,
+    ["journal", "publish", ...retained, "--expected-sequence", "1", "--event-type", "run_completed", ...selector],
+    "invalid-journal-result",
+  );
+  assert.equal(invalid.code, 3);
+  assert.match(invalid.stderr, /invalid workflow journal result/u);
 });
 
 test("REQ-CF21ED6E REQ-26234DC8 initiative planning stays advisory until one slice is selected", async () => {

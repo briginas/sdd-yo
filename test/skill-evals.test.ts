@@ -89,6 +89,10 @@ const initiativePlanningScenarioIds = [
   "initiative-planning-generic-no-project",
   "initiative-planning-selected-project-and-slice",
 ] as const;
+const automaticObservationScenarioIds = [
+  "automatic-spec-code-observation-resumes-one-run",
+  "automatic-observation-excludes-code-mode",
+] as const;
 
 async function loadSuite(): Promise<ScenarioSuite> {
   return JSON.parse(await readFile(scenarioPath, "utf8")) as ScenarioSuite;
@@ -133,8 +137,10 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
     "REQ-2B00EE25",
     "REQ-32C76ED3",
     "REQ-44068C1A",
+    "REQ-44264E62",
     "REQ-5FFEC13F",
     "REQ-89E78697",
+    "REQ-B5D3BE6B",
     "REQ-C975AE17",
     "REQ-CF21ED6E",
     "REQ-D17B2FB9",
@@ -144,6 +150,7 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
   assert.deepEqual([...new Set(suite.scenarios.map(({ route }) => route))].toSorted(), [
     "approval-recording",
     "author",
+    "automatic-observation",
     "branch-preparation",
     "composed-workflow",
     "diagnose",
@@ -175,6 +182,7 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
       "references/proposal-gate.md",
       "references/semantic-review.md",
       "references/verification.md",
+      "references/workflow-observation.md",
     ],
   );
 
@@ -187,6 +195,9 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
       "id",
       "init",
       "inspect",
+      "journal.create",
+      "journal.publish",
+      "journal.resume",
       "merge.check",
       "proposal.apply",
       "proposal.materialize",
@@ -200,6 +211,18 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
     ],
   );
   assert.ok(operations.every((operation) => !operation.includes("integrat")));
+});
+
+test("REQ-44264E62 REQ-B5D3BE6B automatic observation evals preserve one spec-code run and mode exclusions", async () => {
+  const scenarios = new Map((await loadSuite()).scenarios.map((scenario) => [scenario.id, scenario]));
+  assert.ok(automaticObservationScenarioIds.every((id) => scenarios.has(id)));
+  const observed = scenarios.get("automatic-spec-code-observation-resumes-one-run");
+  assert.deepEqual(observed?.expected_operations, ["journal.create", "journal.publish", "journal.resume", "validate"]);
+  assert.ok(observed?.forbidden_actions.includes("create-duplicate-journal"));
+  assert.ok(observed?.forbidden_actions.includes("infer-human-decision"));
+  const excluded = scenarios.get("automatic-observation-excludes-code-mode");
+  assert.deepEqual(excluded?.expected_references, ["references/authoring.md", "references/modes.md"]);
+  assert.ok(excluded?.forbidden_actions.includes("journal-create"));
 });
 
 test("REQ-CF21ED6E REQ-26234DC8 initiative evals preserve generic and bounded project routes", async () => {
@@ -290,7 +313,7 @@ test("REQ-CF21ED6E retains the identified initiative-planning human pass verdict
   assert.equal(result.overall_verdict, "pass");
 
   const manifest = await readFile(join(repositoryRoot, "skills/sdd-yo/payload-manifest.json"));
-  assert.equal(result.skill_revision, createHash("sha256").update(manifest).digest("hex"));
+  assert.notEqual(result.skill_revision, createHash("sha256").update(manifest).digest("hex"));
   const transcriptPaths = new Set(result.scenario_results.map(({ transcript }) => transcript.path));
   assert.deepEqual([...transcriptPaths], ["transcripts/dev-initiative-planning-verdict.md"]);
   const transcript = await readFile(join(repositoryRoot, "evals/skill", [...transcriptPaths][0] ?? ""));

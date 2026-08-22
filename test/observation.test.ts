@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -8,6 +8,7 @@ import { isProjectId } from "../src/contracts/identifiers.ts";
 import {
   parseWorkflowEvent,
   createWorkflowEventProducer,
+  renderWorkflowObserver,
   replayWorkflowEvents,
   retainWorkflowRuns,
   startWorkflowObserver,
@@ -48,6 +49,24 @@ const completedEvents = [
   }),
   event(10, { event_type: "run_completed" }),
 ] as const;
+
+async function readSseFrame(reader: ReadableStreamDefaultReader<Uint8Array>): Promise<string> {
+  const decoder = new TextDecoder();
+  let retained = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) throw new Error("SSE stream ended before one complete frame.");
+    retained += decoder.decode(value, { stream: true });
+    const boundary = retained.indexOf("\n\n");
+    if (boundary !== -1) return retained.slice(0, boundary);
+  }
+}
+
+async function atomicWrite(file: string, contents: string): Promise<void> {
+  const temporary = `${file}.next`;
+  await writeFile(temporary, contents);
+  await rename(temporary, file);
+}
 
 test("REQ-61673C24 rejects unknown, secret-bearing, cross-project, traversal, and oversized workflow events", () => {
   assert.throws(
@@ -103,6 +122,40 @@ test("REQ-1FD47FF6 keeps completed, approval, readiness, freshness, and integrat
   assert.equal(snapshot.integration_state, "not_integrated");
 });
 
+test("REQ-0837358D REQ-6A40513D renders the stable partial spec-code stage model without inference", () => {
+  const snapshot = replayWorkflowEvents(
+    [
+      event(0, {
+        event_type: "run_started",
+        mode: "spec-code",
+        observation_start: "partial",
+        current_stage_id: "specification-candidate",
+      }),
+      event(1, {
+        event_type: "stage_updated",
+        stage_id: "specification-candidate",
+        state: "waiting",
+        reason: "Proposal materialization authority required",
+      }),
+    ],
+    projectId,
+  );
+  assert.equal(snapshot.stages.length, 9);
+  assert.equal(snapshot.current_stage_id, "specification-candidate");
+  assert.deepEqual(
+    snapshot.stages.slice(0, 2).map(({ state, reason }) => ({ state, reason })),
+    [
+      { state: "skipped", reason: "Not observed before partial start" },
+      { state: "skipped", reason: "Not observed before partial start" },
+    ],
+  );
+  const html = renderWorkflowObserver(snapshot, "safe-capability");
+  assert.match(html, /Ordered workflow stages/u);
+  assert.match(html, /Workflow initialization/u);
+  assert.match(html, /Terminal outcome/u);
+  assert.match(html, /Proposal materialization authority required/u);
+});
+
 test("REQ-B2001FED REQ-627F78A2 represents interruption explicitly and evicts only whole runs", () => {
   const interrupted = replayWorkflowEvents(
     [
@@ -151,7 +204,7 @@ test("REQ-B2001FED isolates producer write failure and does not advance its sequ
   assert.equal(retained[0]?.sequence, 0);
 });
 
-test("REQ-291769E4 REQ-2F5B2571 REQ-0837358D serves a capability-protected accessible read-only loopback view", async (context) => {
+test("REQ-291769E4 REQ-2F5B2571 REQ-0837358D REQ-6A40513D serves a capability-protected accessible read-only loopback view", async (context) => {
   const root = await mkdtemp(path.join(os.tmpdir(), "sdd-observer-"));
   await mkdir(path.join(root, ".sdd/staging"), { recursive: true });
   await writeFile(path.join(root, ".sdd/staging/merge-report.json"), '{"artifact_type":"merge_report"}\n');
@@ -174,6 +227,9 @@ test("REQ-291769E4 REQ-2F5B2571 REQ-0837358D serves a capability-protected acces
   assert.match(html, /View only/u);
   assert.match(html, /aria-live="polite"/u);
   assert.match(html, /addEventListener\("snapshot"/u);
+  assert.match(html, /replaceChildren/u);
+  assert.doesNotMatch(html, /location\.reload/u);
+  assert.doesNotMatch(html, /innerHTML/u);
   assert.doesNotMatch(html, /<button/u);
   const base = new URL(session.url);
   const artifactUrl = new URL("/artifact", base);
@@ -183,4 +239,86 @@ test("REQ-291769E4 REQ-2F5B2571 REQ-0837358D serves a capability-protected acces
   assert.equal(artifact.status, 200);
   assert.match(await artifact.text(), /merge_report/u);
   assert.equal(new URL(session.url).hostname, "127.0.0.1");
+});
+
+test("REQ-2F5B2571 REQ-5A23A618 publishes monotonic SSE ids and suppresses reconnect duplicates", async (context) => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "sdd-observer-cursor-"));
+  const beforeCompletion = replayWorkflowEvents(completedEvents.slice(0, 10), projectId);
+  const completed = replayWorkflowEvents(completedEvents, projectId);
+  const session = await startWorkflowObserver({ projectRoot: root, snapshot: beforeCompletion });
+  context.after(() => session.close());
+
+  const eventsUrl = new URL("/events", session.url);
+  eventsUrl.searchParams.set("cap", session.capability);
+  eventsUrl.searchParams.set("after", String(beforeCompletion.last_sequence));
+  const live = await fetch(eventsUrl);
+  assert.equal(live.status, 200);
+  assert.ok(live.body);
+  const reader = live.body.getReader();
+  session.publish(completed);
+  const update = await readSseFrame(reader);
+  assert.match(update, /^id: 10\nevent: snapshot\n/u);
+  assert.match(update, /"execution":"completed"/u);
+
+  assert.doesNotThrow(() => session.publish(completed));
+  assert.throws(() => session.publish({ ...beforeCompletion, last_sequence: 8 }), /sequence moved backwards/u);
+  assert.throws(
+    () => session.publish({ ...completed, change_id: "another-change", last_sequence: 11 }),
+    /subject changed/u,
+  );
+
+  const reconnectUrl = new URL(eventsUrl);
+  reconnectUrl.searchParams.set("after", "9");
+  const reconnect = await fetch(reconnectUrl);
+  assert.ok(reconnect.body);
+  assert.match(await readSseFrame(reconnect.body.getReader()), /^id: 10\nevent: snapshot\n/u);
+
+  const invalidCursor = new URL(eventsUrl);
+  invalidCursor.searchParams.set("after", "11");
+  assert.equal((await fetch(invalidCursor)).status, 400);
+  await reader.cancel();
+});
+
+test("REQ-5A23A618 follows atomic journal replacement and isolates malformed updates", async (context) => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "sdd-observer-follow-"));
+  const journal = path.join(root, "workflow.jsonl");
+  const initialEvents = [event(0, { event_type: "run_started" })];
+  await writeFile(journal, `${JSON.stringify(initialEvents[0])}\n`);
+  const readSnapshot = async () => {
+    const lines = (await readFile(journal, "utf8")).trim().split("\n");
+    return replayWorkflowEvents(
+      lines.map((line) => JSON.parse(line) as unknown),
+      projectId,
+    );
+  };
+  const initial = await readSnapshot();
+  const session = await startWorkflowObserver({
+    projectRoot: root,
+    snapshot: initial,
+    follow: { journalPath: journal, readSnapshot },
+  });
+  context.after(() => session.close());
+
+  const eventsUrl = new URL("/events", session.url);
+  eventsUrl.searchParams.set("cap", session.capability);
+  eventsUrl.searchParams.set("after", "0");
+  const response = await fetch(eventsUrl);
+  assert.ok(response.body);
+  const reader = response.body.getReader();
+
+  const next = event(1, { event_type: "step_started", step_id: "author", label: "Author specification" });
+  await atomicWrite(journal, `${JSON.stringify(initialEvents[0])}\n${JSON.stringify(next)}\n`);
+  const update = await readSseFrame(reader);
+  assert.match(update, /^id: 1\nevent: snapshot\n/u);
+
+  await atomicWrite(journal, "not-json\n");
+  const condition = await readSseFrame(reader);
+  assert.match(condition, /^event: observer_condition\ndata: /u);
+  assert.match(condition, /SDD_OBSERVATION_JOURNAL_INVALID/u);
+
+  const snapshotUrl = new URL("/snapshot", session.url);
+  snapshotUrl.searchParams.set("cap", session.capability);
+  const retained = (await (await fetch(snapshotUrl)).json()) as { readonly last_sequence: number };
+  assert.equal(retained.last_sequence, 1);
+  await reader.cancel();
 });

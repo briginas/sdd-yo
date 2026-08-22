@@ -43,6 +43,7 @@ export type SDDYoChangeDescriptor = ArtifactEnvelope & {
 export type SDDYoWorkflowEvent = EventBase &
   (
     | RunStarted
+    | StageUpdated
     | StepStarted
     | StepWaiting
     | StepCompleted
@@ -58,6 +59,116 @@ export type SDDYoWorkflowEvent = EventBase &
     | ArtifactReferenced
     | ObserverFailed
   );
+export type RunStarted = {
+  [k: string]: unknown | undefined;
+} & {
+  event_type: "run_started";
+  mode?: "spec-code";
+  observation_start?: "complete" | "partial";
+  current_stage_id?:
+    | "workflow-initialization"
+    | "semantic-model"
+    | "specification-candidate"
+    | "proposal-decision"
+    | "exact-specification-patch"
+    | "implementation"
+    | "verification-and-review"
+    | "local-integration"
+    | "terminal-outcome";
+  [k: string]: unknown | undefined;
+};
+export type StageUpdated = {
+  [k: string]: unknown | undefined;
+} & {
+  event_type: "stage_updated";
+  stage_id:
+    | "workflow-initialization"
+    | "semantic-model"
+    | "specification-candidate"
+    | "proposal-decision"
+    | "exact-specification-patch"
+    | "implementation"
+    | "verification-and-review"
+    | "local-integration"
+    | "terminal-outcome";
+  state: "pending" | "active" | "waiting" | "completed" | "skipped" | "interrupted" | "failed";
+  reason?: string;
+  [k: string]: unknown | undefined;
+};
+/**
+ * Version 1 deterministic derived read-only workflow observation snapshot.
+ */
+export type SDDYoWorkflowSnapshot = {
+  [k: string]: unknown | undefined;
+} & {
+  schema_version: "1.0";
+  artifact_type: "workflow_snapshot";
+  project_id: string;
+  change_id: string;
+  run_id: string;
+  producer_id: string;
+  mode: "spec-code" | null;
+  observation_start: ("complete" | "partial") | null;
+  last_sequence: number;
+  execution: "active" | "waiting" | "interrupted" | "failed" | "completed";
+  current_step_id: string | null;
+  current_stage_id:
+    | (
+        | "workflow-initialization"
+        | "semantic-model"
+        | "specification-candidate"
+        | "proposal-decision"
+        | "exact-specification-patch"
+        | "implementation"
+        | "verification-and-review"
+        | "local-integration"
+        | "terminal-outcome"
+      )
+    | null;
+  cli_status: ("ok" | "blocked" | "review_required" | "error") | null;
+  merge_readiness: ("PASS" | "REVIEW_REQUIRED" | "BLOCKED") | null;
+  artifact_freshness: ("current" | "stale" | "missing" | "unknown") | null;
+  approval_state: "unavailable" | "pending" | "approved" | "rejected";
+  integration_state: "unavailable" | "not_integrated" | "integrated";
+  interruption_reason: string | null;
+  observer_diagnostic: string | null;
+  steps: StepSnapshot[];
+  /**
+   * @minItems 0
+   * @maxItems 9
+   */
+  stages:
+    | []
+    | [StageSnapshot]
+    | [StageSnapshot, StageSnapshot]
+    | [StageSnapshot, StageSnapshot, StageSnapshot]
+    | [StageSnapshot, StageSnapshot, StageSnapshot, StageSnapshot]
+    | [StageSnapshot, StageSnapshot, StageSnapshot, StageSnapshot, StageSnapshot]
+    | [StageSnapshot, StageSnapshot, StageSnapshot, StageSnapshot, StageSnapshot, StageSnapshot]
+    | [StageSnapshot, StageSnapshot, StageSnapshot, StageSnapshot, StageSnapshot, StageSnapshot, StageSnapshot]
+    | [
+        StageSnapshot,
+        StageSnapshot,
+        StageSnapshot,
+        StageSnapshot,
+        StageSnapshot,
+        StageSnapshot,
+        StageSnapshot,
+        StageSnapshot,
+      ]
+    | [
+        StageSnapshot,
+        StageSnapshot,
+        StageSnapshot,
+        StageSnapshot,
+        StageSnapshot,
+        StageSnapshot,
+        StageSnapshot,
+        StageSnapshot,
+        StageSnapshot,
+      ];
+  artifacts: ArtifactReference[];
+};
 /**
  * @minItems 1
  */
@@ -429,10 +540,6 @@ export interface EventBase {
   timestamp?: string;
   [k: string]: unknown | undefined;
 }
-export interface RunStarted {
-  event_type: "run_started";
-  [k: string]: unknown | undefined;
-}
 export interface StepStarted {
   event_type: "step_started";
   step_id: string;
@@ -524,35 +631,27 @@ export interface ObserverFailed {
   diagnostic_code: string;
   [k: string]: unknown | undefined;
 }
-/**
- * Version 1 deterministic derived read-only workflow observation snapshot.
- */
-export interface SDDYoWorkflowSnapshot {
-  schema_version: "1.0";
-  artifact_type: "workflow_snapshot";
-  project_id: string;
-  change_id: string;
-  run_id: string;
-  producer_id: string;
-  last_sequence: number;
-  execution: "active" | "waiting" | "interrupted" | "failed" | "completed";
-  current_step_id: string | null;
-  cli_status: ("ok" | "blocked" | "review_required" | "error") | null;
-  merge_readiness: ("PASS" | "REVIEW_REQUIRED" | "BLOCKED") | null;
-  artifact_freshness: ("current" | "stale" | "missing" | "unknown") | null;
-  approval_state: "unavailable" | "pending" | "approved" | "rejected";
-  integration_state: "unavailable" | "not_integrated" | "integrated";
-  interruption_reason: string | null;
-  observer_diagnostic: string | null;
-  steps: StepSnapshot[];
-  artifacts: ArtifactReference[];
-}
 export interface StepSnapshot {
   step_id: string;
   label: string;
   state: "active" | "waiting" | "failed" | "completed";
   waiting_reason: string | null;
   diagnostic_code: string | null;
+}
+export interface StageSnapshot {
+  stage_id:
+    | "workflow-initialization"
+    | "semantic-model"
+    | "specification-candidate"
+    | "proposal-decision"
+    | "exact-specification-patch"
+    | "implementation"
+    | "verification-and-review"
+    | "local-integration"
+    | "terminal-outcome";
+  label: string;
+  state: "pending" | "active" | "waiting" | "completed" | "skipped" | "interrupted" | "failed";
+  reason: string | null;
 }
 /**
  * Version 1 owned macOS user-scoped Skill and private CLI installation binding.

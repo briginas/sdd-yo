@@ -23,6 +23,8 @@ reference:
 - change mode and virtual candidate drafting:
   [modes](../../skills/sdd-yo/references/modes.md) and
   [authoring](../../skills/sdd-yo/references/authoring.md);
+- automatic observation for each selected `spec-code` route:
+  [workflow observation](../../skills/sdd-yo/references/workflow-observation.md);
 - deterministic Proposal Gate review:
   [proposal review](../../skills/sdd-yo/references/proposal-gate.md);
 - explicit human decision recording:
@@ -48,6 +50,13 @@ complete named local closeout or one explicit confirmation after current
 pre-verification head movement requires the advance form before mutation.
 Repository instructions select the active milestone and impose development
 discipline, but do not restate or override the Skill sequence.
+
+For `spec-code`, the Skill initializes or resumes one exact project-local
+journal before validation and publishes typed stage and status boundaries
+without removing any existing human-authority stop. The observation tuple is
+explicit retained data, not hidden Skill state; journal failure remains
+separate from the owning operation. Other routes do not create an automatic
+journal.
 
 The local integration route is intentionally outside the deterministic CLI.
 Before final evidence, the Skill resolves exact local feature and integration

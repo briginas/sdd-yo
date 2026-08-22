@@ -23,6 +23,30 @@ export type WorkflowApprovalState = (typeof WORKFLOW_APPROVAL_STATES)[number];
 export const WORKFLOW_INTEGRATION_STATES = ["unavailable", "not_integrated", "integrated"] as const;
 export type WorkflowIntegrationState = (typeof WORKFLOW_INTEGRATION_STATES)[number];
 
+export const SPEC_CODE_WORKFLOW_STAGES = [
+  { stage_id: "workflow-initialization", label: "Workflow initialization" },
+  { stage_id: "semantic-model", label: "Semantic model" },
+  { stage_id: "specification-candidate", label: "Specification candidate" },
+  { stage_id: "proposal-decision", label: "Proposal decision" },
+  { stage_id: "exact-specification-patch", label: "Exact specification patch" },
+  { stage_id: "implementation", label: "Implementation" },
+  { stage_id: "verification-and-review", label: "Verification and review" },
+  { stage_id: "local-integration", label: "Local integration" },
+  { stage_id: "terminal-outcome", label: "Terminal outcome" },
+] as const;
+export type SpecCodeWorkflowStageId = (typeof SPEC_CODE_WORKFLOW_STAGES)[number]["stage_id"];
+export const WORKFLOW_STAGE_STATES = [
+  "pending",
+  "active",
+  "waiting",
+  "completed",
+  "skipped",
+  "interrupted",
+  "failed",
+] as const;
+export type WorkflowStageState = (typeof WORKFLOW_STAGE_STATES)[number];
+export type WorkflowObservationStart = "complete" | "partial";
+
 export const WORKFLOW_ARTIFACT_KINDS = [
   "proposal_package",
   "approval_evidence",
@@ -55,7 +79,18 @@ export type WorkflowArtifactReference = {
 
 export type WorkflowEvent = WorkflowEventBase &
   (
-    | { readonly event_type: "run_started" }
+    | {
+        readonly event_type: "run_started";
+        readonly mode?: "spec-code";
+        readonly observation_start?: WorkflowObservationStart;
+        readonly current_stage_id?: SpecCodeWorkflowStageId;
+      }
+    | {
+        readonly event_type: "stage_updated";
+        readonly stage_id: SpecCodeWorkflowStageId;
+        readonly state: WorkflowStageState;
+        readonly reason?: string;
+      }
     | { readonly event_type: "step_started"; readonly step_id: string; readonly label: string }
     | { readonly event_type: "step_waiting"; readonly step_id: string; readonly reason: string }
     | { readonly event_type: "step_completed"; readonly step_id: string }
@@ -85,6 +120,13 @@ export type WorkflowStepSnapshot = {
   readonly diagnostic_code: string | null;
 };
 
+export type WorkflowStageSnapshot = {
+  readonly stage_id: SpecCodeWorkflowStageId;
+  readonly label: string;
+  readonly state: WorkflowStageState;
+  readonly reason: string | null;
+};
+
 export type WorkflowSnapshot = {
   readonly schema_version: "1.0";
   readonly artifact_type: "workflow_snapshot";
@@ -92,9 +134,12 @@ export type WorkflowSnapshot = {
   readonly change_id: string;
   readonly run_id: string;
   readonly producer_id: string;
+  readonly mode: "spec-code" | null;
+  readonly observation_start: WorkflowObservationStart | null;
   readonly last_sequence: number;
   readonly execution: WorkflowExecutionState;
   readonly current_step_id: string | null;
+  readonly current_stage_id: SpecCodeWorkflowStageId | null;
   readonly cli_status: WorkflowCliStatus | null;
   readonly merge_readiness: WorkflowReadinessState | null;
   readonly artifact_freshness: WorkflowFreshnessState | null;
@@ -103,6 +148,7 @@ export type WorkflowSnapshot = {
   readonly interruption_reason: string | null;
   readonly observer_diagnostic: string | null;
   readonly steps: readonly WorkflowStepSnapshot[];
+  readonly stages: readonly WorkflowStageSnapshot[];
   readonly artifacts: readonly WorkflowArtifactReference[];
 };
 
@@ -126,7 +172,8 @@ export class WorkflowObservationError extends Error {
     | "SDD_OBSERVATION_PRODUCER_MISMATCH"
     | "SDD_OBSERVATION_SEQUENCE_CONFLICT"
     | "SDD_OBSERVATION_SEQUENCE_GAP"
-    | "SDD_OBSERVATION_TRANSITION_INVALID";
+    | "SDD_OBSERVATION_TRANSITION_INVALID"
+    | "SDD_OBSERVATION_SUBJECT_MISMATCH";
 
   constructor(
     code:
@@ -136,7 +183,8 @@ export class WorkflowObservationError extends Error {
       | "SDD_OBSERVATION_PRODUCER_MISMATCH"
       | "SDD_OBSERVATION_SEQUENCE_CONFLICT"
       | "SDD_OBSERVATION_SEQUENCE_GAP"
-      | "SDD_OBSERVATION_TRANSITION_INVALID",
+      | "SDD_OBSERVATION_TRANSITION_INVALID"
+      | "SDD_OBSERVATION_SUBJECT_MISMATCH",
     message: string,
   ) {
     super(message);
@@ -231,8 +279,28 @@ function assertSpecificEvent(value: UnknownRecord, limits: WorkflowInputLimits):
   };
   switch (value.event_type) {
     case "run_started":
+      assertShape([], ["mode", "observation_start", "current_stage_id"]);
+      if (value.mode === undefined && value.observation_start === undefined && value.current_stage_id === undefined)
+        return;
+      if (
+        value.mode !== "spec-code" ||
+        (value.observation_start !== "complete" && value.observation_start !== "partial") ||
+        !SPEC_CODE_WORKFLOW_STAGES.some(({ stage_id }) => stage_id === value.current_stage_id) ||
+        (value.observation_start === "complete" && value.current_stage_id !== "workflow-initialization")
+      )
+        break;
+      return;
     case "run_completed":
       assertShape([]);
+      return;
+    case "stage_updated":
+      assertShape(["stage_id", "state"], ["reason"]);
+      if (
+        !SPEC_CODE_WORKFLOW_STAGES.some(({ stage_id }) => stage_id === value.stage_id) ||
+        !WORKFLOW_STAGE_STATES.includes(value.state as WorkflowStageState) ||
+        (value.state === "waiting" ? !nonEmpty(value.reason, limits) : value.reason !== undefined)
+      )
+        break;
       return;
     case "step_started":
       assertShape(["step_id", "label"]);
@@ -336,8 +404,8 @@ function canonicalJson(value: unknown): string {
   return JSON.stringify(canonical(value));
 }
 
-function eventFingerprint(event: WorkflowEvent): string {
-  return createHash("sha256").update(canonicalJson(event)).digest("hex");
+export function fingerprintWorkflowEvent(event: WorkflowEvent): Fingerprint {
+  return `sha256:${createHash("sha256").update(canonicalJson(event)).digest("hex")}` as Fingerprint;
 }
 
 function replaceStep(
@@ -347,12 +415,73 @@ function replaceStep(
   return steps.map((step) => (step.step_id === next.step_id ? next : step));
 }
 
+function initialSpecCodeStages(
+  observationStart: WorkflowObservationStart,
+  currentStageId: SpecCodeWorkflowStageId,
+): readonly WorkflowStageSnapshot[] {
+  const currentIndex = SPEC_CODE_WORKFLOW_STAGES.findIndex(({ stage_id }) => stage_id === currentStageId);
+  return SPEC_CODE_WORKFLOW_STAGES.map(({ stage_id, label }, index) => ({
+    stage_id,
+    label,
+    state:
+      index < currentIndex && observationStart === "partial"
+        ? "skipped"
+        : index === currentIndex
+          ? "active"
+          : "pending",
+    reason: index < currentIndex && observationStart === "partial" ? "Not observed before partial start" : null,
+  }));
+}
+
+function updateStage(snapshot: WorkflowSnapshot, event: Extract<WorkflowEvent, { event_type: "stage_updated" }>) {
+  if (snapshot.mode !== "spec-code")
+    throw new WorkflowObservationError(
+      "SDD_OBSERVATION_TRANSITION_INVALID",
+      "Stage events require a spec-code workflow run.",
+    );
+  const selectedIndex = snapshot.stages.findIndex(({ stage_id }) => stage_id === event.stage_id);
+  const selected = snapshot.stages[selectedIndex];
+  if (selected === undefined || selected.state === "completed" || selected.state === "skipped")
+    throw new WorkflowObservationError(
+      "SDD_OBSERVATION_TRANSITION_INVALID",
+      "The selected workflow stage cannot transition from its current state.",
+    );
+  const activeStates: readonly WorkflowStageState[] = ["active", "waiting"];
+  if (
+    activeStates.includes(event.state) &&
+    snapshot.stages.some((stage, index) => index !== selectedIndex && activeStates.includes(stage.state))
+  )
+    throw new WorkflowObservationError(
+      "SDD_OBSERVATION_TRANSITION_INVALID",
+      "Only one workflow stage can be active or waiting.",
+    );
+  const stages = snapshot.stages.map((stage) =>
+    stage.stage_id === event.stage_id ? { ...stage, state: event.state, reason: event.reason ?? null } : stage,
+  );
+  return {
+    ...snapshot,
+    stages,
+    current_stage_id: activeStates.includes(event.state) ? event.stage_id : null,
+  };
+}
+
 function reduceOrdered(snapshot: WorkflowSnapshot, event: WorkflowEvent): WorkflowSnapshot {
   const base = { ...snapshot, last_sequence: event.sequence };
   switch (event.event_type) {
     case "run_started":
       if (event.sequence !== 0 || snapshot.last_sequence !== -1) break;
-      return { ...base, execution: "active" };
+      return event.mode === "spec-code"
+        ? {
+            ...base,
+            execution: "active",
+            mode: event.mode,
+            observation_start: event.observation_start!,
+            current_stage_id: event.current_stage_id!,
+            stages: initialSpecCodeStages(event.observation_start!, event.current_stage_id!),
+          }
+        : { ...base, execution: "active" };
+    case "stage_updated":
+      return updateStage(base, event);
     case "step_started":
       if (snapshot.execution !== "active" && snapshot.execution !== "waiting") break;
       if (snapshot.steps.some((step) => step.step_id === event.step_id)) break;
@@ -449,7 +578,7 @@ export function replayWorkflowEvents(
   const bySequence = new Map<number, { readonly event: WorkflowEvent; readonly fingerprint: string }>();
   for (const input of inputs) {
     const event = parseWorkflowEvent(input, expectedProjectId, limits);
-    const fingerprint = eventFingerprint(event);
+    const fingerprint = fingerprintWorkflowEvent(event);
     const existing = bySequence.get(event.sequence);
     if (existing !== undefined) {
       if (existing.fingerprint !== fingerprint)
@@ -488,9 +617,12 @@ export function replayWorkflowEvents(
     change_id: first.change_id,
     run_id: first.run_id,
     producer_id: first.producer_id,
+    mode: null,
+    observation_start: null,
     last_sequence: -1,
     execution: "active",
     current_step_id: null,
+    current_stage_id: null,
     cli_status: null,
     merge_readiness: null,
     artifact_freshness: null,
@@ -499,6 +631,7 @@ export function replayWorkflowEvents(
     interruption_reason: null,
     observer_diagnostic: null,
     steps: [],
+    stages: [],
     artifacts: [],
   };
   for (const event of ordered) snapshot = reduceOrdered(snapshot, event);

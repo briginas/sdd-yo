@@ -96,3 +96,8 @@ The decision records review, not approval, QA, Finding resolution, semantic
 completeness, Git authority, merge authority, or publication authority. Never
 bind a Finding that was not both supplied to materialization and displayed to
 the human. Stop before any outcome not already selected.
+
+For an observed `spec-code` route, publish one semantic-review wait only after
+the exact subject is displayed and reference review evidence only from the
+matching successful recorder response. Observation failure does not repeat an
+unchanged human decision.

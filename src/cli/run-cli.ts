@@ -8,7 +8,7 @@ import type {
   ProjectPath,
   RequirementId,
 } from "../contracts/identifiers.ts";
-import { isObjectId, isProjectPath, isRequirementId } from "../contracts/identifiers.ts";
+import { isGitObjectId, isObjectId, isProjectPath, isRequirementId } from "../contracts/identifiers.ts";
 import type { CliResponseEnvelope } from "../contracts/result.ts";
 import { relative, resolve, sep } from "node:path";
 import type { FileSystem } from "../platform/filesystem.ts";
@@ -112,7 +112,22 @@ import { IgnoredArtifactOutputError, resolveIgnoredArtifactTarget } from "./igno
 import { renderCliHelp } from "./help.ts";
 import { loadCliCompatibilityIdentity } from "./identity.ts";
 import type { CliCompatibilityIdentity } from "./identity.ts";
-import { replayWorkflowEvents, type WorkflowSnapshot } from "../observation/workflow.ts";
+import {
+  initializeWorkflowJournal,
+  publishWorkflowJournalEvent,
+  readWorkflowJournal,
+  replayWorkflowEvents,
+  resumeWorkflowJournal,
+  SPEC_CODE_WORKFLOW_STAGES,
+  WORKFLOW_ARTIFACT_KINDS,
+  WORKFLOW_STAGE_STATES,
+  type WorkflowArtifactKind,
+  type WorkflowEvent,
+  type WorkflowJournalEventPayload,
+  type WorkflowJournalResult,
+  type WorkflowSnapshot,
+} from "../observation/index.ts";
+import type { WorkflowJournalStore } from "../platform/workflow-journal-store.ts";
 
 export const VALID_EXIT_CODE = 0 as const;
 export const BLOCKED_EXIT_CODE = 1 as const;
@@ -151,6 +166,9 @@ type Command =
   | "proposal.materialize"
   | "proposal.prepare"
   | "proposal.apply"
+  | "journal.create"
+  | "journal.resume"
+  | "journal.publish"
   | "observe";
 type ResponseCommand = Command | "version" | "unknown";
 
@@ -173,7 +191,9 @@ export type CliRuntime = {
   readonly startWorkflowObserver?: (
     projectRoot: string,
     snapshot: WorkflowSnapshot,
+    follow?: { readonly journalPath: string; readonly readSnapshot: () => Promise<WorkflowSnapshot> },
   ) => Promise<{ readonly url: string }>;
+  readonly createWorkflowJournalStore?: (projectRoot: string) => Promise<WorkflowJournalStore>;
 };
 
 type Invocation = {
@@ -226,6 +246,24 @@ type Invocation = {
   readonly qaPaths: readonly ProjectPath[];
   readonly humanReviewPaths: readonly ProjectPath[];
   readonly journalPath?: ProjectPath;
+  readonly workflowMode?: "spec-code";
+  readonly producerId?: string;
+  readonly runId?: string;
+  readonly changeId?: string;
+  readonly partialFrom?: string;
+  readonly expectedSequence?: number;
+  readonly expectedFingerprint?: Fingerprint;
+  readonly eventType?: WorkflowEvent["event_type"];
+  readonly stageId?: string;
+  readonly stageState?: string;
+  readonly eventReason?: string;
+  readonly diagnosticCode?: string;
+  readonly statusAxis?: string;
+  readonly statusValue?: string;
+  readonly artifactKind?: WorkflowArtifactKind;
+  readonly artifactPath?: ProjectPath;
+  readonly artifactFingerprint?: Fingerprint;
+  readonly artifactGitObject?: GitObjectId;
 };
 
 export type InitResult = {
@@ -316,6 +354,10 @@ export type ObserveResult = {
   readonly snapshot: WorkflowSnapshot;
 };
 
+export type JournalCommandResult = WorkflowJournalResult & {
+  readonly publication?: "published" | "duplicate";
+};
+
 export type SemanticReviewMaterializeResult = {
   readonly manifest_path: ProjectPath;
   readonly manifest: SemanticAnalysisInputManifest;
@@ -352,6 +394,7 @@ export type CliResponse =
   | CliResponseEnvelope<"merge.check", "ok" | "blocked" | "review_required", MergeReport>
   | CliResponseEnvelope<"proposal.validate", "ok", ProposalPackage>
   | CliResponseEnvelope<"proposal.materialize", "ok", ProposalMaterializeResult>
+  | CliResponseEnvelope<"journal.create" | "journal.resume" | "journal.publish", "ok", JournalCommandResult>
   | CliResponseEnvelope<"observe", "ok", ObserveResult>
   | CliResponseEnvelope<"proposal.apply", "ok", import("../proposal/index.ts").ProposalApplyResult>
   | CliResponseEnvelope<
@@ -391,13 +434,15 @@ function parseInvocation(
               ? "findings.validate"
               : argv[0] === "merge" && argv[1] === "check"
                 ? "merge.check"
-                : argv[0] === "proposal" &&
-                    (argv[1] === "materialize" ||
-                      argv[1] === "validate" ||
-                      argv[1] === "prepare" ||
-                      argv[1] === "apply")
-                  ? `proposal.${argv[1]}`
-                  : argv[0];
+                : argv[0] === "journal" && (argv[1] === "create" || argv[1] === "resume" || argv[1] === "publish")
+                  ? `journal.${argv[1]}`
+                  : argv[0] === "proposal" &&
+                      (argv[1] === "materialize" ||
+                        argv[1] === "validate" ||
+                        argv[1] === "prepare" ||
+                        argv[1] === "apply")
+                    ? `proposal.${argv[1]}`
+                    : argv[0];
   if (
     command !== "init" &&
     command !== "skill.install" &&
@@ -418,6 +463,9 @@ function parseInvocation(
     command !== "proposal.materialize" &&
     command !== "proposal.prepare" &&
     command !== "proposal.apply" &&
+    command !== "journal.create" &&
+    command !== "journal.resume" &&
+    command !== "journal.publish" &&
     command !== "observe"
   )
     return {
@@ -476,6 +524,24 @@ function parseInvocation(
   const qaPaths: ProjectPath[] = [];
   const humanReviewPaths: ProjectPath[] = [];
   let journalPath: ProjectPath | undefined;
+  let workflowMode: "spec-code" | undefined;
+  let producerId: string | undefined;
+  let runId: string | undefined;
+  let changeId: string | undefined;
+  let partialFrom: string | undefined;
+  let expectedSequence: number | undefined;
+  let expectedFingerprint: Fingerprint | undefined;
+  let eventType: WorkflowEvent["event_type"] | undefined;
+  let stageId: string | undefined;
+  let stageState: string | undefined;
+  let eventReason: string | undefined;
+  let diagnosticCode: string | undefined;
+  let statusAxis: string | undefined;
+  let statusValue: string | undefined;
+  let artifactKind: WorkflowArtifactKind | undefined;
+  let artifactPath: ProjectPath | undefined;
+  let artifactFingerprint: Fingerprint | undefined;
+  let artifactGitObject: GitObjectId | undefined;
   for (
     let index =
       command === "tests.discover" ||
@@ -490,7 +556,10 @@ function parseInvocation(
       command === "proposal.validate" ||
       command === "proposal.materialize" ||
       command === "proposal.prepare" ||
-      command === "proposal.apply"
+      command === "proposal.apply" ||
+      command === "journal.create" ||
+      command === "journal.resume" ||
+      command === "journal.publish"
         ? 2
         : 1;
     index < argv.length;
@@ -542,7 +611,25 @@ function parseInvocation(
       argument === "--human-semantic-review" ||
       argument === "--patch" ||
       argument === "--worktree" ||
-      argument === "--journal"
+      argument === "--journal" ||
+      argument === "--workflow-mode" ||
+      argument === "--producer" ||
+      argument === "--run" ||
+      argument === "--change-id" ||
+      argument === "--partial-from" ||
+      argument === "--expected-sequence" ||
+      argument === "--expected-fingerprint" ||
+      argument === "--event-type" ||
+      argument === "--stage" ||
+      argument === "--stage-state" ||
+      argument === "--event-reason" ||
+      argument === "--diagnostic-code" ||
+      argument === "--axis" ||
+      argument === "--value" ||
+      argument === "--artifact-kind" ||
+      argument === "--artifact-path" ||
+      argument === "--artifact-fingerprint" ||
+      argument === "--artifact-git-object"
     ) {
       const value = argv[index + 1];
       if (value === undefined)
@@ -556,7 +643,10 @@ function parseInvocation(
         };
       index += 1;
       if (argument === "--journal") {
-        if (command !== "observe" || !isProjectPath(value))
+        if (
+          (command !== "observe" && command !== "journal.resume" && command !== "journal.publish") ||
+          !isProjectPath(value)
+        )
           return {
             ok: false,
             diagnostic: cliDiagnostic(
@@ -566,6 +656,134 @@ function parseInvocation(
             ),
           };
         journalPath = value;
+      } else if (argument === "--workflow-mode") {
+        if (command !== "journal.create" || value !== "spec-code")
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+              "The journal workflow mode is invalid.",
+              "Use --workflow-mode spec-code only with sdd journal create.",
+            ),
+          };
+        workflowMode = value;
+      } else if (argument === "--producer" || argument === "--run" || argument === "--change-id") {
+        if (value.length === 0 || value.includes("\0"))
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+              "A workflow journal subject identity is invalid.",
+              "Supply a non-empty bounded workflow identity.",
+            ),
+          };
+        if (argument === "--producer") producerId = value;
+        else if (argument === "--run") runId = value;
+        else changeId = value;
+      } else if (argument === "--partial-from" || argument === "--stage") {
+        if (!SPEC_CODE_WORKFLOW_STAGES.some(({ stage_id }) => stage_id === value))
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+              "The workflow stage is invalid.",
+              "Use one stable spec-code workflow stage identifier.",
+            ),
+          };
+        if (argument === "--partial-from") partialFrom = value;
+        else stageId = value;
+      } else if (argument === "--expected-sequence") {
+        const parsed = Number(value);
+        if (!Number.isSafeInteger(parsed) || parsed < 1 || String(parsed) !== value)
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+              "The expected workflow sequence is invalid.",
+              "Use the exact positive next sequence returned by the CLI.",
+            ),
+          };
+        expectedSequence = parsed;
+      } else if (argument === "--expected-fingerprint" || argument === "--artifact-fingerprint") {
+        if (!/^sha256:[0-9a-f]{64}$/u.test(value))
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+              "A workflow fingerprint is invalid.",
+              "Use the exact sha256 fingerprint returned by its owning operation.",
+            ),
+          };
+        if (argument === "--expected-fingerprint") expectedFingerprint = value as Fingerprint;
+        else artifactFingerprint = value as Fingerprint;
+      } else if (argument === "--event-type") {
+        const allowed: readonly WorkflowEvent["event_type"][] = [
+          "stage_updated",
+          "run_interrupted",
+          "run_failed",
+          "run_completed",
+          "status_observed",
+          "artifact_referenced",
+          "observer_failed",
+        ];
+        if (!allowed.includes(value as WorkflowEvent["event_type"]))
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+              "The workflow event type is invalid.",
+              "Use one allowlisted publication event type.",
+            ),
+          };
+        eventType = value as WorkflowEvent["event_type"];
+      } else if (argument === "--stage-state") {
+        if (!WORKFLOW_STAGE_STATES.includes(value as (typeof WORKFLOW_STAGE_STATES)[number]))
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+              "The workflow stage state is invalid.",
+              "Use one allowlisted stable stage state.",
+            ),
+          };
+        stageState = value;
+      } else if (argument === "--event-reason") eventReason = value;
+      else if (argument === "--diagnostic-code") diagnosticCode = value;
+      else if (argument === "--axis") statusAxis = value;
+      else if (argument === "--value") statusValue = value;
+      else if (argument === "--artifact-kind") {
+        if (!WORKFLOW_ARTIFACT_KINDS.includes(value as WorkflowArtifactKind))
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+              "The workflow artifact kind is invalid.",
+              "Use one allowlisted workflow artifact kind.",
+            ),
+          };
+        artifactKind = value as WorkflowArtifactKind;
+      } else if (argument === "--artifact-path") {
+        if (!isProjectPath(value))
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+              "The workflow artifact path is invalid.",
+              "Use one safe project-relative artifact path.",
+            ),
+          };
+        artifactPath = value;
+      } else if (argument === "--artifact-git-object") {
+        if (!isGitObjectId(value))
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+              "The workflow artifact Git object is invalid.",
+              "Use the exact non-empty Git object returned by its owning operation.",
+            ),
+          };
+        artifactGitObject = value;
       } else if (argument === "--reason" || argument === "--evidence" || argument === "--manifest") {
         if (!isProjectPath(value))
           return {
@@ -1257,13 +1475,81 @@ function parseInvocation(
         "Supply --journal with a safe project-relative JSONL path.",
       ),
     };
-  if (command !== "observe" && journalPath !== undefined)
+  if (
+    command !== "observe" &&
+    command !== "journal.resume" &&
+    command !== "journal.publish" &&
+    journalPath !== undefined
+  )
     return {
       ok: false,
       diagnostic: cliDiagnostic(
         "SDD_CONFIG_CLI_ARGUMENT_INVALID",
         "--journal was used with another command.",
-        "Use --journal only with sdd observe.",
+        "Use --journal only with sdd observe, journal resume, or journal publish.",
+      ),
+    };
+  const journalCommand = command === "journal.create" || command === "journal.resume" || command === "journal.publish";
+  if (command === "journal.create" && (workflowMode !== "spec-code" || producerId === undefined))
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_OBSERVATION_JOURNAL_INPUTS_REQUIRED",
+        "journal create requires a spec-code mode and producer.",
+        "Supply --workflow-mode spec-code and --producer.",
+      ),
+    };
+  if (
+    (command === "journal.resume" || command === "journal.publish") &&
+    (journalPath === undefined || runId === undefined || producerId === undefined || changeId === undefined)
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_OBSERVATION_JOURNAL_INPUTS_REQUIRED",
+        `${command.replace(".", " ")} requires the exact retained journal subject.`,
+        "Supply journal, run, producer, and Change identities from the prior compatible result.",
+      ),
+    };
+  if (
+    command === "journal.publish" &&
+    (expectedSequence === undefined || expectedFingerprint === undefined || eventType === undefined)
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_OBSERVATION_JOURNAL_INPUTS_REQUIRED",
+        "journal publish requires an exact cursor and typed event.",
+        "Supply expected sequence, expected fingerprint, event type, and its allowlisted fields.",
+      ),
+    };
+  if (
+    !journalCommand &&
+    (workflowMode !== undefined ||
+      producerId !== undefined ||
+      runId !== undefined ||
+      changeId !== undefined ||
+      partialFrom !== undefined ||
+      expectedSequence !== undefined ||
+      expectedFingerprint !== undefined ||
+      eventType !== undefined ||
+      stageId !== undefined ||
+      stageState !== undefined ||
+      eventReason !== undefined ||
+      diagnosticCode !== undefined ||
+      statusAxis !== undefined ||
+      statusValue !== undefined ||
+      artifactKind !== undefined ||
+      artifactPath !== undefined ||
+      artifactFingerprint !== undefined ||
+      artifactGitObject !== undefined)
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "A workflow journal option was used with another command.",
+        "Use workflow journal options only with sdd journal create, resume, or publish.",
       ),
     };
   if (command !== "trace" && traceRef !== undefined)
@@ -1544,6 +1830,24 @@ function parseInvocation(
       qaPaths,
       humanReviewPaths,
       ...(journalPath === undefined ? {} : { journalPath }),
+      ...(workflowMode === undefined ? {} : { workflowMode }),
+      ...(producerId === undefined ? {} : { producerId }),
+      ...(runId === undefined ? {} : { runId }),
+      ...(changeId === undefined ? {} : { changeId }),
+      ...(partialFrom === undefined ? {} : { partialFrom }),
+      ...(expectedSequence === undefined ? {} : { expectedSequence }),
+      ...(expectedFingerprint === undefined ? {} : { expectedFingerprint }),
+      ...(eventType === undefined ? {} : { eventType }),
+      ...(stageId === undefined ? {} : { stageId }),
+      ...(stageState === undefined ? {} : { stageState }),
+      ...(eventReason === undefined ? {} : { eventReason }),
+      ...(diagnosticCode === undefined ? {} : { diagnosticCode }),
+      ...(statusAxis === undefined ? {} : { statusAxis }),
+      ...(statusValue === undefined ? {} : { statusValue }),
+      ...(artifactKind === undefined ? {} : { artifactKind }),
+      ...(artifactPath === undefined ? {} : { artifactPath }),
+      ...(artifactFingerprint === undefined ? {} : { artifactFingerprint }),
+      ...(artifactGitObject === undefined ? {} : { artifactGitObject }),
     },
   };
 }
@@ -1552,6 +1856,52 @@ function versionInvocationFormat(argv: readonly string[]): OutputFormat | undefi
   if (argv.length === 1 && argv[0] === "--version") return "human";
   if (argv.length === 3 && argv[0] === "--version" && argv[1] === "--format" && argv[2] === "json") return "json";
   return undefined;
+}
+
+function journalEventPayload(invocation: Invocation): WorkflowJournalEventPayload {
+  switch (invocation.eventType) {
+    case "stage_updated":
+      if (invocation.stageId === undefined || invocation.stageState === undefined)
+        throw new Error("stage_updated requires --stage and --stage-state.");
+      return {
+        event_type: "stage_updated",
+        stage_id: invocation.stageId as Extract<WorkflowEvent, { event_type: "stage_updated" }>["stage_id"],
+        state: invocation.stageState as Extract<WorkflowEvent, { event_type: "stage_updated" }>["state"],
+        ...(invocation.eventReason === undefined ? {} : { reason: invocation.eventReason }),
+      };
+    case "run_interrupted":
+      if (invocation.eventReason === undefined) throw new Error("run_interrupted requires --event-reason.");
+      return { event_type: "run_interrupted", reason: invocation.eventReason };
+    case "run_failed":
+    case "observer_failed":
+      if (invocation.diagnosticCode === undefined)
+        throw new Error(`${invocation.eventType} requires --diagnostic-code.`);
+      return { event_type: invocation.eventType, diagnostic_code: invocation.diagnosticCode };
+    case "run_completed":
+      return { event_type: "run_completed" };
+    case "status_observed":
+      if (invocation.statusAxis === undefined || invocation.statusValue === undefined)
+        throw new Error("status_observed requires --axis and --value.");
+      return {
+        event_type: "status_observed",
+        axis: invocation.statusAxis as Extract<WorkflowEvent, { event_type: "status_observed" }>["axis"],
+        value: invocation.statusValue as Extract<WorkflowEvent, { event_type: "status_observed" }>["value"],
+      };
+    case "artifact_referenced":
+      if (invocation.artifactKind === undefined || invocation.artifactPath === undefined)
+        throw new Error("artifact_referenced requires --artifact-kind and --artifact-path.");
+      return {
+        event_type: "artifact_referenced",
+        artifact: {
+          kind: invocation.artifactKind,
+          path: invocation.artifactPath,
+          ...(invocation.artifactFingerprint === undefined ? {} : { fingerprint: invocation.artifactFingerprint }),
+          ...(invocation.artifactGitObject === undefined ? {} : { git_object_id: invocation.artifactGitObject }),
+        },
+      };
+    default:
+      throw new Error("The journal publication event is missing or unsupported.");
+  }
 }
 
 function response(
@@ -2410,6 +2760,90 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
       return TECHNICAL_FAILURE_EXIT_CODE;
     }
     const project = selected.value;
+    if (
+      invocation.command === "journal.create" ||
+      invocation.command === "journal.resume" ||
+      invocation.command === "journal.publish"
+    ) {
+      try {
+        if (runtime.createWorkflowJournalStore === undefined)
+          throw new Error("This sdd executable cannot publish workflow journals.");
+        const store = await runtime.createWorkflowJournalStore(project.project_root);
+        const subject =
+          invocation.command === "journal.create"
+            ? undefined
+            : {
+                project_id: project.configuration.project_id,
+                mode: "spec-code" as const,
+                run_id: invocation.runId!,
+                producer_id: invocation.producerId!,
+                change_id: invocation.changeId!,
+              };
+        let result: JournalCommandResult;
+        if (invocation.command === "journal.create") {
+          const runId = Buffer.from(runtime.randomness.randomBytes(16)).toString("hex");
+          const candidatePath = `.sdd/staging/workflow-observation/spec-code/${runId}.jsonl`;
+          const ignored = await runtime.processRunner.run({
+            executable: "git",
+            arguments: ["check-ignore", "--quiet", "--", candidatePath],
+            workingDirectory: project.project_root,
+            inheritEnvironment: true,
+            timeoutMilliseconds: 10_000,
+            maxOutputBytes: 64 * 1024,
+          });
+          if (ignored.exitCode !== 0 || ignored.signal !== null)
+            throw new Error("The generated workflow journal path is not ignored by Git.");
+          result = await initializeWorkflowJournal({
+            store,
+            project_id: project.configuration.project_id,
+            run_id: runId,
+            producer_id: invocation.producerId!,
+            observation_start: invocation.partialFrom === undefined ? "complete" : "partial",
+            current_stage_id:
+              (invocation.partialFrom as (typeof SPEC_CODE_WORKFLOW_STAGES)[number]["stage_id"] | undefined) ??
+              "workflow-initialization",
+          });
+        } else if (invocation.command === "journal.resume") {
+          result = await resumeWorkflowJournal({
+            store,
+            journal_path: invocation.journalPath!,
+            subject: subject!,
+            ...(invocation.expectedFingerprint === undefined
+              ? {}
+              : { expected_journal_fingerprint: invocation.expectedFingerprint }),
+          });
+        } else {
+          result = await publishWorkflowJournalEvent({
+            store,
+            journal_path: invocation.journalPath!,
+            subject: subject!,
+            expected_sequence: invocation.expectedSequence!,
+            expected_journal_fingerprint: invocation.expectedFingerprint!,
+            payload: journalEventPayload(invocation),
+          });
+        }
+        emit(
+          runtime,
+          invocation.format,
+          response(invocation.command, project.configuration.project_id, "ok", result, []),
+        );
+        return VALID_EXIT_CODE;
+      } catch (error) {
+        const candidateCode =
+          error instanceof Error && "code" in error && typeof error.code === "string" ? error.code : undefined;
+        const diagnostic = cliDiagnostic(
+          candidateCode?.startsWith("SDD_") === true ? candidateCode : "SDD_OBSERVATION_PUBLICATION_FAILED",
+          error instanceof Error ? error.message : "The workflow journal operation failed.",
+          "Preserve the observed workflow result and retry only with the exact retained journal subject and cursor.",
+        );
+        emit(
+          runtime,
+          invocation.format,
+          response(invocation.command, project.configuration.project_id, "error", null, [diagnostic]),
+        );
+        return TECHNICAL_FAILURE_EXIT_CODE;
+      }
+    }
     if (invocation.command === "observe") {
       try {
         if (invocation.journalPath === undefined || runtime.startWorkflowObserver === undefined)
@@ -2430,7 +2864,23 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
           .filter((line) => line.length > 0)
           .map((line) => JSON.parse(line) as unknown);
         const snapshot = replayWorkflowEvents(events, project.configuration.project_id);
-        const session = await runtime.startWorkflowObserver(project.project_root, snapshot);
+        const follow =
+          snapshot.mode === "spec-code" && runtime.createWorkflowJournalStore !== undefined
+            ? {
+                journalPath: resolvedJournal,
+                readSnapshot: async () => {
+                  const store = await runtime.createWorkflowJournalStore!(project.project_root);
+                  return (
+                    await readWorkflowJournal({
+                      store,
+                      journal_path: invocation.journalPath!,
+                      project_id: project.configuration.project_id,
+                    })
+                  ).snapshot;
+                },
+              }
+            : undefined;
+        const session = await runtime.startWorkflowObserver(project.project_root, snapshot, follow);
         const result: ObserveResult = { url: session.url, snapshot };
         emit(runtime, invocation.format, response("observe", project.configuration.project_id, "ok", result, []));
         return VALID_EXIT_CODE;

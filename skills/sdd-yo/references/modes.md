@@ -40,6 +40,9 @@ change requires a new explicit confirmation.
 
 Record the selected mode, observable outcome, relevant active object IDs, and
 remaining non-normative implementation notes. Then load `authoring.md`.
+For `spec-code`, also load `workflow-observation.md` and initialize or resume
+exactly one automatic observed run before project validation. Journal failure
+does not select another mode or change any authoring authority stop.
 `spec-code` and `spec` first require its ID-free semantic-model confirmation;
 `code` keeps the active Requirement targets and bypasses that checkpoint. Do
 not run proposal validation, present object deltas or semantic candidates, seek

@@ -97,30 +97,40 @@ its public consumer proof are macOS-only.
 
 ## View workflow progress
 
-The observer turns a workflow-event journal into a temporary local web page.
-It is useful when you want to see the current run, its steps, and its separate
-approval, readiness, freshness, and integration states without reading logs.
+The observer turns a workflow-event journal into a temporary local web page
+and follows later valid journal publications without restart. It shows stable
+`spec-code` stages, detailed steps, and separate approval, readiness,
+freshness, and integration states without reading logs.
 
 Use this guide after installing an npm package version that includes the
 observer in the selected repository. The public `sdd-yo@0.5.5` package
 includes it.
 
-Create a JSONL file inside the selected SDD Project. Each line is one event.
-The `project_id` must match `.sdd/config.yaml`, and every event in one run must
-use the same `change_id`, `run_id`, and `producer_id`:
+A package built from this source makes its `sdd-yo` Skill automatically create
+and publish one journal for each newly selected `spec-code` workflow. It prints
+the generated ignored path and run identity; pass that exact path to
+`sdd observe`. `spec` and `code` workflows do not yet create automatic
+journals. This automatic production is repository-source behavior and has not
+created a new npm release.
 
-```jsonl
-{"schema_version":"1.0","artifact_type":"workflow_event","project_id":"SDD-17EF8B29","change_id":"demo","run_id":"run-1","producer_id":"manual","sequence":0,"event_type":"run_started"}
-{"schema_version":"1.0","artifact_type":"workflow_event","project_id":"SDD-17EF8B29","change_id":"demo","run_id":"run-1","producer_id":"manual","sequence":1,"event_type":"step_started","step_id":"validate","label":"Validate project"}
-{"schema_version":"1.0","artifact_type":"workflow_event","project_id":"SDD-17EF8B29","change_id":"demo","run_id":"run-1","producer_id":"manual","sequence":2,"event_type":"step_completed","step_id":"validate"}
-{"schema_version":"1.0","artifact_type":"workflow_event","project_id":"SDD-17EF8B29","change_id":"demo","run_id":"run-1","producer_id":"manual","sequence":3,"event_type":"run_completed"}
-```
-
-Save it, for example, as `.sdd/staging/workflow-events.jsonl`. From the selected
-repository, start its installed SDD Yo CLI with:
+Library or CLI integrations can create the same bounded journal explicitly:
 
 ```text
-npm exec -- sdd observe --cwd /absolute/path/to/repository --journal .sdd/staging/workflow-events.jsonl
+npm exec -- sdd journal create --cwd /absolute/path/to/repository \
+  --workflow-mode spec-code --producer my-integration
+```
+
+Retain the returned journal path, subject, next sequence, and fingerprint.
+Resume only that exact subject with `sdd journal resume`, and publish typed
+events with `sdd journal publish` plus the returned expected sequence and
+fingerprint. A stale or competing writer fails without replacing the last
+complete JSONL publication.
+
+Start the observer with the generated path:
+
+```text
+npm exec -- sdd observe --cwd /absolute/path/to/repository \
+  --journal .sdd/staging/workflow-observation/spec-code/<run-id>.jsonl
 ```
 
 You do not need to choose a port. SDD Yo asks the operating system for an
@@ -128,10 +138,10 @@ available local port and prints the complete `http://127.0.0.1:...` URL. Keep
 the command running while the page is open, and press `Ctrl-C` when you are
 done. The URL contains a private session capability; do not share it.
 
-The CLI reads the journal once when it starts. After changing the file, restart
-the command to see the new snapshot. Applications that need one-way live
-updates can use `replayWorkflowEvents`, `startWorkflowObserver`, and the
-session's `publish` method from the library.
+Valid later atomic publications update the same page live. A malformed, stale,
+or conflicting update leaves the last valid snapshot visible and reports a
+separate observer condition. Reconnect resumes after the last delivered
+sequence without duplicating a completed boundary.
 
 The observer is read-only. It cannot approve a proposal, run a gate, change
 Git, publish, or release. Its journal and snapshot are removable display data,

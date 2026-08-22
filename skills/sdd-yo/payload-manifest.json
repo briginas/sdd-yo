@@ -13,7 +13,7 @@
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "sha256:e1153b3e760e34b8f981be013566afce7fd0809c0d345763b8a0153ba7f1f571"
+      "sha256": "sha256:9d6a7ea9dc3839e4565acc6701abb2caebffec72d20c804c23df6ea05fff4bbb"
     },
     {
       "path": "agents/openai.yaml",
@@ -21,15 +21,15 @@
     },
     {
       "path": "references/approval.md",
-      "sha256": "sha256:59f9169446bb1b5befade2b2e49e329bd8142ddc94adedd7b5f7a8730687365b"
+      "sha256": "sha256:b13292b0bd71b43bc6f5db156240e7a0c320e35b18a87b70761608f906d85038"
     },
     {
       "path": "references/authoring.md",
-      "sha256": "sha256:3ffbad58c1d006873bf812083dbc234f7a91218a9e61ae4842f545f9db4b2842"
+      "sha256": "sha256:e11818f6f6baf021f30212f327e3cac431932a5b88113dd3c0d937552108cf12"
     },
     {
       "path": "references/branch-preparation.md",
-      "sha256": "sha256:daca1166af1a01d8922b7e67a8eaac6beb68f78d0272e5ff29227f76550ed80c"
+      "sha256": "sha256:72a7af48c36f62be5addccc5fc20d73805014a496003faab6cad550f37216059"
     },
     {
       "path": "references/diagnostics.md",
@@ -41,11 +41,11 @@
     },
     {
       "path": "references/integration.md",
-      "sha256": "sha256:1e248b0a1a0562c0712bfb5456cbae7f75894f0a63509d911d80092f400ba3f8"
+      "sha256": "sha256:ea60b226da64230aae0745cea6864aadb8fe106dc7fdf4d7677e69956c9706c9"
     },
     {
       "path": "references/modes.md",
-      "sha256": "sha256:09338c67cbe74378a0cb6950d4b945124ea4aa9855e7c75dc3184239a6aad615"
+      "sha256": "sha256:5543a131c83e7e66afd5e23d9df9a0946b560f3268b51804ab097d8f910372e5"
     },
     {
       "path": "references/object-model.md",
@@ -57,19 +57,23 @@
     },
     {
       "path": "references/proposal-gate.md",
-      "sha256": "sha256:44f271a8ac8fc1c52c397011e8572a0990bb95c56c12d5aefd506ffac3ce7145"
+      "sha256": "sha256:dd03a0a05ac3829a9d030ed72ff3b465ce8637dc6d170d4dc1a9b6a985047212"
     },
     {
       "path": "references/semantic-review.md",
-      "sha256": "sha256:1e4f469e732fd4f7108a67738b52bfac69e5cddba7dba46092f55711e7acf95e"
+      "sha256": "sha256:3dae48715096244dbaa188656ed22865c09e7df514eb7ce9cbea9e80db85a7d9"
     },
     {
       "path": "references/verification.md",
-      "sha256": "sha256:e55c3bba89efd0c37df72bd945d1aab120f62718385b9caae733726fcb72c7a6"
+      "sha256": "sha256:6203676b9342a81641e1845b81dd09524fc656069eb47eb75b3dc0eeec5095ea"
+    },
+    {
+      "path": "references/workflow-observation.md",
+      "sha256": "sha256:29cac7ec76d4e7ea90212eb88317e4ba135ce41271c44ec61dece34ee3304621"
     },
     {
       "path": "scripts/check-cli-compatibility",
-      "sha256": "sha256:6db6cc2a853f3fe9be7ef1fd7ba97facd0a31074ef2060babef2125de82a6606"
+      "sha256": "sha256:8460cce86438eccd77fe2b153d8e27600b32af4fbf94d1ce6ebf9a467cfb0001"
     },
     {
       "path": "templates/capability.md",

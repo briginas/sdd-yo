@@ -12,6 +12,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { startWorkflowObserver } from "../observation/server.js";
+import { createNodeWorkflowJournalStore } from "../platform/node-workflow-journal-store.js";
 
 const cliPath = fileURLToPath(import.meta.url);
 const packageRoot = fileURLToPath(new URL("../..", import.meta.url));
@@ -46,5 +47,7 @@ process.exitCode = await runCli({
   writeOutputFile: (path: string, message: string): void => {
     writeFileSync(path, message, "utf8");
   },
-  startWorkflowObserver: async (projectRoot, snapshot) => startWorkflowObserver({ projectRoot, snapshot }),
+  createWorkflowJournalStore: createNodeWorkflowJournalStore,
+  startWorkflowObserver: async (projectRoot, snapshot, follow) =>
+    startWorkflowObserver({ projectRoot, snapshot, ...(follow === undefined ? {} : { follow }) }),
 });

@@ -79,6 +79,11 @@ Findings, proof of conflict, approval, rejection, or model conclusions. A clean
 mechanical ProposalPackage does not prove implementation behavior, accepted
 existing behavior, semantic completeness, verification, or merge readiness.
 
+For an observed `spec-code` route, reference the ProposalPackage only from this
+compatible response, complete specification candidate, start proposal
+decision, and publish its wait only after the exact subject and evidence target
+are displayed.
+
 On any other status, preserve the exact diagnostics and stop. Do not repair the
 candidate, change mode, create evidence, or continue to preparation.
 
