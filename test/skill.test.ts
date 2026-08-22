@@ -145,6 +145,7 @@ else {
   const journalSnapshot = {
     schema_version: "1.0", artifact_type: "workflow_snapshot", project_id: selectedProjectId,
     change_id: "pre-change:run-a", run_id: "run-a", producer_id: "sdd-yo-skill", mode: "spec-code",
+    base_ref: null, code_targets: [],
     observation_start: "complete", current_stage_id: "workflow-initialization", last_sequence: 0,
     lifecycle: "active", steps: [], statuses: {}, artifacts: [], stages: [], diagnostics: [],
   };
@@ -265,7 +266,7 @@ test("REQ-44264E62 Skill makes spec-code observation automatic and authority-neu
   const observation = await readFile(join(skillRoot, "references/workflow-observation.md"), "utf8");
 
   assert.match(skill, /automatic observed run/u);
-  assert.match(modes, /one automatic observed run/u);
+  assert.match(modes, /one automatic\s+observed run/u);
   assert.match(observation, /Initialize or resume exactly one run/u);
   assert.match(observation, /Do not ask for observation opt-in/u);
   assert.match(observation, /Across a human pause, retry, or\s+agent turn, invoke `journal resume`/u);
@@ -273,6 +274,32 @@ test("REQ-44264E62 Skill makes spec-code observation automatic and authority-neu
   assert.match(observation, /observation failure/u);
   assert.match(observation, /grants no authority/u);
   assert.match(observation, /verification-and-review/u);
+});
+
+test("REQ-42ACF537 Skill observes code subjects without specification-changing ceremony", async () => {
+  const skill = await readFile(join(skillRoot, "SKILL.md"), "utf8");
+  const modes = await readFile(join(skillRoot, "references/modes.md"), "utf8");
+  const observation = await readFile(join(skillRoot, "references/workflow-observation.md"), "utf8");
+  const proposal = await readFile(join(skillRoot, "references/proposal-gate.md"), "utf8");
+  const approval = await readFile(join(skillRoot, "references/approval.md"), "utf8");
+  const verification = await readFile(join(skillRoot, "references/verification.md"), "utf8");
+  const integration = await readFile(join(skillRoot, "references/integration.md"), "utf8");
+
+  assert.match(skill, /For `spec-code` or `code`, also load/u);
+  assert.match(skill, /`spec` creates no automatic journal/u);
+  assert.match(modes, /resolves the selected base Git object/u);
+  assert.match(modes, /canonical ID plus semantic and\s+structural fingerprints/u);
+  assert.match(observation, /complete canonical CodeTarget set/u);
+  assert.match(observation, /The stable `code` stage order is:[\s\S]*`code-proposal`/u);
+  assert.match(observation, /successful package-only ProposalPackage materialization/u);
+  assert.match(observation, /do not publish or invent a\s+semantic-model/u);
+  assert.match(observation, /SpecPatch preparation, or SpecPatch application stage/u);
+  assert.match(observation, /implementation changes\s+invalidate dependent evidence/u);
+  assert.match(observation, /Automatic production applies only to `spec-code` and `code`/u);
+  assert.match(proposal, /For an observed `spec-code` or `code` route/u);
+  assert.match(approval, /approved `code` proposal\s+bypasses branch preparation and SpecPatch application/u);
+  assert.match(verification, /Implementation changes invalidate dependent evidence/u);
+  assert.match(integration, /For an observed `spec-code` or `code` route/u);
 });
 
 test("REQ-B5D3BE6B compatibility wrapper accepts only exact workflow journal results", async () => {
@@ -292,6 +319,8 @@ test("REQ-B5D3BE6B compatibility wrapper accepts only exact workflow journal res
   assert.equal((JSON.parse(created.stdout) as { command: string }).command, "journal.create");
 
   const retained = [
+    "--workflow-mode",
+    "spec-code",
     "--journal",
     ".sdd/staging/workflow-observation/spec-code/run-a.jsonl",
     "--run",

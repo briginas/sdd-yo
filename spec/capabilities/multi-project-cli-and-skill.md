@@ -351,10 +351,60 @@ observation opt-in.
 - An observation initialization or publication failure is reported separately
   and does not change an authoring, approval, patch, implementation,
   verification, Git, merge, publication, or release result or authority stop.
-- Automatic observation applies only to `spec-code`; `code`, `spec`,
-  onboarding, planning, understand, diagnose, release, and repository
-  maintenance routes remain unchanged until separately governed behavior is
-  delivered.
+- This Requirement governs `spec-code` observation only. `code` observation is
+  governed separately; `spec`, onboarding, planning, understand, diagnose,
+  release, and repository-maintenance routes remain unchanged until separately
+  governed behavior is delivered.
+
+<a id="req-42acf537"></a>
+
+## REQ-42ACF537 — Observe every selected code workflow automatically
+
+```sdd
+kind: behavior
+verification: manual
+```
+
+### Relations <!-- sdd:relations -->
+
+- depends-on: [REQ-26234DC8 — Orchestrate through one progressive-disclosure skill](multi-project-cli-and-skill.md#req-26234dc8)
+- depends-on: [REQ-7B9B6531 — Project one exact observed code workflow](read-only-workflow-progress-observation.md#req-7b9b6531)
+- depends-on: [REQ-5FFEC13F — Derive the unchanged code proposal subject](proposal-modes-and-workflow-gates.md#req-5ffec13f)
+- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+
+### Statement <!-- sdd:statement -->
+
+For every newly selected `code` workflow, the `sdd-yo` Agent Skill shall
+automatically initialize and retain exactly one observed run bound to the
+selected base and exact active Requirement targets and publish allowlisted
+events at the actual implementation-only orchestration boundaries without
+requiring an observation opt-in.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- After one project, `code` outcome, base, and non-empty exact active
+  Requirement target set are selected, the Skill invokes the compatible CLI
+  journal initializer, returns its generated mode-scoped ignored path and run
+  identity, and creates no duplicate journal for the retained run.
+- The Skill preserves the exact journal, mode, resolved base object, bound
+  Requirement targets, producer, Change identity, next sequence, and
+  fingerprint across human pauses, compatible retries, and agent turns and
+  resumes only through the compatible CLI operation.
+- The code proposal stage references only the retained package-only unchanged
+  ProposalPackage. The Skill performs no semantic-model confirmation, ID
+  generation, authored-candidate materialization, branch preparation, or
+  SpecPatch preparation or application for the observed `code` workflow.
+- The Skill publishes only after or while waiting at an owning typed boundary,
+  including validation and target binding, package-only proposal review,
+  explicit decision recording, implementation, evidence invalidation and
+  refresh, review, merge readiness, optional local integration, interruption,
+  failure, rejection, and terminal completion.
+- Starting observation for already-running unobserved `code` work creates one
+  explicitly partial run at the supplied checkpoint and never reconstructs
+  earlier work.
+- Observation failure is reported separately and does not change an approval,
+  implementation, verification, Git, merge, publication, release result, or
+  authority stop. `spec` and non-Change routes remain uninstrumented.
 
 <a id="req-cf21ed6e"></a>
 

@@ -156,6 +156,100 @@ test("REQ-0837358D REQ-6A40513D renders the stable partial spec-code stage model
   assert.match(html, /Proposal materialization authority required/u);
 });
 
+test("REQ-7B9B6531 projects one exact seven-stage code workflow without specification ceremony", () => {
+  const semanticFingerprint = `sha256:${"1".repeat(64)}`;
+  const structuralFingerprint = `sha256:${"2".repeat(64)}`;
+  const snapshot = replayWorkflowEvents(
+    [
+      event(0, {
+        event_type: "run_started",
+        mode: "code",
+        base_ref: "base-object-35",
+        code_targets: [
+          {
+            requirement_id: "REQ-7B9B6531",
+            semantic_fingerprint: semanticFingerprint,
+            structural_fingerprint: structuralFingerprint,
+          },
+        ],
+        observation_start: "complete",
+        current_stage_id: "workflow-initialization",
+      }),
+    ],
+    projectId,
+  );
+
+  assert.equal(snapshot.mode, "code");
+  assert.equal(snapshot.base_ref, "base-object-35");
+  assert.deepEqual(snapshot.code_targets, [
+    {
+      requirement_id: "REQ-7B9B6531",
+      semantic_fingerprint: semanticFingerprint,
+      structural_fingerprint: structuralFingerprint,
+    },
+  ]);
+  assert.deepEqual(
+    snapshot.stages.map(({ stage_id }) => stage_id),
+    [
+      "workflow-initialization",
+      "code-proposal",
+      "proposal-decision",
+      "implementation",
+      "verification-and-review",
+      "local-integration",
+      "terminal-outcome",
+    ],
+  );
+  assert.ok(
+    snapshot.stages.every(
+      ({ stage_id }) =>
+        stage_id !== "semantic-model" &&
+        stage_id !== "specification-candidate" &&
+        stage_id !== "exact-specification-patch",
+    ),
+  );
+});
+
+test("REQ-7B9B6531 marks partial code stages unobserved and rejects code subject or stage drift", () => {
+  const target = {
+    requirement_id: "REQ-7B9B6531",
+    semantic_fingerprint: `sha256:${"3".repeat(64)}`,
+    structural_fingerprint: `sha256:${"4".repeat(64)}`,
+  };
+  const started = event(0, {
+    event_type: "run_started",
+    mode: "code",
+    base_ref: "base-object-35",
+    code_targets: [target],
+    observation_start: "partial",
+    current_stage_id: "implementation",
+  });
+  const snapshot = replayWorkflowEvents([started], projectId);
+  assert.deepEqual(
+    snapshot.stages.slice(0, 3).map(({ state, reason }) => ({ state, reason })),
+    [
+      { state: "skipped", reason: "Not observed before partial start" },
+      { state: "skipped", reason: "Not observed before partial start" },
+      { state: "skipped", reason: "Not observed before partial start" },
+    ],
+  );
+  assert.equal(snapshot.stages[3]?.state, "active");
+
+  assert.throws(
+    () => parseWorkflowEvent({ ...started, code_targets: [target, target] }, projectId),
+    (error: unknown) => error instanceof WorkflowObservationError && error.code === "SDD_OBSERVATION_EVENT_INVALID",
+  );
+  assert.throws(
+    () =>
+      replayWorkflowEvents(
+        [started, event(1, { event_type: "stage_updated", stage_id: "semantic-model", state: "active" })],
+        projectId,
+      ),
+    (error: unknown) =>
+      error instanceof WorkflowObservationError && error.code === "SDD_OBSERVATION_TRANSITION_INVALID",
+  );
+});
+
 test("REQ-B2001FED REQ-627F78A2 represents interruption explicitly and evicts only whole runs", () => {
   const interrupted = replayWorkflowEvents(
     [

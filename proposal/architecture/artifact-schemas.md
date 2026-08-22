@@ -17,26 +17,26 @@ representative.
 
 The complete version 1 artifact schema set is:
 
-| Artifact | Materialized schema |
-| --- | --- |
-| ChangeDescriptor | [`change-descriptor.schema.json`](../../contracts/v1/schemas/change-descriptor.schema.json) |
-| WorkflowEvent | [`workflow-event.schema.json`](../../contracts/v1/schemas/workflow-event.schema.json) |
-| WorkflowSnapshot | [`workflow-snapshot.schema.json`](../../contracts/v1/schemas/workflow-snapshot.schema.json) |
-| CandidateTreeManifest | [`candidate-tree-manifest.schema.json`](../../contracts/v1/schemas/candidate-tree-manifest.schema.json) |
-| ProposalPackage | [`proposal-package.schema.json`](../../contracts/v1/schemas/proposal-package.schema.json) |
-| SpecPatch | [`spec-patch.schema.json`](../../contracts/v1/schemas/spec-patch.schema.json) |
-| ApprovalEvidence | [`approval-evidence.schema.json`](../../contracts/v1/schemas/approval-evidence.schema.json) |
-| TestIndex | [`test-index.schema.json`](../../contracts/v1/schemas/test-index.schema.json) |
-| TestExecutionEvidence | [`test-execution-evidence.schema.json`](../../contracts/v1/schemas/test-execution-evidence.schema.json) |
-| QAEvidence | [`qa-evidence.schema.json`](../../contracts/v1/schemas/qa-evidence.schema.json) |
-| GovernanceEvidence | [`governance-evidence.schema.json`](../../contracts/v1/schemas/governance-evidence.schema.json) |
-| Finding | [`finding.schema.json`](../../contracts/v1/schemas/finding.schema.json) |
-| FindingResolution | [`finding-resolution.schema.json`](../../contracts/v1/schemas/finding-resolution.schema.json) |
-| HumanSemanticReviewEvidence | [`human-semantic-review-evidence.schema.json`](../../contracts/v1/schemas/human-semantic-review-evidence.schema.json) |
+| Artifact                      | Materialized schema                                                                                                       |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| ChangeDescriptor              | [`change-descriptor.schema.json`](../../contracts/v1/schemas/change-descriptor.schema.json)                               |
+| WorkflowEvent                 | [`workflow-event.schema.json`](../../contracts/v1/schemas/workflow-event.schema.json)                                     |
+| WorkflowSnapshot              | [`workflow-snapshot.schema.json`](../../contracts/v1/schemas/workflow-snapshot.schema.json)                               |
+| CandidateTreeManifest         | [`candidate-tree-manifest.schema.json`](../../contracts/v1/schemas/candidate-tree-manifest.schema.json)                   |
+| ProposalPackage               | [`proposal-package.schema.json`](../../contracts/v1/schemas/proposal-package.schema.json)                                 |
+| SpecPatch                     | [`spec-patch.schema.json`](../../contracts/v1/schemas/spec-patch.schema.json)                                             |
+| ApprovalEvidence              | [`approval-evidence.schema.json`](../../contracts/v1/schemas/approval-evidence.schema.json)                               |
+| TestIndex                     | [`test-index.schema.json`](../../contracts/v1/schemas/test-index.schema.json)                                             |
+| TestExecutionEvidence         | [`test-execution-evidence.schema.json`](../../contracts/v1/schemas/test-execution-evidence.schema.json)                   |
+| QAEvidence                    | [`qa-evidence.schema.json`](../../contracts/v1/schemas/qa-evidence.schema.json)                                           |
+| GovernanceEvidence            | [`governance-evidence.schema.json`](../../contracts/v1/schemas/governance-evidence.schema.json)                           |
+| Finding                       | [`finding.schema.json`](../../contracts/v1/schemas/finding.schema.json)                                                   |
+| FindingResolution             | [`finding-resolution.schema.json`](../../contracts/v1/schemas/finding-resolution.schema.json)                             |
+| HumanSemanticReviewEvidence   | [`human-semantic-review-evidence.schema.json`](../../contracts/v1/schemas/human-semantic-review-evidence.schema.json)     |
 | SemanticAnalysisInputManifest | [`semantic-analysis-input-manifest.schema.json`](../../contracts/v1/schemas/semantic-analysis-input-manifest.schema.json) |
-| ConflictReport | [`conflict-report.schema.json`](../../contracts/v1/schemas/conflict-report.schema.json) |
-| VerificationReport | [`verification-report.schema.json`](../../contracts/v1/schemas/verification-report.schema.json) |
-| MergeReport | [`merge-report.schema.json`](../../contracts/v1/schemas/merge-report.schema.json) |
+| ConflictReport                | [`conflict-report.schema.json`](../../contracts/v1/schemas/conflict-report.schema.json)                                   |
+| VerificationReport            | [`verification-report.schema.json`](../../contracts/v1/schemas/verification-report.schema.json)                           |
+| MergeReport                   | [`merge-report.schema.json`](../../contracts/v1/schemas/merge-report.schema.json)                                         |
 
 The contract parse, schema, project, and subject cases are enumerated by the
 [`artifact fixture matrix`](../../fixtures/v1/artifacts/cases.json).
@@ -94,7 +94,10 @@ validated events. It keeps execution, exact CLI status, merge readiness,
 artifact freshness, approval, and integration as independent fields. Ordered
 step state and allowlisted project-relative artifact references support a
 read-only renderer without turning the snapshot into approval, evidence,
-readiness, or Git authority.
+readiness, or Git authority. Journals and snapshots are mode-scoped. For
+`code`, their immutable subject also carries the resolved base object as
+`base_ref` and canonical non-empty `code_targets` with each active
+Requirement's semantic and structural fingerprints.
 
 A resumable `spec-code` snapshot also carries its observation start and the
 stable nine-stage projection: workflow initialization, semantic model,
@@ -103,6 +106,14 @@ implementation, verification and review, local integration, and terminal
 outcome. Stage state changes only through the allowlisted `stage_updated`
 event; partial starts mark earlier stages unobserved rather than inferring or
 backfilling them.
+
+A resumable `code` snapshot carries the same observation-start semantics and
+exactly seven stages: `workflow-initialization` (workflow initialization and
+targets), `code-proposal`, `proposal-decision`, `implementation`,
+`verification-and-review`, `local-integration`, and `terminal-outcome`. Its
+proposal artifact is the package-only unchanged ProposalPackage. The record has
+no semantic-model, authored-candidate, branch-preparation, or exact-SpecPatch
+stage, so later events cannot make that ceremony appear completed.
 
 Neither record is decision-bearing. Observation failure does not change the
 underlying CLI response or referenced artifact, and removing an event journal
@@ -322,8 +333,8 @@ Every operation is validated before any write. The final tree must equal
   "decision": "approved",
   "mode": "spec-code",
   "subject": {
-    "base": {"git_ref": "4f88...", "tree_fingerprint": "sha256:..."},
-    "candidate": {"source": "manifest", "tree_fingerprint": "sha256:..."},
+    "base": { "git_ref": "4f88...", "tree_fingerprint": "sha256:..." },
+    "candidate": { "source": "manifest", "tree_fingerprint": "sha256:..." },
     "object_delta": {
       "semantic_fingerprint": "sha256:...",
       "structural_fingerprint": "sha256:...",
@@ -373,7 +384,7 @@ contradictory decisions prevent `PASS`.
       "local_id": "test-818",
       "full_name": "Export REQ-7F3A2C91 writes UTF-8",
       "requirement_ids": ["REQ-7F3A2C91"],
-      "source": {"path": "test/export.test.ts", "line": 18}
+      "source": { "path": "test/export.test.ts", "line": 18 }
     }
   ]
 }
@@ -424,9 +435,7 @@ Allowed statuses are `passed`, `failed`, `skipped`, `todo`, `disabled`,
     "affected_scope_fingerprint": "sha256:..."
   },
   "capability_ids": ["CAP-15DBC157"],
-  "manual_requirements": [
-    {"requirement_id": "REQ-CDE94D0B", "decision": "passed"}
-  ],
+  "manual_requirements": [{ "requirement_id": "REQ-CDE94D0B", "decision": "passed" }],
   "notes": "optional"
 }
 ```
@@ -486,14 +495,12 @@ the subject is not another retained artifact schema.
   "artifact_type": "finding",
   "project_id": "SDD-17EF8B29",
   "finding_id": "FND-5D5B4366CBB7",
-  "analyzer": {"name": "semantic-review", "version": "1.0"},
+  "analyzer": { "name": "semantic-review", "version": "1.0" },
   "kind": "semantic_conflict",
   "severity": "blocking",
   "input_fingerprint": "sha256:...",
   "objects": ["REQ-AAAA0001", "REQ-BBBB0002"],
-  "sections": [
-    {"object_id": "REQ-AAAA0001", "section": "statement"}
-  ],
+  "sections": [{ "object_id": "REQ-AAAA0001", "section": "statement" }],
   "summary": "The requirements prescribe incompatible outcomes.",
   "confidence": 0.82,
   "waiver_eligible": false

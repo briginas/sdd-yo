@@ -91,7 +91,8 @@ const initiativePlanningScenarioIds = [
 ] as const;
 const automaticObservationScenarioIds = [
   "automatic-spec-code-observation-resumes-one-run",
-  "automatic-observation-excludes-code-mode",
+  "automatic-code-observation-binds-targets-and-resumes-one-run",
+  "automatic-observation-excludes-spec-mode",
 ] as const;
 
 async function loadSuite(): Promise<ScenarioSuite> {
@@ -136,6 +137,7 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
     "REQ-26234DC8",
     "REQ-2B00EE25",
     "REQ-32C76ED3",
+    "REQ-42ACF537",
     "REQ-44068C1A",
     "REQ-44264E62",
     "REQ-5FFEC13F",
@@ -213,14 +215,26 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
   assert.ok(operations.every((operation) => !operation.includes("integrat")));
 });
 
-test("REQ-44264E62 REQ-B5D3BE6B automatic observation evals preserve one spec-code run and mode exclusions", async () => {
+test("REQ-44264E62 REQ-42ACF537 REQ-B5D3BE6B automatic observation evals preserve exact Change runs and spec exclusion", async () => {
   const scenarios = new Map((await loadSuite()).scenarios.map((scenario) => [scenario.id, scenario]));
   assert.ok(automaticObservationScenarioIds.every((id) => scenarios.has(id)));
   const observed = scenarios.get("automatic-spec-code-observation-resumes-one-run");
   assert.deepEqual(observed?.expected_operations, ["journal.create", "journal.publish", "journal.resume", "validate"]);
   assert.ok(observed?.forbidden_actions.includes("create-duplicate-journal"));
   assert.ok(observed?.forbidden_actions.includes("infer-human-decision"));
-  const excluded = scenarios.get("automatic-observation-excludes-code-mode");
+  const code = scenarios.get("automatic-code-observation-binds-targets-and-resumes-one-run");
+  assert.deepEqual(code?.expected_operations, [
+    "inspect",
+    "journal.create",
+    "journal.publish",
+    "journal.resume",
+    "proposal.materialize",
+    "validate",
+  ]);
+  assert.ok(code?.forbidden_actions.includes("draft-authored-candidate"));
+  assert.ok(code?.forbidden_actions.includes("prepare-spec-patch"));
+  assert.ok(code?.forbidden_actions.includes("reconstruct-journal-subject"));
+  const excluded = scenarios.get("automatic-observation-excludes-spec-mode");
   assert.deepEqual(excluded?.expected_references, ["references/authoring.md", "references/modes.md"]);
   assert.ok(excluded?.forbidden_actions.includes("journal-create"));
 });

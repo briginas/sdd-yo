@@ -192,7 +192,7 @@ function parsePackResult(standardOutput: string): PackResult {
   return result as PackResult;
 }
 
-test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-0163273A REQ-3F19778B REQ-CF3A1070 REQ-A0456614 REQ-DAF21960 REQ-8DC50806 REQ-AA165BDE REQ-FFE60B5A REQ-D9CF3A46 REQ-97D96950 REQ-382BBBD6 REQ-7C848ED0 REQ-778099C0 REQ-C975AE17 REQ-05CABE17 REQ-2B49D454 REQ-DEB23207 REQ-C18AEE90 REQ-50351033 package builds, verifies public and offline quickstarts, manages repository and macOS user Skills, and completes first use offline", async () => {
+test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-0163273A REQ-3F19778B REQ-CF3A1070 REQ-A0456614 REQ-DAF21960 REQ-8DC50806 REQ-AA165BDE REQ-FFE60B5A REQ-D9CF3A46 REQ-97D96950 REQ-382BBBD6 REQ-7C848ED0 REQ-778099C0 REQ-C975AE17 REQ-05CABE17 REQ-2B49D454 REQ-DEB23207 REQ-C18AEE90 REQ-50351033 REQ-7B9B6531 REQ-42ACF537 package builds, verifies public and offline quickstarts, manages repository and macOS user Skills, and completes first use offline", async () => {
   const temporaryRoot = await mkdtemp(join(tmpdir(), "sdd-yo-package-smoke-"));
   const buildCache = join(temporaryRoot, "build-cache");
   const installCache = join(temporaryRoot, "install-cache");
@@ -644,8 +644,69 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-0163273A REQ-3F19778B REQ-CF3A1
     assert.deepEqual(automationResponse.diagnostics, []);
 
     await writeFile(join(consumerRoot, ".gitignore"), "/.sdd/staging/\n");
+    await writeFile(
+      join(consumerRoot, "spec/README.md"),
+      `---
+sdd:
+  type: index
+---
+
+# Product specification
+
+## Capabilities <!-- sdd:capabilities -->
+
+- [CAP-A1000001 — Code target](capabilities/code-target.md)
+
+## Domain concepts <!-- sdd:concepts -->
+`,
+    );
+    await writeFile(
+      join(consumerRoot, "spec/capabilities/code-target.md"),
+      `---
+sdd:
+  type: capability
+  id: CAP-A1000001
+---
+
+# Code target
+
+## Purpose <!-- sdd:purpose -->
+
+Provide one active implementation target.
+
+<a id="req-a1000001"></a>
+
+## REQ-A1000001 — Keep implementation aligned
+
+\`\`\`sdd
+kind: behavior
+verification: automated
+\`\`\`
+
+### Relations <!-- sdd:relations -->
+
+### Statement <!-- sdd:statement -->
+
+The implementation shall remain aligned with this active Requirement.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- The Requirement can be selected as an exact code workflow target.
+`,
+    );
     const consumerGit = await runCommand("git", ["init"], consumerRoot);
     assert.equal(consumerGit.exitCode, 0, consumerGit.standardError || consumerGit.standardOutput);
+    const stagedCodeBase = await runCommand("git", ["add", ".gitignore", ".sdd/config.yaml", "spec"], consumerRoot);
+    assert.equal(stagedCodeBase.exitCode, 0, stagedCodeBase.standardError);
+    const committedCodeBase = await runCommand(
+      "git",
+      ["commit", "--quiet", "-m", "add governed code target"],
+      consumerRoot,
+    );
+    assert.equal(committedCodeBase.exitCode, 0, committedCodeBase.standardError);
+    const resolvedCodeBase = await runCommand("git", ["rev-parse", "HEAD"], consumerRoot);
+    assert.equal(resolvedCodeBase.exitCode, 0, resolvedCodeBase.standardError);
+    const codeBaseRef = resolvedCodeBase.standardOutput.trim();
     const journalCreate = await runCommand(
       process.execPath,
       [
@@ -679,6 +740,45 @@ test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-0163273A REQ-3F19778B REQ-CF3A1
     assert.equal(journalResponse.result.next_sequence, 1);
     assert.match(journalResponse.result.journal_path, /^\.sdd\/staging\/workflow-observation\/spec-code\//u);
     assert.match(journalResponse.result.journal_fingerprint, /^sha256:[0-9a-f]{64}$/u);
+
+    const codeJournalCreate = await runCommand(
+      process.execPath,
+      [
+        repositoryWrapper,
+        "--",
+        "journal",
+        "create",
+        "--workflow-mode",
+        "code",
+        "--producer",
+        "package-smoke",
+        "--base",
+        codeBaseRef,
+        "--code-target",
+        "REQ-A1000001",
+        "--cwd",
+        consumerRoot,
+      ],
+      consumerRoot,
+    );
+    assert.equal(codeJournalCreate.exitCode, 0, codeJournalCreate.standardError || codeJournalCreate.standardOutput);
+    const codeJournalResponse = JSON.parse(codeJournalCreate.standardOutput) as {
+      readonly command: string;
+      readonly result: {
+        readonly mode: string;
+        readonly base_ref: string;
+        readonly code_targets: readonly { readonly requirement_id: string }[];
+        readonly journal_path: string;
+      };
+    };
+    assert.equal(codeJournalResponse.command, "journal.create");
+    assert.equal(codeJournalResponse.result.mode, "code");
+    assert.equal(codeJournalResponse.result.base_ref, codeBaseRef);
+    assert.deepEqual(
+      codeJournalResponse.result.code_targets.map((target) => target.requirement_id),
+      ["REQ-A1000001"],
+    );
+    assert.match(codeJournalResponse.result.journal_path, /^\.sdd\/staging\/workflow-observation\/code\//u);
 
     const skillRemoval = await runCommand(
       process.execPath,

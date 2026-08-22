@@ -75,6 +75,7 @@ import {
   revalidateProposalBundle,
   serializeApprovalEvidence,
   SpecPatchInputError,
+  validateProposalTrees,
   MAX_APPROVAL_TEXT_BYTES,
 } from "../proposal/index.ts";
 import { ProposalRevalidationError } from "../proposal/revalidate-proposal.ts";
@@ -118,6 +119,7 @@ import {
   readWorkflowJournal,
   replayWorkflowEvents,
   resumeWorkflowJournal,
+  CODE_WORKFLOW_STAGES,
   SPEC_CODE_WORKFLOW_STAGES,
   WORKFLOW_ARTIFACT_KINDS,
   WORKFLOW_STAGE_STATES,
@@ -125,7 +127,12 @@ import {
   type WorkflowEvent,
   type WorkflowJournalEventPayload,
   type WorkflowJournalResult,
+  type WorkflowJournalSubject,
   type WorkflowSnapshot,
+  type ObservedWorkflowMode,
+  type CodeWorkflowStageId,
+  type SpecCodeWorkflowStageId,
+  type WorkflowStageId,
 } from "../observation/index.ts";
 import type { WorkflowJournalStore } from "../platform/workflow-journal-store.ts";
 
@@ -246,7 +253,7 @@ type Invocation = {
   readonly qaPaths: readonly ProjectPath[];
   readonly humanReviewPaths: readonly ProjectPath[];
   readonly journalPath?: ProjectPath;
-  readonly workflowMode?: "spec-code";
+  readonly workflowMode?: ObservedWorkflowMode;
   readonly producerId?: string;
   readonly runId?: string;
   readonly changeId?: string;
@@ -524,7 +531,7 @@ function parseInvocation(
   const qaPaths: ProjectPath[] = [];
   const humanReviewPaths: ProjectPath[] = [];
   let journalPath: ProjectPath | undefined;
-  let workflowMode: "spec-code" | undefined;
+  let workflowMode: ObservedWorkflowMode | undefined;
   let producerId: string | undefined;
   let runId: string | undefined;
   let changeId: string | undefined;
@@ -657,13 +664,16 @@ function parseInvocation(
           };
         journalPath = value;
       } else if (argument === "--workflow-mode") {
-        if (command !== "journal.create" || value !== "spec-code")
+        if (
+          (command !== "journal.create" && command !== "journal.resume" && command !== "journal.publish") ||
+          (value !== "spec-code" && value !== "code")
+        )
           return {
             ok: false,
             diagnostic: cliDiagnostic(
               "SDD_CONFIG_CLI_ARGUMENT_INVALID",
               "The journal workflow mode is invalid.",
-              "Use --workflow-mode spec-code only with sdd journal create.",
+              "Use --workflow-mode spec-code or code with a journal operation.",
             ),
           };
         workflowMode = value;
@@ -681,13 +691,13 @@ function parseInvocation(
         else if (argument === "--run") runId = value;
         else changeId = value;
       } else if (argument === "--partial-from" || argument === "--stage") {
-        if (!SPEC_CODE_WORKFLOW_STAGES.some(({ stage_id }) => stage_id === value))
+        if (![...SPEC_CODE_WORKFLOW_STAGES, ...CODE_WORKFLOW_STAGES].some(({ stage_id }) => stage_id === value))
           return {
             ok: false,
             diagnostic: cliDiagnostic(
               "SDD_CONFIG_CLI_ARGUMENT_INVALID",
               "The workflow stage is invalid.",
-              "Use one stable spec-code workflow stage identifier.",
+              "Use one stable observed workflow stage identifier.",
             ),
           };
         if (argument === "--partial-from") partialFrom = value;
@@ -1222,6 +1232,9 @@ function parseInvocation(
     command !== "diff" &&
     command !== "proposal.validate" &&
     command !== "proposal.materialize" &&
+    command !== "journal.create" &&
+    command !== "journal.resume" &&
+    command !== "journal.publish" &&
     (baseRef !== undefined || targetRef !== undefined)
   )
     return {
@@ -1248,6 +1261,18 @@ function parseInvocation(
         "SDD_CONFIG_CLI_ARGUMENT_INVALID",
         "--target does not apply to proposal materialization.",
         "Use --base with sdd proposal materialize.",
+      ),
+    };
+  if (
+    (command === "journal.create" || command === "journal.resume" || command === "journal.publish") &&
+    targetRef !== undefined
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "--target does not apply to workflow journals.",
+        "Use --base only for a code workflow journal subject.",
       ),
     };
   if (command === "diff" && (baseRef === undefined || targetRef === undefined))
@@ -1325,7 +1350,12 @@ function parseInvocation(
     command !== "approval.record" &&
     command !== "semantic-review.materialize" &&
     command !== "semantic-review.record" &&
-    (proposalMode !== undefined || candidatePath !== undefined || codeTargets.length > 0)
+    (proposalMode !== undefined ||
+      candidatePath !== undefined ||
+      (codeTargets.length > 0 &&
+        command !== "journal.create" &&
+        command !== "journal.resume" &&
+        command !== "journal.publish"))
   )
     return {
       ok: false,
@@ -1490,25 +1520,59 @@ function parseInvocation(
       ),
     };
   const journalCommand = command === "journal.create" || command === "journal.resume" || command === "journal.publish";
-  if (command === "journal.create" && (workflowMode !== "spec-code" || producerId === undefined))
+  if (command === "journal.create" && (workflowMode === undefined || producerId === undefined))
     return {
       ok: false,
       diagnostic: cliDiagnostic(
         "SDD_OBSERVATION_JOURNAL_INPUTS_REQUIRED",
-        "journal create requires a spec-code mode and producer.",
-        "Supply --workflow-mode spec-code and --producer.",
+        "journal create requires a supported workflow mode and producer.",
+        "Supply --workflow-mode spec-code or code and --producer.",
       ),
     };
   if (
     (command === "journal.resume" || command === "journal.publish") &&
-    (journalPath === undefined || runId === undefined || producerId === undefined || changeId === undefined)
+    (journalPath === undefined ||
+      workflowMode === undefined ||
+      runId === undefined ||
+      producerId === undefined ||
+      changeId === undefined)
   )
     return {
       ok: false,
       diagnostic: cliDiagnostic(
         "SDD_OBSERVATION_JOURNAL_INPUTS_REQUIRED",
         `${command.replace(".", " ")} requires the exact retained journal subject.`,
-        "Supply journal, run, producer, and Change identities from the prior compatible result.",
+        "Supply journal, mode, run, producer, and Change identities from the prior compatible result.",
+      ),
+    };
+  if (
+    journalCommand &&
+    workflowMode !== undefined &&
+    ((workflowMode === "code" && (baseRef === undefined || codeTargets.length === 0)) ||
+      (workflowMode === "spec-code" && (baseRef !== undefined || codeTargets.length > 0)))
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_OBSERVATION_JOURNAL_INPUTS_REQUIRED",
+        "The workflow journal subject does not match its selected mode.",
+        "Supply --base and at least one --code-target only for code; omit both for spec-code.",
+      ),
+    };
+  if (
+    partialFrom !== undefined &&
+    (command !== "journal.create" ||
+      workflowMode === undefined ||
+      !(workflowMode === "spec-code" ? SPEC_CODE_WORKFLOW_STAGES : CODE_WORKFLOW_STAGES).some(
+        ({ stage_id }) => stage_id === partialFrom,
+      ))
+  )
+    return {
+      ok: false,
+      diagnostic: cliDiagnostic(
+        "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+        "The partial checkpoint does not belong to the selected workflow mode.",
+        "Use one stage from the selected mode only with journal create.",
       ),
     };
   if (
@@ -2769,20 +2833,46 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
         if (runtime.createWorkflowJournalStore === undefined)
           throw new Error("This sdd executable cannot publish workflow journals.");
         const store = await runtime.createWorkflowJournalStore(project.project_root);
+        let codeBinding:
+          | Pick<Extract<WorkflowJournalSubject, { readonly mode: "code" }>, "base_ref" | "code_targets">
+          | undefined;
+        if (invocation.workflowMode === "code") {
+          const reader = await discoverProcessGitReader(runtime.processRunner, project.project_root);
+          const baseRef = await reader.resolveRevision(invocation.baseRef!);
+          const base = await loadBaseSpecificationTree(reader, baseRef, project);
+          const codeSubject = validateProposalTrees({
+            project,
+            baseRef,
+            base,
+            candidate: { source: "base", tree: base },
+            mode: "code",
+            codeTargets: invocation.codeTargets,
+          });
+          codeBinding = { base_ref: codeSubject.base.git_ref, code_targets: codeSubject.code_targets };
+        }
         const subject =
           invocation.command === "journal.create"
             ? undefined
-            : {
-                project_id: project.configuration.project_id,
-                mode: "spec-code" as const,
-                run_id: invocation.runId!,
-                producer_id: invocation.producerId!,
-                change_id: invocation.changeId!,
-              };
+            : invocation.workflowMode === "code"
+              ? {
+                  project_id: project.configuration.project_id,
+                  mode: "code" as const,
+                  run_id: invocation.runId!,
+                  producer_id: invocation.producerId!,
+                  change_id: invocation.changeId!,
+                  ...codeBinding!,
+                }
+              : {
+                  project_id: project.configuration.project_id,
+                  mode: "spec-code" as const,
+                  run_id: invocation.runId!,
+                  producer_id: invocation.producerId!,
+                  change_id: invocation.changeId!,
+                };
         let result: JournalCommandResult;
         if (invocation.command === "journal.create") {
           const runId = Buffer.from(runtime.randomness.randomBytes(16)).toString("hex");
-          const candidatePath = `.sdd/staging/workflow-observation/spec-code/${runId}.jsonl`;
+          const candidatePath = `.sdd/staging/workflow-observation/${invocation.workflowMode}/${runId}.jsonl`;
           const ignored = await runtime.processRunner.run({
             executable: "git",
             arguments: ["check-ignore", "--quiet", "--", candidatePath],
@@ -2793,16 +2883,29 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
           });
           if (ignored.exitCode !== 0 || ignored.signal !== null)
             throw new Error("The generated workflow journal path is not ignored by Git.");
-          result = await initializeWorkflowJournal({
-            store,
-            project_id: project.configuration.project_id,
-            run_id: runId,
-            producer_id: invocation.producerId!,
-            observation_start: invocation.partialFrom === undefined ? "complete" : "partial",
-            current_stage_id:
-              (invocation.partialFrom as (typeof SPEC_CODE_WORKFLOW_STAGES)[number]["stage_id"] | undefined) ??
-              "workflow-initialization",
-          });
+          result =
+            invocation.workflowMode === "code"
+              ? await initializeWorkflowJournal({
+                  store,
+                  project_id: project.configuration.project_id,
+                  mode: "code",
+                  ...codeBinding!,
+                  run_id: runId,
+                  producer_id: invocation.producerId!,
+                  observation_start: invocation.partialFrom === undefined ? "complete" : "partial",
+                  current_stage_id:
+                    (invocation.partialFrom as CodeWorkflowStageId | undefined) ?? "workflow-initialization",
+                })
+              : await initializeWorkflowJournal({
+                  store,
+                  project_id: project.configuration.project_id,
+                  mode: "spec-code",
+                  run_id: runId,
+                  producer_id: invocation.producerId!,
+                  observation_start: invocation.partialFrom === undefined ? "complete" : "partial",
+                  current_stage_id:
+                    (invocation.partialFrom as SpecCodeWorkflowStageId | undefined) ?? "workflow-initialization",
+                });
         } else if (invocation.command === "journal.resume") {
           result = await resumeWorkflowJournal({
             store,
@@ -2831,11 +2934,14 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
       } catch (error) {
         const candidateCode =
           error instanceof Error && "code" in error && typeof error.code === "string" ? error.code : undefined;
-        const diagnostic = cliDiagnostic(
-          candidateCode?.startsWith("SDD_") === true ? candidateCode : "SDD_OBSERVATION_PUBLICATION_FAILED",
-          error instanceof Error ? error.message : "The workflow journal operation failed.",
-          "Preserve the observed workflow result and retry only with the exact retained journal subject and cursor.",
-        );
+        const diagnostic =
+          error instanceof ProposalValidationError
+            ? error.diagnostic
+            : cliDiagnostic(
+                candidateCode?.startsWith("SDD_") === true ? candidateCode : "SDD_OBSERVATION_PUBLICATION_FAILED",
+                error instanceof Error ? error.message : "The workflow journal operation failed.",
+                "Preserve the observed workflow result and retry only with the exact retained journal subject and cursor.",
+              );
         emit(
           runtime,
           invocation.format,
@@ -2865,7 +2971,8 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
           .map((line) => JSON.parse(line) as unknown);
         const snapshot = replayWorkflowEvents(events, project.configuration.project_id);
         const follow =
-          snapshot.mode === "spec-code" && runtime.createWorkflowJournalStore !== undefined
+          (snapshot.mode === "spec-code" || snapshot.mode === "code") &&
+          runtime.createWorkflowJournalStore !== undefined
             ? {
                 journalPath: resolvedJournal,
                 readSnapshot: async () => {

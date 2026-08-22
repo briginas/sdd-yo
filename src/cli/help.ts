@@ -98,19 +98,20 @@ export const CLI_HELP_ENTRIES: readonly CliHelpEntry[] = [
   },
   {
     path: "journal create",
-    usage: "sdd journal create --workflow-mode spec-code --producer <id> [--partial-from <stage>]",
+    usage:
+      "sdd journal create --workflow-mode spec-code|code --producer <id> [--base <git-ref> --code-target <REQ-ID> ...] [--partial-from <stage>]",
     summary: "Create one safe ignored resumable workflow observation journal.",
   },
   {
     path: "journal resume",
     usage:
-      "sdd journal resume --journal <path> --run <id> --producer <id> --change-id <id> [--expected-fingerprint <sha256>]",
+      "sdd journal resume --journal <path> --workflow-mode spec-code|code --run <id> --producer <id> --change-id <id> [--base <git-object> --code-target <REQ-ID> ...] [--expected-fingerprint <sha256>]",
     summary: "Resume one exact workflow journal subject and cursor.",
   },
   {
     path: "journal publish",
     usage:
-      "sdd journal publish --journal <path> --run <id> --producer <id> --change-id <id> --expected-sequence <n> --expected-fingerprint <sha256> --event-type <type> [typed event options]",
+      "sdd journal publish --journal <path> --workflow-mode spec-code|code --run <id> --producer <id> --change-id <id> [--base <git-object> --code-target <REQ-ID> ...] --expected-sequence <n> --expected-fingerprint <sha256> --event-type <type> [typed event options]",
     summary: "Publish one sequence-checked allowlisted workflow event atomically.",
   },
   {

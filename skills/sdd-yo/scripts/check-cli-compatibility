@@ -52,6 +52,17 @@ function optionValue(arguments_, option) {
   return value;
 }
 
+function optionValues(arguments_, option) {
+  const values = [];
+  for (let index = 0; index < arguments_.length; index += 1) {
+    if (arguments_[index] !== option) continue;
+    const value = arguments_[index + 1];
+    if (value === undefined || value.startsWith("--")) fail(`${option} requires a value.`);
+    values.push(value);
+  }
+  return values;
+}
+
 function isRecord(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
@@ -70,6 +81,15 @@ function isRequirementId(value) {
 
 function isCapabilityId(value) {
   return typeof value === "string" && /^CAP-[0-9A-F]{8}$/u.test(value);
+}
+
+function isWorkflowCodeTarget(value) {
+  return (
+    hasExactKeys(value, ["requirement_id", "semantic_fingerprint", "structural_fingerprint"]) &&
+    isRequirementId(value.requirement_id) &&
+    isFingerprint(value.semantic_fingerprint) &&
+    isFingerprint(value.structural_fingerprint)
+  );
 }
 
 function verifyApprovalRecordResult(result, projectId) {
@@ -95,12 +115,24 @@ function verifyWorkflowJournalResult(result, projectId, publication = false) {
     "journal_fingerprint",
     "snapshot",
   ];
+  if (result?.mode === "code") keys.push("base_ref", "code_targets");
   if (publication) keys.push("publication");
+  const codeSubjectValid =
+    result?.mode === "code"
+      ? typeof result.base_ref === "string" &&
+        result.base_ref.length > 0 &&
+        Array.isArray(result.code_targets) &&
+        result.code_targets.length > 0 &&
+        result.code_targets.every(isWorkflowCodeTarget) &&
+        result.code_targets.every(
+          (target, index) => index === 0 || result.code_targets[index - 1].requirement_id < target.requirement_id,
+        )
+      : result?.mode === "spec-code";
   return (
     hasExactKeys(result, keys) &&
     isProjectPath(result.journal_path) &&
     result.project_id === projectId &&
-    result.mode === "spec-code" &&
+    codeSubjectValid &&
     typeof result.run_id === "string" &&
     result.run_id.length > 0 &&
     typeof result.producer_id === "string" &&
@@ -114,7 +146,13 @@ function verifyWorkflowJournalResult(result, projectId, publication = false) {
     result.snapshot.schema_version === "1.0" &&
     result.snapshot.artifact_type === "workflow_snapshot" &&
     result.snapshot.project_id === projectId &&
-    result.snapshot.mode === "spec-code" &&
+    result.snapshot.mode === result.mode &&
+    (result.mode === "code"
+      ? result.snapshot.base_ref === result.base_ref &&
+        JSON.stringify(result.snapshot.code_targets) === JSON.stringify(result.code_targets)
+      : result.snapshot.base_ref === null &&
+        Array.isArray(result.snapshot.code_targets) &&
+        result.snapshot.code_targets.length === 0) &&
     result.snapshot.run_id === result.run_id &&
     result.snapshot.producer_id === result.producer_id &&
     result.snapshot.change_id === result.change_id &&
@@ -1070,16 +1108,34 @@ if (operation === "tests.discover") requireOption(commandArguments, "--head", op
 if (operation === "observe") requireOption(commandArguments, "--journal", operation);
 if (operation === "journal.create") {
   requireOption(commandArguments, "--producer", operation);
-  if (optionValue(commandArguments, "--workflow-mode") !== "spec-code")
-    fail("journal.create requires --workflow-mode spec-code.");
+  const mode = optionValue(commandArguments, "--workflow-mode");
+  if (mode !== "spec-code" && mode !== "code")
+    fail("journal.create requires --workflow-mode spec-code or code.");
+  if (mode === "code") {
+    requireOption(commandArguments, "--base", operation);
+    requireOption(commandArguments, "--code-target", operation);
+  } else if (
+    optionValue(commandArguments, "--base") !== undefined ||
+    optionValue(commandArguments, "--code-target") !== undefined
+  ) {
+    fail("journal.create accepts --base and --code-target only for code mode.");
+  }
 }
 if (operation === "journal.resume") {
-  for (const option of ["--journal", "--run", "--producer", "--change-id", "--expected-fingerprint"])
+  for (const option of [
+    "--journal",
+    "--workflow-mode",
+    "--run",
+    "--producer",
+    "--change-id",
+    "--expected-fingerprint",
+  ])
     requireOption(commandArguments, option, operation);
 }
 if (operation === "journal.publish") {
   for (const option of [
     "--journal",
+    "--workflow-mode",
     "--run",
     "--producer",
     "--change-id",
@@ -1088,6 +1144,19 @@ if (operation === "journal.publish") {
     "--event-type",
   ])
     requireOption(commandArguments, option, operation);
+}
+if (operation === "journal.resume" || operation === "journal.publish") {
+  const mode = optionValue(commandArguments, "--workflow-mode");
+  if (mode !== "spec-code" && mode !== "code") fail(`${operation} requires a supported --workflow-mode.`);
+  if (mode === "code") {
+    requireOption(commandArguments, "--base", operation);
+    requireOption(commandArguments, "--code-target", operation);
+  } else if (
+    optionValue(commandArguments, "--base") !== undefined ||
+    optionValue(commandArguments, "--code-target") !== undefined
+  ) {
+    fail(`${operation} accepts --base and --code-target only for code mode.`);
+  }
 }
 if (operation === "findings.validate") {
   requireOption(commandArguments, "--input-manifest", operation);
@@ -1291,19 +1360,29 @@ if (operation.startsWith("journal.") && response.status === "ok") {
   if (!verifyWorkflowJournalResult(response.result, response.project_id, publication))
     fail("the sdd CLI returned an invalid workflow journal result.");
   if (operation === "journal.create") {
+    const mode = optionValue(commandArguments, "--workflow-mode");
     if (
       response.result.producer_id !== optionValue(commandArguments, "--producer") ||
-      !response.result.journal_path.startsWith(".sdd/staging/workflow-observation/spec-code/")
+      response.result.mode !== mode ||
+      !response.result.journal_path.startsWith(`.sdd/staging/workflow-observation/${mode}/`)
     )
       fail("the sdd CLI journal initializer changed its selected producer or generated path.");
   } else if (
     response.result.journal_path !== optionValue(commandArguments, "--journal") ||
+    response.result.mode !== optionValue(commandArguments, "--workflow-mode") ||
     response.result.run_id !== optionValue(commandArguments, "--run") ||
     response.result.producer_id !== optionValue(commandArguments, "--producer") ||
     response.result.change_id !== optionValue(commandArguments, "--change-id")
   ) {
     fail("the sdd CLI journal operation changed its retained subject.");
   }
+  if (
+    response.result.mode === "code" &&
+    (response.result.base_ref !== optionValue(commandArguments, "--base") ||
+      JSON.stringify(response.result.code_targets.map((target) => target.requirement_id)) !==
+        JSON.stringify(optionValues(commandArguments, "--code-target").toSorted()))
+  )
+    fail("the sdd CLI journal operation changed its bound code subject.");
 }
 if (operation === "findings.validate" && (response.status === "ok" || response.status === "blocked")) {
   if (!verifyFindingAssessment(response.result)) fail("the sdd CLI returned an invalid finding assessment result.");

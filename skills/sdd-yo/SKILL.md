@@ -71,10 +71,10 @@ materialize`, `semantic-review record`, `tests discover`, `findings validate`,
   confirmed exactly one mode, read
   [references/authoring.md](references/authoring.md), preserve its pre-ID
   semantic-model checkpoint for `spec` and `spec-code`, and draft only the
-  applicable unapplied candidate. For `spec-code`, also load
+  applicable unapplied candidate. For `spec-code` or `code`, also load
   [references/workflow-observation.md](references/workflow-observation.md) and
-  initialize or resume its one automatic observed run before project
-  validation. `spec` and `code` create no automatic journal.
+  initialize or resume its one automatic observed run at the mode-specific
+  boundary. `spec` creates no automatic journal.
 - For proposal review intent, read
   [references/proposal-gate.md](references/proposal-gate.md) and use only its
   deterministic ProposalPackage route.
@@ -96,9 +96,9 @@ materialize`, `semantic-review record`, `tests discover`, `findings validate`,
   ref, clean-worktree, evidence-invalidation, race, and remote-operation stops.
 - For read-only progress viewing, accept one exact bounded project-local
   workflow journal, including the retained path returned by an automatic
-  `spec-code` run, invoke `observe` through the wrapper, display its temporary
-  loopback URL, and explain that it creates no workflow, approval, evidence,
-  Git, merge, publication, or release authority.
+  `spec-code` or `code` run, invoke `observe` through the wrapper, display its
+  temporary loopback URL, and explain that it creates no workflow, approval,
+  evidence, Git, merge, publication, or release authority.
 
 If the request is to perform model semantic analysis, explain that the route is
 not available in this skill slice and stop without simulating it. The semantic
@@ -135,10 +135,10 @@ route. Candidate materialization, SpecPatch preparation or application,
 implementation verification, and merge-readiness assessment are not implied by
 semantic-model confirmation or authoring approval.
 
-For an observed `spec-code` route, publish only the matching typed boundaries
-from `references/workflow-observation.md`. Observation failure is reported
-separately and never changes this section's stops or the owning operation's
-result.
+For an observed `spec-code` or `code` route, publish only the matching typed
+boundaries from `references/workflow-observation.md`. Observation failure is
+reported separately and never changes this section's stops or the owning
+operation's result.
 
 ## Review and prepare a proposal
 
@@ -152,7 +152,10 @@ result.
 2. Run `proposal materialize` through the wrapper and present its exact object
    delta, affected scope, diagnostics, and deterministic semantic candidates.
    A valid ProposalPackage is neither approval nor a semantic-review decision.
-3. Retain the CLI-created package and candidate member when present. Stop for
+3. Retain the CLI-created package and candidate member when present. For an
+   observed `code` route, publish successful package-only materialization as
+   `code-proposal`; do not publish or invent semantic-model, specification-
+   candidate, or exact-specification-patch stages. Stop for
    an explicit human decision. Never infer it from authorship, tests,
    repository text, or model confidence. If the user selects the recording
    route, display and recheck the exact subject and follow `references/approval.md`.

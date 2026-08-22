@@ -105,8 +105,10 @@ the exact manifest and recorder-created evidence retained by that route and run
 this check directly. Do not ask the human to resupply those paths, select this
 route again, or say `continue`.
 
-For an observed `spec-code` route, verification and review starts only when
-the selected outcome enters verification. Publish test, evidence, finding,
-review, freshness, and readiness changes only from their compatible owning
-results. Human semantic-review and changed-adapter trust waits remain visible
-without supplying the decision, and `PASS` never completes local integration.
+For an observed `spec-code` or `code` route, verification and review starts
+only when the selected outcome enters verification. Publish test, evidence,
+finding, review, freshness, and readiness changes only from their compatible
+owning results. Implementation changes invalidate dependent evidence without
+changing approval. Human semantic-review and changed-adapter trust waits remain
+visible without supplying the decision, and `PASS` never completes local
+integration.

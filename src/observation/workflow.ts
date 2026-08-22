@@ -1,6 +1,13 @@
 import { createHash } from "node:crypto";
 
-import type { Fingerprint, GitObjectId, ProjectId, ProjectPath } from "../contracts/identifiers.ts";
+import {
+  isRequirementId,
+  type Fingerprint,
+  type GitObjectId,
+  type ProjectId,
+  type ProjectPath,
+  type RequirementId,
+} from "../contracts/identifiers.ts";
 
 export const WORKFLOW_EXECUTION_STATES = ["active", "waiting", "interrupted", "failed", "completed"] as const;
 export type WorkflowExecutionState = (typeof WORKFLOW_EXECUTION_STATES)[number];
@@ -35,6 +42,18 @@ export const SPEC_CODE_WORKFLOW_STAGES = [
   { stage_id: "terminal-outcome", label: "Terminal outcome" },
 ] as const;
 export type SpecCodeWorkflowStageId = (typeof SPEC_CODE_WORKFLOW_STAGES)[number]["stage_id"];
+export const CODE_WORKFLOW_STAGES = [
+  { stage_id: "workflow-initialization", label: "Workflow initialization and targets" },
+  { stage_id: "code-proposal", label: "Code proposal" },
+  { stage_id: "proposal-decision", label: "Proposal decision" },
+  { stage_id: "implementation", label: "Implementation" },
+  { stage_id: "verification-and-review", label: "Verification and review" },
+  { stage_id: "local-integration", label: "Local integration" },
+  { stage_id: "terminal-outcome", label: "Terminal outcome" },
+] as const;
+export type CodeWorkflowStageId = (typeof CODE_WORKFLOW_STAGES)[number]["stage_id"];
+export type WorkflowStageId = SpecCodeWorkflowStageId | CodeWorkflowStageId;
+export type ObservedWorkflowMode = "spec-code" | "code";
 export const WORKFLOW_STAGE_STATES = [
   "pending",
   "active",
@@ -59,6 +78,12 @@ export const WORKFLOW_ARTIFACT_KINDS = [
 ] as const;
 export type WorkflowArtifactKind = (typeof WORKFLOW_ARTIFACT_KINDS)[number];
 
+export type WorkflowCodeTarget = {
+  readonly requirement_id: RequirementId;
+  readonly semantic_fingerprint: Fingerprint;
+  readonly structural_fingerprint: Fingerprint;
+};
+
 type WorkflowEventBase = {
   readonly schema_version: "1.0";
   readonly artifact_type: "workflow_event";
@@ -81,13 +106,29 @@ export type WorkflowEvent = WorkflowEventBase &
   (
     | {
         readonly event_type: "run_started";
-        readonly mode?: "spec-code";
-        readonly observation_start?: WorkflowObservationStart;
-        readonly current_stage_id?: SpecCodeWorkflowStageId;
+        readonly mode?: undefined;
+        readonly observation_start?: undefined;
+        readonly current_stage_id?: undefined;
+        readonly base_ref?: undefined;
+        readonly code_targets?: undefined;
+      }
+    | {
+        readonly event_type: "run_started";
+        readonly mode: "spec-code";
+        readonly observation_start: WorkflowObservationStart;
+        readonly current_stage_id: SpecCodeWorkflowStageId;
+      }
+    | {
+        readonly event_type: "run_started";
+        readonly mode: "code";
+        readonly observation_start: WorkflowObservationStart;
+        readonly current_stage_id: CodeWorkflowStageId;
+        readonly base_ref: GitObjectId;
+        readonly code_targets: readonly WorkflowCodeTarget[];
       }
     | {
         readonly event_type: "stage_updated";
-        readonly stage_id: SpecCodeWorkflowStageId;
+        readonly stage_id: WorkflowStageId;
         readonly state: WorkflowStageState;
         readonly reason?: string;
       }
@@ -121,7 +162,7 @@ export type WorkflowStepSnapshot = {
 };
 
 export type WorkflowStageSnapshot = {
-  readonly stage_id: SpecCodeWorkflowStageId;
+  readonly stage_id: WorkflowStageId;
   readonly label: string;
   readonly state: WorkflowStageState;
   readonly reason: string | null;
@@ -134,12 +175,14 @@ export type WorkflowSnapshot = {
   readonly change_id: string;
   readonly run_id: string;
   readonly producer_id: string;
-  readonly mode: "spec-code" | null;
+  readonly mode: ObservedWorkflowMode | null;
+  readonly base_ref: GitObjectId | null;
+  readonly code_targets: readonly WorkflowCodeTarget[];
   readonly observation_start: WorkflowObservationStart | null;
   readonly last_sequence: number;
   readonly execution: WorkflowExecutionState;
   readonly current_step_id: string | null;
-  readonly current_stage_id: SpecCodeWorkflowStageId | null;
+  readonly current_stage_id: WorkflowStageId | null;
   readonly cli_status: WorkflowCliStatus | null;
   readonly merge_readiness: WorkflowReadinessState | null;
   readonly artifact_freshness: WorkflowFreshnessState | null;
@@ -238,6 +281,52 @@ function validFingerprint(value: unknown): value is Fingerprint {
   return typeof value === "string" && /^sha256:[0-9a-f]{64}$/u.test(value);
 }
 
+function validGitObjectId(value: unknown, limits: WorkflowInputLimits): value is GitObjectId {
+  return nonEmpty(value, limits);
+}
+
+function parseCodeTargets(value: unknown): readonly WorkflowCodeTarget[] {
+  if (!Array.isArray(value) || value.length === 0) {
+    throw new WorkflowObservationError(
+      "SDD_OBSERVATION_EVENT_INVALID",
+      "A code workflow requires at least one exact Requirement target.",
+    );
+  }
+  const targets = value.map((target): WorkflowCodeTarget => {
+    if (
+      !isRecord(target) ||
+      !exactKeys(target, ["requirement_id", "semantic_fingerprint", "structural_fingerprint"]) ||
+      !isRequirementId(target.requirement_id) ||
+      !validFingerprint(target.semantic_fingerprint) ||
+      !validFingerprint(target.structural_fingerprint)
+    ) {
+      throw new WorkflowObservationError(
+        "SDD_OBSERVATION_EVENT_INVALID",
+        "A code workflow Requirement target is invalid.",
+      );
+    }
+    return target as WorkflowCodeTarget;
+  });
+  if (targets.some((target, index) => index > 0 && targets[index - 1]!.requirement_id >= target.requirement_id)) {
+    throw new WorkflowObservationError(
+      "SDD_OBSERVATION_EVENT_INVALID",
+      "Code workflow Requirement targets must be unique and canonically ordered.",
+    );
+  }
+  return targets;
+}
+
+function workflowStages(mode: ObservedWorkflowMode) {
+  return mode === "spec-code" ? SPEC_CODE_WORKFLOW_STAGES : CODE_WORKFLOW_STAGES;
+}
+
+function isWorkflowStageId(value: unknown): value is WorkflowStageId {
+  return (
+    typeof value === "string" &&
+    [...SPEC_CODE_WORKFLOW_STAGES, ...CODE_WORKFLOW_STAGES].some(({ stage_id }) => stage_id === value)
+  );
+}
+
 function parseArtifact(value: unknown, limits: WorkflowInputLimits): WorkflowArtifactReference {
   if (!isRecord(value) || !exactKeys(value, ["kind", "path"], ["fingerprint", "git_object_id"])) {
     throw new WorkflowObservationError("SDD_OBSERVATION_EVENT_INVALID", "The artifact reference shape is invalid.");
@@ -279,16 +368,25 @@ function assertSpecificEvent(value: UnknownRecord, limits: WorkflowInputLimits):
   };
   switch (value.event_type) {
     case "run_started":
-      assertShape([], ["mode", "observation_start", "current_stage_id"]);
-      if (value.mode === undefined && value.observation_start === undefined && value.current_stage_id === undefined)
+      assertShape([], ["mode", "observation_start", "current_stage_id", "base_ref", "code_targets"]);
+      if (
+        value.mode === undefined &&
+        value.observation_start === undefined &&
+        value.current_stage_id === undefined &&
+        value.base_ref === undefined &&
+        value.code_targets === undefined
+      )
         return;
       if (
-        value.mode !== "spec-code" ||
+        (value.mode !== "spec-code" && value.mode !== "code") ||
         (value.observation_start !== "complete" && value.observation_start !== "partial") ||
-        !SPEC_CODE_WORKFLOW_STAGES.some(({ stage_id }) => stage_id === value.current_stage_id) ||
-        (value.observation_start === "complete" && value.current_stage_id !== "workflow-initialization")
+        !workflowStages(value.mode).some(({ stage_id }) => stage_id === value.current_stage_id) ||
+        (value.observation_start === "complete" && value.current_stage_id !== "workflow-initialization") ||
+        (value.mode === "spec-code" && (value.base_ref !== undefined || value.code_targets !== undefined)) ||
+        (value.mode === "code" && !validGitObjectId(value.base_ref, limits))
       )
         break;
+      if (value.mode === "code") parseCodeTargets(value.code_targets);
       return;
     case "run_completed":
       assertShape([]);
@@ -296,7 +394,7 @@ function assertSpecificEvent(value: UnknownRecord, limits: WorkflowInputLimits):
     case "stage_updated":
       assertShape(["stage_id", "state"], ["reason"]);
       if (
-        !SPEC_CODE_WORKFLOW_STAGES.some(({ stage_id }) => stage_id === value.stage_id) ||
+        !isWorkflowStageId(value.stage_id) ||
         !WORKFLOW_STAGE_STATES.includes(value.state as WorkflowStageState) ||
         (value.state === "waiting" ? !nonEmpty(value.reason, limits) : value.reason !== undefined)
       )
@@ -415,12 +513,14 @@ function replaceStep(
   return steps.map((step) => (step.step_id === next.step_id ? next : step));
 }
 
-function initialSpecCodeStages(
+function initialWorkflowStages(
+  mode: ObservedWorkflowMode,
   observationStart: WorkflowObservationStart,
-  currentStageId: SpecCodeWorkflowStageId,
+  currentStageId: WorkflowStageId,
 ): readonly WorkflowStageSnapshot[] {
-  const currentIndex = SPEC_CODE_WORKFLOW_STAGES.findIndex(({ stage_id }) => stage_id === currentStageId);
-  return SPEC_CODE_WORKFLOW_STAGES.map(({ stage_id, label }, index) => ({
+  const definitions: readonly { readonly stage_id: WorkflowStageId; readonly label: string }[] = workflowStages(mode);
+  const currentIndex = definitions.findIndex(({ stage_id }) => stage_id === currentStageId);
+  return definitions.map(({ stage_id, label }, index) => ({
     stage_id,
     label,
     state:
@@ -434,10 +534,15 @@ function initialSpecCodeStages(
 }
 
 function updateStage(snapshot: WorkflowSnapshot, event: Extract<WorkflowEvent, { event_type: "stage_updated" }>) {
-  if (snapshot.mode !== "spec-code")
+  if (
+    snapshot.mode === null ||
+    !(workflowStages(snapshot.mode) as readonly { readonly stage_id: WorkflowStageId }[]).some(
+      ({ stage_id }) => stage_id === event.stage_id,
+    )
+  )
     throw new WorkflowObservationError(
       "SDD_OBSERVATION_TRANSITION_INVALID",
-      "Stage events require a spec-code workflow run.",
+      "The stage event does not belong to the selected workflow mode.",
     );
   const selectedIndex = snapshot.stages.findIndex(({ stage_id }) => stage_id === event.stage_id);
   const selected = snapshot.stages[selectedIndex];
@@ -470,14 +575,16 @@ function reduceOrdered(snapshot: WorkflowSnapshot, event: WorkflowEvent): Workfl
   switch (event.event_type) {
     case "run_started":
       if (event.sequence !== 0 || snapshot.last_sequence !== -1) break;
-      return event.mode === "spec-code"
+      return event.mode === "spec-code" || event.mode === "code"
         ? {
             ...base,
             execution: "active",
             mode: event.mode,
-            observation_start: event.observation_start!,
-            current_stage_id: event.current_stage_id!,
-            stages: initialSpecCodeStages(event.observation_start!, event.current_stage_id!),
+            base_ref: event.mode === "code" ? event.base_ref : null,
+            code_targets: event.mode === "code" ? event.code_targets : [],
+            observation_start: event.observation_start,
+            current_stage_id: event.current_stage_id,
+            stages: initialWorkflowStages(event.mode, event.observation_start, event.current_stage_id),
           }
         : { ...base, execution: "active" };
     case "stage_updated":
@@ -618,6 +725,8 @@ export function replayWorkflowEvents(
     run_id: first.run_id,
     producer_id: first.producer_id,
     mode: null,
+    base_ref: null,
+    code_targets: [],
     observation_start: null,
     last_sequence: -1,
     execution: "active",

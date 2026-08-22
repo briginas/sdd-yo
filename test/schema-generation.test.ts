@@ -114,6 +114,8 @@ test("generated artifact types expose representative version 1 shapes", () => {
     run_id: "run-1",
     producer_id: "cli",
     mode: null,
+    base_ref: null,
+    code_targets: [],
     observation_start: null,
     last_sequence: 1,
     execution: "active",

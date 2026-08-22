@@ -2,83 +2,10 @@
 
 ## Status
 
-- Active: Milestone 35 — automatic `code` workflow observation; immediate leaf
-  35.1
-- Queued: Milestone 36 — automatic `spec` workflow observation
-- Complete: Milestones 0–34; public `sdd-yo@0.5.5`
+- Active: Milestone 36 — automatic `spec` workflow observation; immediate leaf
+  36.1
+- Complete: Milestones 0–35; public `sdd-yo@0.5.5`
 - Last updated: 2026-08-22
-
-## Milestone 35 — Automatic `code` workflow observation
-
-After Milestone 34 proves automatic journal creation, resume, live refresh, and
-the stable stage renderer, Milestone 35 extends them to every
-Skill-orchestrated `code` workflow. This is a separate `spec-code` delivery
-Change because it adds observable product behavior while the workflow being
-observed uses `code` mode.
-
-### Outcome and user-visible stages
-
-A person can see exactly where an implementation-only correction is without
-being shown specification-changing ceremony that `code` mode forbids:
-
-1. **Workflow initialization and targets** — create the journal automatically,
-   validate the project, and bind the run to exact active Requirement targets
-   and the selected base.
-2. **Code proposal** — derive the unchanged specification subject and retain
-   the package-only ProposalPackage; no semantic-model, authored-candidate, or
-   SpecPatch stage exists.
-3. **Proposal decision** — present the exact subject, wait for explicit human
-   approval or rejection, and record only that decision.
-4. **Implementation** — plan and perform the correction against the unchanged
-   active Requirements.
-5. **Verification and review** — discover Requirement-named tests, collect
-   current execution and QA evidence, validate findings and resolutions,
-   perform required human reviews, and compute merge readiness.
-6. **Local integration** — show authority wait, optional normalization,
-   invalidated-evidence refresh, exact fast-forward integration, or not
-   requested without implying any remote operation.
-7. **Terminal outcome** — report completion, interruption, failure, or
-   rejection while keeping approval, readiness, freshness, and integration
-   independent.
-
-### Dependencies, boundaries, and verification
-
-- Depends on the completed Milestone 34 journal, producer, stage, resume,
-  retention, live-rendering, packaging, and failure-isolation contracts.
-- Reuses common event types where their meaning is identical and adds only
-  `code`-specific stage transitions; it does not emulate candidate authoring,
-  branch preparation, or patch application.
-- Keeps `spec` and non-Change routes uninstrumented until a later Change and
-  does not add hosted storage, remote control, Git authority, or release state.
-- Verification must prove automatic one-run/one-journal creation, exact target
-  binding, package-only progress, truthful absence of specification stages,
-  waits and retries, implementation and evidence invalidation, merge-readiness
-  independence, optional integration, end-to-end live refresh, Skill evals,
-  package behavior, and the full repository validation suite.
-
-### Planned leaves
-
-- [ ] **35.1 — Confirm the observed `code` semantic contract.** Present one
-      complete ID-free model for automatic `code` observation, exact target
-      binding, the mode-specific stable stage projection, pause and resume,
-      failure isolation, and truthful absence of specification-changing
-      ceremony. Stop for explicit confirmation before generating identities or
-      drafting a specification candidate.
-- [ ] **35.2 — Author and apply the governed specification proposal.** Generate
-      identities only for the unchanged confirmed model, materialize and
-      review one immutable proposal bundle, record the separate human decision,
-      prepare the exact patch, and apply it only after explicit selection.
-- [ ] **35.3 — Implement and verify automatic `code` observation.** Extend the
-      shared journal, stable stage projection, Skill production, live observer,
-      evals, package proof, user documentation, and closeout without adding
-      candidate authoring or SpecPatch ceremony to observed `code` workflows.
-
-### Immediate leaf
-
-Milestone 35.1 is next. It confirms only the complete mode-specific semantic
-contract. It does not generate object IDs, draft or apply a specification
-candidate, change implementation, create Git history, integrate, push,
-publish, or release.
 
 ## Milestone 36 — Automatic `spec` workflow observation
 
@@ -129,6 +56,30 @@ into the specification without a fictitious implementation phase:
   explicit human waits, applicable QA and review progress, merge-readiness
   independence, optional local integration, end-to-end live refresh, Skill
   evals, package behavior, and the full repository validation suite.
+
+### Planned leaves
+
+- [ ] **36.1 — Confirm the observed `spec` semantic contract.** Present one
+      complete ID-free model for automatic `spec` observation, accepted
+      behavior binding, the mode-specific stable stage projection, pause and
+      resume, failure isolation, and truthful implementation-not-applicable
+      state. Stop for explicit confirmation before generating identities or
+      drafting a specification candidate.
+- [ ] **36.2 — Author and apply the governed specification proposal.** Generate
+      identities only for the unchanged confirmed model, materialize and
+      review one immutable proposal bundle, record the separate human decision,
+      prepare the exact patch, and apply it only after explicit selection.
+- [ ] **36.3 — Implement and verify automatic `spec` observation.** Extend the
+      shared journal, stable stage projection, Skill production, live observer,
+      evals, package proof, user documentation, and closeout without inventing
+      an implementation phase for an observed `spec` workflow.
+
+### Immediate leaf
+
+Milestone 36.1 is next. It confirms only the complete mode-specific semantic
+contract. It does not generate object IDs, draft or apply a specification
+candidate, change implementation, create Git history, integrate, push,
+publish, or release.
 
 ## Authority and navigation
 
@@ -187,19 +138,22 @@ noncanonical project-local planning document is explicitly requested.
 Workflow progress observation is implemented as versioned allowlisted events,
 a pure deterministic reducer, sequence-and-fingerprint-checked atomic journal
 publication, and a temporary read-only loopback renderer. Every newly selected
-Skill-orchestrated `spec-code` workflow automatically initializes or resumes
-one explicit project-local run and publishes only typed boundaries; `spec` and
-`code` remain uninstrumented pending Milestones 35 and 36. The stable nine-stage
-projection, partial starts, exact duplicate retries, stale-writer rejection,
-and separate observer conditions do not infer workflow authority. One running
-observer follows valid later publications over protected SSE and preserves its
-last valid snapshot across malformed updates or reconnects. Execution, CLI
-outcome, approval, merge readiness, artifact freshness, and integration remain
-independent axes. Journals and snapshots are removable observation data rather
-than hidden workflow state or authoritative evidence, and the observer cannot
-record a decision, run a gate, mutate Git, publish, or release. Additional
-terminal, IDE, CI, or hosted adapters remain deferred renderers over the same
-observation contract.
+Skill-orchestrated `spec-code` or `code` workflow automatically initializes or
+resumes one explicit project-local run and publishes only typed boundaries. A
+`code` run is bound to its resolved base and complete canonical active
+Requirement target set, uses a stable seven-stage package-only projection, and
+never invents candidate authoring or SpecPatch ceremony; `spec` remains
+uninstrumented pending Milestone 36. Stable stage projections, partial starts,
+exact duplicate retries, stale-writer rejection, and separate observer
+conditions do not infer workflow authority. One running observer follows valid
+later publications over protected SSE and preserves its last valid snapshot
+across malformed updates or reconnects. Execution, CLI outcome, approval,
+merge readiness, artifact freshness, and integration remain independent axes.
+Journals and snapshots are removable observation data rather than hidden
+workflow state or authoritative evidence, and the observer cannot record a
+decision, run a gate, mutate Git, publish, or release. Additional terminal,
+IDE, CI, or hosted adapters remain deferred renderers over the same observation
+contract.
 
 Exact `sdd-yo@0.5.5` is public on npm from annotated tag `v0.5.5` at commit
 `41780f7ff578c01548ad785db2ce336d816097cd`. The registry tarball matches the

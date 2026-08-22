@@ -451,7 +451,8 @@
         "REQ-291769E4",
         "REQ-B2001FED",
         "REQ-B5D3BE6B",
-        "REQ-6A40513D"
+        "REQ-6A40513D",
+        "REQ-7B9B6531"
       ],
       "required_fields": [
         "schema_version",
@@ -487,7 +488,8 @@
         "REQ-1FD47FF6",
         "REQ-291769E4",
         "REQ-B5D3BE6B",
-        "REQ-6A40513D"
+        "REQ-6A40513D",
+        "REQ-7B9B6531"
       ],
       "required_fields": [
         "schema_version",
@@ -497,6 +499,8 @@
         "run_id",
         "producer_id",
         "mode",
+        "base_ref",
+        "code_targets",
         "observation_start",
         "last_sequence",
         "execution",

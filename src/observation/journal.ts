@@ -1,6 +1,12 @@
 import { createHash } from "node:crypto";
 
-import { isProjectPath, type Fingerprint, type ProjectId, type ProjectPath } from "../contracts/identifiers.ts";
+import {
+  isProjectPath,
+  type Fingerprint,
+  type GitObjectId,
+  type ProjectId,
+  type ProjectPath,
+} from "../contracts/identifiers.ts";
 import type { WorkflowJournalStore } from "../platform/workflow-journal-store.ts";
 export type { WorkflowJournalStore } from "../platform/workflow-journal-store.ts";
 import {
@@ -8,7 +14,10 @@ import {
   fingerprintWorkflowEvent,
   parseWorkflowEvent,
   replayWorkflowEvents,
+  type CodeWorkflowStageId,
+  type ObservedWorkflowMode,
   type SpecCodeWorkflowStageId,
+  type WorkflowCodeTarget,
   type WorkflowEvent,
   type WorkflowInputLimits,
   type WorkflowObservationStart,
@@ -17,13 +26,22 @@ import {
 
 export const DEFAULT_WORKFLOW_JOURNAL_MAX_BYTES = 16 * 1024 * 1024;
 
-export type WorkflowJournalSubject = {
+type WorkflowJournalSubjectBase = {
   readonly project_id: ProjectId;
-  readonly mode: "spec-code";
   readonly run_id: string;
   readonly producer_id: string;
   readonly change_id: string;
 };
+
+export type WorkflowJournalSubject = WorkflowJournalSubjectBase &
+  (
+    | { readonly mode: "spec-code" }
+    | {
+        readonly mode: "code";
+        readonly base_ref: GitObjectId;
+        readonly code_targets: readonly WorkflowCodeTarget[];
+      }
+  );
 
 export type WorkflowJournalResult = WorkflowJournalSubject & {
   readonly journal_path: ProjectPath;
@@ -81,13 +99,13 @@ function assertBoundedIdentity(value: string, label: string): void {
     throw new WorkflowJournalError("SDD_OBSERVATION_SUBJECT_MISMATCH", `${label} is invalid.`);
 }
 
-export function workflowJournalPath(runId: string): ProjectPath {
+export function workflowJournalPath(mode: ObservedWorkflowMode, runId: string): ProjectPath {
   if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/u.test(runId) || runId === "." || runId === "..")
     throw new WorkflowJournalError(
       "SDD_OBSERVATION_JOURNAL_PATH_UNSAFE",
       "The run identity cannot form a safe generated journal path.",
     );
-  const path = `.sdd/staging/workflow-observation/spec-code/${runId}.jsonl`;
+  const path = `.sdd/staging/workflow-observation/${mode}/${runId}.jsonl`;
   if (!isProjectPath(path))
     throw new WorkflowJournalError(
       "SDD_OBSERVATION_JOURNAL_PATH_UNSAFE",
@@ -134,10 +152,10 @@ function result(
   snapshot: WorkflowSnapshot,
 ): ReadWorkflowJournalResult {
   const first = events[0]!;
-  return {
+  if (snapshot.mode === null) throw new Error("A resumable workflow journal must name its mode.");
+  const common = {
     journal_path: journalPath,
     project_id: first.project_id,
-    mode: "spec-code",
     run_id: first.run_id,
     producer_id: first.producer_id,
     change_id: first.change_id,
@@ -147,6 +165,14 @@ function result(
     events,
     bytes,
   };
+  return snapshot.mode === "code"
+    ? {
+        ...common,
+        mode: "code",
+        base_ref: snapshot.base_ref!,
+        code_targets: snapshot.code_targets,
+      }
+    : { ...common, mode: "spec-code" };
 }
 
 export async function readWorkflowJournal(input: {
@@ -170,21 +196,40 @@ export async function readWorkflowJournal(input: {
       error instanceof Error ? error.message : "The workflow journal is invalid.",
     );
   }
-  if (snapshot.mode !== "spec-code")
+  if (snapshot.mode !== "spec-code" && snapshot.mode !== "code")
     throw new WorkflowJournalError(
       "SDD_OBSERVATION_JOURNAL_MALFORMED",
-      "The workflow journal is not a resumable spec-code run.",
+      "The workflow journal is not a resumable observed run.",
+    );
+  if (input.journal_path !== workflowJournalPath(snapshot.mode, snapshot.run_id))
+    throw new WorkflowJournalError(
+      "SDD_OBSERVATION_JOURNAL_PATH_UNSAFE",
+      "The workflow journal path does not match its retained mode and run identity.",
     );
   return result(input.journal_path, events, bytes, snapshot);
 }
 
 function assertSubject(actual: WorkflowJournalSubject, expected: WorkflowJournalSubject): void {
+  const codeTargetsMatch =
+    actual.mode !== "code" ||
+    expected.mode !== "code" ||
+    (actual.code_targets.length === expected.code_targets.length &&
+      actual.code_targets.every((target, index) => {
+        const retained = expected.code_targets[index];
+        return (
+          retained !== undefined &&
+          target.requirement_id === retained.requirement_id &&
+          target.semantic_fingerprint === retained.semantic_fingerprint &&
+          target.structural_fingerprint === retained.structural_fingerprint
+        );
+      }));
   if (
     actual.project_id !== expected.project_id ||
     actual.mode !== expected.mode ||
     actual.run_id !== expected.run_id ||
     actual.producer_id !== expected.producer_id ||
-    actual.change_id !== expected.change_id
+    actual.change_id !== expected.change_id ||
+    (actual.mode === "code" && expected.mode === "code" && (actual.base_ref !== expected.base_ref || !codeTargetsMatch))
   )
     throw new WorkflowJournalError(
       "SDD_OBSERVATION_SUBJECT_MISMATCH",
@@ -192,38 +237,47 @@ function assertSubject(actual: WorkflowJournalSubject, expected: WorkflowJournal
     );
 }
 
-export async function initializeWorkflowJournal(input: {
+type InitializeWorkflowJournalInput = {
   readonly store: WorkflowJournalStore;
   readonly project_id: ProjectId;
   readonly run_id: string;
   readonly producer_id: string;
   readonly change_id?: string;
   readonly observation_start?: WorkflowObservationStart;
-  readonly current_stage_id?: SpecCodeWorkflowStageId;
-}): Promise<WorkflowJournalResult> {
+} & (
+  | { readonly mode?: "spec-code"; readonly current_stage_id?: SpecCodeWorkflowStageId }
+  | {
+      readonly mode: "code";
+      readonly base_ref: GitObjectId;
+      readonly code_targets: readonly WorkflowCodeTarget[];
+      readonly current_stage_id?: CodeWorkflowStageId;
+    }
+);
+
+export async function initializeWorkflowJournal(input: InitializeWorkflowJournalInput): Promise<WorkflowJournalResult> {
   assertBoundedIdentity(input.run_id, "Run identity");
   assertBoundedIdentity(input.producer_id, "Producer identity");
   const changeId = input.change_id ?? `pre-change:${input.run_id}`;
   assertBoundedIdentity(changeId, "Change identity");
   const observationStart = input.observation_start ?? "complete";
+  const mode = input.mode ?? "spec-code";
   const currentStageId = input.current_stage_id ?? "workflow-initialization";
-  const journalPath = workflowJournalPath(input.run_id);
-  const started = parseWorkflowEvent(
-    {
-      schema_version: "1.0",
-      artifact_type: "workflow_event",
-      project_id: input.project_id,
-      change_id: changeId,
-      run_id: input.run_id,
-      producer_id: input.producer_id,
-      sequence: 0,
-      event_type: "run_started",
-      mode: "spec-code",
-      observation_start: observationStart,
-      current_stage_id: currentStageId,
-    },
-    input.project_id,
-  );
+  const journalPath = workflowJournalPath(mode, input.run_id);
+  const startedInput = {
+    schema_version: "1.0",
+    artifact_type: "workflow_event",
+    project_id: input.project_id,
+    change_id: changeId,
+    run_id: input.run_id,
+    producer_id: input.producer_id,
+    sequence: 0,
+    event_type: "run_started",
+    mode,
+    observation_start: observationStart,
+    current_stage_id: currentStageId,
+    ...(input.mode === "code" ? { base_ref: input.base_ref, code_targets: input.code_targets } : {}),
+  } as const;
+  const started = parseWorkflowEvent(startedInput, input.project_id);
   const bytes = serialize([started]);
   await input.store.create(journalPath, bytes);
   const snapshot = replayWorkflowEvents([started], input.project_id);

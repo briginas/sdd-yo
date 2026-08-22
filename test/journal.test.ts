@@ -4,13 +4,20 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
-import { isProjectId, type Fingerprint, type ProjectPath } from "../src/contracts/identifiers.ts";
+import {
+  isGitObjectId,
+  isProjectId,
+  isRequirementId,
+  type Fingerprint,
+  type ProjectPath,
+} from "../src/contracts/identifiers.ts";
 import {
   initializeWorkflowJournal,
   publishWorkflowJournalEvent,
   readWorkflowJournal,
   resumeWorkflowJournal,
   WorkflowJournalError,
+  WorkflowObservationError,
 } from "../src/observation/index.ts";
 import {
   createNodeWorkflowJournalStore,
@@ -144,6 +151,86 @@ test("REQ-B5D3BE6B REQ-6A40513D represents a partial start without fabricating e
   );
   assert.equal(created.snapshot.stages[5]?.state, "active");
   assert.match(created.snapshot.stages[0]?.reason ?? "", /Not observed/u);
+});
+
+test("REQ-B5D3BE6B REQ-7B9B6531 initializes and resumes one exact mode-scoped code journal", async () => {
+  const root = await mkdtemp(join(tmpdir(), "sdd-code-workflow-journal-"));
+  const store = await createNodeWorkflowJournalStore(root);
+  const requirementIdValue = "REQ-7B9B6531";
+  const baseRefValue = "resolved-base-object";
+  const anotherBaseRefValue = "another-base";
+  assert.ok(isRequirementId(requirementIdValue));
+  assert.ok(isGitObjectId(baseRefValue));
+  assert.ok(isGitObjectId(anotherBaseRefValue));
+  const codeTargets = [
+    {
+      requirement_id: requirementIdValue,
+      semantic_fingerprint: `sha256:${"5".repeat(64)}` as Fingerprint,
+      structural_fingerprint: `sha256:${"6".repeat(64)}` as Fingerprint,
+    },
+  ];
+  const created = await initializeWorkflowJournal({
+    store,
+    project_id: projectId,
+    mode: "code",
+    run_id: "run-35-code",
+    producer_id: "skill",
+    base_ref: baseRefValue,
+    code_targets: codeTargets,
+  });
+  assert.equal(created.journal_path, ".sdd/staging/workflow-observation/code/run-35-code.jsonl");
+  assert.equal(created.mode, "code");
+  if (created.mode !== "code") assert.fail("expected a code journal result");
+  assert.equal(created.base_ref, "resolved-base-object");
+  assert.deepEqual(created.code_targets, codeTargets);
+  assert.equal(created.snapshot.stages.length, 7);
+
+  const subject = {
+    project_id: projectId,
+    mode: "code" as const,
+    run_id: created.run_id,
+    producer_id: created.producer_id,
+    change_id: created.change_id,
+    base_ref: created.base_ref,
+    code_targets: created.code_targets,
+  };
+  const resumed = await resumeWorkflowJournal({
+    store,
+    journal_path: created.journal_path,
+    subject,
+    expected_journal_fingerprint: created.journal_fingerprint,
+  });
+  assert.equal(resumed.next_sequence, 1);
+  await assert.rejects(
+    resumeWorkflowJournal({
+      store,
+      journal_path: created.journal_path,
+      subject: { ...subject, base_ref: anotherBaseRefValue },
+    }),
+    (error: unknown) => error instanceof WorkflowJournalError && error.code === "SDD_OBSERVATION_SUBJECT_MISMATCH",
+  );
+
+  const published = await publishWorkflowJournalEvent({
+    store,
+    journal_path: created.journal_path,
+    subject,
+    expected_sequence: created.next_sequence,
+    expected_journal_fingerprint: created.journal_fingerprint,
+    payload: { event_type: "stage_updated", stage_id: "workflow-initialization", state: "completed" },
+  });
+  assert.equal(published.publication, "published");
+  await assert.rejects(
+    publishWorkflowJournalEvent({
+      store,
+      journal_path: created.journal_path,
+      subject,
+      expected_sequence: published.next_sequence,
+      expected_journal_fingerprint: published.journal_fingerprint,
+      payload: { event_type: "stage_updated", stage_id: "semantic-model", state: "active" },
+    }),
+    (error: unknown) =>
+      error instanceof WorkflowObservationError && error.code === "SDD_OBSERVATION_TRANSITION_INVALID",
+  );
 });
 
 test("REQ-B5D3BE6B rejects symbolic journal parents and preserves complete bytes on failed replacement", async () => {

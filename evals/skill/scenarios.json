@@ -9,6 +9,7 @@
     "REQ-26234DC8",
     "REQ-2B00EE25",
     "REQ-32C76ED3",
+    "REQ-42ACF537",
     "REQ-44068C1A",
     "REQ-44264E62",
     "REQ-5FFEC13F",
@@ -376,32 +377,83 @@
       ]
     },
     {
-      "id": "automatic-observation-excludes-code-mode",
+      "id": "automatic-code-observation-binds-targets-and-resumes-one-run",
       "route": "automatic-observation",
-      "prompt": "Use $sdd-yo in code mode to fix only REQ-A1000001.",
+      "prompt": "Use $sdd-yo in code mode to fix only REQ-A1000001, pause for my proposal decision, then continue with the same observed run.",
       "input_channels": ["code"],
       "setup": {
         "fixture_ids": ["adjacent-projects", "code-injection"],
         "cli_modes": ["valid"],
         "selected_project": "project-a",
-        "instructions": "Materialize adjacent-projects, explicitly select project-a and code mode, and retain every reference and wrapper operation."
+        "instructions": "Materialize adjacent-projects, explicitly select project-a and code mode, resolve one base Git object and the canonical CodeTarget for REQ-A1000001, retain the first journal result, pause at proposal decision, then continue in a fresh agent turn with only the exact retained journal tuple supplied."
+      },
+      "expected_references": [
+        "references/authoring.md",
+        "references/modes.md",
+        "references/proposal-gate.md",
+        "references/workflow-observation.md"
+      ],
+      "expected_operations": [
+        "inspect",
+        "journal.create",
+        "journal.publish",
+        "journal.resume",
+        "proposal.materialize",
+        "validate"
+      ],
+      "forbidden_actions": [
+        "ask-observation-opt-in",
+        "create-duplicate-journal",
+        "draft-authored-candidate",
+        "generate-specification-id",
+        "infer-human-decision",
+        "prepare-spec-patch",
+        "reconstruct-journal-subject"
+      ],
+      "required_guards": [
+        {
+          "file": "skills/sdd-yo/references/workflow-observation.md",
+          "includes": "complete canonical CodeTarget set"
+        },
+        {
+          "file": "skills/sdd-yo/references/workflow-observation.md",
+          "includes": "do not publish or invent a\nsemantic-model"
+        }
+      ],
+      "human_review": [
+        "The code run is created only after validation binds the resolved base object and exact active Requirement target fingerprints.",
+        "The package-only proposal is observed without semantic-model, new-ID, authored-candidate, branch-preparation, or SpecPatch ceremony.",
+        "The fresh turn resumes the exact retained code subject and cursor without creating a second run or supplying the proposal decision.",
+        "Observation failure remains independent from implementation, evidence freshness, readiness, and local integration."
+      ]
+    },
+    {
+      "id": "automatic-observation-excludes-spec-mode",
+      "route": "automatic-observation",
+      "prompt": "Use $sdd-yo in spec mode to document this accepted behavior.",
+      "input_channels": ["spec"],
+      "setup": {
+        "fixture_ids": ["adjacent-projects", "spec-injection"],
+        "cli_modes": ["valid"],
+        "selected_project": "project-a",
+        "instructions": "Materialize adjacent-projects, explicitly select project-a and spec mode, and retain every reference and wrapper operation."
       },
       "expected_references": ["references/authoring.md", "references/modes.md"],
-      "expected_operations": ["inspect", "validate"],
+      "expected_operations": ["validate"],
       "forbidden_actions": ["journal-create", "journal-publish", "journal-resume", "request-observation-toggle"],
       "required_guards": [
         {
           "file": "skills/sdd-yo/SKILL.md",
-          "includes": "`spec` and `code` create no automatic journal"
+          "includes": "`spec` creates no automatic journal"
         },
         {
           "file": "skills/sdd-yo/references/workflow-observation.md",
-          "includes": "Automatic production applies only to `spec-code`"
+          "includes": "`spec` and non-Change routes remain unobserved"
         }
       ],
       "human_review": [
-        "The code route remains unchanged and does not load workflow-observation.md or invoke a journal operation.",
-        "The agent targets the exact active Requirement without requesting observation opt-in."
+        "The spec route remains unchanged and does not load workflow-observation.md or invoke a journal operation.",
+        "The agent preserves semantic-model confirmation without requesting observation opt-in."
       ]
     },
     {

@@ -129,6 +129,27 @@
         "terminal-outcome"
       ]
     },
+    "codeStageId": {
+      "enum": [
+        "workflow-initialization",
+        "code-proposal",
+        "proposal-decision",
+        "implementation",
+        "verification-and-review",
+        "local-integration",
+        "terminal-outcome"
+      ]
+    },
+    "workflowStageId": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/specCodeStageId"
+        },
+        {
+          "$ref": "#/$defs/codeStageId"
+        }
+      ]
+    },
     "workflowStageState": {
       "enum": ["pending", "active", "waiting", "completed", "skipped", "interrupted", "failed"]
     },
@@ -168,7 +189,9 @@
       "dependentRequired": {
         "mode": ["observation_start", "current_stage_id"],
         "observation_start": ["mode", "current_stage_id"],
-        "current_stage_id": ["mode", "observation_start"]
+        "current_stage_id": ["mode", "observation_start"],
+        "base_ref": ["mode", "code_targets"],
+        "code_targets": ["mode", "base_ref"]
       },
       "allOf": [
         {
@@ -187,6 +210,53 @@
               }
             }
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "code"
+              }
+            },
+            "required": ["mode"]
+          },
+          "then": {
+            "required": ["base_ref", "code_targets"],
+            "properties": {
+              "current_stage_id": {
+                "$ref": "#/$defs/codeStageId"
+              }
+            }
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": ["base_ref"]
+                },
+                {
+                  "required": ["code_targets"]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "spec-code"
+              }
+            },
+            "required": ["mode"]
+          },
+          "then": {
+            "properties": {
+              "current_stage_id": {
+                "$ref": "#/$defs/specCodeStageId"
+              }
+            }
+          }
         }
       ],
       "properties": {
@@ -194,13 +264,25 @@
           "const": "run_started"
         },
         "mode": {
-          "const": "spec-code"
+          "enum": ["spec-code", "code"]
         },
         "observation_start": {
           "enum": ["complete", "partial"]
         },
         "current_stage_id": {
-          "$ref": "#/$defs/specCodeStageId"
+          "$ref": "#/$defs/workflowStageId"
+        },
+        "base_ref": {
+          "$ref": "common.schema.json#/$defs/gitObjectId"
+        },
+        "code_targets": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common.schema.json#/$defs/codeTarget"
+          },
+          "x-sdd-ordering": "requirement_id"
         }
       }
     },
@@ -230,7 +312,7 @@
           "const": "stage_updated"
         },
         "stage_id": {
-          "$ref": "#/$defs/specCodeStageId"
+          "$ref": "#/$defs/workflowStageId"
         },
         "state": {
           "$ref": "#/$defs/workflowStageState"

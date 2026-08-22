@@ -191,15 +191,19 @@ verification: automated
 
 ### Statement <!-- sdd:statement -->
 
-The deterministic CLI shall create and publish one contained project-local
-workflow journal for an explicit run through sequence-checked operations that
-support compatible resume without hidden workflow state.
+The deterministic CLI shall create and publish one contained mode-scoped
+project-local workflow journal for an explicit run through sequence-checked
+operations that support compatible resume without hidden workflow state.
 
 ### Acceptance criteria <!-- sdd:acceptance -->
 
 - Initialization validates the selected project, pre-Change run identity,
-  producer, workflow mode, generated ignored path, and absence of an existing
-  journal before atomically publishing sequence zero.
+  producer, supported workflow mode, mode-scoped generated ignored path, and
+  absence of an existing journal before atomically publishing sequence zero.
+- A `code` journal additionally resolves the selected base to one exact Git
+  object, binds a canonical non-empty set of exact active Requirement targets
+  with their semantic and structural fingerprints, and preserves that complete
+  subject across resume and publication.
 - Publication validates the selected project, run, producer, expected next
   sequence, current complete journal, allowlisted event payload, path
   containment, symbolic-link boundaries, size limits, and writer freshness
@@ -361,6 +365,53 @@ decision boundary without implying independent authority or unobserved work.
 - A partial run marks earlier unobserved stages explicitly and begins only from
   the supplied current checkpoint.
 
+<a id="req-7b9b6531"></a>
+
+## REQ-7B9B6531 — Project one exact observed code workflow
+
+```sdd
+kind: behavior
+verification: automated
+```
+
+### Relations <!-- sdd:relations -->
+
+- depends-on: [REQ-02F9FAB3 — Replay events deterministically](read-only-workflow-progress-observation.md#req-02f9fab3)
+- depends-on: [REQ-1FD47FF6 — Keep workflow status axes independent](read-only-workflow-progress-observation.md#req-1fd47ff6)
+- depends-on: [REQ-0837358D — Render accessible workflow progress](read-only-workflow-progress-observation.md#req-0837358d)
+- depends-on: [REQ-B5D3BE6B — Publish resumable project-local workflow journals](read-only-workflow-progress-observation.md#req-b5d3be6b)
+- depends-on: [REQ-5FFEC13F — Derive the unchanged code proposal subject](proposal-modes-and-workflow-gates.md#req-5ffec13f)
+- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+
+### Statement <!-- sdd:statement -->
+
+An observed `code` run shall preserve one exact implementation-only subject
+and project allowlisted workflow events into one stable ordered stage model
+without adding specification-changing ceremony or implying independent
+authority.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- The run is bound to mode `code`, one resolved base Git object, and a
+  canonical non-empty set of exact active Requirement targets with their
+  semantic and structural fingerprints; resume and publication reject any
+  subject drift without changing the owning workflow.
+- The ordered stages are workflow initialization and targets, code proposal,
+  proposal decision, implementation, verification and review, local
+  integration, and terminal outcome.
+- No semantic-model, authored specification-candidate, branch-preparation, or
+  exact-SpecPatch stage is present, completed, or inferred for `code`.
+- Proposal progress references the package-only unchanged ProposalPackage;
+  that retained package remains authoritative and observation never replaces
+  or reconstructs its subject.
+- Waiting distinguishes only real boundaries, including proposal decision,
+  semantic review, adapter trust review, implementation authority when
+  required by the selected workflow, and local Git authority, without
+  supplying or inferring a decision.
+- A partial run marks earlier unobserved `code` stages explicitly; terminal
+  completed, interrupted, failed, or rejected remains separate from approval,
+  merge readiness, artifact freshness, and local integration state.
+
 <a id="req-5a23a618"></a>
 
 ## REQ-5A23A618 — Follow valid journal publications live
@@ -375,6 +426,7 @@ verification: automated
 - depends-on: [REQ-B5D3BE6B — Publish resumable project-local workflow journals](read-only-workflow-progress-observation.md#req-b5d3be6b)
 - depends-on: [REQ-2F5B2571 — Serve one protected loopback view](read-only-workflow-progress-observation.md#req-2f5b2571)
 - depends-on: [REQ-6A40513D — Project one stable observed spec-code stage model](read-only-workflow-progress-observation.md#req-6a40513d)
+- depends-on: [REQ-7B9B6531 — Project one exact observed code workflow](read-only-workflow-progress-observation.md#req-7b9b6531)
 
 ### Statement <!-- sdd:statement -->
 

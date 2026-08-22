@@ -19,14 +19,98 @@
         "properties": {
           "stages": {
             "minItems": 9,
-            "maxItems": 9
+            "maxItems": 9,
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/stageSnapshot"
+                },
+                {
+                  "properties": {
+                    "stage_id": {
+                      "$ref": "workflow-event.schema.json#/$defs/specCodeStageId"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "base_ref": {
+            "type": "null"
+          },
+          "code_targets": {
+            "maxItems": 0
+          },
+          "current_stage_id": {
+            "anyOf": [
+              {
+                "$ref": "workflow-event.schema.json#/$defs/specCodeStageId"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         }
       },
       "else": {
-        "properties": {
-          "stages": {
-            "maxItems": 0
+        "if": {
+          "properties": {
+            "mode": {
+              "const": "code"
+            }
+          },
+          "required": ["mode"]
+        },
+        "then": {
+          "properties": {
+            "stages": {
+              "minItems": 7,
+              "maxItems": 7,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "#/$defs/stageSnapshot"
+                  },
+                  {
+                    "properties": {
+                      "stage_id": {
+                        "$ref": "workflow-event.schema.json#/$defs/codeStageId"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "base_ref": {
+              "$ref": "common.schema.json#/$defs/gitObjectId"
+            },
+            "code_targets": {
+              "minItems": 1
+            },
+            "current_stage_id": {
+              "anyOf": [
+                {
+                  "$ref": "workflow-event.schema.json#/$defs/codeStageId"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        "else": {
+          "properties": {
+            "stages": {
+              "maxItems": 0
+            },
+            "base_ref": {
+              "type": "null"
+            },
+            "code_targets": {
+              "maxItems": 0
+            }
           }
         }
       }
@@ -40,6 +124,8 @@
     "run_id",
     "producer_id",
     "mode",
+    "base_ref",
+    "code_targets",
     "observation_start",
     "last_sequence",
     "execution",
@@ -78,12 +164,30 @@
     "mode": {
       "anyOf": [
         {
-          "const": "spec-code"
+          "enum": ["spec-code", "code"]
         },
         {
           "type": "null"
         }
       ]
+    },
+    "base_ref": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/gitObjectId"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "code_targets": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "common.schema.json#/$defs/codeTarget"
+      },
+      "x-sdd-ordering": "requirement_id"
     },
     "observation_start": {
       "anyOf": [
@@ -115,7 +219,7 @@
     "current_stage_id": {
       "anyOf": [
         {
-          "$ref": "workflow-event.schema.json#/$defs/specCodeStageId"
+          "$ref": "workflow-event.schema.json#/$defs/workflowStageId"
         },
         {
           "type": "null"
@@ -211,7 +315,7 @@
       "required": ["stage_id", "label", "state", "reason"],
       "properties": {
         "stage_id": {
-          "$ref": "workflow-event.schema.json#/$defs/specCodeStageId"
+          "$ref": "workflow-event.schema.json#/$defs/workflowStageId"
         },
         "label": {
           "$ref": "common.schema.json#/$defs/nonEmptyString"

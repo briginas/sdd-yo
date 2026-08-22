@@ -169,7 +169,7 @@ test("REQ-61673C24 REQ-2F5B2571 sdd observe starts only from one explicit bounde
   assert.match(response.result.url, /^http:\/\/127\.0\.0\.1:/u);
 });
 
-test("REQ-B5D3BE6B journal CLI creates, resumes, and publishes one exact retained run", async () => {
+test("REQ-B5D3BE6B REQ-7B9B6531 journal CLI creates, resumes, and publishes exact mode subjects", async () => {
   const root = await mkdtemp(join(tmpdir(), "sdd-cli-journal-"));
   assert.equal((await execute(["init", "--format", "json"], root)).exitCode, 0);
   const invoke = async (argv: readonly string[]) => {
@@ -213,6 +213,8 @@ test("REQ-B5D3BE6B journal CLI creates, resumes, and publishes one exact retaine
   const subject = [
     "--journal",
     initial.journal_path,
+    "--workflow-mode",
+    "spec-code",
     "--run",
     initial.run_id,
     "--producer",
@@ -258,6 +260,101 @@ test("REQ-B5D3BE6B journal CLI creates, resumes, and publishes one exact retaine
   ]);
   assert.equal(stale.exitCode, 3);
   assert.equal((stale.value.diagnostics as readonly { code: string }[])[0]?.code, "SDD_OBSERVATION_STALE_WRITER");
+
+  await writeFile(join(root, ".gitignore"), "/.sdd/staging/\n");
+  await writeFile(
+    join(root, "spec/README.md"),
+    `---
+sdd:
+  type: index
+---
+# Product specification
+
+## Capabilities <!-- sdd:capabilities -->
+
+- [CAP-A1000001 — Code target](capabilities/code-target.md)
+
+## Domain concepts <!-- sdd:concepts -->
+`,
+  );
+  await writeFile(
+    join(root, "spec/capabilities/code-target.md"),
+    `---
+sdd:
+  type: capability
+  id: CAP-A1000001
+---
+
+# Code target
+
+## Purpose <!-- sdd:purpose -->
+
+Provide one active implementation target.
+
+<a id="req-a1000001"></a>
+
+## REQ-A1000001 — Keep implementation aligned
+
+\`\`\`sdd
+kind: behavior
+verification: automated
+\`\`\`
+
+### Statement <!-- sdd:statement -->
+
+The implementation shall remain aligned with this active Requirement.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- The Requirement can be selected as an exact code workflow target.
+`,
+  );
+  await executeFile("git", ["init"], { cwd: root });
+  await executeFile("git", ["add", ".gitignore", ".sdd/config.yaml", "spec"], { cwd: root });
+  await executeFile("git", ["-c", "user.name=SDD Yo", "-c", "user.email=sdd@example.invalid", "commit", "-m", "base"], {
+    cwd: root,
+  });
+  const { stdout: baseOutput } = await executeFile("git", ["rev-parse", "HEAD"], { cwd: root });
+  const baseRef = baseOutput.trim();
+  const codeCreated = await invoke([
+    "journal",
+    "create",
+    "--workflow-mode",
+    "code",
+    "--producer",
+    "cli-test",
+    "--base",
+    baseRef,
+    "--code-target",
+    "REQ-A1000001",
+  ]);
+  assert.equal(codeCreated.exitCode, 0, JSON.stringify(codeCreated.value));
+  const codeInitial = codeCreated.value.result as {
+    mode: string;
+    base_ref: string;
+    code_targets: readonly { requirement_id: string }[];
+    journal_path: string;
+    snapshot: { stages: readonly { stage_id: string }[] };
+  };
+  assert.equal(codeInitial.mode, "code");
+  assert.equal(codeInitial.base_ref, baseRef);
+  assert.deepEqual(
+    codeInitial.code_targets.map((target) => target.requirement_id),
+    ["REQ-A1000001"],
+  );
+  assert.match(codeInitial.journal_path, /^\.sdd\/staging\/workflow-observation\/code\//u);
+  assert.deepEqual(
+    codeInitial.snapshot.stages.map((stage) => stage.stage_id),
+    [
+      "workflow-initialization",
+      "code-proposal",
+      "proposal-decision",
+      "implementation",
+      "verification-and-review",
+      "local-integration",
+      "terminal-outcome",
+    ],
+  );
 });
 
 test("REQ-382BBBD6 init rejects a symbolic-link path component before writing", async () => {

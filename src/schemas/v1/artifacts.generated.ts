@@ -63,18 +63,34 @@ export type RunStarted = {
   [k: string]: unknown | undefined;
 } & {
   event_type: "run_started";
-  mode?: "spec-code";
+  mode?: "spec-code" | "code";
   observation_start?: "complete" | "partial";
   current_stage_id?:
-    | "workflow-initialization"
-    | "semantic-model"
-    | "specification-candidate"
-    | "proposal-decision"
-    | "exact-specification-patch"
-    | "implementation"
-    | "verification-and-review"
-    | "local-integration"
-    | "terminal-outcome";
+    | (
+        | "workflow-initialization"
+        | "semantic-model"
+        | "specification-candidate"
+        | "proposal-decision"
+        | "exact-specification-patch"
+        | "implementation"
+        | "verification-and-review"
+        | "local-integration"
+        | "terminal-outcome"
+      )
+    | (
+        | "workflow-initialization"
+        | "code-proposal"
+        | "proposal-decision"
+        | "implementation"
+        | "verification-and-review"
+        | "local-integration"
+        | "terminal-outcome"
+      );
+  base_ref?: string;
+  /**
+   * @minItems 1
+   */
+  code_targets?: [CodeTarget, ...CodeTarget[]];
   [k: string]: unknown | undefined;
 };
 export type StageUpdated = {
@@ -82,15 +98,26 @@ export type StageUpdated = {
 } & {
   event_type: "stage_updated";
   stage_id:
-    | "workflow-initialization"
-    | "semantic-model"
-    | "specification-candidate"
-    | "proposal-decision"
-    | "exact-specification-patch"
-    | "implementation"
-    | "verification-and-review"
-    | "local-integration"
-    | "terminal-outcome";
+    | (
+        | "workflow-initialization"
+        | "semantic-model"
+        | "specification-candidate"
+        | "proposal-decision"
+        | "exact-specification-patch"
+        | "implementation"
+        | "verification-and-review"
+        | "local-integration"
+        | "terminal-outcome"
+      )
+    | (
+        | "workflow-initialization"
+        | "code-proposal"
+        | "proposal-decision"
+        | "implementation"
+        | "verification-and-review"
+        | "local-integration"
+        | "terminal-outcome"
+      );
   state: "pending" | "active" | "waiting" | "completed" | "skipped" | "interrupted" | "failed";
   reason?: string;
   [k: string]: unknown | undefined;
@@ -107,22 +134,35 @@ export type SDDYoWorkflowSnapshot = {
   change_id: string;
   run_id: string;
   producer_id: string;
-  mode: "spec-code" | null;
+  mode: ("spec-code" | "code") | null;
+  base_ref: string | null;
+  code_targets: CodeTarget[];
   observation_start: ("complete" | "partial") | null;
   last_sequence: number;
   execution: "active" | "waiting" | "interrupted" | "failed" | "completed";
   current_step_id: string | null;
   current_stage_id:
     | (
-        | "workflow-initialization"
-        | "semantic-model"
-        | "specification-candidate"
-        | "proposal-decision"
-        | "exact-specification-patch"
-        | "implementation"
-        | "verification-and-review"
-        | "local-integration"
-        | "terminal-outcome"
+        | (
+            | "workflow-initialization"
+            | "semantic-model"
+            | "specification-candidate"
+            | "proposal-decision"
+            | "exact-specification-patch"
+            | "implementation"
+            | "verification-and-review"
+            | "local-integration"
+            | "terminal-outcome"
+          )
+        | (
+            | "workflow-initialization"
+            | "code-proposal"
+            | "proposal-decision"
+            | "implementation"
+            | "verification-and-review"
+            | "local-integration"
+            | "terminal-outcome"
+          )
       )
     | null;
   cli_status: ("ok" | "blocked" | "review_required" | "error") | null;
@@ -640,15 +680,26 @@ export interface StepSnapshot {
 }
 export interface StageSnapshot {
   stage_id:
-    | "workflow-initialization"
-    | "semantic-model"
-    | "specification-candidate"
-    | "proposal-decision"
-    | "exact-specification-patch"
-    | "implementation"
-    | "verification-and-review"
-    | "local-integration"
-    | "terminal-outcome";
+    | (
+        | "workflow-initialization"
+        | "semantic-model"
+        | "specification-candidate"
+        | "proposal-decision"
+        | "exact-specification-patch"
+        | "implementation"
+        | "verification-and-review"
+        | "local-integration"
+        | "terminal-outcome"
+      )
+    | (
+        | "workflow-initialization"
+        | "code-proposal"
+        | "proposal-decision"
+        | "implementation"
+        | "verification-and-review"
+        | "local-integration"
+        | "terminal-outcome"
+      );
   label: string;
   state: "pending" | "active" | "waiting" | "completed" | "skipped" | "interrupted" | "failed";
   reason: string | null;
