@@ -99,7 +99,7 @@ semantic-review evidence. Stop after local closeout. Never push, modify a
 remote ref, merge a pull request, change branch protection, tag, release, or
 publish in this route.
 
-For an observed `spec-code` or `code` route, local integration is not requested
+For an observed `spec-code`, `spec`, or `code` route, local integration is not requested
 unless this route was selected. Publish a Git-authority wait before mutation
 and mark integration complete only after the final checked local refs and clean
 worktree; never infer it from `PASS` or feature-branch completion.

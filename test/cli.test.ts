@@ -169,7 +169,7 @@ test("REQ-61673C24 REQ-2F5B2571 sdd observe starts only from one explicit bounde
   assert.match(response.result.url, /^http:\/\/127\.0\.0\.1:/u);
 });
 
-test("REQ-B5D3BE6B REQ-7B9B6531 journal CLI creates, resumes, and publishes exact mode subjects", async () => {
+test("REQ-B5D3BE6B REQ-7B9B6531 REQ-09B6EA82 journal CLI creates, resumes, and publishes exact mode subjects", async () => {
   const root = await mkdtemp(join(tmpdir(), "sdd-cli-journal-"));
   assert.equal((await execute(["init", "--format", "json"], root)).exitCode, 0);
   const invoke = async (argv: readonly string[]) => {
@@ -260,6 +260,76 @@ test("REQ-B5D3BE6B REQ-7B9B6531 journal CLI creates, resumes, and publishes exac
   ]);
   assert.equal(stale.exitCode, 3);
   assert.equal((stale.value.diagnostics as readonly { code: string }[])[0]?.code, "SDD_OBSERVATION_STALE_WRITER");
+
+  const acceptedBehavior = "The deployed CLI already shows one bounded report.";
+  const intendedQaPlan = "QA will compare that report with the canonical example.";
+  const specCreated = await invoke([
+    "journal",
+    "create",
+    "--workflow-mode",
+    "spec",
+    "--producer",
+    "cli-test",
+    "--accepted-behavior",
+    acceptedBehavior,
+    "--qa-plan",
+    intendedQaPlan,
+  ]);
+  assert.equal(specCreated.exitCode, 0, JSON.stringify(specCreated.value));
+  const specInitial = specCreated.value.result as {
+    mode: string;
+    journal_path: string;
+    run_id: string;
+    producer_id: string;
+    change_id: string;
+    accepted_behavior: string;
+    intended_qa_plan: string;
+    journal_fingerprint: string;
+    snapshot: { implementation_state: string; stages: readonly { stage_id: string }[] };
+  };
+  assert.equal(specInitial.mode, "spec");
+  assert.equal(specInitial.accepted_behavior, acceptedBehavior);
+  assert.equal(specInitial.intended_qa_plan, intendedQaPlan);
+  assert.equal(specInitial.snapshot.implementation_state, "not_applicable");
+  assert.match(specInitial.journal_path, /^\.sdd\/staging\/workflow-observation\/spec\//u);
+  assert.equal(specInitial.snapshot.stages.length, 8);
+  assert.ok(specInitial.snapshot.stages.every(({ stage_id }) => stage_id !== "implementation"));
+
+  const specResume = await invoke([
+    "journal",
+    "resume",
+    "--journal",
+    specInitial.journal_path,
+    "--workflow-mode",
+    "spec",
+    "--run",
+    specInitial.run_id,
+    "--producer",
+    specInitial.producer_id,
+    "--change-id",
+    specInitial.change_id,
+    "--accepted-behavior",
+    acceptedBehavior,
+    "--qa-plan",
+    intendedQaPlan,
+    "--expected-fingerprint",
+    specInitial.journal_fingerprint,
+  ]);
+  assert.equal(specResume.exitCode, 0, JSON.stringify(specResume.value));
+
+  const missingBinding = await invoke([
+    "journal",
+    "create",
+    "--workflow-mode",
+    "spec",
+    "--producer",
+    "another-producer",
+  ]);
+  assert.equal(missingBinding.exitCode, 3);
+  assert.equal(
+    (missingBinding.value.diagnostics as readonly { code: string }[])[0]?.code,
+    "SDD_OBSERVATION_JOURNAL_INPUTS_REQUIRED",
+  );
 
   await writeFile(join(root, ".gitignore"), "/.sdd/staging/\n");
   await writeFile(

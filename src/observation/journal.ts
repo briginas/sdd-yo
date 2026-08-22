@@ -17,6 +17,7 @@ import {
   type CodeWorkflowStageId,
   type ObservedWorkflowMode,
   type SpecCodeWorkflowStageId,
+  type SpecWorkflowStageId,
   type WorkflowCodeTarget,
   type WorkflowEvent,
   type WorkflowInputLimits,
@@ -36,6 +37,11 @@ type WorkflowJournalSubjectBase = {
 export type WorkflowJournalSubject = WorkflowJournalSubjectBase &
   (
     | { readonly mode: "spec-code" }
+    | {
+        readonly mode: "spec";
+        readonly accepted_behavior: string;
+        readonly intended_qa_plan: string;
+      }
     | {
         readonly mode: "code";
         readonly base_ref: GitObjectId;
@@ -172,7 +178,14 @@ function result(
         base_ref: snapshot.base_ref!,
         code_targets: snapshot.code_targets,
       }
-    : { ...common, mode: "spec-code" };
+    : snapshot.mode === "spec"
+      ? {
+          ...common,
+          mode: "spec",
+          accepted_behavior: snapshot.accepted_behavior!,
+          intended_qa_plan: snapshot.intended_qa_plan!,
+        }
+      : { ...common, mode: "spec-code" };
 }
 
 export async function readWorkflowJournal(input: {
@@ -196,7 +209,7 @@ export async function readWorkflowJournal(input: {
       error instanceof Error ? error.message : "The workflow journal is invalid.",
     );
   }
-  if (snapshot.mode !== "spec-code" && snapshot.mode !== "code")
+  if (snapshot.mode !== "spec-code" && snapshot.mode !== "spec" && snapshot.mode !== "code")
     throw new WorkflowJournalError(
       "SDD_OBSERVATION_JOURNAL_MALFORMED",
       "The workflow journal is not a resumable observed run.",
@@ -229,11 +242,15 @@ function assertSubject(actual: WorkflowJournalSubject, expected: WorkflowJournal
     actual.run_id !== expected.run_id ||
     actual.producer_id !== expected.producer_id ||
     actual.change_id !== expected.change_id ||
+    (actual.mode === "spec" &&
+      expected.mode === "spec" &&
+      (actual.accepted_behavior !== expected.accepted_behavior ||
+        actual.intended_qa_plan !== expected.intended_qa_plan)) ||
     (actual.mode === "code" && expected.mode === "code" && (actual.base_ref !== expected.base_ref || !codeTargetsMatch))
   )
     throw new WorkflowJournalError(
       "SDD_OBSERVATION_SUBJECT_MISMATCH",
-      "The retained workflow journal describes another project, run, producer, mode, or Change.",
+      "The retained workflow journal describes another project, run, producer, mode, Change, or mode-specific binding.",
     );
 }
 
@@ -247,6 +264,12 @@ type InitializeWorkflowJournalInput = {
 } & (
   | { readonly mode?: "spec-code"; readonly current_stage_id?: SpecCodeWorkflowStageId }
   | {
+      readonly mode: "spec";
+      readonly accepted_behavior: string;
+      readonly intended_qa_plan: string;
+      readonly current_stage_id?: SpecWorkflowStageId;
+    }
+  | {
       readonly mode: "code";
       readonly base_ref: GitObjectId;
       readonly code_targets: readonly WorkflowCodeTarget[];
@@ -257,6 +280,10 @@ type InitializeWorkflowJournalInput = {
 export async function initializeWorkflowJournal(input: InitializeWorkflowJournalInput): Promise<WorkflowJournalResult> {
   assertBoundedIdentity(input.run_id, "Run identity");
   assertBoundedIdentity(input.producer_id, "Producer identity");
+  if (input.mode === "spec") {
+    assertBoundedIdentity(input.accepted_behavior, "Accepted behavior");
+    assertBoundedIdentity(input.intended_qa_plan, "Intended QA plan");
+  }
   const changeId = input.change_id ?? `pre-change:${input.run_id}`;
   assertBoundedIdentity(changeId, "Change identity");
   const observationStart = input.observation_start ?? "complete";
@@ -276,6 +303,9 @@ export async function initializeWorkflowJournal(input: InitializeWorkflowJournal
     observation_start: observationStart,
     current_stage_id: currentStageId,
     ...(input.mode === "code" ? { base_ref: input.base_ref, code_targets: input.code_targets } : {}),
+    ...(input.mode === "spec"
+      ? { accepted_behavior: input.accepted_behavior, intended_qa_plan: input.intended_qa_plan }
+      : {}),
   } as const;
   const started = parseWorkflowEvent(startedInput, input.project_id);
   const bytes = serialize([started]);

@@ -41,6 +41,15 @@
           "code_targets": {
             "maxItems": 0
           },
+          "accepted_behavior": {
+            "type": "null"
+          },
+          "intended_qa_plan": {
+            "type": "null"
+          },
+          "implementation_state": {
+            "type": "null"
+          },
           "current_stage_id": {
             "anyOf": [
               {
@@ -88,6 +97,15 @@
             "code_targets": {
               "minItems": 1
             },
+            "accepted_behavior": {
+              "type": "null"
+            },
+            "intended_qa_plan": {
+              "type": "null"
+            },
+            "implementation_state": {
+              "type": "null"
+            },
             "current_stage_id": {
               "anyOf": [
                 {
@@ -101,15 +119,81 @@
           }
         },
         "else": {
-          "properties": {
-            "stages": {
-              "maxItems": 0
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "spec"
+              }
             },
-            "base_ref": {
-              "type": "null"
-            },
-            "code_targets": {
-              "maxItems": 0
+            "required": ["mode"]
+          },
+          "then": {
+            "properties": {
+              "stages": {
+                "minItems": 8,
+                "maxItems": 8,
+                "items": {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/stageSnapshot"
+                    },
+                    {
+                      "properties": {
+                        "stage_id": {
+                          "$ref": "workflow-event.schema.json#/$defs/specStageId"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "base_ref": {
+                "type": "null"
+              },
+              "code_targets": {
+                "maxItems": 0
+              },
+              "accepted_behavior": {
+                "$ref": "common.schema.json#/$defs/nonEmptyString"
+              },
+              "intended_qa_plan": {
+                "$ref": "common.schema.json#/$defs/nonEmptyString"
+              },
+              "implementation_state": {
+                "const": "not_applicable"
+              },
+              "current_stage_id": {
+                "anyOf": [
+                  {
+                    "$ref": "workflow-event.schema.json#/$defs/specStageId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "stages": {
+                "maxItems": 0
+              },
+              "base_ref": {
+                "type": "null"
+              },
+              "code_targets": {
+                "maxItems": 0
+              },
+              "accepted_behavior": {
+                "type": "null"
+              },
+              "intended_qa_plan": {
+                "type": "null"
+              },
+              "implementation_state": {
+                "type": "null"
+              }
             }
           }
         }
@@ -126,6 +210,9 @@
     "mode",
     "base_ref",
     "code_targets",
+    "accepted_behavior",
+    "intended_qa_plan",
+    "implementation_state",
     "observation_start",
     "last_sequence",
     "execution",
@@ -164,7 +251,7 @@
     "mode": {
       "anyOf": [
         {
-          "enum": ["spec-code", "code"]
+          "enum": ["spec-code", "spec", "code"]
         },
         {
           "type": "null"
@@ -188,6 +275,36 @@
         "$ref": "common.schema.json#/$defs/codeTarget"
       },
       "x-sdd-ordering": "requirement_id"
+    },
+    "accepted_behavior": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "intended_qa_plan": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "implementation_state": {
+      "anyOf": [
+        {
+          "const": "not_applicable"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "observation_start": {
       "anyOf": [

@@ -79,10 +79,10 @@ Findings, proof of conflict, approval, rejection, or model conclusions. A clean
 mechanical ProposalPackage does not prove implementation behavior, accepted
 existing behavior, semantic completeness, verification, or merge readiness.
 
-For an observed `spec-code` or `code` route, reference the ProposalPackage only
+For an observed `spec-code`, `spec`, or `code` route, reference the ProposalPackage only
 from this compatible response, start proposal decision, and publish its wait
 only after the exact subject and evidence target are displayed. For
-`spec-code`, this response completes specification candidate. For `code`, it
+`spec-code` or `spec`, this response completes specification candidate. For `code`, it
 completes code proposal and retains only the package-only bundle; it never
 creates or observes an authored candidate or specification patch.
 

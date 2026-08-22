@@ -140,6 +140,18 @@
         "terminal-outcome"
       ]
     },
+    "specStageId": {
+      "enum": [
+        "workflow-initialization",
+        "semantic-model",
+        "specification-candidate",
+        "proposal-decision",
+        "exact-specification-patch",
+        "verification-and-review",
+        "local-integration",
+        "terminal-outcome"
+      ]
+    },
     "workflowStageId": {
       "anyOf": [
         {
@@ -147,6 +159,9 @@
         },
         {
           "$ref": "#/$defs/codeStageId"
+        },
+        {
+          "$ref": "#/$defs/specStageId"
         }
       ]
     },
@@ -191,7 +206,9 @@
         "observation_start": ["mode", "current_stage_id"],
         "current_stage_id": ["mode", "observation_start"],
         "base_ref": ["mode", "code_targets"],
-        "code_targets": ["mode", "base_ref"]
+        "code_targets": ["mode", "base_ref"],
+        "accepted_behavior": ["mode", "intended_qa_plan"],
+        "intended_qa_plan": ["mode", "accepted_behavior"]
       },
       "allOf": [
         {
@@ -245,6 +262,36 @@
           "if": {
             "properties": {
               "mode": {
+                "const": "spec"
+              }
+            },
+            "required": ["mode"]
+          },
+          "then": {
+            "required": ["accepted_behavior", "intended_qa_plan"],
+            "properties": {
+              "current_stage_id": {
+                "$ref": "#/$defs/specStageId"
+              }
+            }
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": ["accepted_behavior"]
+                },
+                {
+                  "required": ["intended_qa_plan"]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "mode": {
                 "const": "spec-code"
               }
             },
@@ -264,7 +311,7 @@
           "const": "run_started"
         },
         "mode": {
-          "enum": ["spec-code", "code"]
+          "enum": ["spec-code", "spec", "code"]
         },
         "observation_start": {
           "enum": ["complete", "partial"]
@@ -283,6 +330,12 @@
             "$ref": "common.schema.json#/$defs/codeTarget"
           },
           "x-sdd-ordering": "requirement_id"
+        },
+        "accepted_behavior": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "intended_qa_plan": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
         }
       }
     },

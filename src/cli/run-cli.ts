@@ -120,6 +120,7 @@ import {
   replayWorkflowEvents,
   resumeWorkflowJournal,
   CODE_WORKFLOW_STAGES,
+  SPEC_WORKFLOW_STAGES,
   SPEC_CODE_WORKFLOW_STAGES,
   WORKFLOW_ARTIFACT_KINDS,
   WORKFLOW_STAGE_STATES,
@@ -132,6 +133,7 @@ import {
   type ObservedWorkflowMode,
   type CodeWorkflowStageId,
   type SpecCodeWorkflowStageId,
+  type SpecWorkflowStageId,
   type WorkflowStageId,
 } from "../observation/index.ts";
 import type { WorkflowJournalStore } from "../platform/workflow-journal-store.ts";
@@ -257,6 +259,8 @@ type Invocation = {
   readonly producerId?: string;
   readonly runId?: string;
   readonly changeId?: string;
+  readonly acceptedBehavior?: string;
+  readonly intendedQaPlan?: string;
   readonly partialFrom?: string;
   readonly expectedSequence?: number;
   readonly expectedFingerprint?: Fingerprint;
@@ -535,6 +539,8 @@ function parseInvocation(
   let producerId: string | undefined;
   let runId: string | undefined;
   let changeId: string | undefined;
+  let acceptedBehavior: string | undefined;
+  let intendedQaPlan: string | undefined;
   let partialFrom: string | undefined;
   let expectedSequence: number | undefined;
   let expectedFingerprint: Fingerprint | undefined;
@@ -623,6 +629,8 @@ function parseInvocation(
       argument === "--producer" ||
       argument === "--run" ||
       argument === "--change-id" ||
+      argument === "--accepted-behavior" ||
+      argument === "--qa-plan" ||
       argument === "--partial-from" ||
       argument === "--expected-sequence" ||
       argument === "--expected-fingerprint" ||
@@ -666,14 +674,14 @@ function parseInvocation(
       } else if (argument === "--workflow-mode") {
         if (
           (command !== "journal.create" && command !== "journal.resume" && command !== "journal.publish") ||
-          (value !== "spec-code" && value !== "code")
+          (value !== "spec-code" && value !== "spec" && value !== "code")
         )
           return {
             ok: false,
             diagnostic: cliDiagnostic(
               "SDD_CONFIG_CLI_ARGUMENT_INVALID",
               "The journal workflow mode is invalid.",
-              "Use --workflow-mode spec-code or code with a journal operation.",
+              "Use --workflow-mode spec-code, spec, or code with a journal operation.",
             ),
           };
         workflowMode = value;
@@ -690,8 +698,24 @@ function parseInvocation(
         if (argument === "--producer") producerId = value;
         else if (argument === "--run") runId = value;
         else changeId = value;
+      } else if (argument === "--accepted-behavior" || argument === "--qa-plan") {
+        if (value.length === 0 || value.includes("\0") || new TextEncoder().encode(value).byteLength > 4_096)
+          return {
+            ok: false,
+            diagnostic: cliDiagnostic(
+              "SDD_CONFIG_CLI_ARGUMENT_INVALID",
+              "A spec workflow subject description is invalid.",
+              "Supply one non-empty bounded accepted-behavior or intended-QA-plan description.",
+            ),
+          };
+        if (argument === "--accepted-behavior") acceptedBehavior = value;
+        else intendedQaPlan = value;
       } else if (argument === "--partial-from" || argument === "--stage") {
-        if (![...SPEC_CODE_WORKFLOW_STAGES, ...CODE_WORKFLOW_STAGES].some(({ stage_id }) => stage_id === value))
+        if (
+          ![...SPEC_CODE_WORKFLOW_STAGES, ...SPEC_WORKFLOW_STAGES, ...CODE_WORKFLOW_STAGES].some(
+            ({ stage_id }) => stage_id === value,
+          )
+        )
           return {
             ok: false,
             diagnostic: cliDiagnostic(
@@ -1526,7 +1550,7 @@ function parseInvocation(
       diagnostic: cliDiagnostic(
         "SDD_OBSERVATION_JOURNAL_INPUTS_REQUIRED",
         "journal create requires a supported workflow mode and producer.",
-        "Supply --workflow-mode spec-code or code and --producer.",
+        "Supply --workflow-mode spec-code, spec, or code and --producer.",
       ),
     };
   if (
@@ -1548,24 +1572,41 @@ function parseInvocation(
   if (
     journalCommand &&
     workflowMode !== undefined &&
-    ((workflowMode === "code" && (baseRef === undefined || codeTargets.length === 0)) ||
-      (workflowMode === "spec-code" && (baseRef !== undefined || codeTargets.length > 0)))
+    ((workflowMode === "code" &&
+      (baseRef === undefined ||
+        codeTargets.length === 0 ||
+        acceptedBehavior !== undefined ||
+        intendedQaPlan !== undefined)) ||
+      (workflowMode === "spec" &&
+        (acceptedBehavior === undefined ||
+          intendedQaPlan === undefined ||
+          baseRef !== undefined ||
+          codeTargets.length > 0)) ||
+      (workflowMode === "spec-code" &&
+        (baseRef !== undefined ||
+          codeTargets.length > 0 ||
+          acceptedBehavior !== undefined ||
+          intendedQaPlan !== undefined)))
   )
     return {
       ok: false,
       diagnostic: cliDiagnostic(
         "SDD_OBSERVATION_JOURNAL_INPUTS_REQUIRED",
         "The workflow journal subject does not match its selected mode.",
-        "Supply --base and at least one --code-target only for code; omit both for spec-code.",
+        "Supply accepted behavior and QA plan only for spec, or base and code targets only for code.",
       ),
     };
   if (
     partialFrom !== undefined &&
     (command !== "journal.create" ||
       workflowMode === undefined ||
-      !(workflowMode === "spec-code" ? SPEC_CODE_WORKFLOW_STAGES : CODE_WORKFLOW_STAGES).some(
-        ({ stage_id }) => stage_id === partialFrom,
-      ))
+      !(
+        workflowMode === "spec-code"
+          ? SPEC_CODE_WORKFLOW_STAGES
+          : workflowMode === "spec"
+            ? SPEC_WORKFLOW_STAGES
+            : CODE_WORKFLOW_STAGES
+      ).some(({ stage_id }) => stage_id === partialFrom))
   )
     return {
       ok: false,
@@ -1593,6 +1634,8 @@ function parseInvocation(
       producerId !== undefined ||
       runId !== undefined ||
       changeId !== undefined ||
+      acceptedBehavior !== undefined ||
+      intendedQaPlan !== undefined ||
       partialFrom !== undefined ||
       expectedSequence !== undefined ||
       expectedFingerprint !== undefined ||
@@ -1895,6 +1938,8 @@ function parseInvocation(
       humanReviewPaths,
       ...(journalPath === undefined ? {} : { journalPath }),
       ...(workflowMode === undefined ? {} : { workflowMode }),
+      ...(acceptedBehavior === undefined ? {} : { acceptedBehavior }),
+      ...(intendedQaPlan === undefined ? {} : { intendedQaPlan }),
       ...(producerId === undefined ? {} : { producerId }),
       ...(runId === undefined ? {} : { runId }),
       ...(changeId === undefined ? {} : { changeId }),
@@ -2850,25 +2895,25 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
           });
           codeBinding = { base_ref: codeSubject.base.git_ref, code_targets: codeSubject.code_targets };
         }
-        const subject =
+        const commonSubject = {
+          project_id: project.configuration.project_id,
+          run_id: invocation.runId!,
+          producer_id: invocation.producerId!,
+          change_id: invocation.changeId!,
+        };
+        const subject: WorkflowJournalSubject | undefined =
           invocation.command === "journal.create"
             ? undefined
             : invocation.workflowMode === "code"
-              ? {
-                  project_id: project.configuration.project_id,
-                  mode: "code" as const,
-                  run_id: invocation.runId!,
-                  producer_id: invocation.producerId!,
-                  change_id: invocation.changeId!,
-                  ...codeBinding!,
-                }
-              : {
-                  project_id: project.configuration.project_id,
-                  mode: "spec-code" as const,
-                  run_id: invocation.runId!,
-                  producer_id: invocation.producerId!,
-                  change_id: invocation.changeId!,
-                };
+              ? { ...commonSubject, mode: "code", ...codeBinding! }
+              : invocation.workflowMode === "spec"
+                ? {
+                    ...commonSubject,
+                    mode: "spec",
+                    accepted_behavior: invocation.acceptedBehavior!,
+                    intended_qa_plan: invocation.intendedQaPlan!,
+                  }
+                : { ...commonSubject, mode: "spec-code" };
         let result: JournalCommandResult;
         if (invocation.command === "journal.create") {
           const runId = Buffer.from(runtime.randomness.randomBytes(16)).toString("hex");
@@ -2896,16 +2941,29 @@ export async function runCli(runtime: CliRuntime): Promise<ExitCode> {
                   current_stage_id:
                     (invocation.partialFrom as CodeWorkflowStageId | undefined) ?? "workflow-initialization",
                 })
-              : await initializeWorkflowJournal({
-                  store,
-                  project_id: project.configuration.project_id,
-                  mode: "spec-code",
-                  run_id: runId,
-                  producer_id: invocation.producerId!,
-                  observation_start: invocation.partialFrom === undefined ? "complete" : "partial",
-                  current_stage_id:
-                    (invocation.partialFrom as SpecCodeWorkflowStageId | undefined) ?? "workflow-initialization",
-                });
+              : invocation.workflowMode === "spec"
+                ? await initializeWorkflowJournal({
+                    store,
+                    project_id: project.configuration.project_id,
+                    mode: "spec",
+                    accepted_behavior: invocation.acceptedBehavior!,
+                    intended_qa_plan: invocation.intendedQaPlan!,
+                    run_id: runId,
+                    producer_id: invocation.producerId!,
+                    observation_start: invocation.partialFrom === undefined ? "complete" : "partial",
+                    current_stage_id:
+                      (invocation.partialFrom as SpecWorkflowStageId | undefined) ?? "workflow-initialization",
+                  })
+                : await initializeWorkflowJournal({
+                    store,
+                    project_id: project.configuration.project_id,
+                    mode: "spec-code",
+                    run_id: runId,
+                    producer_id: invocation.producerId!,
+                    observation_start: invocation.partialFrom === undefined ? "complete" : "partial",
+                    current_stage_id:
+                      (invocation.partialFrom as SpecCodeWorkflowStageId | undefined) ?? "workflow-initialization",
+                  });
         } else if (invocation.command === "journal.resume") {
           result = await resumeWorkflowJournal({
             store,

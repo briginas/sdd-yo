@@ -351,10 +351,9 @@ observation opt-in.
 - An observation initialization or publication failure is reported separately
   and does not change an authoring, approval, patch, implementation,
   verification, Git, merge, publication, or release result or authority stop.
-- This Requirement governs `spec-code` observation only. `code` observation is
-  governed separately; `spec`, onboarding, planning, understand, diagnose,
-  release, and repository-maintenance routes remain unchanged until separately
-  governed behavior is delivered.
+- This Requirement governs `spec-code` observation only. `code` and `spec`
+  observation are governed separately; onboarding, planning, understand,
+  diagnose, release, and repository-maintenance routes remain uninstrumented.
 
 <a id="req-42acf537"></a>
 
@@ -404,7 +403,61 @@ requiring an observation opt-in.
   earlier work.
 - Observation failure is reported separately and does not change an approval,
   implementation, verification, Git, merge, publication, release result, or
-  authority stop. `spec` and non-Change routes remain uninstrumented.
+  authority stop. `spec` observation is governed separately and non-Change
+  routes remain uninstrumented.
+
+<a id="req-4760bbd5"></a>
+
+## REQ-4760BBD5 — Observe every selected spec workflow automatically
+
+```sdd
+kind: behavior
+verification: manual
+```
+
+### Relations <!-- sdd:relations -->
+
+- depends-on: [REQ-26234DC8 — Orchestrate through one progressive-disclosure skill](multi-project-cli-and-skill.md#req-26234dc8)
+- depends-on: [REQ-09B6EA82 — Project one exact observed spec workflow](read-only-workflow-progress-observation.md#req-09b6ea82)
+- depends-on: [REQ-B5D3BE6B — Publish resumable project-local workflow journals](read-only-workflow-progress-observation.md#req-b5d3be6b)
+- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+
+### Statement <!-- sdd:statement -->
+
+For every newly selected `spec` workflow, the `sdd-yo` Agent Skill shall
+automatically initialize and retain exactly one observed run and publish
+allowlisted events at its actual accepted-behavior specification boundaries
+without requiring an observation opt-in.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- After one project, accepted existing behavior, intended QA plan, and `spec`
+  outcome are selected, the Skill invokes the compatible CLI journal
+  initializer, returns its exact generated mode-scoped ignored path and run
+  identity, and creates no duplicate journal for the retained run.
+- The Skill preserves the exact journal, mode, accepted-behavior and QA-plan
+  binding, producer, Change identity, next sequence, and fingerprint across
+  human pauses, compatible retries, and agent turns and resumes only through
+  the compatible CLI operation.
+- The Skill publishes only after or while waiting at an owning typed boundary,
+  including validation, semantic-model confirmation, identity generation,
+  candidate-and-package materialization, proposal decision, exact patch
+  preparation and application, applicable QA and review, merge readiness,
+  optional local integration, interruption, failure, rejection, and terminal
+  completion.
+- The Skill never turns the described behavior or intended QA plan into
+  approval or evidence, never creates an implementation stage for `spec`, and
+  preserves implementation as explicitly not applicable.
+- Starting observation for already-running unobserved `spec` work creates one
+  explicitly partial run at the supplied checkpoint and never reconstructs or
+  backfills earlier work.
+- Observation failure is reported separately and does not change an authoring,
+  approval, patch, verification, Git, merge, publication, release result, or
+  authority stop.
+- This Requirement governs `spec` observation only. `spec-code` and `code`
+  observation remain separately governed; onboarding, initiative planning,
+  understand, diagnose, repository maintenance, release, publication, and
+  remote integration routes do not acquire automatic observation through it.
 
 <a id="req-cf21ed6e"></a>
 

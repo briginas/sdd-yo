@@ -100,6 +100,12 @@ slices, no automatic planning file, and no invented SDD artifact or authority.
 scenarios, bound to the exact reviewed packaged Skill manifest and the explicit
 verdict transcript. Its matching template remains an inert starting point.
 
+Milestone 36 extends automatic observation to `spec` Changes. Its forward eval
+binds the accepted existing behavior and intended QA plan as descriptive,
+non-evidence subject fields, resumes one exact journal across human waits, and
+requires the eight-stage projection to report implementation as not applicable
+without publishing an implementation stage.
+
 These checks do not simulate an agent or count as the manual verification
 required by `REQ-26234DC8`, `REQ-D17B2FB9`, and `REQ-1DD46CA9`. For human review,
 run each current or explicitly selected new case

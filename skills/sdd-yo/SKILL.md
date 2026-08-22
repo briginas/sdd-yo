@@ -71,10 +71,11 @@ materialize`, `semantic-review record`, `tests discover`, `findings validate`,
   confirmed exactly one mode, read
   [references/authoring.md](references/authoring.md), preserve its pre-ID
   semantic-model checkpoint for `spec` and `spec-code`, and draft only the
-  applicable unapplied candidate. For `spec-code` or `code`, also load
+  applicable unapplied candidate. For `spec-code`, `spec`, or `code`, also load
   [references/workflow-observation.md](references/workflow-observation.md) and
   initialize or resume its one automatic observed run at the mode-specific
-  boundary. `spec` creates no automatic journal.
+  boundary. A `spec` subject binds the accepted existing behavior and intended
+  QA plan as descriptive non-evidence inputs and has no implementation stage.
 - For proposal review intent, read
   [references/proposal-gate.md](references/proposal-gate.md) and use only its
   deterministic ProposalPackage route.
@@ -96,7 +97,7 @@ materialize`, `semantic-review record`, `tests discover`, `findings validate`,
   ref, clean-worktree, evidence-invalidation, race, and remote-operation stops.
 - For read-only progress viewing, accept one exact bounded project-local
   workflow journal, including the retained path returned by an automatic
-  `spec-code` or `code` run, invoke `observe` through the wrapper, display its
+  `spec-code`, `spec`, or `code` run, invoke `observe` through the wrapper, display its
   temporary loopback URL, and explain that it creates no workflow, approval,
   evidence, Git, merge, publication, or release authority.
 
@@ -135,7 +136,7 @@ route. Candidate materialization, SpecPatch preparation or application,
 implementation verification, and merge-readiness assessment are not implied by
 semantic-model confirmation or authoring approval.
 
-For an observed `spec-code` or `code` route, publish only the matching typed
+For an observed `spec-code`, `spec`, or `code` route, publish only the matching typed
 boundaries from `references/workflow-observation.md`. Observation failure is
 reported separately and never changes this section's stops or the owning
 operation's result.

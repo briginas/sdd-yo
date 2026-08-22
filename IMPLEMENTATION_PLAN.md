@@ -2,84 +2,12 @@
 
 ## Status
 
-- Active: Milestone 36 — automatic `spec` workflow observation; immediate leaf
-  36.1
-- Complete: Milestones 0–35; public `sdd-yo@0.5.5`
+- Active: no milestone selected
+- Complete: Milestones 0–36; public `sdd-yo@0.5.5`
 - Last updated: 2026-08-22
 
-## Milestone 36 — Automatic `spec` workflow observation
-
-After the common observation contract has served both a specification-changing
-implementation workflow and an implementation-only correction, Milestone 36
-extends it to every Skill-orchestrated `spec` workflow. This is also a separate
-`spec-code` delivery Change because it changes observer and Skill behavior,
-while the workflow being observed uses `spec` mode.
-
-### Outcome and user-visible stages
-
-A person can see exactly where accepted existing behavior is being brought
-into the specification without a fictitious implementation phase:
-
-1. **Workflow initialization and accepted behavior** — create the journal
-   automatically, validate the project, confirm `spec` mode, and retain the
-   described existing behavior and intended QA plan without turning either
-   into evidence.
-2. **Semantic model** — prepare the complete ID-free model, wait for explicit
-   confirmation, and retain the unchanged confirmed model.
-3. **Specification candidate** — generate confirmed identities, author the
-   complete virtual candidate, and materialize the immutable proposal bundle.
-4. **Proposal decision** — present the exact subject, wait for explicit human
-   approval or rejection, and record only that decision.
-5. **Exact specification patch** — discover and revalidate bounded refs,
-   prepare the exact patch, wait for application authority, and apply only the
-   unchanged selected patch.
-6. **Verification and review** — show implementation as not applicable,
-   evaluate the applicable test and QA scope, validate findings and required
-   human review, and compute merge readiness from exact current inputs.
-7. **Local integration** — show the optional governed local closeout or not
-   requested without implying implementation work or remote operations.
-8. **Terminal outcome** — report completion, interruption, failure, or
-   rejection while preserving every independent status axis.
-
-### Dependencies, boundaries, and verification
-
-- Depends on Milestone 34's shared journal and live observer and follows
-  Milestone 35 so mode-specific stages and explicit not-applicable states are
-  already proven reusable.
-- Reuses `spec-code` authoring, proposal, approval, and exact-patch boundaries,
-  but never infers that existing behavior is accepted and never creates an
-  implementation stage from specification progress.
-- Leaves onboarding, initiative planning, understand, diagnose, maintenance,
-  release, publication, and remote integration outside automatic observation.
-- Verification must prove automatic one-run/one-journal creation, the complete
-  semantic and patch lifecycle, truthful implementation-not-applicable state,
-  explicit human waits, applicable QA and review progress, merge-readiness
-  independence, optional local integration, end-to-end live refresh, Skill
-  evals, package behavior, and the full repository validation suite.
-
-### Planned leaves
-
-- [ ] **36.1 — Confirm the observed `spec` semantic contract.** Present one
-      complete ID-free model for automatic `spec` observation, accepted
-      behavior binding, the mode-specific stable stage projection, pause and
-      resume, failure isolation, and truthful implementation-not-applicable
-      state. Stop for explicit confirmation before generating identities or
-      drafting a specification candidate.
-- [ ] **36.2 — Author and apply the governed specification proposal.** Generate
-      identities only for the unchanged confirmed model, materialize and
-      review one immutable proposal bundle, record the separate human decision,
-      prepare the exact patch, and apply it only after explicit selection.
-- [ ] **36.3 — Implement and verify automatic `spec` observation.** Extend the
-      shared journal, stable stage projection, Skill production, live observer,
-      evals, package proof, user documentation, and closeout without inventing
-      an implementation phase for an observed `spec` workflow.
-
-### Immediate leaf
-
-Milestone 36.1 is next. It confirms only the complete mode-specific semantic
-contract. It does not generate object IDs, draft or apply a specification
-candidate, change implementation, create Git history, integrate, push,
-publish, or release.
+No follow-up milestone is selected. Future work remains candidate scope until
+it is explicitly promoted into one bounded milestone and immediate leaf.
 
 ## Authority and navigation
 
@@ -138,16 +66,19 @@ noncanonical project-local planning document is explicitly requested.
 Workflow progress observation is implemented as versioned allowlisted events,
 a pure deterministic reducer, sequence-and-fingerprint-checked atomic journal
 publication, and a temporary read-only loopback renderer. Every newly selected
-Skill-orchestrated `spec-code` or `code` workflow automatically initializes or
-resumes one explicit project-local run and publishes only typed boundaries. A
-`code` run is bound to its resolved base and complete canonical active
-Requirement target set, uses a stable seven-stage package-only projection, and
-never invents candidate authoring or SpecPatch ceremony; `spec` remains
-uninstrumented pending Milestone 36. Stable stage projections, partial starts,
-exact duplicate retries, stale-writer rejection, and separate observer
-conditions do not infer workflow authority. One running observer follows valid
-later publications over protected SSE and preserves its last valid snapshot
-across malformed updates or reconnects. Execution, CLI outcome, approval,
+Skill-orchestrated `spec-code`, `spec`, or `code` workflow automatically
+initializes or resumes one explicit project-local run and publishes only typed
+boundaries. A `code` run is bound to its resolved base and complete canonical
+active Requirement target set, uses a stable seven-stage package-only
+projection, and never invents candidate authoring or SpecPatch ceremony. A
+`spec` run binds the exact accepted existing behavior and intended QA plan as
+descriptive non-evidence context, uses a stable eight-stage projection with no
+implementation stage, and reports implementation as not applicable. Stable
+stage projections, partial starts, exact duplicate retries, stale-writer
+rejection, and separate observer conditions do not infer workflow authority.
+One running observer follows valid later publications over protected SSE and
+preserves its last valid snapshot across malformed updates or reconnects.
+Execution, CLI outcome, approval,
 merge readiness, artifact freshness, and integration remain independent axes.
 Journals and snapshots are removable observation data rather than hidden
 workflow state or authoritative evidence, and the observer cannot record a

@@ -99,7 +99,7 @@ its public consumer proof are macOS-only.
 
 The observer turns a workflow-event journal into a temporary local web page
 and follows later valid journal publications without restart. It shows the
-stable mode-specific stages for `spec-code` and implementation-only `code`
+stable mode-specific stages for `spec-code`, accepted-behavior `spec`, and implementation-only `code`
 workflows, detailed steps, and separate approval, readiness, freshness, and
 integration states without reading logs.
 
@@ -108,12 +108,13 @@ observer in the selected repository. The public `sdd-yo@0.5.5` package
 includes it.
 
 A package built from this source makes its `sdd-yo` Skill automatically create
-and publish one mode-scoped journal for each newly selected `spec-code` or
-`code` workflow. It prints the generated ignored path and run identity; pass
+and publish one mode-scoped journal for each newly selected `spec-code`, `spec`,
+or `code` workflow. It prints the generated ignored path and run identity; pass
 that exact path to `sdd observe`. A `code` journal is additionally bound to the
 resolved base object and the exact active Requirement targets with their
-semantic and structural fingerprints. `spec` and non-Change routes do not yet
-create automatic journals. This automatic production is repository-source
+semantic and structural fingerprints. A `spec` journal instead binds the exact
+accepted behavior and intended QA plan without treating either as evidence.
+Non-Change routes do not create automatic journals. This automatic production is repository-source
 behavior and has not created a new npm release.
 
 Library or CLI integrations can create the same bounded journal explicitly:
@@ -130,6 +131,16 @@ when the journal is created:
 npm exec -- sdd journal create --cwd /absolute/path/to/repository \
   --workflow-mode code --producer my-integration --base main \
   --code-target REQ-XXXXXXXX
+```
+
+For accepted existing behavior, bind the descriptive subject and intended QA
+plan when the journal is created:
+
+```text
+npm exec -- sdd journal create --cwd /absolute/path/to/repository \
+  --workflow-mode spec --producer my-integration \
+  --accepted-behavior "Existing export is accepted" \
+  --qa-plan "Verify the exported document"
 ```
 
 Retain the returned journal path, subject, next sequence, and fingerprint.
@@ -159,7 +170,8 @@ The observer is read-only. In particular, a `code` view has exactly seven
 stages: workflow initialization and targets, code proposal, proposal decision,
 implementation, verification and review, local integration, and terminal
 outcome. It has no semantic-model, authored-candidate, branch-preparation, or
-SpecPatch stage. The observer cannot approve a proposal, run a gate, change
+SpecPatch stage. A `spec` view has exactly eight stages, omits implementation,
+and reports implementation as not applicable. The observer cannot approve a proposal, run a gate, change
 Git, publish, or release. Its journal and snapshot are removable display data,
 not approval or merge evidence.
 

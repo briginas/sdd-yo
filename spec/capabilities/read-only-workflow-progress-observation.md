@@ -412,6 +412,52 @@ authority.
   completed, interrupted, failed, or rejected remains separate from approval,
   merge readiness, artifact freshness, and local integration state.
 
+<a id="req-09b6ea82"></a>
+
+## REQ-09B6EA82 — Project one exact observed spec workflow
+
+```sdd
+kind: behavior
+verification: automated
+```
+
+### Relations <!-- sdd:relations -->
+
+- depends-on: [REQ-02F9FAB3 — Replay events deterministically](read-only-workflow-progress-observation.md#req-02f9fab3)
+- depends-on: [REQ-1FD47FF6 — Keep workflow status axes independent](read-only-workflow-progress-observation.md#req-1fd47ff6)
+- depends-on: [REQ-0837358D — Render accessible workflow progress](read-only-workflow-progress-observation.md#req-0837358d)
+- depends-on: [REQ-B5D3BE6B — Publish resumable project-local workflow journals](read-only-workflow-progress-observation.md#req-b5d3be6b)
+- refers-to: [CON-3E620A28 — Change](../concepts/change.md)
+
+### Statement <!-- sdd:statement -->
+
+An observed `spec` run shall preserve its accepted-existing-behavior subject
+and project allowlisted workflow events into one stable ordered stage model
+without inventing implementation work or implying independent authority.
+
+### Acceptance criteria <!-- sdd:acceptance -->
+
+- The run is bound to mode `spec`, the described accepted existing behavior,
+  and its intended QA plan; neither description is approval, QA evidence, test
+  execution evidence, or proof that the behavior is implemented correctly.
+- The ordered stages are workflow initialization and accepted behavior,
+  semantic model, specification candidate, proposal decision, exact
+  specification patch, verification and review, local integration, and
+  terminal outcome.
+- No implementation stage is present, completed, or inferred for `spec`, and
+  implementation remains explicitly not applicable while specification,
+  applicable QA and review, and merge-readiness progress remain independent.
+- Waiting distinguishes only real boundaries, including semantic-model
+  confirmation, proposal decision, patch application, semantic review,
+  adapter trust review, and local Git authority, without supplying or
+  inferring a decision.
+- Resume preserves the exact mode-specific subject, stage projection, and next
+  sequence across human pauses, compatible retries, and agent turns; a partial
+  run marks earlier unobserved stages explicitly and never backfills them.
+- Terminal completed, interrupted, failed, or rejected remains separate from
+  approval, merge readiness, artifact freshness, local integration, push,
+  publication, and release.
+
 <a id="req-5a23a618"></a>
 
 ## REQ-5A23A618 — Follow valid journal publications live
@@ -427,6 +473,7 @@ verification: automated
 - depends-on: [REQ-2F5B2571 — Serve one protected loopback view](read-only-workflow-progress-observation.md#req-2f5b2571)
 - depends-on: [REQ-6A40513D — Project one stable observed spec-code stage model](read-only-workflow-progress-observation.md#req-6a40513d)
 - depends-on: [REQ-7B9B6531 — Project one exact observed code workflow](read-only-workflow-progress-observation.md#req-7b9b6531)
+- depends-on: [REQ-09B6EA82 — Project one exact observed spec workflow](read-only-workflow-progress-observation.md#req-09b6ea82)
 
 ### Statement <!-- sdd:statement -->
 

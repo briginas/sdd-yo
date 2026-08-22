@@ -192,7 +192,7 @@ function parsePackResult(standardOutput: string): PackResult {
   return result as PackResult;
 }
 
-test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-0163273A REQ-3F19778B REQ-CF3A1070 REQ-A0456614 REQ-DAF21960 REQ-8DC50806 REQ-AA165BDE REQ-FFE60B5A REQ-D9CF3A46 REQ-97D96950 REQ-382BBBD6 REQ-7C848ED0 REQ-778099C0 REQ-C975AE17 REQ-05CABE17 REQ-2B49D454 REQ-DEB23207 REQ-C18AEE90 REQ-50351033 REQ-7B9B6531 REQ-42ACF537 package builds, verifies public and offline quickstarts, manages repository and macOS user Skills, and completes first use offline", async () => {
+test("REQ-B0B35D6D REQ-A2199BC2 REQ-43B4311E REQ-0163273A REQ-3F19778B REQ-CF3A1070 REQ-A0456614 REQ-DAF21960 REQ-8DC50806 REQ-AA165BDE REQ-FFE60B5A REQ-D9CF3A46 REQ-97D96950 REQ-382BBBD6 REQ-7C848ED0 REQ-778099C0 REQ-C975AE17 REQ-05CABE17 REQ-2B49D454 REQ-DEB23207 REQ-C18AEE90 REQ-50351033 REQ-7B9B6531 REQ-09B6EA82 REQ-42ACF537 package builds, verifies public and offline quickstarts, manages repository and macOS user Skills, and completes first use offline", async () => {
   const temporaryRoot = await mkdtemp(join(tmpdir(), "sdd-yo-package-smoke-"));
   const buildCache = join(temporaryRoot, "build-cache");
   const installCache = join(temporaryRoot, "install-cache");
@@ -740,6 +740,62 @@ The implementation shall remain aligned with this active Requirement.
     assert.equal(journalResponse.result.next_sequence, 1);
     assert.match(journalResponse.result.journal_path, /^\.sdd\/staging\/workflow-observation\/spec-code\//u);
     assert.match(journalResponse.result.journal_fingerprint, /^sha256:[0-9a-f]{64}$/u);
+
+    const acceptedBehavior = "The installed CLI already renders one bounded report.";
+    const intendedQaPlan = "QA will compare the current report with its canonical example.";
+    const specJournalCreate = await runCommand(
+      process.execPath,
+      [
+        binTarget,
+        "journal",
+        "create",
+        "--workflow-mode",
+        "spec",
+        "--producer",
+        "package-smoke",
+        "--accepted-behavior",
+        acceptedBehavior,
+        "--qa-plan",
+        intendedQaPlan,
+        "--cwd",
+        consumerRoot,
+        "--format",
+        "json",
+      ],
+      consumerRoot,
+    );
+    assert.equal(specJournalCreate.exitCode, 0, specJournalCreate.standardError || specJournalCreate.standardOutput);
+    const specJournalResponse = JSON.parse(specJournalCreate.standardOutput) as {
+      readonly command: string;
+      readonly result: {
+        readonly mode: string;
+        readonly accepted_behavior: string;
+        readonly intended_qa_plan: string;
+        readonly journal_path: string;
+        readonly snapshot: {
+          readonly implementation_state: string;
+          readonly stages: readonly { readonly stage_id: string }[];
+        };
+      };
+    };
+    assert.equal(specJournalResponse.command, "journal.create");
+    assert.equal(specJournalResponse.result.mode, "spec");
+    assert.equal(specJournalResponse.result.accepted_behavior, acceptedBehavior);
+    assert.equal(specJournalResponse.result.intended_qa_plan, intendedQaPlan);
+    assert.equal(specJournalResponse.result.snapshot.implementation_state, "not_applicable");
+    assert.deepEqual(
+      specJournalResponse.result.snapshot.stages.map(({ stage_id }) => stage_id),
+      [
+        "workflow-initialization",
+        "semantic-model",
+        "specification-candidate",
+        "proposal-decision",
+        "exact-specification-patch",
+        "verification-and-review",
+        "local-integration",
+        "terminal-outcome",
+      ],
+    );
 
     const codeJournalCreate = await runCommand(
       process.execPath,

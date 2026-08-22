@@ -42,6 +42,17 @@ export const SPEC_CODE_WORKFLOW_STAGES = [
   { stage_id: "terminal-outcome", label: "Terminal outcome" },
 ] as const;
 export type SpecCodeWorkflowStageId = (typeof SPEC_CODE_WORKFLOW_STAGES)[number]["stage_id"];
+export const SPEC_WORKFLOW_STAGES = [
+  { stage_id: "workflow-initialization", label: "Workflow initialization and accepted behavior" },
+  { stage_id: "semantic-model", label: "Semantic model" },
+  { stage_id: "specification-candidate", label: "Specification candidate" },
+  { stage_id: "proposal-decision", label: "Proposal decision" },
+  { stage_id: "exact-specification-patch", label: "Exact specification patch" },
+  { stage_id: "verification-and-review", label: "Verification and review" },
+  { stage_id: "local-integration", label: "Local integration" },
+  { stage_id: "terminal-outcome", label: "Terminal outcome" },
+] as const;
+export type SpecWorkflowStageId = (typeof SPEC_WORKFLOW_STAGES)[number]["stage_id"];
 export const CODE_WORKFLOW_STAGES = [
   { stage_id: "workflow-initialization", label: "Workflow initialization and targets" },
   { stage_id: "code-proposal", label: "Code proposal" },
@@ -52,8 +63,8 @@ export const CODE_WORKFLOW_STAGES = [
   { stage_id: "terminal-outcome", label: "Terminal outcome" },
 ] as const;
 export type CodeWorkflowStageId = (typeof CODE_WORKFLOW_STAGES)[number]["stage_id"];
-export type WorkflowStageId = SpecCodeWorkflowStageId | CodeWorkflowStageId;
-export type ObservedWorkflowMode = "spec-code" | "code";
+export type WorkflowStageId = SpecCodeWorkflowStageId | SpecWorkflowStageId | CodeWorkflowStageId;
+export type ObservedWorkflowMode = "spec-code" | "spec" | "code";
 export const WORKFLOW_STAGE_STATES = [
   "pending",
   "active",
@@ -120,6 +131,14 @@ export type WorkflowEvent = WorkflowEventBase &
       }
     | {
         readonly event_type: "run_started";
+        readonly mode: "spec";
+        readonly observation_start: WorkflowObservationStart;
+        readonly current_stage_id: SpecWorkflowStageId;
+        readonly accepted_behavior: string;
+        readonly intended_qa_plan: string;
+      }
+    | {
+        readonly event_type: "run_started";
         readonly mode: "code";
         readonly observation_start: WorkflowObservationStart;
         readonly current_stage_id: CodeWorkflowStageId;
@@ -178,6 +197,9 @@ export type WorkflowSnapshot = {
   readonly mode: ObservedWorkflowMode | null;
   readonly base_ref: GitObjectId | null;
   readonly code_targets: readonly WorkflowCodeTarget[];
+  readonly accepted_behavior: string | null;
+  readonly intended_qa_plan: string | null;
+  readonly implementation_state: "not_applicable" | null;
   readonly observation_start: WorkflowObservationStart | null;
   readonly last_sequence: number;
   readonly execution: WorkflowExecutionState;
@@ -317,13 +339,19 @@ function parseCodeTargets(value: unknown): readonly WorkflowCodeTarget[] {
 }
 
 function workflowStages(mode: ObservedWorkflowMode) {
-  return mode === "spec-code" ? SPEC_CODE_WORKFLOW_STAGES : CODE_WORKFLOW_STAGES;
+  return mode === "spec-code"
+    ? SPEC_CODE_WORKFLOW_STAGES
+    : mode === "spec"
+      ? SPEC_WORKFLOW_STAGES
+      : CODE_WORKFLOW_STAGES;
 }
 
 function isWorkflowStageId(value: unknown): value is WorkflowStageId {
   return (
     typeof value === "string" &&
-    [...SPEC_CODE_WORKFLOW_STAGES, ...CODE_WORKFLOW_STAGES].some(({ stage_id }) => stage_id === value)
+    [...SPEC_CODE_WORKFLOW_STAGES, ...SPEC_WORKFLOW_STAGES, ...CODE_WORKFLOW_STAGES].some(
+      ({ stage_id }) => stage_id === value,
+    )
   );
 }
 
@@ -368,21 +396,37 @@ function assertSpecificEvent(value: UnknownRecord, limits: WorkflowInputLimits):
   };
   switch (value.event_type) {
     case "run_started":
-      assertShape([], ["mode", "observation_start", "current_stage_id", "base_ref", "code_targets"]);
+      assertShape(
+        [],
+        [
+          "mode",
+          "observation_start",
+          "current_stage_id",
+          "base_ref",
+          "code_targets",
+          "accepted_behavior",
+          "intended_qa_plan",
+        ],
+      );
       if (
         value.mode === undefined &&
         value.observation_start === undefined &&
         value.current_stage_id === undefined &&
         value.base_ref === undefined &&
-        value.code_targets === undefined
+        value.code_targets === undefined &&
+        value.accepted_behavior === undefined &&
+        value.intended_qa_plan === undefined
       )
         return;
       if (
-        (value.mode !== "spec-code" && value.mode !== "code") ||
+        (value.mode !== "spec-code" && value.mode !== "spec" && value.mode !== "code") ||
         (value.observation_start !== "complete" && value.observation_start !== "partial") ||
         !workflowStages(value.mode).some(({ stage_id }) => stage_id === value.current_stage_id) ||
         (value.observation_start === "complete" && value.current_stage_id !== "workflow-initialization") ||
-        (value.mode === "spec-code" && (value.base_ref !== undefined || value.code_targets !== undefined)) ||
+        (value.mode !== "code" && (value.base_ref !== undefined || value.code_targets !== undefined)) ||
+        (value.mode === "spec" &&
+          (!nonEmpty(value.accepted_behavior, limits) || !nonEmpty(value.intended_qa_plan, limits))) ||
+        (value.mode !== "spec" && (value.accepted_behavior !== undefined || value.intended_qa_plan !== undefined)) ||
         (value.mode === "code" && !validGitObjectId(value.base_ref, limits))
       )
         break;
@@ -575,13 +619,16 @@ function reduceOrdered(snapshot: WorkflowSnapshot, event: WorkflowEvent): Workfl
   switch (event.event_type) {
     case "run_started":
       if (event.sequence !== 0 || snapshot.last_sequence !== -1) break;
-      return event.mode === "spec-code" || event.mode === "code"
+      return event.mode === "spec-code" || event.mode === "spec" || event.mode === "code"
         ? {
             ...base,
             execution: "active",
             mode: event.mode,
             base_ref: event.mode === "code" ? event.base_ref : null,
             code_targets: event.mode === "code" ? event.code_targets : [],
+            accepted_behavior: event.mode === "spec" ? event.accepted_behavior : null,
+            intended_qa_plan: event.mode === "spec" ? event.intended_qa_plan : null,
+            implementation_state: event.mode === "spec" ? "not_applicable" : null,
             observation_start: event.observation_start,
             current_stage_id: event.current_stage_id,
             stages: initialWorkflowStages(event.mode, event.observation_start, event.current_stage_id),
@@ -727,6 +774,9 @@ export function replayWorkflowEvents(
     mode: null,
     base_ref: null,
     code_targets: [],
+    accepted_behavior: null,
+    intended_qa_plan: null,
+    implementation_state: null,
     observation_start: null,
     last_sequence: -1,
     execution: "active",

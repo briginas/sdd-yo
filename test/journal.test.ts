@@ -233,6 +233,64 @@ test("REQ-B5D3BE6B REQ-7B9B6531 initializes and resumes one exact mode-scoped co
   );
 });
 
+test("REQ-B5D3BE6B REQ-09B6EA82 preserves one exact spec subject across resume and publication", async () => {
+  const root = await mkdtemp(join(tmpdir(), "sdd-spec-workflow-journal-"));
+  const store = await createNodeWorkflowJournalStore(root);
+  const created = await initializeWorkflowJournal({
+    store,
+    project_id: projectId,
+    mode: "spec",
+    run_id: "run-36-spec",
+    producer_id: "skill",
+    accepted_behavior: "The CLI already renders the selected report.",
+    intended_qa_plan: "QA will compare the documented and current report shapes.",
+  });
+  assert.equal(created.mode, "spec");
+  if (created.mode !== "spec") assert.fail("expected a spec journal result");
+  assert.equal(created.journal_path, ".sdd/staging/workflow-observation/spec/run-36-spec.jsonl");
+  assert.equal(created.accepted_behavior, "The CLI already renders the selected report.");
+  assert.equal(created.intended_qa_plan, "QA will compare the documented and current report shapes.");
+  assert.equal(created.snapshot.implementation_state, "not_applicable");
+  assert.equal(created.snapshot.stages.length, 8);
+
+  const subject = {
+    project_id: projectId,
+    mode: "spec" as const,
+    run_id: created.run_id,
+    producer_id: created.producer_id,
+    change_id: created.change_id,
+    accepted_behavior: created.accepted_behavior,
+    intended_qa_plan: created.intended_qa_plan,
+  };
+  const resumed = await resumeWorkflowJournal({
+    store,
+    journal_path: created.journal_path,
+    subject,
+    expected_journal_fingerprint: created.journal_fingerprint,
+  });
+  assert.equal(resumed.next_sequence, 1);
+  await assert.rejects(
+    resumeWorkflowJournal({
+      store,
+      journal_path: created.journal_path,
+      subject: { ...subject, intended_qa_plan: "A different QA plan." },
+    }),
+    (error: unknown) => error instanceof WorkflowJournalError && error.code === "SDD_OBSERVATION_SUBJECT_MISMATCH",
+  );
+
+  const published = await publishWorkflowJournalEvent({
+    store,
+    journal_path: created.journal_path,
+    subject,
+    expected_sequence: created.next_sequence,
+    expected_journal_fingerprint: created.journal_fingerprint,
+    payload: { event_type: "stage_updated", stage_id: "workflow-initialization", state: "completed" },
+  });
+  assert.equal(published.publication, "published");
+  assert.equal(published.snapshot.accepted_behavior, subject.accepted_behavior);
+  assert.equal(published.snapshot.intended_qa_plan, subject.intended_qa_plan);
+});
+
 test("REQ-B5D3BE6B rejects symbolic journal parents and preserves complete bytes on failed replacement", async () => {
   const root = await mkdtemp(join(tmpdir(), "sdd-workflow-journal-root-"));
   const outside = await mkdtemp(join(tmpdir(), "sdd-workflow-journal-outside-"));

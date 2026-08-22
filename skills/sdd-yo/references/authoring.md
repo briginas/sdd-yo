@@ -101,9 +101,10 @@ materialize a candidate directory or manifest, run proposal validation, compute
 object deltas, perform semantic review, prepare or apply a SpecPatch, or create
 evidence. Those actions belong to later routes.
 
-For an observed `spec-code` route, publish semantic-model start and waiting
+For an observed `spec-code` or `spec` route, publish semantic-model start and waiting
 only at the actual presentation boundary, and completion only after unchanged
 explicit confirmation. Generated identities and candidate authoring remain in
 specification candidate until compatible proposal materialization retains the
 immutable bundle. A correction keeps the stage incomplete; observation never
-supplies confirmation.
+supplies confirmation. For `spec`, the retained accepted behavior and intended
+QA plan do not become evidence, and no implementation stage is created.

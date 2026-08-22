@@ -23,7 +23,7 @@ reference:
 - change mode and virtual candidate drafting:
   [modes](../../skills/sdd-yo/references/modes.md) and
   [authoring](../../skills/sdd-yo/references/authoring.md);
-- automatic observation for each selected `spec-code` or `code` route:
+- automatic observation for each selected `spec-code`, `spec`, or `code` route:
   [workflow observation](../../skills/sdd-yo/references/workflow-observation.md);
 - deterministic Proposal Gate review:
   [proposal review](../../skills/sdd-yo/references/proposal-gate.md);
@@ -52,7 +52,9 @@ Repository instructions select the active milestone and impose development
 discipline, but do not restate or override the Skill sequence.
 
 For `spec-code`, the Skill initializes or resumes one exact mode-scoped
-project-local journal before validation. For `code`, initialization additionally
+project-local journal before validation. For `spec`, it also binds the exact
+accepted existing behavior and intended QA plan as descriptive non-evidence
+subject values. For `code`, initialization additionally
 resolves the selected base and binds the exact active Requirement targets and
 their fingerprints before publishing the run. Both modes publish typed stage
 and status boundaries without removing any existing human-authority stop. The
@@ -64,8 +66,10 @@ targets, code proposal, proposal decision, implementation, verification and
 review, local integration, and terminal outcome. Its proposal is the
 package-only unchanged ProposalPackage. The Skill does not add a semantic-model
 checkpoint, identity generation, authored candidate, branch preparation, or
-SpecPatch ceremony to that route. `spec` and non-Change routes do not create an
-automatic journal.
+SpecPatch ceremony to that route. The observed `spec` projection contains eight
+stages from accepted-behavior initialization through verification and optional
+local integration, has no implementation stage, and reports implementation as
+not applicable. Non-Change routes do not create an automatic journal.
 
 The local integration route is intentionally outside the deterministic CLI.
 Before final evidence, the Skill resolves exact local feature and integration

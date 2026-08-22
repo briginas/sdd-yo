@@ -452,7 +452,8 @@
         "REQ-B2001FED",
         "REQ-B5D3BE6B",
         "REQ-6A40513D",
-        "REQ-7B9B6531"
+        "REQ-7B9B6531",
+        "REQ-09B6EA82"
       ],
       "required_fields": [
         "schema_version",
@@ -489,7 +490,8 @@
         "REQ-291769E4",
         "REQ-B5D3BE6B",
         "REQ-6A40513D",
-        "REQ-7B9B6531"
+        "REQ-7B9B6531",
+        "REQ-09B6EA82"
       ],
       "required_fields": [
         "schema_version",
@@ -501,6 +503,9 @@
         "mode",
         "base_ref",
         "code_targets",
+        "accepted_behavior",
+        "intended_qa_plan",
+        "implementation_state",
         "observation_start",
         "last_sequence",
         "execution",

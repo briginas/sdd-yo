@@ -92,7 +92,7 @@ const initiativePlanningScenarioIds = [
 const automaticObservationScenarioIds = [
   "automatic-spec-code-observation-resumes-one-run",
   "automatic-code-observation-binds-targets-and-resumes-one-run",
-  "automatic-observation-excludes-spec-mode",
+  "automatic-spec-observation-binds-accepted-behavior-and-resumes",
 ] as const;
 
 async function loadSuite(): Promise<ScenarioSuite> {
@@ -131,6 +131,7 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
   assert.equal(suite.suite_id, "sdd-yo-skill-safety-v1");
   assert.deepEqual(suite.requirements, [
     "REQ-05CABE17",
+    "REQ-09B6EA82",
     "REQ-189D2CFA",
     "REQ-1DD46CA9",
     "REQ-20D8EC8C",
@@ -140,6 +141,7 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
     "REQ-42ACF537",
     "REQ-44068C1A",
     "REQ-44264E62",
+    "REQ-4760BBD5",
     "REQ-5FFEC13F",
     "REQ-89E78697",
     "REQ-B5D3BE6B",
@@ -215,7 +217,7 @@ test("REQ-26234DC8 skill eval corpus covers every progressive-disclosure route",
   assert.ok(operations.every((operation) => !operation.includes("integrat")));
 });
 
-test("REQ-44264E62 REQ-42ACF537 REQ-B5D3BE6B automatic observation evals preserve exact Change runs and spec exclusion", async () => {
+test("REQ-44264E62 REQ-42ACF537 REQ-09B6EA82 REQ-4760BBD5 REQ-B5D3BE6B automatic observation evals preserve exact Change runs", async () => {
   const scenarios = new Map((await loadSuite()).scenarios.map((scenario) => [scenario.id, scenario]));
   assert.ok(automaticObservationScenarioIds.every((id) => scenarios.has(id)));
   const observed = scenarios.get("automatic-spec-code-observation-resumes-one-run");
@@ -234,9 +236,23 @@ test("REQ-44264E62 REQ-42ACF537 REQ-B5D3BE6B automatic observation evals preserv
   assert.ok(code?.forbidden_actions.includes("draft-authored-candidate"));
   assert.ok(code?.forbidden_actions.includes("prepare-spec-patch"));
   assert.ok(code?.forbidden_actions.includes("reconstruct-journal-subject"));
-  const excluded = scenarios.get("automatic-observation-excludes-spec-mode");
-  assert.deepEqual(excluded?.expected_references, ["references/authoring.md", "references/modes.md"]);
-  assert.ok(excluded?.forbidden_actions.includes("journal-create"));
+  const spec = scenarios.get("automatic-spec-observation-binds-accepted-behavior-and-resumes");
+  assert.deepEqual(spec?.expected_operations, [
+    "approval.record",
+    "journal.create",
+    "journal.publish",
+    "journal.resume",
+    "proposal.apply",
+    "proposal.materialize",
+    "proposal.prepare",
+    "proposal.validate",
+    "validate",
+  ]);
+  assert.ok(spec?.expected_references.includes("references/workflow-observation.md"));
+  assert.ok(spec?.forbidden_actions.includes("infer-accepted-behavior"));
+  assert.ok(spec?.forbidden_actions.includes("mark-description-as-evidence"));
+  assert.ok(spec?.forbidden_actions.includes("publish-implementation-stage"));
+  assert.ok(spec?.forbidden_actions.includes("reconstruct-journal-subject"));
 });
 
 test("REQ-CF21ED6E REQ-26234DC8 initiative evals preserve generic and bounded project routes", async () => {

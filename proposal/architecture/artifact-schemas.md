@@ -97,7 +97,9 @@ read-only renderer without turning the snapshot into approval, evidence,
 readiness, or Git authority. Journals and snapshots are mode-scoped. For
 `code`, their immutable subject also carries the resolved base object as
 `base_ref` and canonical non-empty `code_targets` with each active
-Requirement's semantic and structural fingerprints.
+Requirement's semantic and structural fingerprints. For `spec`, the immutable
+subject instead carries non-empty `accepted_behavior` and `intended_qa_plan`
+strings; both remain descriptive non-evidence values.
 
 A resumable `spec-code` snapshot also carries its observation start and the
 stable nine-stage projection: workflow initialization, semantic model,
@@ -114,6 +116,12 @@ targets), `code-proposal`, `proposal-decision`, `implementation`,
 proposal artifact is the package-only unchanged ProposalPackage. The record has
 no semantic-model, authored-candidate, branch-preparation, or exact-SpecPatch
 stage, so later events cannot make that ceremony appear completed.
+
+A resumable `spec` snapshot has exactly eight stages: workflow initialization
+and accepted behavior, semantic model, specification candidate, proposal
+decision, exact specification patch, verification and review, local
+integration, and terminal outcome. It has no implementation stage and carries
+`implementation_state: not_applicable`; the other observed modes carry `null`.
 
 Neither record is decision-bearing. Observation failure does not change the
 underlying CLI response or referenced artifact, and removing an event journal

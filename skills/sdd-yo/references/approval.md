@@ -59,12 +59,14 @@ was displayed before the pause. Any changed, missing, malformed, blocked, or
 mismatched input invalidates the response. Stop and begin a new informed
 decision request; never carry the old decision forward.
 
-For an observed `spec-code` or `code` route, only this exact recorder response
+For an observed `spec-code`, `spec`, or `code` route, only this exact recorder response
 may change the approval axis or reference ApprovalEvidence. Rejection completes
 proposal decision and supplies a rejected terminal outcome; observation never
 converts assent or a passing check into approval. An approved `code` proposal
 bypasses branch preparation and SpecPatch application and proceeds only through
-separately authorized implementation and verification.
+separately authorized implementation and verification. An approved `spec`
+proposal proceeds to its exact specification patch without creating an
+implementation stage.
 
 ## Separate preparation boundary
 

@@ -1,15 +1,23 @@
 # Automatic Change workflow observation
 
-Load this reference only after one existing SDD Project and either `spec-code`
+Load this reference only after one existing SDD Project and `spec-code`, `spec`,
 or `code` mode have been selected. Observation is an inseparable producer
 sidecar for that route, but it grants no authority and never replaces an owning
-workflow result. `spec` and non-Change routes remain unobserved.
+workflow result. Non-Change routes remain unobserved.
 
 ## Initialize or resume exactly one run
 
 For a newly selected `spec-code` workflow, before the first project validation
 invoke `journal create` through the compatibility wrapper with the selected
 project, mode `spec-code`, and producer `sdd-yo-skill`.
+
+For a newly selected `spec` workflow, first retain the exact accepted existing
+behavior and intended QA plan confirmed during mode selection. Before the first
+project validation invoke `journal create` with the selected project, mode
+`spec`, producer `sdd-yo-skill`, `--accepted-behavior <description>`, and
+`--qa-plan <description>`. Both descriptions are bounded non-empty UTF-8
+subject values. They are not approval, QA evidence, test execution evidence,
+or proof that the behavior is implemented correctly.
 
 For a newly selected `code` workflow, first validate the project and resolve
 the selected base Git object and every exact active Requirement target. Bind
@@ -22,6 +30,7 @@ unresolved ref name, or targets reconstructed from chat.
 Retain only the exact returned tuple:
 
 - project selector, journal path, run, producer, mode, and pre-Change identity;
+- for `spec`, the exact accepted behavior and intended QA plan;
 - for `code`, the resolved base object and complete canonical CodeTarget set;
 - next sequence and journal fingerprint; and
 - current deterministic snapshot and partial-start checkpoint when present.
@@ -29,11 +38,12 @@ Retain only the exact returned tuple:
 Display the journal path and run identity. Do not ask for observation opt-in or
 create another journal for the retained run. Across a human pause, retry, or
 agent turn, invoke `journal resume` with that exact tuple and current explicit
-workflow subject. For `code`, resume must supply the unchanged resolved base
-and canonical CodeTarget set; any base, target, or fingerprint drift is a
-subject mismatch, not a request to repair the retained journal. Never
-reconstruct the tuple from chat, logs, file names, prompts, reasoning, elapsed
-time, or repository searches.
+workflow subject. For `spec`, resume must supply the unchanged accepted
+behavior and intended QA plan. For `code`, resume must supply the unchanged
+resolved base and canonical CodeTarget set. Any description, base, target, or
+fingerprint drift is a subject mismatch, not a request to repair the retained
+journal. Never reconstruct the tuple from chat, logs, file names, prompts,
+reasoning, elapsed time, or repository searches.
 
 For a previously started unobserved workflow, create one new run with the exact
 current stage as its partial checkpoint. Earlier stages remain explicitly
@@ -69,14 +79,29 @@ The stable `code` stage order is:
 6. `local-integration`
 7. `terminal-outcome`
 
+The stable `spec` stage order is:
+
+1. `workflow-initialization`
+2. `semantic-model`
+3. `specification-candidate`
+4. `proposal-decision`
+5. `exact-specification-patch`
+6. `verification-and-review`
+7. `local-integration`
+8. `terminal-outcome`
+
+The `spec` snapshot has no `implementation` stage. Its
+`implementation_state` is exactly `not_applicable`; this is explicit typed
+truth, not a completed or skipped implementation phase.
+
 Publish only at actual boundaries shared by the selected mode:
 
 - validation belongs to workflow initialization; for `code`, exact resolved
   base and CodeTarget binding completes that stage;
 - exact proposal display, decision wait, and recorder response belong to
   proposal decision;
-- scoped implementation start, interruption, failure, and completion belong to
-  implementation;
+- for `spec-code` and `code`, scoped implementation start, interruption,
+  failure, and completion belong to implementation; `spec` publishes none;
 - test discovery, retained execution or QA evidence, invalidated-evidence
   refresh, review waits, findings validation, and merge check belong to
   verification and review;
@@ -85,10 +110,13 @@ Publish only at actual boundaries shared by the selected mode:
 - terminal completion means the selected bounded outcome completed, never only
   that a proposal was approved, tests passed, or merge readiness is `PASS`.
 
-For `spec-code`, model presentation and confirmation wait belong to semantic
-model; IDs, candidate authoring, and successful candidate-and-package
+For `spec-code` and `spec`, model presentation and confirmation wait belong to
+semantic model; IDs, candidate authoring, and successful candidate-and-package
 materialization belong to specification candidate; and preparation,
-application wait, and exact apply response belong to exact specification patch.
+application wait, and exact apply response belong to exact specification
+patch. After successful `spec` patch application the next applicable stage is
+verification and review; do not publish, complete, skip, or invent
+implementation progress.
 
 For `code`, successful package-only ProposalPackage materialization belongs to
 code proposal. The specification remains unchanged: do not publish or invent a
@@ -96,11 +124,12 @@ semantic-model, object-ID generation, authored-candidate,
 specification-candidate, branch-preparation, exact-specification-patch,
 SpecPatch preparation, or SpecPatch application stage.
 
-Use waiting events only for real human boundaries. Both modes may wait for the
-proposal decision, semantic review, adapter trust review, or local Git
-authority; `spec-code` may additionally wait for semantic confirmation and
-patch application. Waiting reports the boundary without supplying the
-decision. Optional branches remain visible as skipped or not requested.
+Use waiting events only for real human boundaries. All three modes may wait for
+the proposal decision, semantic review, adapter trust review, or local Git
+authority; `spec-code` and `spec` may additionally wait for semantic
+confirmation and patch application. Waiting reports the boundary without
+supplying the decision. Optional branches remain visible as skipped or not
+requested.
 
 Update CLI, approval, readiness, freshness, artifact, and integration axes only
 from their owning compatible deterministic result. One axis never completes a
@@ -116,6 +145,6 @@ the last retained tuple, but continue or stop solely according to the owning
 workflow operation and its existing authority boundary. Never retry by
 renumbering, merging, repairing, or rewriting journal events.
 
-Automatic production applies only to `spec-code` and `code`. `spec`,
-onboarding, initiative planning, understand, diagnose, release, and
-repository-maintenance routes create no automatic journal.
+Automatic production applies to `spec-code`, `spec`, and `code`. Onboarding,
+initiative planning, understand, diagnose, release, publication, remote
+integration, and repository-maintenance routes create no automatic journal.

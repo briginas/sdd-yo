@@ -156,6 +156,68 @@ test("REQ-0837358D REQ-6A40513D renders the stable partial spec-code stage model
   assert.match(html, /Proposal materialization authority required/u);
 });
 
+test("REQ-09B6EA82 projects one exact eight-stage spec workflow with implementation not applicable", () => {
+  const started = event(0, {
+    event_type: "run_started",
+    mode: "spec",
+    accepted_behavior: "Users can already export one report.",
+    intended_qa_plan: "QA will compare the canonical example with the existing output.",
+    observation_start: "partial",
+    current_stage_id: "specification-candidate",
+  });
+  const snapshot = replayWorkflowEvents([started], projectId);
+
+  assert.equal(snapshot.mode, "spec");
+  assert.equal(snapshot.accepted_behavior, "Users can already export one report.");
+  assert.equal(snapshot.intended_qa_plan, "QA will compare the canonical example with the existing output.");
+  assert.equal(snapshot.implementation_state, "not_applicable");
+  assert.equal(snapshot.base_ref, null);
+  assert.deepEqual(snapshot.code_targets, []);
+  assert.deepEqual(
+    snapshot.stages.map(({ stage_id }) => stage_id),
+    [
+      "workflow-initialization",
+      "semantic-model",
+      "specification-candidate",
+      "proposal-decision",
+      "exact-specification-patch",
+      "verification-and-review",
+      "local-integration",
+      "terminal-outcome",
+    ],
+  );
+  assert.deepEqual(
+    snapshot.stages.slice(0, 2).map(({ state, reason }) => ({ state, reason })),
+    [
+      { state: "skipped", reason: "Not observed before partial start" },
+      { state: "skipped", reason: "Not observed before partial start" },
+    ],
+  );
+  assert.ok(snapshot.stages.every(({ stage_id }) => stage_id !== "implementation"));
+  assert.equal(snapshot.approval_state, "unavailable");
+  assert.equal(snapshot.artifacts.length, 0);
+  const html = renderWorkflowObserver(snapshot, "safe-capability");
+  assert.match(html, /<h2>Implementation<\/h2><p id="implementation-state">not applicable<\/p>/u);
+  assert.match(html, /Accepted behavior specification context/u);
+  assert.match(html, /Users can already export one report\./u);
+  assert.match(html, /QA will compare the canonical example with the existing output\./u);
+  assert.match(html, /Descriptive context only · not approval, QA evidence, test execution evidence/u);
+
+  assert.throws(
+    () =>
+      replayWorkflowEvents(
+        [started, event(1, { event_type: "stage_updated", stage_id: "implementation", state: "active" })],
+        projectId,
+      ),
+    (error: unknown) =>
+      error instanceof WorkflowObservationError && error.code === "SDD_OBSERVATION_TRANSITION_INVALID",
+  );
+  assert.throws(
+    () => parseWorkflowEvent({ ...started, intended_qa_plan: undefined }, projectId),
+    (error: unknown) => error instanceof WorkflowObservationError && error.code === "SDD_OBSERVATION_EVENT_INVALID",
+  );
+});
+
 test("REQ-7B9B6531 projects one exact seven-stage code workflow without specification ceremony", () => {
   const semanticFingerprint = `sha256:${"1".repeat(64)}`;
   const structuralFingerprint = `sha256:${"2".repeat(64)}`;

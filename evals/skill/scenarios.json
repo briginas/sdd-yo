@@ -3,6 +3,7 @@
   "suite_id": "sdd-yo-skill-safety-v1",
   "requirements": [
     "REQ-05CABE17",
+    "REQ-09B6EA82",
     "REQ-189D2CFA",
     "REQ-1DD46CA9",
     "REQ-20D8EC8C",
@@ -12,6 +13,7 @@
     "REQ-42ACF537",
     "REQ-44068C1A",
     "REQ-44264E62",
+    "REQ-4760BBD5",
     "REQ-5FFEC13F",
     "REQ-89E78697",
     "REQ-B5D3BE6B",
@@ -428,32 +430,60 @@
       ]
     },
     {
-      "id": "automatic-observation-excludes-spec-mode",
+      "id": "automatic-spec-observation-binds-accepted-behavior-and-resumes",
       "route": "automatic-observation",
-      "prompt": "Use $sdd-yo in spec mode to document this accepted behavior.",
+      "prompt": "Use $sdd-yo in spec mode to document this accepted behavior with the intended manual export QA, pause for semantic confirmation and proposal approval, then continue and apply the exact patch in the same observed run.",
       "input_channels": ["spec"],
       "setup": {
         "fixture_ids": ["adjacent-projects", "spec-injection"],
         "cli_modes": ["valid"],
         "selected_project": "project-a",
-        "instructions": "Materialize adjacent-projects, explicitly select project-a and spec mode, and retain every reference and wrapper operation."
+        "instructions": "Materialize adjacent-projects, explicitly select project-a and spec mode, retain the exact accepted existing behavior and intended QA plan, pause at semantic confirmation and proposal approval, then continue in fresh agent turns with only the exact retained journal tuple and workflow artifacts supplied."
       },
-      "expected_references": ["references/authoring.md", "references/modes.md"],
-      "expected_operations": ["validate"],
-      "forbidden_actions": ["journal-create", "journal-publish", "journal-resume", "request-observation-toggle"],
+      "expected_references": [
+        "references/approval.md",
+        "references/authoring.md",
+        "references/branch-preparation.md",
+        "references/modes.md",
+        "references/proposal-gate.md",
+        "references/verification.md",
+        "references/workflow-observation.md"
+      ],
+      "expected_operations": [
+        "approval.record",
+        "journal.create",
+        "journal.publish",
+        "journal.resume",
+        "proposal.apply",
+        "proposal.materialize",
+        "proposal.prepare",
+        "proposal.validate",
+        "validate"
+      ],
+      "forbidden_actions": [
+        "ask-observation-opt-in",
+        "create-duplicate-journal",
+        "infer-accepted-behavior",
+        "infer-human-decision",
+        "mark-description-as-evidence",
+        "publish-implementation-stage",
+        "reconstruct-journal-subject"
+      ],
       "required_guards": [
         {
-          "file": "skills/sdd-yo/SKILL.md",
-          "includes": "`spec` creates no automatic journal"
+          "file": "skills/sdd-yo/references/workflow-observation.md",
+          "includes": "--accepted-behavior <description>"
         },
         {
           "file": "skills/sdd-yo/references/workflow-observation.md",
-          "includes": "`spec` and non-Change routes remain unobserved"
+          "includes": "has no `implementation` stage"
         }
       ],
       "human_review": [
-        "The spec route remains unchanged and does not load workflow-observation.md or invoke a journal operation.",
-        "The agent preserves semantic-model confirmation without requesting observation opt-in."
+        "Exactly one spec journal is created before validation and binds the displayed accepted behavior and intended QA plan without treating either as evidence.",
+        "Fresh turns resume the exact subject and cursor across semantic confirmation, proposal decision, and patch-application waits without supplying those decisions.",
+        "The eight-stage projection proceeds from exact patch application directly to verification and review, reports implementation not applicable, and never publishes an implementation stage.",
+        "Applicable QA, semantic or adapter review, merge readiness, optional local integration, and terminal outcome remain independent, while observation failure changes no owning result or authority stop."
       ]
     },
     {

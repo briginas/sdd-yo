@@ -32,6 +32,12 @@ const operation = ["approval", "proposal", "semantic-review", "tests", "findings
   ? \`\${command}.\${args[1] ?? ""}\`
   : command;
 const mode = process.env.SDD_SKILL_FAKE_MODE ?? "valid";
+const workflowModeIndex = args.indexOf("--workflow-mode");
+const workflowMode = workflowModeIndex === -1 ? "spec-code" : args[workflowModeIndex + 1];
+const acceptedBehaviorIndex = args.indexOf("--accepted-behavior");
+const acceptedBehavior = acceptedBehaviorIndex === -1 ? undefined : args[acceptedBehaviorIndex + 1];
+const qaPlanIndex = args.indexOf("--qa-plan");
+const intendedQaPlan = qaPlanIndex === -1 ? undefined : args[qaPlanIndex + 1];
 if (command === "--version") {
   const identity = {
     schema_version: "1.0", command: "version", project_id: null, status: "ok",
@@ -144,16 +150,20 @@ else {
   };
   const journalSnapshot = {
     schema_version: "1.0", artifact_type: "workflow_snapshot", project_id: selectedProjectId,
-    change_id: "pre-change:run-a", run_id: "run-a", producer_id: "sdd-yo-skill", mode: "spec-code",
+    change_id: "pre-change:run-a", run_id: "run-a", producer_id: "sdd-yo-skill", mode: workflowMode,
     base_ref: null, code_targets: [],
+    accepted_behavior: workflowMode === "spec" ? acceptedBehavior : null,
+    intended_qa_plan: workflowMode === "spec" ? intendedQaPlan : null,
+    implementation_state: workflowMode === "spec" ? "not_applicable" : null,
     observation_start: "complete", current_stage_id: "workflow-initialization", last_sequence: 0,
     lifecycle: "active", steps: [], statuses: {}, artifacts: [], stages: [], diagnostics: [],
   };
   const journalResult = {
-    journal_path: ".sdd/staging/workflow-observation/spec-code/run-a.jsonl",
-    project_id: selectedProjectId, mode: "spec-code", run_id: "run-a", producer_id: "sdd-yo-skill",
+    journal_path: ".sdd/staging/workflow-observation/" + workflowMode + "/run-a.jsonl",
+    project_id: selectedProjectId, mode: workflowMode, run_id: "run-a", producer_id: "sdd-yo-skill",
     change_id: "pre-change:run-a", next_sequence: 1, journal_fingerprint: fingerprint,
     snapshot: journalSnapshot,
+    ...(workflowMode === "spec" ? { accepted_behavior: acceptedBehavior, intended_qa_plan: intendedQaPlan } : {}),
   };
   const result = command === "init"
     ? { created_paths: [".sdd/config.yaml", "spec/README.md", "spec/capabilities", "spec/concepts"] }
@@ -276,7 +286,7 @@ test("REQ-44264E62 Skill makes spec-code observation automatic and authority-neu
   assert.match(observation, /verification-and-review/u);
 });
 
-test("REQ-42ACF537 Skill observes code subjects without specification-changing ceremony", async () => {
+test("REQ-42ACF537 REQ-09B6EA82 REQ-4760BBD5 Skill preserves exact mode-specific observation", async () => {
   const skill = await readFile(join(skillRoot, "SKILL.md"), "utf8");
   const modes = await readFile(join(skillRoot, "references/modes.md"), "utf8");
   const observation = await readFile(join(skillRoot, "references/workflow-observation.md"), "utf8");
@@ -285,21 +295,24 @@ test("REQ-42ACF537 Skill observes code subjects without specification-changing c
   const verification = await readFile(join(skillRoot, "references/verification.md"), "utf8");
   const integration = await readFile(join(skillRoot, "references/integration.md"), "utf8");
 
-  assert.match(skill, /For `spec-code` or `code`, also load/u);
-  assert.match(skill, /`spec` creates no automatic journal/u);
+  assert.match(skill, /For `spec-code`, `spec`, or `code`, also load/u);
+  assert.match(skill, /accepted existing behavior and intended\s+QA plan/u);
   assert.match(modes, /resolves the selected base Git object/u);
-  assert.match(modes, /canonical ID plus semantic and\s+structural fingerprints/u);
+  assert.match(modes, /canonical ID plus\s+semantic and structural fingerprints/u);
   assert.match(observation, /complete canonical CodeTarget set/u);
   assert.match(observation, /The stable `code` stage order is:[\s\S]*`code-proposal`/u);
   assert.match(observation, /successful package-only ProposalPackage materialization/u);
   assert.match(observation, /do not publish or invent a\s+semantic-model/u);
   assert.match(observation, /SpecPatch preparation, or SpecPatch application stage/u);
   assert.match(observation, /implementation changes\s+invalidate dependent evidence/u);
-  assert.match(observation, /Automatic production applies only to `spec-code` and `code`/u);
-  assert.match(proposal, /For an observed `spec-code` or `code` route/u);
+  assert.match(observation, /The stable `spec` stage order is:[\s\S]*`verification-and-review`/u);
+  assert.match(observation, /no `implementation` stage/u);
+  assert.match(observation, /implementation.*`not_applicable`/u);
+  assert.match(observation, /Automatic production applies to `spec-code`, `spec`, and `code`/u);
+  assert.match(proposal, /For an observed `spec-code`, `spec`, or `code` route/u);
   assert.match(approval, /approved `code` proposal\s+bypasses branch preparation and SpecPatch application/u);
   assert.match(verification, /Implementation changes invalidate dependent evidence/u);
-  assert.match(integration, /For an observed `spec-code` or `code` route/u);
+  assert.match(integration, /For an observed `spec-code`, `spec`, or `code` route/u);
 });
 
 test("REQ-B5D3BE6B compatibility wrapper accepts only exact workflow journal results", async () => {
@@ -350,6 +363,27 @@ test("REQ-B5D3BE6B compatibility wrapper accepts only exact workflow journal res
   ]);
   assert.equal(published.code, 0, published.stderr);
   assert.equal((JSON.parse(published.stdout) as { result: { publication: string } }).result.publication, "published");
+
+  const specCreated = await runChecker(cli, [
+    "journal",
+    "create",
+    "--workflow-mode",
+    "spec",
+    "--producer",
+    "sdd-yo-skill",
+    "--accepted-behavior",
+    "Existing export is accepted.",
+    "--qa-plan",
+    "Verify the exported document manually.",
+    ...selector,
+  ]);
+  assert.equal(specCreated.code, 0, specCreated.stderr);
+  const specResult = JSON.parse(specCreated.stdout) as {
+    result: { mode: string; accepted_behavior: string; intended_qa_plan: string };
+  };
+  assert.equal(specResult.result.mode, "spec");
+  assert.equal(specResult.result.accepted_behavior, "Existing export is accepted.");
+  assert.equal(specResult.result.intended_qa_plan, "Verify the exported document manually.");
 
   for (const args of [
     ["journal", "create", "--workflow-mode", "spec", "--producer", "sdd-yo-skill", ...selector],

@@ -40,13 +40,15 @@ change requires a new explicit confirmation.
 
 Record the selected mode, observable outcome, relevant active object IDs, and
 remaining non-normative implementation notes. Then load `authoring.md`.
-For `spec-code` or `code`, also load `workflow-observation.md`. A `spec-code`
-run initializes or resumes before project validation. A `code` run first
-validates the project, resolves the selected base Git object, and binds every
-exact active Requirement target to its canonical ID plus semantic and
-structural fingerprints; only then initialize or resume exactly one automatic
-observed run for that exact subject. Journal failure does not select another
-mode or change any authoring authority stop.
+For `spec-code`, `spec`, or `code`, also load `workflow-observation.md`.
+`spec-code` initializes or resumes before project validation. `spec` does the
+same only after the accepted existing behavior and intended QA plan are exact;
+both values remain descriptive inputs rather than approval or evidence. A
+`code` run first validates the project, resolves the selected base Git object,
+and binds every exact active Requirement target to its canonical ID plus
+semantic and structural fingerprints; only then initialize or resume exactly
+one automatic observed run for that exact subject. Journal failure does not
+select another mode or change any authoring authority stop.
 `spec-code` and `spec` first require its ID-free semantic-model confirmation;
 `code` keeps the active Requirement targets and bypasses that checkpoint. Do
 not run proposal validation, present object deltas or semantic candidates, seek
