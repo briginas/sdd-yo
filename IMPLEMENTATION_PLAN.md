@@ -2,36 +2,9 @@
 
 ## Status
 
-- Active: Milestone 37 — release `0.5.6`
-- Complete: Milestones 0–36; public `sdd-yo@0.5.5`
+- Active: no milestone selected
+- Complete: Milestones 0–37; public `sdd-yo@0.5.6`
 - Last updated: 2026-08-23
-
-## Milestone 37 — release `0.5.6`
-
-- Outcome: publish the exact `sdd-yo@0.5.6` package from one reviewed,
-  immutable `main` subject through the protected GitHub release workflow, then
-  independently verify the registry artifact, provenance, clean consumer, and
-  final CI closeout.
-- Requirement traceability: `REQ-B0B35D6D`, `REQ-A2199BC2`, `REQ-ABFFEAF2`,
-  `REQ-0163273A`.
-- Leaves:
-  - 37.1 bind the `0.5.6` package identity and all materialized release
-    surfaces.
-  - 37.2 produce and review reproducible package bytes and inventory hashes.
-  - 37.3 create the release commit on synchronized `main` and pass subject CI.
-  - 37.4 prepare the protected `release` environment, annotated tag, and
-    GitHub Release.
-  - 37.5 verify protected publication, registry bytes, provenance, and an
-    isolated exact consumer.
-  - 37.6 close the milestone and verify final CI.
-- Immediate leaf: 37.1 bind the `0.5.6` package identity and release surfaces.
-- Exclusions: unrelated runtime behavior, protocol or schema-major changes,
-  new operating-system support, a Codex plugin, hosted state, local
-  publication, token authentication, and any release of a different version.
-
-No follow-up milestone is selected while Milestone 37 is active. Future work
-remains candidate scope until it is explicitly promoted into one bounded
-milestone and immediate leaf.
 
 ## Authority and navigation
 
@@ -110,13 +83,13 @@ decision, run a gate, mutate Git, publish, or release. Additional terminal,
 IDE, CI, or hosted adapters remain deferred renderers over the same observation
 contract.
 
-Exact `sdd-yo@0.5.5` is public on npm from annotated tag `v0.5.5` at commit
-`41780f7ff578c01548ad785db2ce336d816097cd`. The registry tarball matches the
+Exact `sdd-yo@0.5.6` is public on npm from annotated tag `v0.5.6` at commit
+`a7c7c703f4b5ba4b77c8601fb35df3c56f61cd76`. The registry tarball matches the
 reviewed release subject byte-for-byte with SHA-256
-`132318087a99862381d5c9d244d7ae2c1694194c1c127065831e5bbc669ad2d0`, inventory
-SHA-256 `14d9d4904e2587376e1e5e79568e1f9caa66e048f8dc4832399149b4935f23c2`, and
-2,171 entries. npm trusted publishing records a cryptographically verified
-SLSA provenance subject bound to `briginas/sdd-yo`, `publish.yml`, `v0.5.5`,
+`ef8777ef3ba41ea4cc6eb09a5dd26905006fd58ad4f20ca90a872d9fef4d4a85`, inventory
+SHA-256 `53f908f036e3e6ef56240f7a02e28a39531e356726c4e43da660893628ef925f`, and
+2,188 entries. npm trusted publishing records a cryptographically verified
+SLSA provenance subject bound to `briginas/sdd-yo`, `publish.yml`, `v0.5.6`,
 and the release commit. An isolated consumer installed the exact package and
 verified its CLI, schema, Skill identity, and one valid npm attestation. The
 source `package.json` remains the primary package identity; publication and
